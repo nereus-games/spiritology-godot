@@ -5,6 +5,6 @@
 [resource]
 script = ExtResource("1_osh77")
 id = &"reactive_depreciation"
-origin_species = &"fonéchal"
+origin_species = &"fonechal"
 cost = 2
 tags = PackedStringArray("ETH loss", "limit actions")

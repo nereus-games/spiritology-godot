@@ -5,6 +5,6 @@
 [resource]
 script = ExtResource("1_eapw1")
 id = &"social_capital"
-origin_species = &"oléni"
+origin_species = &"oleni"
 cost = 2
 tags = PackedStringArray("change weakness", "recover ETH")

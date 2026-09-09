@@ -17,9 +17,9 @@ const LOOT_CELL := Vector3i(1, 0, 1)
 const TRAP_CELL := Vector3i(1, 0, 3)
 
 ## Espèce coéquipière SANS le talent reveal_traps (érzélak porte trick_to_reveal).
-const NO_TALENT_TEAMMATE := &"érzélak"
+const NO_TALENT_TEAMMATE := &"erzelak"
 ## Espèce coéquipière AVEC le talent reveal_traps.
-const REVEAL_TRAPS_TEAMMATE := &"razél"
+const REVEAL_TRAPS_TEAMMATE := &"razel"
 
 var _fails: Array[String] = []
 var _messages: Array[String] = []

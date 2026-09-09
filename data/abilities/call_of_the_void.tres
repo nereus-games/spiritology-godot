@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1_vvpfq")
 id = &"call_of_the_void"
-origin_species = &"vérnal"
+origin_species = &"vernal"
 energy = 3
 cost = 4
 base_damage = 15

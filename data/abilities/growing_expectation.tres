@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1_4ye08")
 id = &"growing_expectation"
-origin_species = &"sénskor"
+origin_species = &"senskor"
 energy = 2
 cost = 4
 tags = PackedStringArray("change weakness", "recover DEN")

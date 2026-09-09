@@ -5,5 +5,5 @@
 [resource]
 script = ExtResource("1_2wv5m")
 id = &"trick_to_reveal"
-owner_species = &"érzélak"
+owner_species = &"erzelak"
 tags = PackedStringArray()

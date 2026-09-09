@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1_070f1")
 id = &"ejection_flurry"
-origin_species = &"razél"
+origin_species = &"razel"
 energy = 3
 cost = 4
 base_damage = 15

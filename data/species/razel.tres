@@ -4,7 +4,7 @@
 
 [resource]
 script = ExtResource("1_tdwxd")
-id = &"razél"
+id = &"razel"
 weakness_first = 1
 weakness_middle = 0
 weakness_last = 1
@@ -16,4 +16,4 @@ also_used_abilities = Array[StringName]([&"effort_of_neutrality"])
 encyclopaedia_abilities = Array[StringName]([&"thermal_beam", &"barrier"])
 forlorn_ability = &"ejection_flurry"
 loot = Array[StringName]([&"notice", &"rune_stone"])
-sprite_idle = "res://assets/sprites/spirimonsters/razél.png"
+sprite_idle = "res://assets/sprites/spirimonsters/razel.png"

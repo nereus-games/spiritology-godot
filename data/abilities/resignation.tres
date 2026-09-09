@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1_ld48c")
 id = &"resignation"
-origin_species = &"mastél"
+origin_species = &"mastel"
 energy = 2
 base_damage = 5
 single_use = true

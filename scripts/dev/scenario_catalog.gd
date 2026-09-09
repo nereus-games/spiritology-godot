@@ -30,20 +30,20 @@ static var selected_id: StringName = &"movement"
 
 ## Espèces que le mini-quiz peut donner au PERSONNAGE PRINCIPAL (doc Notion « Story +
 ## Characters / Introduction / Mini Personality Quiz », section Available Results).
-const MAIN_SPECIES: Array[StringName] = [&"ravbak", &"akturlin", &"érzélak", &"zuk"]
+const MAIN_SPECIES: Array[StringName] = [&"ravbak", &"akturlin", &"erzelak", &"zuk"]
 
 ## Espèces que le mini-quiz peut donner au COÉQUIPIER : les mêmes que pour le principal,
 ## plus six autres (doc, même section). Le duo peut porter deux fois la même espèce.
 const TEAMMATE_SPECIES: Array[StringName] = [
-	&"ravbak", &"akturlin", &"érzélak", &"zuk",
-	&"razél", &"jézal", &"gélmi", &"granop", &"fopin", &"spodra",
+	&"ravbak", &"akturlin", &"erzelak", &"zuk",
+	&"razel", &"jezal", &"gelmi", &"granop", &"fopin", &"spodra",
 ]
 
 ## DEV : duo imposé aux scénarios, choisi dans l'écran de sélection. En vrai c'est le
 ## mini-quiz de personnalité qui l'attribue ; ici on le choisit à la main, en restant dans
 ## les résultats que le quiz peut donner à chacun des deux rôles.
 static var main_species: StringName = &"ravbak"
-static var teammate_species: StringName = &"razél"
+static var teammate_species: StringName = &"razel"
 
 ## DEV : DEN maximal imposé aux rivaux des scénarios, réglé au curseur dans l'écran de
 ## sélection. Le DEN d'un rival est normalement un réglage de LEVEL DESIGN (donjon par donjon) ;

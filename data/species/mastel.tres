@@ -4,7 +4,7 @@
 
 [resource]
 script = ExtResource("1_20v6b")
-id = &"mastél"
+id = &"mastel"
 spiricosm = 2
 weakness_first = 2
 weakness_middle = 0

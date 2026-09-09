@@ -5,5 +5,5 @@
 [resource]
 script = ExtResource("1_clsjq")
 id = &"commendation"
-origin_species = &"lulupéa"
+origin_species = &"lulupea"
 tags = PackedStringArray("damage reduction/increase or immunity", "recover ETH")

@@ -5,6 +5,6 @@
 [resource]
 script = ExtResource("1_mt6uk")
 id = &"hypnotize"
-origin_species = &"jézal"
+origin_species = &"jezal"
 energy = 1
 tags = PackedStringArray("ETH loss", "limit actions")

@@ -4,7 +4,7 @@
 
 [resource]
 script = ExtResource("1_7231b")
-id = &"lulupéa"
+id = &"lulupea"
 spiricosm = 2
 weakness_first = 3
 weakness_middle = 1

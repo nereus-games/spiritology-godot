@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1_oaryp")
 id = &"r_ejection"
-origin_species = &"sénskor"
+origin_species = &"senskor"
 energy = 1
 cost = 3
 tags = PackedStringArray("change weakness")

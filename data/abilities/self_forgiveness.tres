@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1_aloec")
 id = &"self_forgiveness"
-origin_species = &"érdouss"
+origin_species = &"erdouss"
 energy = 3
 single_use = true
 tags = PackedStringArray("change weakness", "recover ETH")

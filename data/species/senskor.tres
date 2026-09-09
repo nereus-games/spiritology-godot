@@ -4,7 +4,7 @@
 
 [resource]
 script = ExtResource("1_vi0kc")
-id = &"sénskor"
+id = &"senskor"
 spiricosm = 1
 weakness_first = 0
 weakness_middle = 3

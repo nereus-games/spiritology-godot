@@ -4,7 +4,7 @@
 
 [resource]
 script = ExtResource("1_l3kt1")
-id = &"jézal"
+id = &"jezal"
 weakness_first = 1
 weakness_middle = 4
 weakness_last = 0
@@ -14,4 +14,4 @@ origin_abilities = Array[StringName]([&"dance_battle", &"sublimation", &"hypnoti
 also_used_abilities = Array[StringName]([&"strict_audit", &"perpetual_motion", &"sad_song"])
 encyclopaedia_abilities = Array[StringName]([&"hypnotize", &"dance_battle"])
 forlorn_ability = &"sublimation"
-sprite_idle = "res://assets/sprites/spirimonsters/jézal.png"
+sprite_idle = "res://assets/sprites/spirimonsters/jezal.png"

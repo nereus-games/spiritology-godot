@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1_uldtl")
 id = &"libation"
-origin_species = &"mastél"
+origin_species = &"mastel"
 energy = 1
 cost = 1
 tags = PackedStringArray("change weakness", "recover DEN")

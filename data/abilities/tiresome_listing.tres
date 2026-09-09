@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1_v2ghr")
 id = &"tiresome_listing"
-origin_species = &"érzélak"
+origin_species = &"erzelak"
 energy = 4
 cost = 2
 base_damage = 7

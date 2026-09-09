@@ -271,7 +271,7 @@ func _check_traps_hidden_on_map(dm) -> void:
 ## une espèce PLUS LARGE QUE HAUTE (jézal, 2000 × 1898) : caler sur la seule hauteur la ferait
 ## déborder sur les cases voisines.
 func _check_rival_sprite_box(dm) -> void:
-	for species in [&"jezal", &"jézal", &"fliritus", &"ravbak"]:
+	for species in [&"jezal", &"jezal", &"fliritus", &"ravbak"]:
 		var rival = RIVAL_SCENE.instantiate()
 		rival.species_id = species
 		rival.position = dm.cell_to_world(Vector3i(0, 0, 0))

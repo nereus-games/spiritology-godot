@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://4tw28xokoili"
-path="res://.godot/imported/razél.png-395ed0a09aa01473472e90abf0d17385.ctex"
+uid="uid://bqajqkakuh85"
+path="res://.godot/imported/razel.png-8c6e34f5aaf431f353094d74907167d6.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/sprites/spirimonsters/razél.png"
-dest_files=["res://.godot/imported/razél.png-395ed0a09aa01473472e90abf0d17385.ctex"]
+source_file="res://assets/sprites/spirimonsters/razel.png"
+dest_files=["res://.godot/imported/razel.png-8c6e34f5aaf431f353094d74907167d6.ctex"]
 
 [params]
 

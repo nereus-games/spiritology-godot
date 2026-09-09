@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1_v63wg")
 id = &"absorption_guard"
-origin_species = &"gélmi"
+origin_species = &"gelmi"
 energy = 6
 base_damage = 7
 tags = PackedStringArray("damage", "gives info/Examine bonus", "recover DEN")

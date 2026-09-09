@@ -4,7 +4,7 @@
 
 [resource]
 script = ExtResource("1_xrwh7")
-id = &"érdouss"
+id = &"erdouss"
 spiricosm = 1
 weakness_first = 2
 weakness_middle = 4

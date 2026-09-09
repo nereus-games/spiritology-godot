@@ -16,7 +16,7 @@ const SPADE := &"spade"
 
 ## Spirimonstres dont un Dig peut livrer une info encyclo (doc Walls + Decors).
 const INFO_SPECIES: Array[StringName] = [
-	&"mastél", &"kurkab", &"sopiark", &"firulis", &"skorpis", &"yilir",
+	&"mastel", &"kurkab", &"sopiark", &"firulis", &"skorpis", &"yilir",
 ]
 
 ## Objets qu'un creusage peut donner (placeholder ; loot précis à définir côté design).

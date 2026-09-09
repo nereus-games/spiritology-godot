@@ -13,8 +13,13 @@ extends "res://scripts/exploration/mechanisms/dungeon_mechanism.gd"
 const ExplorationAction := preload("res://scripts/exploration/exploration_action.gd")
 
 ## Spirimonstres dont un Examine de litière peut livrer une info (doc Walls + Decors).
+##
+## ## TODO: la doc cite aussi « néarog », qui n'a aucune page d'espèce — donc aucun
+## `data/species/néarog.tres`. Le laisser dans la liste ne produisait rien : l'espèce
+## était simplement introuvable au tirage, sans erreur. À rétablir le jour où l'espèce
+## existe (cf. data_integrity_check, qui vérifie désormais ces listes).
 const INFO_SPECIES: Array[StringName] = [
-	&"firulis", &"razél", &"kalilk", &"vilgane", &"néarog", &"zuk", &"hibulus",
+	&"firulis", &"razel", &"kalilk", &"vilgane", &"zuk", &"hibulus",
 ]
 
 ## Objets qu'un recyclage peut donner (placeholder).

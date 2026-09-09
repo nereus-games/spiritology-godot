@@ -5,6 +5,6 @@
 [resource]
 script = ExtResource("1_mb0n7")
 id = &"strict_audit"
-origin_species = &"fonéchal"
+origin_species = &"fonechal"
 energy = 3
 tags = PackedStringArray("damage")

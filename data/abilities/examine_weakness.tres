@@ -5,5 +5,5 @@
 [resource]
 script = ExtResource("1_l1owl")
 id = &"examine_weakness"
-owner_species = &"gélmi"
+owner_species = &"gelmi"
 tags = PackedStringArray()

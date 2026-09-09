@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1_2uiv2")
 id = &"keep_the_distance"
-origin_species = &"fonéchal"
+origin_species = &"fonechal"
 energy = 2
 cost = 2
 tags = PackedStringArray("change next TO", "limit actions")

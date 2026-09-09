@@ -5,6 +5,6 @@
 [resource]
 script = ExtResource("1_fnodi")
 id = &"warning"
-origin_species = &"oléni"
+origin_species = &"oleni"
 energy = 6
 tags = PackedStringArray("ETH loss", "damage reduction/increase or immunity")

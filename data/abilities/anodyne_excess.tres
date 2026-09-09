@@ -5,6 +5,6 @@
 [resource]
 script = ExtResource("1_8vioc")
 id = &"anodyne_excess"
-origin_species = &"vérnal"
+origin_species = &"vernal"
 single_use = true
 tags = PackedStringArray("change weakness")

@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1_q4wry")
 id = &"liminal_ritual"
-origin_species = &"lulupéa"
+origin_species = &"lulupea"
 energy = 6
 single_use = true
 tags = PackedStringArray("change weakness", "recover DEN")

@@ -5,6 +5,6 @@
 [resource]
 script = ExtResource("1_lc7sj")
 id = &"critical_mass"
-origin_species = &"gélmi"
+origin_species = &"gelmi"
 cost = 4
 tags = PackedStringArray("damage", "recover DEN")

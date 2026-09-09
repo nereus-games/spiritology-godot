@@ -4,7 +4,7 @@
 
 [resource]
 script = ExtResource("1_lstxi")
-id = &"fonéchal"
+id = &"fonechal"
 weakness_first = 0
 weakness_middle = 3
 weakness_last = 1

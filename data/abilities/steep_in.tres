@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1_2qo1d")
 id = &"steep_in"
-origin_species = &"vérnal"
+origin_species = &"vernal"
 energy = 6
 cost = 1
 tags = PackedStringArray("change weakness", "gives info/Examine bonus")

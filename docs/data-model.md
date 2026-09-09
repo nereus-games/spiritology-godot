@@ -35,8 +35,14 @@ The slug is the filename **and** the `id` field, and the two must match — seve
 paths resolve data by string interpolation (`data/species/%s.tres`,
 `assets/sprites/spirimonsters/%s.png`), so a divergence breaks them silently.
 
-Rules: lowercase; accents **kept** (species are common nouns — `mastél`, `érzélak`); every
-run of non-alphanumeric characters becomes a single `_`; no leading or trailing `_`.
+Rules: lowercase **ASCII**; every run of other characters becomes a single `_`; no leading
+or trailing `_`.
+
+Accents are folded in the slug but **kept in the name**: the species called *mastél* has id
+`mastel`, file `data/species/mastel.tres`, key `SPECIES_MASTEL_NAME`, and the accented form
+lives where it belongs — as the `.po` value that players actually see. The slug is an
+identifier; the name is text. Docstrings that name a species keep the accent for the same
+reason.
 
 A Notion name wrapped in square brackets (`[Anomaly]`) marks a **provisional name**. Strip
 the brackets for the display name; the slug never carries them.

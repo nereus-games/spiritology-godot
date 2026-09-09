@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1_knh8g")
 id = &"saving_face"
-origin_species = &"sénskor"
+origin_species = &"senskor"
 energy = 6
 cost = 3
 base_damage = 10

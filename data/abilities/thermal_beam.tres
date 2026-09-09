@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1_sdlj3")
 id = &"thermal_beam"
-origin_species = &"razél"
+origin_species = &"razel"
 energy = 0
 cost = 2
 base_damage = 10

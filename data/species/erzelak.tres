@@ -4,7 +4,7 @@
 
 [resource]
 script = ExtResource("1_chv7i")
-id = &"érzélak"
+id = &"erzelak"
 weakness_first = 4
 weakness_middle = 2
 weakness_last = 0

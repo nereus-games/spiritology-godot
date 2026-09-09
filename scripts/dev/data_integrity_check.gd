@@ -29,6 +29,15 @@ const PO_FR := "res://translations/fr.po"
 ## réciproquement. Les UI_* sont écrites à la main et hors périmètre.
 const DATA_PREFIXES := ["SPECIES_", "ABILITY_", "TALENT_", "OBJECT_", "DUNGEON_"]
 
+## Constantes de code contenant des slugs d'espèces mais dont le NOM ne le dit pas.
+## Le balayage repère seul les constantes dont le nom contient « SPECIES » — d'où le nom
+## de CELLE-CI, qui doit y échapper pour ne pas se vérifier elle-même. Les exceptions
+## sont listées à la main plutôt que renommées : renommer du code de jeu pour arranger un
+## test, c'est déguiser le test en refactor.
+const EXTRA_SLUG_CONSTANTS := {
+	"res://scripts/exploration/mechanisms/examinable_decor.gd": ["POOLS"],
+}
+
 var _fails: Array[String] = []
 
 var _species: Dictionary = {}    ## id -> SpeciesData
@@ -61,6 +70,7 @@ func _run_all() -> void:
 	_check_loading()
 	_check_enums()
 	_check_cross_refs()
+	_check_code_species_refs()
 	_check_translations()
 	_check_sprites()
 	print("")
@@ -214,6 +224,62 @@ func _check_cross_refs() -> void:
 		if owner == &"" or not _species.has(owner) or _species[owner].talent != id:
 			unowned.append("%s (owner_species=%s)" % [id, owner])
 	_check_empty(unowned, "chaque talent est porté par l'espèce qui le déclare")
+
+# --------------------------------------------------------------------------
+# Espèces citées par le CODE : un slug mort n'y déclenche rien du tout
+# --------------------------------------------------------------------------
+
+## Les mécanismes d'exploration codent en dur des listes d'espèces (quel spirimonstre une
+## litière peut révéler, quel décor renvoie à qui). Un slug fautif y est INVISIBLE : la
+## liste se contente de ne rien donner, sans erreur. Le contrôle des références entre
+## `.tres` ne les voit pas — elles ne sont pas dans les données.
+##
+## On lit les constantes des scripts chargés plutôt que de parser du GDScript : la table
+## de constantes est exacte là où une expression régulière serait approximative.
+func _check_code_species_refs() -> void:
+	print("— espèces citées par le code —")
+	var dead: Array = []
+	var checked := 0
+	for path in _gd_files("res://scripts/"):
+		var script := load(path) as GDScript
+		if script == null:
+			continue
+		var extras: Array = EXTRA_SLUG_CONSTANTS.get(path, [])
+		for name in script.get_script_constant_map():
+			if not (String(name).contains("SPECIES") or extras.has(String(name))):
+				continue
+			for slug in _flatten_slugs(script.get_script_constant_map()[name]):
+				checked += 1
+				if not _species.has(slug):
+					dead.append("%s.%s → %s" % [path.get_file(), name, slug])
+	_check(checked > 0, "%d slugs d'espèce cités dans le code" % checked)
+	_check_empty(dead, "toute espèce citée par le code existe dans data/species/")
+
+## Slugs contenus dans une constante, qu'elle soit un tableau ou un dictionnaire de
+## tableaux (les pools de décor sont indexés par type).
+func _flatten_slugs(value) -> Array:
+	var out: Array = []
+	if value is Array:
+		for v in value:
+			if v is StringName or v is String:
+				out.append(StringName(v))
+	elif value is Dictionary:
+		for k in value:
+			out.append_array(_flatten_slugs(value[k]))
+	return out
+
+func _gd_files(dir_path: String) -> Array:
+	var out: Array = []
+	var dir := DirAccess.open(dir_path)
+	if dir == null:
+		return out
+	for d in dir.get_directories():
+		out.append_array(_gd_files(dir_path.path_join(d)))
+	for f in dir.get_files():
+		if f.ends_with(".gd"):
+			out.append(dir_path.path_join(f))
+	out.sort()
+	return out
 
 # --------------------------------------------------------------------------
 # Traductions : la clé manquante ne casse rien, elle affiche son propre nom

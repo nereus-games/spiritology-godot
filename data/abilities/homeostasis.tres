@@ -5,6 +5,6 @@
 [resource]
 script = ExtResource("1_xmoor")
 id = &"homeostasis"
-origin_species = &"lulupéa"
+origin_species = &"lulupea"
 energy = 2
 tags = PackedStringArray("change next TO", "recover ETH")

@@ -15,16 +15,20 @@ const ExplorationAction := preload("res://scripts/exploration/exploration_action
 enum DecorType { GOOEY_MARKS, POSTERS, SCRATCH_MARKS }
 
 ## Pools de spirimonstres par type de décor (doc Walls + Decors).
+##
+## ## TODO: la doc cite aussi « mazir » parmi les traces gluantes, mais cette espèce n'a
+## pas de page — donc pas de `data/species/mazir.tres`. Elle était tirée sans jamais rien
+## donner. À rétablir quand l'espèce existera.
 const POOLS := {
 	DecorType.GOOEY_MARKS: [
-		&"kurkab", &"malcouli", &"sénskor", &"spodra", &"sadakbia",
-		&"fonéchal", &"kalilk", &"mazir", &"sopiark",
+		&"kurkab", &"malcouli", &"senskor", &"spodra", &"sadakbia",
+		&"fonechal", &"kalilk", &"sopiark",
 	],
 	DecorType.POSTERS: [
-		&"jézal", &"zuk", &"fopin", &"oléni", &"érzélak", &"ravbak", &"gélmi", &"niyat",
+		&"jezal", &"zuk", &"fopin", &"oleni", &"erzelak", &"ravbak", &"gelmi", &"niyat",
 	],
 	DecorType.SCRATCH_MARKS: [
-		&"yadol", &"gaiaz", &"draka", &"kalilk", &"razél", &"érdouss", &"vérnal",
+		&"yadol", &"gaiaz", &"draka", &"kalilk", &"razel", &"erdouss", &"vernal",
 	],
 }
 

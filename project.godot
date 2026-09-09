@@ -18,7 +18,7 @@ config/name="Spiritology"
 config/description="Monster cataloger dungeon crawler RPG."
 run/main_scene="res://scenes/boot.tscn"
 config/features=PackedStringArray("4.6", "GL Compatibility")
-config/icon="res://icon.svg"
+config/icon="res://assets/icon.svg"
 
 [autoload]
 

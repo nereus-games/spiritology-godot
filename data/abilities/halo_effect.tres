@@ -5,5 +5,5 @@
 [resource]
 script = ExtResource("1_1r4xo")
 id = &"halo_effect"
-origin_species = &"oléni"
+origin_species = &"oleni"
 tags = PackedStringArray("gives info/Examine bonus", "recover ETH")

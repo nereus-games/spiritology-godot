@@ -1,0 +1,350 @@
+Licence Art Libre 1.3 / Free Art License 1.3
+SPDX-License-Identifier: LAL-1.3
+Source : https://artlibre.org/licence/lal/
+
+Le texte français est l'original ; la version anglaise qui suit en est la traduction
+officielle. La licence autorise explicitement sa propre reproduction verbatim.
+
+================================================================================
+FRANÇAIS (texte original)
+================================================================================
+
+Licence Art Libre 1.3 (LAL 1.3)
+
+Préambule :
+
+Avec la Licence Art Libre, l’autorisation est donnée de copier, de diffuser et de transformer librement les œuvres dans le respect des droits de l’auteur.
+
+Loin d’ignorer ces droits, la Licence Art Libre les reconnaît et les protège. Elle en reformule l’exercice en permettant à tout un chacun de faire un usage créatif des productions de l’esprit quels que soient leur genre et leur forme d’expression.
+
+Si, en règle générale, l’application du droit d’auteur conduit à restreindre l’accès aux œuvres de l’esprit, la Licence Art Libre, au contraire, le favorise. L’intention est d’autoriser l’utilisation des ressources d’une œuvre ; créer de nouvelles conditions de création pour amplifier les possibilités de création. La Licence Art Libre permet d’avoir jouissance des œuvres tout en reconnaissant les droits et les responsabilités de chacun.
+
+Avec le développement du numérique, l’invention d’internet et des logiciels libres, les modalités de création ont évolué : les productions de l’esprit s’offrent naturellement à la circulation, à l’échange et aux transformations. Elles se prêtent favorablement à la réalisation d’œuvres communes que chacun peut augmenter pour l’avantage de tous.
+
+C’est la raison essentielle de la Licence Art Libre : promouvoir et protéger ces productions de l’esprit selon les principes du copyleft : liberté d’usage, de copie, de diffusion, de transformation et interdiction d’appropriation exclusive.
+
+Définitions :
+
+Nous désignons par « œuvre », autant l’œuvre initiale, les œuvres conséquentes, que l’œuvre commune telles que définies ci-après :
+
+L’œuvre commune :
+
+Il s’agit d’une œuvre qui comprend l’œuvre initiale ainsi que toutes les contributions postérieures (les originaux conséquents et les copies). Elle est créée à l’initiative de l’auteur initial qui par cette licence définit les conditions selon lesquelles les contributions sont faites.
+
+L’œuvre initiale :
+
+C’est-à-dire l’œuvre créée par l’initiateur de l’œuvre commune dont les copies vont être modifiées par qui le souhaite.
+
+Les œuvres conséquentes :
+
+C’est-à-dire les contributions des auteurs qui participent à la formation de l’œuvre commune en faisant usage des droits de reproduction, de diffusion et de modification que leur confère la licence.
+
+Originaux (sources ou ressources de l’œuvre) :
+
+Chaque exemplaire daté de l’œuvre initiale ou conséquente que leurs auteurs présentent comme référence pour toutes actualisations, interprétations, copies ou reproductions ultérieures.
+
+Copie :
+
+Toute reproduction d’un original au sens de cette licence.
+
+1- OBJET.
+
+Cette licence a pour objet de définir les conditions selon lesquelles vous pouvez jouir librement de l’œuvre.
+
+2. L’ÉTENDUE DE LA JOUISSANCE.
+
+Cette œuvre est soumise au droit d’auteur, et l’auteur par cette licence vous indique quelles sont vos libertés pour la copier, la diffuser et la modifier.
+
+2.1 LA LIBERTÉ DE COPIER (OU DE REPRODUCTION).
+
+Vous avez la liberté de copier cette œuvre pour vous, vos amis ou toute autre personne, quelle que soit la technique employée.
+
+2.2 LA LIBERTÉ DE DIFFUSER (INTERPRÉTER, REPRÉSENTER, DISTRIBUER).
+
+Vous pouvez diffuser librement les copies de ces œuvres, modifiées ou non, quel que soit le support, quel que soit le lieu, à titre onéreux ou gratuit, si vous respectez toutes les conditions suivantes :
+
+- joindre aux copies cette licence à l’identique ou indiquer précisément où se trouve la licence ;
+
+- indiquer au destinataire le nom de chaque auteur des originaux, y compris le vôtre si vous avez modifié l’œuvre ;
+
+- indiquer au destinataire où il pourrait avoir accès aux originaux (initiaux et/ou conséquents).
+
+Les auteurs des originaux pourront, s’ils le souhaitent, vous autoriser à diffuser l’original dans les mêmes conditions que les copies.
+
+2.3 LA LIBERTÉ DE MODIFIER.
+
+Vous avez la liberté de modifier les copies des originaux (initiaux et conséquents) dans le respect des conditions suivantes :
+
+- celles prévues à l’article 2.2 en cas de diffusion de la copie modifiée ;
+
+- indiquer qu’il s’agit d’une œuvre modifiée et, si possible, la nature de la modification ;
+
+- diffuser cette œuvre conséquente avec la même licence ou avec toute licence compatible ;
+
+- Les auteurs des originaux pourront, s’ils le souhaitent, vous autoriser à modifier l’original dans les mêmes conditions que les copies.
+
+3. DROITS CONNEXES.
+
+Les actes donnant lieu à des droits d’auteur ou des droits voisins ne doivent pas constituer un obstacle aux libertés conférées par cette licence.
+
+C’est pourquoi, par exemple, les interprétations doivent être soumises à la même licence ou une licence compatible. De même, l’intégration de l’œuvre à une base de données, une compilation ou une anthologie ne doit pas faire obstacle à la jouissance de l’œuvre telle que définie par cette licence.
+
+4. L’ INTÉGRATION DE L’ŒUVRE.
+
+Toute intégration de cette œuvre à un ensemble non soumis à la LAL doit assurer l’exercice des libertés conférées par cette licence.
+
+Si l’œuvre n’est plus accessible indépendamment de l’ensemble, alors l’intégration n’est possible qu’à condition que l’ensemble soit soumis à la LAL ou une licence compatible.
+
+5. CRITÈRES DE COMPATIBILITÉ.
+
+Une licence est compatible avec la LAL si et seulement si :
+
+- elle accorde l’autorisation de copier, diffuser et modifier des copies de l’œuvre, y compris à des fins lucratives, et sans autres restrictions que celles qu’impose le respect des autres critères de compatibilité ;
+
+- elle garantit la paternité de l’œuvre et l’accès aux versions antérieures de l’œuvre quand cet accès est possible ;
+
+- elle reconnaît la LAL également compatible (réciprocité) ;
+
+- elle impose que les modifications faites sur l’œuvre soient soumises à la même licence ou encore à une licence répondant aux critères de compatibilité posés par la LAL.
+
+6. VOS DROITS INTELLECTUELS.
+
+La LAL n’a pas pour objet de nier vos droits d’auteur sur votre contribution ni vos droits connexes. En choisissant de contribuer à l’évolution de cette œuvre commune, vous acceptez seulement d’offrir aux autres les mêmes autorisations sur votre contribution que celles qui vous ont été accordées par cette licence. Ces autorisations n’entraînent pas un dessaisissement de vos droits intellectuels.
+
+7. VOS RESPONSABILITÉS.
+
+La liberté de jouir de l’œuvre tel que permis par la LAL (liberté de copier, diffuser, modifier) implique pour chacun la responsabilité de ses propres faits.
+
+8. LA DURÉE DE LA LICENCE.
+
+Cette licence prend effet dès votre acceptation de ses dispositions. Le fait de copier, de diffuser, ou de modifier l’œuvre constitue une acceptation tacite.
+
+Cette licence a pour durée la durée des droits d’auteur attachés à l’œuvre. Si vous ne respectez pas les termes de cette licence, vous perdez automatiquement les droits qu’elle vous confère.
+
+Si le régime juridique auquel vous êtes soumis ne vous permet pas de respecter les termes de cette licence, vous ne pouvez pas vous prévaloir des libertés qu’elle confère.
+
+9. LES DIFFÉRENTES VERSIONS DE LA LICENCE.
+
+Cette licence pourra être modifiée régulièrement, en vue de son amélioration, par ses auteurs (les acteurs du mouvement Copyleft Attitude) sous la forme de nouvelles versions numérotées.
+
+Vous avez toujours le choix entre vous contenter des dispositions contenues dans la version de la LAL sous laquelle la copie vous a été communiquée ou alors, vous prévaloir des dispositions d’une des versions ultérieures.
+
+10. LES SOUS-LICENCES.
+
+Les sous-licences ne sont pas autorisées par la présente. Toute personne qui souhaite bénéficier des libertés qu’elle confère sera liée directement aux auteurs de l’œuvre commune.
+
+11. LE CONTEXTE JURIDIQUE.
+
+Cette licence est rédigée en référence au droit français et à la Convention de Berne relative au droit d’auteur.
+
+MODE D’EMPLOI :
+
+– Comment utiliser la Licence Art Libre ?
+
+Pour bénéficier de la Licence Art Libre il suffit d’accompagner votre
+
+œuvrede cette mention :
+
+[Nom de l’auteur, titre, date et le cas échéant, le nom des
+
+auteurs de l’œuvre initiale et conséquentes ainsi que leur localisation].
+
+Copyleft: cette œuvre est libre, vous pouvez la copier, la diffuser et la modifier selon les termes de la Licence Art Libre http://www.artlibre.org
+
+– Pourquoi utiliser la Licence Art Libre ?
+
+- Pour mettre à disposition votre œuvre au plus grand nombre.
+
+- Pour la laisser diffuser librement.
+
+- Pour lui permettre d’évoluer en autorisant sa copie, diffusion et
+
+- transformation par d’autres.
+
+- Pour pouvoir vous-même utiliser les ressources d’une œuvre quand celle-ci est sous Licence Art Libre : la copier, la diffuser ou la transformer librement.
+
+- Ce n’est pas tout : La Licence Art Libre offre un cadre juridique intéressant pour empêcher toute appropriation abusive. Il n’est pas possible de s’emparer de votre œuvre pour en court-circuiter le processus créatif et en avoir une jouissance exclusive.
+
+– Quand utiliser la Licence Art Libre ?
+
+Chaque fois que vous voulez bénéficier et faire bénéficier des droits de copie, diffusion et transformation des créations, sans qu’il n’y ait d’appropriation exclusive, utilisez la Licence Art Libre. Par exemple, pour des projets scientifiques, artistiques ou pédagogiques.
+
+– A quels types d’œuvres convient la Licence Art Libre ?
+
+La Licence Art Libre s’applique aussi bien aux œuvres numériques que non numériques.
+
+Vous pouvez mettre sous Licence Art Libre tout texte, toute image, tout son, tout geste, toutes sortes de machins sur lesquels vous disposez suffisamment de droits d’auteurs pour agir.
+
+– Cette licence a une histoire :
+
+Elle est née de l’observation et de la pratique du numérique, du logiciel libre, d’internet et de l’art. Elle est issue des rencontres « Copyleft Attitude » qui ont eu lieu à Paris en 2000. Pour la première fois elles faisaient se rencontrer des informaticiens du libre avec des gens du monde de l’art. Il s’agissait d’adapter les principes du copyleft qui définissent le logiciel libre à toutes sortes de créations. http://www.artlibre.org
+
+Copyleft Attitude, 2007.
+
+Vous pouvez reproduire et diffuser cette licence à l’identique (verbatim).
+
+================================================================================
+ENGLISH (official translation)
+================================================================================
+
+[ Copyleft Attitude ]
+
+Free Art License 1.3 (FAL 1.3)
+
+Preamble
+
+The Free Art License grants the right to freely copy, distribute, and transform creative works without infringing the author’s rights.
+
+The Free Art License recognizes and protects these rights. Their implementation has been reformulated in order to allow everyone to use creations of the human mind in a creative manner, regardless of their types and ways of expression.
+
+While the public’s access to creations of the human mind usually is restricted by the implementation of copyright law, it is favoured by the Free Art License. This license intends to allow the use of a work’s resources; to establish new conditions for creating in order to increase creation opportunities. The Free Art License grants the right to use a work, and acknowledges the right holder’s and the user’s rights and responsibility.
+
+The invention and development of digital technologies, Internet and Free Software have changed creation methods: creations of the human mind can obviously be distributed, exchanged, and transformed. They allow to produce common works to which everyone can contribute to the benefit of all.
+
+The main rationale for this Free Art License is to promote and protect these creations of the human mind according to the principles of copyleft: freedom to use, copy, distribute, transform, and prohibition of exclusive appropriation.
+
+Definitions
+
+« work » either means the initial work, the subsequent works or the common work as defined hereafter:
+
+« common work » means a work composed of the initial work and all subsequent contributions to it (originals and copies). The initial author is the one who, by choosing this license, defines the conditions under which contributions are made.
+
+« Initial work » means the work created by the initiator of the common work (as defined above), the copies of which can be modified by whoever wants to
+
+« Subsequent works » means the contributions made by authors who participate in the evolution of the common work by exercising the rights to reproduce, distribute, and modify that are granted by the license.
+
+« Originals » (sources or resources of the work) means all copies of either the initial work or any subsequent work mentioning a date and used by their author(s) as references for any subsequent updates, interpretations, copies or reproductions.
+
+« Copy » means any reproduction of an original as defined by this license.
+
+1. OBJECT 
+
+The aim of this license is to define the conditions under which one can use this work freely.
+
+2. SCOPE 
+
+This work is subject to copyright law. Through this license its author specifies the extent to which you can copy, distribute, and modify it.
+
+2.1 FREEDOM TO COPY (OR TO MAKE REPRODUCTIONS) 
+
+You have the right to copy this work for yourself, your friends or any other person, whatever the technique used.
+
+2.2 FREEDOM TO DISTRIBUTE, TO PERFORM IN PUBLIC 
+
+You have the right to distribute copies of this work; whether modified or not, whatever the medium and the place, with or without any charge, provided that you:
+
+attach this license without any modification to the copies of this work or indicate precisely where the license can be found,
+
+specify to the recipient the names of the author(s) of the originals, including yours if you have modified the work,
+
+specify to the recipient where to access the originals (either initial or subsequent).
+
+The authors of the originals may, if they wish to, give you the right to distribute the originals under the same conditions as the copies.
+
+2.3 FREEDOM TO MODIFY 
+
+You have the right to modify copies of the originals (whether initial or subsequent) provided you comply with the following conditions:
+
+all conditions in article 2.2 above, if you distribute modified copies;
+
+indicate that the work has been modified and, if it is possible, what kind of modifications have been made;
+
+distribute the subsequent work under the same license or any compatible license.
+
+The author(s) of the original work may give you the right to modify it under the same conditions as the copies.
+
+3. RELATED RIGHTS 
+
+Activities giving rise to author’s rights and related rights shall not challenge the rights granted by this license.
+
+For example, this is the reason why performances must be subject to the same license or a compatible license. Similarly, integrating the work in a database, a compilation or an anthology shall not prevent anyone from using the work under the same conditions as those defined in this license.
+
+4. INCORPORATION OF THE WORK 
+
+Incorporating this work into a larger work that is not subject to the Free Art License shall not challenge the rights granted by this license.
+
+If the work can no longer be accessed apart from the larger work in which it is incorporated, then incorporation shall only be allowed under the condition that the larger work is subject either to the Free Art License or a compatible license.
+
+5. COMPATIBILITY 
+
+A license is compatible with the Free Art License provided:
+
+it gives the right to copy, distribute, and modify copies of the work including for commercial purposes and without any other restrictions than those required by the respect of the other compatibility criteria;
+
+it ensures proper attribution of the work to its authors and access to previous versions of the work when possible;
+
+it recognizes the Free Art License as compatible (reciprocity);
+
+it requires that changes made to the work be subject to the same license or to a license which also meets these compatibility criteria.
+
+6. YOUR INTELLECTUAL RIGHTS 
+
+This license does not aim at denying your author’s rights in your contribution or any related right. By choosing to contribute to the development of this common work, you only agree to grant others the same rights with regard to your contribution as those you were granted by this license. Conferring these rights does not mean you have to give up your intellectual rights.
+
+7. YOUR RESPONSIBILITIES 
+
+The freedom to use the work as defined by the Free Art License (right to copy, distribute, modify) implies that everyone is responsible for their own actions.
+
+8. DURATION OF THE LICENSE 
+
+This license takes effect as of your acceptance of its terms. The act of copying, distributing, or modifying the work constitutes a tacit agreement. This license will remain in effect for as long as the copyright which is attached to the work. If you do not respect the terms of this license, you automatically lose the rights that it confers.
+
+If the legal status or legislation to which you are subject makes it impossible for you to respect the terms of this license, you may not make use of the rights which it confers.
+
+9. VARIOUS VERSIONS OF THE LICENSE 
+
+This license may undergo periodic modifications to incorporate improvements by its authors (instigators of the « Copyleft Attitude » movement) by way of new, numbered versions.
+
+You will always have the choice of accepting the terms contained in the version under which the copy of the work was distributed to you, or alternatively, to use the provisions of one of the subsequent versions.
+
+10. SUB-LICENSING 
+
+Sub-licenses are not authorized by this license. Any person wishing to make use of the rights that it confers will be directly bound to the authors of the common work.
+
+11. LEGAL FRAMEWORK
+
+This license is written with respect to both French law and the Berne Convention for the Protection of Literary and Artistic Works.
+
+USER GUIDE
+
+– How to use the Free Art License? 
+
+To benefit from the Free Art License, you only need to mention the following elements on your work:
+
+[Name of the author, title, date of the work. When applicable, names of authors of the common work and, if possible, where to find the originals].
+
+Copyleft: This is a free work, you can copy, distribute, and modify it under the terms of the Free Art License https://artlibre.org/licence/lal/en/
+
+– Why to use the Free Art License? 
+
+1.To give the greatest number of people access to your work.
+
+2.To allow it to be distributed freely.
+
+3.To allow it to evolve by allowing its copy, distribution, and transformation by others.
+
+4.So that you benefit from the resources of a work when it is under the Free Art License: to be able to copy, distribute or transform it freely.
+
+5.But also, because the Free Art License offers a legal framework to disallow any misappropriation. It is forbidden to take hold of your work and bypass the creative process for one’s exclusive possession.
+
+– When to use the Free Art License? 
+
+Any time you want to benefit and make others benefit from the right to copy, distribute and transform creative works without any exclusive appropriation, you should use the Free Art License. You can for example use it for scientific, artistic or educational projects.
+
+– What kinds of works can be subject to the Free Art License? 
+
+The Free Art License can be applied to digital as well as physical works.
+
+You can choose to apply the Free Art License on any text, picture, sound, gesture, or whatever sort of stuff on which you have sufficient author’s rights.
+
+– Historical background of this license: 
+
+It is the result of observing, using and creating digital technologies, free software, the Internet and art. It arose from the « Copyleft Attitude » meetings which took place in Paris in 2000. For the first time, these meetings brought together members of the Free Software community, artists, and members of the art world. The goal was to adapt the principles of Copyleft and free software to all sorts of creations. http://www.artlibre.org
+
+Copyleft Attitude, 2007.
+
+You can make reproductions and distribute this license verbatim (without any changes).
+
+Translation : Jonathan Clarke, Benjamin Jean, Griselda Jung, Fanny Mourguet, Antoine Pitrou.
+
+Thanks to framalang.org

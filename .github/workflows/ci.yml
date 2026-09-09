@@ -47,3 +47,24 @@ jobs:
 
       - name: Vérifications headless
         run: ./tools/run_checks.sh
+
+  reuse:
+    name: Conformité REUSE (double licence)
+    runs-on: ubuntu-latest
+
+    # Prouve qu'AUCUN fichier n'est sans licence déclarée, y compris ceux ajoutés plus
+    # tard. C'est le seul moyen que la frontière code/contenu reste vraie dans six mois.
+    # Job séparé : il n'a pas besoin de Godot et tourne en parallèle du reste.
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # L'extra charset-normalizer évite de dépendre de la présence de libmagic.
+      - name: Installer REUSE
+        run: pip install --quiet "reuse[charset-normalizer]"
+
+      - name: reuse lint
+        run: reuse lint

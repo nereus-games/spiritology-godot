@@ -1,0 +1,45 @@
+version = 1
+SPDX-PackageName = "Spiritology"
+SPDX-PackageSupplier = "Nereus Games LLC"
+
+# Ce dépôt est en DOUBLE LICENCE, et la frontière suit l'arborescence : un fichier est
+# couvert par le dossier qui le contient, sans exception ni en-tête à lire. C'est ce qui
+# permet à ce fichier de faire une douzaine de lignes au lieu de deux cents en-têtes SPDX,
+# et à `reuse lint` de prouver qu'aucun fichier n'est laissé sans licence.
+#
+#   CODE    -> GPL-3.0-or-later
+#   CONTENU -> LAL-1.3 (assets, textes, données de game design, level design)
+#
+# Où poser un fichier neuf : s'il est exécuté, il est du code ; s'il est lu, joué,
+# affiché ou équilibré, il est du contenu. En cas de doute, le dossier tranche.
+#
+# Un document qui EST du game design (et non de la documentation technique) va dans
+# `docs/design/` ; il faudra alors lui ajouter ici une annotation LAL.
+
+[[annotations]]
+path = [
+    "assets/**",       # sprites, icône
+    "data/**",         # espèces, capacités, talents, objets — le game design lui-même
+    "translations/**", # tous les textes affichés
+]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 Nereus Games LLC and the Spiritology authors (see AUTHORS)"
+SPDX-License-Identifier = "LAL-1.3"
+
+[[annotations]]
+path = [
+    "autoloads/**",
+    "resources/**",
+    "scripts/**",
+    "scenes/**",
+    "ui/**",
+    "tools/**",
+    "docs/**",         # documentation technique ; le design va dans docs/design/
+    ".github/**",
+    "project.godot",
+    ".gitignore",
+    "REUSE.toml",
+]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 Nereus Games LLC and the Spiritology authors (see AUTHORS)"
+SPDX-License-Identifier = "GPL-3.0-or-later"

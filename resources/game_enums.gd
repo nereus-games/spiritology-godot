@@ -79,11 +79,11 @@ enum ObjectEffect {
 }
 
 
-## Translittère un slug en token de clé de traduction : MAJUSCULE + accents pliés
-## en ASCII. DOIT rester identique à `_key_token()` du générateur
-## (`tools/notion_to_tres.gd`), sinon `tr()` échoue sur les ids accentués (ex.
-## l'id « razél » → clé `SPECIES_RAZEL_NAME`, telle qu'écrite dans les .po).
-## Point unique partagé par tous les `name_key()`/`desc_key()` des Resources.
+## Translittère un slug en token de clé de traduction : MAJUSCULE + accents pliés en
+## ASCII (l'id « razél » → clé `SPECIES_RAZEL_NAME`, telle qu'écrite dans les .po).
+## Sans ce pliage, `tr()` échouerait sur les ids accentués.
+## Point unique partagé par tous les `name_key()`/`desc_key()` des Resources : c'est ici,
+## et nulle part ailleurs, que se décide la forme d'une clé.
 static func key_token(raw) -> String:
 	var s := str(raw).to_upper()
 	var map := {"É": "E", "È": "E", "Ê": "E", "À": "A", "Â": "A", "Î": "I",

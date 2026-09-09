@@ -1,8 +1,8 @@
 ## Orchestrateur de l'effet complet d'UNE capacité (logique unique).
 ##
-## Chaque capacité a son script dédié dans `effects/abilities/<id>.gd`, généré depuis
-## Notion (mécanique en docstring) et JAMAIS écrasé. Tant qu'une capacité n'est pas
-## implémentée à la main, son script garde le comportement par défaut ci-dessous :
+## Chaque capacité a son script dédié dans `effects/abilities/<id>.gd`, avec sa mécanique
+## rappelée en docstring. Tant qu'une capacité n'est pas implémentée, son script garde le
+## comportement par défaut ci-dessous :
 ## exécuter les effets génériques dérivés des `tags` (briques [AbilityEffect]). Une
 ## capacité implémentée surcharge [method execute] avec sa mécanique précise (souvent
 ## conditionnelle : cibles, faiblesses, ordre du tour, UI…), en composant les briques

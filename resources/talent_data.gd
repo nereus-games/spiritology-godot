@@ -3,7 +3,8 @@
 ## Un talent par espèce, non apprenable et non encyclopédiable. Se cumule si le duo
 ## comporte deux individus de la même espèce. Séparé d'[AbilityData] car les talents
 ## n'ont ni énergie, ni coût, ni dégâts directs et obéissent à une logique distincte.
-## Instances .tres générées depuis Notion (lignes Type=Talent).
+## Instances .tres dans `data/abilities/` (lignes Type=Talent côté Notion), éditées à
+## la main — cf. `docs/data-model.md`.
 class_name TalentData
 extends Resource
 

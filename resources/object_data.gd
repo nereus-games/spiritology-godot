@@ -1,16 +1,15 @@
 ## Schéma d'un objet d'inventaire (consommable, empilable).
 ##
-## Instances .tres (texte) attendues dans `data/objects/`, générées depuis l'export
-## Notion comme les autres Resources. Ne JAMAIS éditer à la main dans l'éditeur.
-## Données LÉGÈRES uniquement : chargées au boot avec le reste.
+## Instances .tres (texte) dans `data/objects/`, éditées à la main comme les autres
+## Resources — cf. `docs/data-model.md`. Données LÉGÈRES uniquement : chargées au boot.
 ##
 ## Doc source : Game Design / section « Objects + Inventory ». « There is no necessary
 ## object in this game » : tous consommables (retirés après usage), tous empilables,
 ## obtenus chez des marchands ou auprès du Pr Shadako ravbak.
 ##
 ## ## NOTE: les objets ne sont pas une BASE DE DONNÉES Notion comme les espèces et les
-## capacités — ils sont décrits en liste à puces dans la page « Game Design ». C'est cette
-## liste que `notion_to_tres.gd` parse (`_generate_objects`) pour émettre `data/objects/`.
+## capacités — ils sont décrits en liste à puces dans la page « Game Design ». Leur effet
+## est donc mappé PAR SLUG et non déduit de la prose ; la table est dans docs/data-model.md.
 ## Les mêmes slugs servent de tags à la propriété « Potential Loot » des espèces.
 ##
 ## ## NOTE: « costume » n'est PAS généré : la doc dit « the costume name indicates which

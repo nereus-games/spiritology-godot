@@ -1,9 +1,9 @@
 ## Catalogue/résolveur des effets de capacités (utilitaire statique, pas d'autoload).
 ##
-## Chaque capacité (générée depuis Notion, jamais éditée à la main) a une logique
-## UNIQUE décrite dans sa page Notion. Le terrain est préparé ainsi :
+## Chaque capacité a une logique UNIQUE, décrite dans sa page Notion. Le terrain est
+## préparé ainsi :
 ##   - un script dédié par capacité dans `scripts/encounter/effects/abilities/<id>.gd`
-##     (généré avec la mécanique en docstring) — [method script_for] le résout par id ;
+##     (mécanique rappelée en docstring) — [method script_for] le résout par id ;
 ##   - tant qu'il n'est pas implémenté, son [AbilityScript] retombe sur les effets
 ##     GÉNÉRIQUES dérivés des `tags` (briques [AbilityEffect]), via [method tag_effects].
 ## Les `tags` ne sont qu'une catégorisation/garde-fou, pas la logique réelle.

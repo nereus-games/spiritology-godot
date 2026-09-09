@@ -1,7 +1,9 @@
 ## Schéma d'une capacité (Talent, Exploration ou Rencontre).
 ##
-## Instances stockées en .tres texte dans `data/abilities/`, générées depuis l'export
-## Notion par `tools/notion_to_tres.gd`. Ne JAMAIS éditer à la main dans l'éditeur.
+## Instances stockées en .tres texte dans `data/abilities/`, ÉDITÉES À LA MAIN : ces
+## fichiers sont la source de vérité, pas un artefact. Le design vit dans Notion et la
+## correspondance champ par champ est documentée dans `docs/data-model.md` ; c'est
+## `scripts/dev/data_integrity_check.gd` qui garantit leur cohérence.
 ## Les textes affichables passent par des clés de traduction, jamais en dur.
 class_name AbilityData
 extends Resource

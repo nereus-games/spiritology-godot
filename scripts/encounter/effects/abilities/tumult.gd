@@ -8,8 +8,7 @@
 ##   encounter’s end, unless one of the player characters uses Meditate (then UI goes back to
 ##   normal).
 ##
-## Exemple d'effet UNIQUE implémenté à la main (override + RNG + UI). Le marqueur
-## @generated-stub a été retiré : le générateur ne réécrira plus ce fichier.
+## Exemple d'effet UNIQUE implémenté à la main (override + RNG + UI).
 extends AbilityScript
 
 ## Probabilité de dégâts par individu (« X % » Notion — à équilibrer).

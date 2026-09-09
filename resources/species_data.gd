@@ -1,7 +1,8 @@
 ## Schéma d'une espèce de spirimonstre.
 ##
-## Instances .tres (texte) dans `data/species/`, générées depuis l'export Notion
-## (Story + Characters / Possible Encounters). Données LÉGÈRES uniquement : tout est
+## Instances .tres (texte) dans `data/species/`, éditées à la main d'après Notion
+## (Story + Characters / Possible Encounters) — cf. `docs/data-model.md`, qui décrit
+## quelle propriété Notion alimente quel champ. Données LÉGÈRES uniquement : tout est
 ## chargé au boot. Les sprites sont des CHEMINS String (pas des Texture2D exportés),
 ## sinon charger le .tres tirerait la texture en RAM ; ils sont préchargés par donjon.
 class_name SpeciesData

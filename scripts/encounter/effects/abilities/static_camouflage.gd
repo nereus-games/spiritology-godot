@@ -1,4 +1,4 @@
-# @generated-stub notion_to_tres.gd
+# @unimplemented
 ## Static Camouflage — Exploration · origine — · — · coût — · dégâts —
 ##
 ## MÉCANIQUE (Notion) :
@@ -20,7 +20,7 @@ extends AbilityScript
 
 
 func execute(ctx: EncounterContext) -> void:
-	# TODO: implémenter la mécanique unique ci-dessus, puis retirer la ligne
-	# « @generated-stub notion_to_tres.gd » en tête pour figer ce script.
-	# Par défaut : effets génériques dérivés des tags.
+	# TODO: implémenter la mécanique ci-dessus, puis retirer le « @unimplemented »
+	# en tête. En attendant, les effets génériques dérivés des tags s'appliquent —
+	# c'est un échafaudage, pas la mécanique réelle.
 	super.execute(ctx)

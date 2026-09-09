@@ -5,6 +5,7 @@
 ## ou l'activation d'un piège l'annule immédiatement (géré côté joueur / piège).
 extends "res://scripts/exploration/abilities/exploration_ability.gd"
 
+
 func use(ctx) -> bool:
 	ctx.hide_from_rivals(ctx.rng.randi_range(5, 8))
 	return true

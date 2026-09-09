@@ -1,0 +1,72 @@
+# Configuration gdlint (gdtoolkit 4).
+#
+# Les règles laissées actives attrapent de vraies régressions ; celles qui sont assouplies
+# le sont pour une raison écrite, et non pour faire taire l'outil.
+#
+# class-definitions-order — DÉSACTIVÉE. La règle impose un ordre global (signaux, enums,
+#   constantes, variables, fonctions). Ce projet groupe délibérément chaque variable avec
+#   la constante qu'elle sert et la docstring qui l'explique ; s'y plier disperserait des
+#   blocs qui se lisent ensemble. 96 signalements, aucun défaut derrière.
+#
+# max-public-methods: 60 et max-returns: 10 — RELEVÉES, pas neutralisées. Aux valeurs par
+#   défaut (20 et 6), elles signalent exactement les fichiers déjà identifiés comme trop
+#   gros (dungeon_manager 56 méthodes publiques, encounter_context 49 ; rival_behavior.take_turn
+#   enchaîne 9 gardes en début de fonction). Le seuil est posé
+#   juste au-dessus de l'existant : il ne dit rien du passé, mais il bloque toute
+#   AGGRAVATION. À redescendre quand ces fichiers auront été découpés.
+#
+# signal-name — ÉLARGIE au préfixe `_`. `UiAgent._submitted` est de la plomberie interne :
+#   il est émis par `submit()` et attendu par `decide()` dans le même fichier, et le `_` dit
+#   à un lecteur de ne pas s'y connecter de l'extérieur. Le renommer en `submitted` le ferait
+#   passer pour une API. Mieux vaut la convention de l'auteur qu'un code tordu pour l'outil.
+#
+# max-line-length reste à 100, y compris pour les commentaires.
+
+class-definitions-order:
+- tools
+- classnames
+- extends
+- docstrings
+- signals
+- enums
+- consts
+- staticvars
+- exports
+- pubvars
+- prvvars
+- onreadypubvars
+- onreadyprvvars
+- others
+class-load-variable-name: (([A-Z][a-z0-9]*)+|_?[a-z][a-z0-9]*(_[a-z0-9]+)*)
+class-name: ([A-Z][a-z0-9]*)+
+class-variable-name: _?[a-z][a-z0-9]*(_[a-z0-9]+)*
+comparison-with-itself: null
+constant-name: _?[A-Z][A-Z0-9]*(_[A-Z0-9]+)*
+disable:
+- class-definitions-order
+duplicated-load: null
+enum-element-name: '[A-Z][A-Z0-9]*(_[A-Z0-9]+)*'
+enum-name: ([A-Z][a-z0-9]*)+
+excluded_directories: !!set
+  .git: null
+expression-not-assigned: null
+function-argument-name: _?[a-z][a-z0-9]*(_[a-z0-9]+)*
+function-arguments-number: 10
+function-name: (_on_([A-Z][a-z0-9]*)+(_[a-z0-9]+)*|_?[a-z][a-z0-9]*(_[a-z0-9]+)*)
+function-preload-variable-name: ([A-Z][a-z0-9]*)+
+function-variable-name: '[a-z][a-z0-9]*(_[a-z0-9]+)*'
+load-constant-name: (([A-Z][a-z0-9]*)+|_?[A-Z][A-Z0-9]*(_[A-Z0-9]+)*)
+loop-variable-name: _?[a-z][a-z0-9]*(_[a-z0-9]+)*
+max-file-lines: 1000
+max-line-length: 100
+max-public-methods: 60
+max-returns: 10
+mixed-tabs-and-spaces: null
+no-elif-return: null
+no-else-return: null
+signal-name: _?[a-z][a-z0-9]*(_[a-z0-9]+)*
+sub-class-name: _?([A-Z][a-z0-9]*)+
+tab-characters: 1
+trailing-whitespace: null
+unnecessary-pass: null
+unused-argument: null

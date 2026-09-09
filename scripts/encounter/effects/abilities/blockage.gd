@@ -3,6 +3,7 @@
 ## si c'est un coéquipier ou un rival, elle perd X ETH.
 extends AbilityScript
 
+
 func execute(ctx: EncounterContext) -> void:
 	var t = ctx.primary()
 	if t == null:

@@ -4,8 +4,10 @@ extends AbilityEffect
 
 const DEFAULT_AMOUNT := 1
 
+
 func tag() -> StringName:
 	return &"gives info/Examine bonus"
+
 
 func execute(ctx: EncounterContext) -> void:
 	for t in ctx.targets:

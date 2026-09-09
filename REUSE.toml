@@ -39,7 +39,21 @@ path = [
     "project.godot",
     ".gitignore",
     "REUSE.toml",
+    "README.md",
+    "CONTRIBUTING.md",
+    "AUTHORS",
+    "NOTICE",
 ]
 precedence = "aggregate"
 SPDX-FileCopyrightText = "2026 Nereus Games LLC and the Spiritology authors (see AUTHORS)"
 SPDX-License-Identifier = "GPL-3.0-or-later"
+
+# ORDRE SIGNIFICATIF : quand plusieurs annotations désignent le même fichier, REUSE retient
+# la DERNIÈRE (vérifié avec `reuse spdx`). Ce bloc doit donc rester après celui du code,
+# sinon `docs/**` reprend les captures et les fait basculer en GPL.
+[[annotations]]
+path = ["docs/images/**"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 Nereus Games LLC and the Spiritology authors (see AUTHORS)"
+# Une capture d'écran montre l'art du jeu : elle en dérive, et suit donc sa licence.
+SPDX-License-Identifier = "LAL-1.3"

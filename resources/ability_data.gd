@@ -48,13 +48,16 @@ const COST_ETH := {
 	GameEnums.Cost.A_LOT: 15,
 }
 
+
 ## Coût en ETH de la capacité (0 si gratuite). Payé à l'usage par le [EncounterManager].
 func eth_cost() -> int:
 	return COST_ETH.get(cost, 0)
 
+
 ## Clé de traduction du nom. Convention : ABILITY_<ID_MAJ>_NAME.
 func name_key() -> String:
 	return "ABILITY_%s_NAME" % GameEnums.key_token(id)
+
 
 ## Clé de traduction de la description. Convention : ABILITY_<ID_MAJ>_DESC.
 func desc_key() -> String:

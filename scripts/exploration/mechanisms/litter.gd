@@ -19,7 +19,12 @@ const ExplorationAction := preload("res://scripts/exploration/exploration_action
 ## était simplement introuvable au tirage, sans erreur. À rétablir le jour où l'espèce
 ## existe (cf. data_integrity_check, qui vérifie désormais ces listes).
 const INFO_SPECIES: Array[StringName] = [
-	&"firulis", &"razel", &"kalilk", &"vilgane", &"zuk", &"hibulus",
+	&"firulis",
+	&"razel",
+	&"kalilk",
+	&"vilgane",
+	&"zuk",
+	&"hibulus",
 ]
 
 ## Objets qu'un recyclage peut donner (placeholder).
@@ -30,9 +35,11 @@ const INFO_SPECIES: Array[StringName] = [
 var _recycled := false
 var _examined := false
 
+
 ## Obstacle tant que non recyclée.
 func blocks_walk() -> bool:
 	return not _recycled
+
 
 ## Actions disponibles depuis une case adjacente (tant que non recyclée).
 func on_adjacent_actions(who: Node, _facing: Vector3i) -> Array:
@@ -40,19 +47,29 @@ func on_adjacent_actions(who: Node, _facing: Vector3i) -> Array:
 		return []
 	var actions: Array = []
 	if not _examined:
-		actions.append(ExplorationAction.new(&"examine", "UI_ACTION_EXAMINE", Callable(self, "examine").bind(who)))
-	actions.append(ExplorationAction.new(&"recycle", "UI_ACTION_RECYCLE", Callable(self, "recycle").bind(who)))
+		actions.append(
+			ExplorationAction.new(
+				&"examine", "UI_ACTION_EXAMINE", Callable(self, "examine").bind(who)
+			)
+		)
+	actions.append(
+		ExplorationAction.new(&"recycle", "UI_ACTION_RECYCLE", Callable(self, "recycle").bind(who))
+	)
 	return actions
+
 
 func is_recycled() -> bool:
 	return _recycled
+
 
 ## Litière recyclée : plus d'actions, la case est devenue un sol ordinaire (règle transverse).
 func is_spent() -> bool:
 	return _recycled
 
+
 func has_been_examined() -> bool:
 	return _examined
+
 
 ## Examine : livre une info encyclo (une fois par visite).
 func examine(_who: Node) -> void:
@@ -62,6 +79,7 @@ func examine(_who: Node) -> void:
 	if not INFO_SPECIES.is_empty():
 		var sp: StringName = INFO_SPECIES[randi() % INFO_SPECIES.size()]
 		GameSession.award_ifp(sp, GameEnums.IfpAction.EXAMINE_DECOR)
+
 
 ## Recycle : objets aléatoires + rafraîchit une capacité d'exploration, puis sol normal.
 func recycle(_who: Node) -> void:
@@ -77,10 +95,12 @@ func recycle(_who: Node) -> void:
 			GameSession.add_object(loot_pool[randi() % loot_pool.size()], 1)
 	GameSession.refresh_random_exploration_ability()
 
+
 ## Persistance entre visites : une litière recyclée reste un sol normal (acquis) ; le
 ## replacement des décors examinés est géré au niveau donjon (incrément Examinable Decor).
 func reset_between_visits() -> void:
 	pass
+
 
 func _spawn_visual() -> void:
 	_add_marker(Color(0.35, 0.6, 0.35), 0.5, 0.75)  # tas vert (obstacle)

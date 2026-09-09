@@ -2,6 +2,7 @@
 ## MÉCANIQUE : la cible subit des dégâts, puis sa faiblesse devient Chaleur (= Sad Song).
 extends AbilityScript
 
+
 func execute(ctx: EncounterContext) -> void:
 	var t = ctx.primary()
 	if t:

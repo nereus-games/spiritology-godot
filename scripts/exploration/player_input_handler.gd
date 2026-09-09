@@ -45,8 +45,8 @@ var _controller: PlayerController
 var _rig: CameraRig
 var _repeat_timer := 0.0
 
-var _base_yaw := 0.0       # orientation rigide (multiples de 90°) = orientation de déplacement
-var _yaw_offset := 0.0     # dérive du regard libre (souris) autour de la base
+var _base_yaw := 0.0  # orientation rigide (multiples de 90°) = orientation de déplacement
+var _yaw_offset := 0.0  # dérive du regard libre (souris) autour de la base
 var _pitch := 0.0
 var _recenter_pitch := false
 var _initialised := false
@@ -57,10 +57,12 @@ var _mouse_burst_open := false
 var _mouse_burst_idle := 0.0
 var _mouse_burst_turn := 0.0
 
+
 func _ready() -> void:
 	_controller = get_parent() as PlayerController
 	_rig = get_parent().get_node_or_null("CameraRig") as CameraRig
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+
 
 ## Regard souris (delta relatif) + bascule du curseur. Le regard libre n'agit qu'au repos
 ## (pas pendant un pas), comme dans le proto.
@@ -70,11 +72,16 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if _controller == null or _controller.input_locked:
 		return
-	if event is InputEventMouseButton and event.pressed and Input.mouse_mode == Input.MOUSE_MODE_VISIBLE:
+	if (
+		event is InputEventMouseButton
+		and event.pressed
+		and Input.mouse_mode == Input.MOUSE_MODE_VISIBLE
+	):
 		_set_mouse_captured(true)
 		return
 	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		_apply_mouse_look(event.relative)
+
 
 ## Applique un delta souris relatif au regard (yaw libre + pitch). Le regard libre n'agit
 ## qu'au repos (pas pendant un pas), comme dans le proto.
@@ -86,6 +93,7 @@ func _apply_mouse_look(relative: Vector2) -> void:
 	if not _recenter_pitch:
 		# Souris vers le haut (relative.y < 0) => regarder en haut => pitch croît.
 		_pitch = clampf(_pitch - relative.y * mouse_sensitivity, pitch_min, pitch_max)
+
 
 ## Disarray appliqué au regard libre (doc « Level Design / Mechanisms », piège Disarray).
 ##
@@ -110,6 +118,7 @@ func _disarrayed_mouse(relative: Vector2) -> Vector2:
 		return relative
 	return relative.rotated(deg_to_rad(_mouse_burst_turn))
 
+
 func _process(delta: float) -> void:
 	if _controller == null:
 		return
@@ -132,6 +141,7 @@ func _process(delta: float) -> void:
 	_fold_offset()
 	_apply_look()
 
+
 ## Valide une rotation de 90° dès que le regard libre dépasse [member commit_angle] (≈ 50°,
 ## pas besoin d'atteindre 90°) : l'orientation de DÉPLACEMENT (et la mini-map) bascule alors,
 ## et un tour est compté. La tête reste où pointe la souris (continuité visuelle).
@@ -151,6 +161,7 @@ func _fold_offset() -> void:
 		_controller.affliction.consume_move()
 		_controller.rotated_90()
 
+
 func _handle_rotation() -> void:
 	if not _controller.is_at_rest():
 		return
@@ -159,6 +170,7 @@ func _handle_rotation() -> void:
 		_rotate_step(90.0)
 	elif Input.is_action_just_pressed("rotate_right"):
 		_rotate_step(-90.0)
+
 
 ## Rotation rigide de ±90° : snappe l'orientation courante au multiple de 90 le plus proche,
 ## ajoute l'angle, remet le regard libre à zéro et recentre le pitch. Compte un tour.
@@ -172,6 +184,7 @@ func _rotate_step(angle: float) -> void:
 	_yaw_offset = 0.0
 	_recenter_pitch = true
 	_controller.rotated_90()
+
 
 func _handle_movement(delta: float) -> void:
 	var axis := Input.get_vector("move_left", "move_right", "move_forward", "move_back")
@@ -189,11 +202,13 @@ func _handle_movement(delta: float) -> void:
 	_controller.try_move(dir)
 	_repeat_timer = move_repeat_delay
 
+
 func _apply_look() -> void:
 	_controller.set_yaw_target(_base_yaw + _yaw_offset)  # orientation VISUELLE (continue)
-	_controller.set_move_yaw(_base_yaw)                  # orientation DÉPLACEMENT (cardinale)
+	_controller.set_move_yaw(_base_yaw)  # orientation DÉPLACEMENT (cardinale)
 	if _rig != null:
 		_rig.set_pitch(_pitch)
+
 
 func _set_mouse_captured(captured: bool) -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED if captured else Input.MOUSE_MODE_VISIBLE

@@ -5,7 +5,8 @@
 ## texte « courant/max » (élément 2 de la doc), et un menu d'actions contextuelles en bas à
 ## gauche (élément 3) alimenté par [method DungeonManager.actions_for] selon la case et
 ## l'orientation du joueur. Navigation : `cycle_action` (Tab) cycle, `cycle_action_reverse`
-## (Maj+Tab) cycle à l'envers, `interact` (Espace/Entrée) valide. Se met à jour en direct via les signaux DEN/ETH de [GameSession].
+## (Maj+Tab) cycle à l'envers, `interact` (Espace/Entrée) valide. Se met à jour en direct
+## via les signaux DEN/ETH de [GameSession].
 ## TODO (doc Notion « User Interface ») : mini-map (élément 1), pile des capacités
 ## d'exploration connues (élément 4) avec sous-menu USE/CANCEL, disposition finale (DEN/ETH
 ## en bas-centre, icônes rondes).
@@ -30,10 +31,10 @@ const DEN_COLOR := Color(0.85, 0.27, 0.30)  ## densité (vie)
 const ETH_COLOR := Color(0.30, 0.62, 0.90)  ## éther (énergie)
 
 var _name_label: Dictionary = {}  # slot -> Label
-var _den_bar: Dictionary = {}     # slot -> ProgressBar
-var _eth_bar: Dictionary = {}     # slot -> ProgressBar
-var _den_text: Dictionary = {}    # slot -> Label
-var _eth_text: Dictionary = {}    # slot -> Label
+var _den_bar: Dictionary = {}  # slot -> ProgressBar
+var _eth_bar: Dictionary = {}  # slot -> ProgressBar
+var _den_text: Dictionary = {}  # slot -> Label
+var _eth_text: Dictionary = {}  # slot -> Label
 
 var _action_menu: Control
 var _dungeon: DungeonManager
@@ -51,6 +52,7 @@ var _message_tween: Tween
 const MESSAGE_HOLD := 4.0
 const MESSAGE_FADE := 1.0
 
+
 func _ready() -> void:
 	layer = 10  # au-dessus de la 3D, sous l'overlay de rencontre (TransitionManager)
 	_build()
@@ -63,6 +65,7 @@ func _ready() -> void:
 	GameSession.eth_changed.connect(_on_eth_changed)
 	for slot in SLOTS:
 		_refresh(slot)
+
 
 ## Construit l'arborescence d'UI (jauges DEN/ETH côte à côte, en bas au centre — doc UI).
 func _build() -> void:
@@ -82,6 +85,7 @@ func _build() -> void:
 	for slot in SLOTS:
 		row.add_child(_build_slot(slot))
 
+
 ## Construit le panneau d'un emplacement et mémorise ses widgets.
 func _build_slot(slot: GameSession.PartySlot) -> Control:
 	var panel := PanelContainer.new()
@@ -98,9 +102,15 @@ func _build_slot(slot: GameSession.PartySlot) -> Control:
 	box.add_child(_build_bar(slot, "ETH", ETH_COLOR, _eth_bar, _eth_text))
 	return panel
 
+
 ## Construit une ligne « libellé + barre + texte courant/max » et mémorise barre & texte.
-func _build_bar(slot: GameSession.PartySlot, caption: String, color: Color,
-		bar_store: Dictionary, text_store: Dictionary) -> Control:
+func _build_bar(
+	slot: GameSession.PartySlot,
+	caption: String,
+	color: Color,
+	bar_store: Dictionary,
+	text_store: Dictionary
+) -> Control:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 6)
 
@@ -126,11 +136,13 @@ func _build_bar(slot: GameSession.PartySlot, caption: String, color: Color,
 	row.add_child(value_label)
 	return row
 
+
 ## Rafraîchit intégralement un emplacement (nom + barres + textes).
 func _refresh(slot: GameSession.PartySlot) -> void:
 	_name_label[slot].text = _slot_name(slot)
 	_on_den_changed(slot, GameSession.get_den(slot))
 	_on_eth_changed(slot, GameSession.get_eth(slot))
+
 
 func _on_den_changed(slot: GameSession.PartySlot, value: int) -> void:
 	if not _den_bar.has(slot):
@@ -139,6 +151,7 @@ func _on_den_changed(slot: GameSession.PartySlot, value: int) -> void:
 	_den_bar[slot].value = value
 	_den_text[slot].text = "%d/%d" % [value, GameSession.MAX_DEN]
 
+
 func _on_eth_changed(slot: GameSession.PartySlot, value: int) -> void:
 	if not _eth_bar.has(slot):
 		return
@@ -146,18 +159,23 @@ func _on_eth_changed(slot: GameSession.PartySlot, value: int) -> void:
 	_eth_bar[slot].value = value
 	_eth_text[slot].text = "%d/%d" % [value, GameSession.MAX_ETH]
 
+
 ## Nom affiché : nom traduit de l'espèce de l'emplacement, sinon un repli générique.
 func _slot_name(slot: GameSession.PartySlot) -> String:
-	var id := GameSession.main_character if slot == GameSession.PartySlot.MAIN else GameSession.teammate
+	var id := (
+		GameSession.main_character if slot == GameSession.PartySlot.MAIN else GameSession.teammate
+	)
 	if id != &"":
 		var sp: SpeciesData = GameData.species(id)
 		if sp:
 			return String(TranslationServer.translate(sp.name_key()))
 	return "Personnage %d" % (1 if slot == GameSession.PartySlot.MAIN else 2)
 
+
 # --------------------------------------------------------------------------
 # Menu d'actions contextuelles (élément 3)
 # --------------------------------------------------------------------------
+
 
 ## Construit le menu d'actions (plein écran ; la liste elle-même s'ancre en bas à gauche et
 ## croît vers le haut, de sorte que toutes les entrées restent visibles).
@@ -166,6 +184,7 @@ func _build_action_menu() -> void:
 	_action_menu.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_action_menu.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_action_menu)
+
 
 ## Interroge chaque frame les actions contextuelles disponibles quand le joueur est au repos
 ## et met à jour le menu. (Résout paresseusement le donjon et le joueur : le HUD peut être
@@ -183,6 +202,7 @@ func _process(_delta: float) -> void:
 		_refresh_actions()
 	_update_status()
 
+
 ## Recompose le menu : actions de mécanismes (case + case regardée) + capacités et objets
 ## d'exploration (via un [ExplorationExtraActions] persistant, dont les callables restent
 ## valides tant que le menu les affiche).
@@ -192,8 +212,11 @@ func _refresh_actions() -> void:
 	var actions := _dungeon.actions_for(_player.cell, _player.facing_delta(), _player)
 	actions.append_array(_extra_actions.build())
 	# Bouton MENU toujours présent (DEV : renvoie à la sélection de scénarios).
-	actions.append(ExplorationAction.new(&"menu", "UI_ACTION_MENU", Callable(self, "_open_scenario_select")))
+	actions.append(
+		ExplorationAction.new(&"menu", "UI_ACTION_MENU", Callable(self, "_open_scenario_select"))
+	)
 	_action_menu.set_actions(actions)
+
 
 ## Bandeau d'état des afflictions (poison / disarray), en haut à gauche.
 func _build_status() -> void:
@@ -201,6 +224,7 @@ func _build_status() -> void:
 	_status_label.position = Vector2(16, 16)
 	_status_label.add_theme_color_override("font_color", Color(0.95, 0.75, 0.35))
 	add_child(_status_label)
+
 
 ## Met à jour le bandeau d'état depuis les afflictions du joueur.
 func _update_status() -> void:
@@ -217,6 +241,7 @@ func _update_status() -> void:
 		parts.append("✦ Désorienté : %d mouvement(s)" % aff.remaining_disarray())
 	_status_label.text = "\n".join(parts)
 
+
 ## Bandeau de messages ponctuels, centré en haut : ce que le donjon a à DIRE au joueur
 ## (« Le cubimprévu fait 3 — des rivaux surgissent tout autour »), par opposition au bandeau
 ## d'état qui, lui, décrit une situation qui dure.
@@ -231,6 +256,7 @@ func _build_message() -> void:
 	_message_label.modulate.a = 0.0
 	add_child(_message_label)
 
+
 ## Affiche un message ponctuel : plein pendant [constant MESSAGE_HOLD] s, puis fondu. Un
 ## nouveau message remplace le précédent (le fondu en cours est annulé).
 func show_message(text: String) -> void:
@@ -244,6 +270,7 @@ func show_message(text: String) -> void:
 	_message_tween.tween_interval(MESSAGE_HOLD)
 	_message_tween.tween_property(_message_label, "modulate:a", 0.0, MESSAGE_FADE)
 
+
 ## Mini-map ancrée en bas à droite (élément 1 du HUD).
 func _build_minimap() -> void:
 	var minimap := ExplorationMinimap.new()
@@ -253,13 +280,16 @@ func _build_minimap() -> void:
 	minimap.position = Vector2(-186, -186)
 	add_child(minimap)
 
+
 ## DEV : retour à l'écran de sélection des scénarios (bouton MENU).
 func _open_scenario_select() -> void:
 	TransitionManager.change_scene(SCENARIO_SELECT)
 
+
 # --------------------------------------------------------------------------
 # Barre d'équilibre (pont étroit)
 # --------------------------------------------------------------------------
+
 
 ## Barre horizontale centrée haut : le curseur au centre = équilibre, aux bords = chute.
 func _build_balance_bar() -> void:
@@ -274,13 +304,16 @@ func _build_balance_bar() -> void:
 	_balance_bar.visible = false
 	add_child(_balance_bar)
 
+
 ## Affiche le déséquilibre courant ∈ [-1, 1] (0 = centré).
 func show_balance(imbalance: float) -> void:
 	_balance_bar.visible = true
 	_balance_bar.value = clampf(0.5 + imbalance * 0.5, 0.0, 1.0)
 
+
 func hide_balance() -> void:
 	_balance_bar.visible = false
+
 
 ## Navigation clavier du menu d'actions (non modal : ne bloque pas le déplacement).
 func _unhandled_input(event: InputEvent) -> void:

@@ -3,6 +3,7 @@
 ## dégâts réduits de moitié jusqu'à son prochain tour. (Malus d'info via Talk : TODO.)
 extends AbilityScript
 
+
 func execute(ctx: EncounterContext) -> void:
 	var t = ctx.user
 	ctx.grant_immunity(t, [GameEnums.Energy.CRYSTAL])

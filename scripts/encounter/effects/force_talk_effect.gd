@@ -2,8 +2,10 @@
 class_name ForceTalkEffect
 extends AbilityEffect
 
+
 func tag() -> StringName:
 	return &"force Talk"
+
 
 func execute(ctx: EncounterContext) -> void:
 	for t in ctx.targets:

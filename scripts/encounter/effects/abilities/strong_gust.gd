@@ -2,6 +2,7 @@
 ## MÉCANIQUE : la cible subit des dégâts (si rival) et passe dernière au tour suivant.
 extends AbilityScript
 
+
 func execute(ctx: EncounterContext) -> void:
 	var t = ctx.primary()
 	if t == null:

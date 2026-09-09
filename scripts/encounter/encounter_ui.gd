@@ -74,12 +74,14 @@ var _agent := UiAgent.new()
 ## dans [GameSession] à la fin de la rencontre. Liste de { fighter, slot }.
 var _player_slots: Array = []
 
+
 ## Configure et lance la rencontre. `player_ids`/`rival_ids` = slugs d'espèces.
 ## Point d'intégration persistance : les fighters JOUEURS sont initialisés depuis le
 ## DEN/ETH persistant de leur emplacement ([GameSession]) et réécrits à la fin
 ## ([method _sync_back_to_session]). Les rivaux gardent leurs stats placeholder.
-func begin(player_ids: Array, rival_ids: Array, completed: Dictionary = {},
-		rival_states: Array = []) -> void:
+func begin(
+	player_ids: Array, rival_ids: Array, _completed: Dictionary = {}, rival_states: Array = []
+) -> void:
 	var pf: Array = []
 	for i in player_ids.size():
 		var f := EncounterManager.make_fighter(StringName(player_ids[i]), true)
@@ -136,7 +138,9 @@ func begin(player_ids: Array, rival_ids: Array, completed: Dictionary = {},
 	_append("[b]Rencontre[/b] : %s contre %s\n" % [_names(pf), _names(rf)])
 	_manager.start()
 
+
 # --- Mise en page : planches des rivaux, timeline, journal ---
+
 
 ## Pleines planches des rivaux, au centre de l'écran (mockup : jusqu'à 3 de front).
 func _build_rival_art(rivals: Array) -> void:
@@ -154,6 +158,7 @@ func _build_rival_art(rivals: Array) -> void:
 		art.set_meta("fighter", fighter)
 		_rivals_row.add_child(art)
 
+
 ## Reconstruit la timeline dans l'ordre du tour courant. Appelée à chaque tour joué :
 ## l'ordre lui-même est modifiable en cours de rencontre (Shuffle, Tumult…).
 func _refresh_timeline() -> void:
@@ -165,8 +170,13 @@ func _refresh_timeline() -> void:
 		var entry := TimelineEntry.new()
 		_timeline_row.add_child(entry)
 		var position := _manager.timeline.position_of(fighter)
-		entry.setup(fighter, _knows(fighter), fighter == _acting_fighter,
-			fighter.active_weakness(position), (i + 1) if _debug_view else 0)
+		entry.setup(
+			fighter,
+			_knows(fighter),
+			fighter == _acting_fighter,
+			fighter.active_weakness(position),
+			(i + 1) if _debug_view else 0
+		)
 	# Planches des rivaux dissous : estompées, comme leur case de timeline.
 	for c in _rivals_row.get_children():
 		var art := c as TextureRect
@@ -174,10 +184,12 @@ func _refresh_timeline() -> void:
 			var f: EncounterFighter = art.get_meta("fighter")
 			art.modulate.a = 0.25 if f.is_dissolved() else 1.0
 
+
 ## Espèce enregistrée dans l'encyclopédie ? Conditionne l'affichage de la densité et de
 ## la faiblesse d'un rival dans la timeline (règle doc). La vue de test lève le voile.
 func _knows(fighter: EncounterFighter) -> bool:
 	return _debug_view or fighter.is_player or GameSession.knows_species(fighter.species_id())
+
 
 ## MENU (DEV) : retour à l'écran de sélection des scénarios.
 ##
@@ -190,9 +202,11 @@ func _on_menu_pressed() -> void:
 	finished.emit(&"menu")
 	TransitionManager.change_scene(SCENARIO_SELECT)
 
+
 func _toggle_log() -> void:
 	_log_panel.visible = not _log_panel.visible
 	_update_turn_label()
+
 
 func _update_turn_label() -> void:
 	if not _log_panel.visible:
@@ -200,6 +214,7 @@ func _update_turn_label() -> void:
 	_turn_label.text = tr("UI_ENCOUNTER_TURN") % _manager.round_number
 	if _debug_view:
 		_turn_label.text += "  ·  F1"
+
 
 ## Applique (ou retire) la disposition de test : journal adossé au bord droit, ouvert en
 ## permanence, plutôt que le panneau central modal qu'ouvre le bouton JOURNAL.
@@ -227,10 +242,12 @@ func _apply_debug_view() -> void:
 		_log_panel.visible = false
 	_update_turn_label()
 
+
 func _toggle_debug_view() -> void:
 	_debug_view = not _debug_view
 	_apply_debug_view()
 	_refresh_timeline()
+
 
 # --- Menu : actions -> (capacités) -> cibles ---
 #
@@ -244,15 +261,19 @@ func _toggle_debug_view() -> void:
 # [method EncounterManager.menu_kinds] (qui applique les talents du fighter) ; le menu ci-dessous
 # n'affiche que les kinds présents — une action retirée par un talent est absente, pas grisée.
 
+
 func _on_choice_requested(fighter: EncounterFighter, manager: EncounterManager) -> void:
 	_acting_fighter = fighter
 	_refresh_timeline()  # la case du combattant actif change de gabarit
 	_show_actions(fighter, manager)
 
+
 ## Barre d'actions horizontale du mockup, dans son ordre :
 ## MEDITATE · CHALLENGE · TALK · EXAMINE · OBJECTS.
 func _show_actions(fighter: EncounterFighter, manager: EncounterManager) -> void:
-	_prompt.text = tr("UI_ENCOUNTER_CHOOSE_ACTION") % [fighter.display_name(), fighter.eth, fighter.max_eth]
+	_prompt.text = (
+		tr("UI_ENCOUNTER_CHOOSE_ACTION") % [fighter.display_name(), fighter.eth, fighter.max_eth]
+	)
 	_clear_options()
 	_clear_bar()
 	_description.visible = false
@@ -263,60 +284,120 @@ func _show_actions(fighter: EncounterFighter, manager: EncounterManager) -> void
 	var kinds := manager.menu_kinds(fighter)
 
 	# Meditate n'a ni coût ni cible, aucun talent ne le touche : filet de sécurité du joueur.
-	_add_bar_action(tr("UI_ENCOUNTER_ACTION_MEDITATE"), true,
-		func(): _submit(EncounterAction.of_kind(EncounterAction.Kind.MEDITATE, [fighter])))
+	_add_bar_action(
+		tr("UI_ENCOUNTER_ACTION_MEDITATE"),
+		true,
+		func(): _submit(EncounterAction.of_kind(EncounterAction.Kind.MEDITATE, [fighter]))
+	)
 	if kinds.has(EncounterAction.Kind.ABILITY):
-		_add_bar_action(tr("UI_ENCOUNTER_ACTION_ABILITY"), not manager.usable_abilities(fighter).is_empty(),
-			func(): _show_abilities(fighter, manager))
+		_add_bar_action(
+			tr("UI_ENCOUNTER_ACTION_ABILITY"),
+			not manager.usable_abilities(fighter).is_empty(),
+			func(): _show_abilities(fighter, manager)
+		)
 	if kinds.has(EncounterAction.Kind.TALK):
 		# Cibles de Talk élargies aux alliés si un talent l'autorise (Serene Waves).
 		var talkable := manager.talk_targets(fighter)
-		_add_bar_action(tr("UI_ENCOUNTER_ACTION_TALK"), not talkable.is_empty(),
-			func(): _pick_target(fighter, manager, EncounterAction.Kind.TALK, tr("UI_ENCOUNTER_ACTION_TALK"), talkable))
+		_add_bar_action(
+			tr("UI_ENCOUNTER_ACTION_TALK"),
+			not talkable.is_empty(),
+			func():
+				_pick_target(
+					fighter,
+					manager,
+					EncounterAction.Kind.TALK,
+					tr("UI_ENCOUNTER_ACTION_TALK"),
+					talkable
+				)
+		)
 	if kinds.has(EncounterAction.Kind.EXAMINE):
-		_add_bar_action(tr("UI_ENCOUNTER_ACTION_EXAMINE"), not foes.is_empty(),
-			func(): _pick_target(fighter, manager, EncounterAction.Kind.EXAMINE, tr("UI_ENCOUNTER_ACTION_EXAMINE"), foes))
-	_add_bar_action(tr("UI_ENCOUNTER_ACTION_OBJECT"), not GameSession.inventory.is_empty(),
-		func(): _show_objects(fighter, manager))
+		_add_bar_action(
+			tr("UI_ENCOUNTER_ACTION_EXAMINE"),
+			not foes.is_empty(),
+			func():
+				_pick_target(
+					fighter,
+					manager,
+					EncounterAction.Kind.EXAMINE,
+					tr("UI_ENCOUNTER_ACTION_EXAMINE"),
+					foes
+				)
+		)
+	_add_bar_action(
+		tr("UI_ENCOUNTER_ACTION_OBJECT"),
+		not GameSession.inventory.is_empty(),
+		func(): _show_objects(fighter, manager)
+	)
 	# Actions AJOUTÉES par un talent (jamais de base) :
 	if kinds.has(EncounterAction.Kind.FLEE):
 		# Run Away : sans cible (quitter la rencontre). La fuite réelle est encore un stub.
-		_add_bar_action(tr("UI_ENCOUNTER_ACTION_FLEE"), true,
-			func(): _submit(EncounterAction.of_kind(EncounterAction.Kind.FLEE)))
+		_add_bar_action(
+			tr("UI_ENCOUNTER_ACTION_FLEE"),
+			true,
+			func(): _submit(EncounterAction.of_kind(EncounterAction.Kind.FLEE))
+		)
 	if kinds.has(EncounterAction.Kind.STEAL):
 		# Steal (granop) : vise un rival, comme Examine.
-		_add_bar_action(tr("UI_ENCOUNTER_ACTION_STEAL"), not foes.is_empty(),
-			func(): _pick_target(fighter, manager, EncounterAction.Kind.STEAL, tr("UI_ENCOUNTER_ACTION_STEAL"), foes))
+		_add_bar_action(
+			tr("UI_ENCOUNTER_ACTION_STEAL"),
+			not foes.is_empty(),
+			func():
+				_pick_target(
+					fighter,
+					manager,
+					EncounterAction.Kind.STEAL,
+					tr("UI_ENCOUNTER_ACTION_STEAL"),
+					foes
+				)
+		)
 
 	var first := _first_enabled(_action_bar)
 	if first == null:
 		# « If for some reason no action is available (not even Meditate), a “…” action is
 		# added on top of the list » — passe le tour en gardant sa place dans l'ordre.
-		var pass_btn := _add_bar_action(tr("UI_ENCOUNTER_ACTION_PASS"), true,
-			func(): _submit(EncounterAction.of_kind(EncounterAction.Kind.PASS)))
+		var pass_btn := _add_bar_action(
+			tr("UI_ENCOUNTER_ACTION_PASS"),
+			true,
+			func(): _submit(EncounterAction.of_kind(EncounterAction.Kind.PASS))
+		)
 		_action_bar.move_child(pass_btn, 0)
 		first = pass_btn
 	_action_bar.visible = true
 	first.grab_focus()  # « TALK » encadré du mockup : il y a toujours un focus visible
 
+
 ## Cible d'une action non-combat parmi `targets` : immédiate s'il n'y en a qu'une, sinon
 ## étape de choix. Utilisé par Talk (cibles possiblement élargies aux alliés), Examine, Steal.
-func _pick_target(fighter: EncounterFighter, manager: EncounterManager, kind: EncounterAction.Kind, title: String, targets: Array) -> void:
+func _pick_target(
+	fighter: EncounterFighter,
+	manager: EncounterManager,
+	kind: EncounterAction.Kind,
+	title: String,
+	targets: Array
+) -> void:
 	if targets.size() <= 1:
 		_submit(EncounterAction.of_kind(kind, targets))
 		return
-	_show_targets(title, targets,
+	_show_targets(
+		title,
+		targets,
 		func(t): return EncounterAction.of_kind(kind, [t]),
-		func(): _show_actions(fighter, manager))
+		func(): _show_actions(fighter, manager)
+	)
+
 
 func _show_abilities(fighter: EncounterFighter, manager: EncounterManager) -> void:
-	_prompt.text = tr("UI_ENCOUNTER_CHOOSE_ABILITY") % [fighter.display_name(), fighter.eth, fighter.max_eth]
+	_prompt.text = (
+		tr("UI_ENCOUNTER_CHOOSE_ABILITY") % [fighter.display_name(), fighter.eth, fighter.max_eth]
+	)
 	_open_submenu()
 	# Les capacités non payables restent visibles mais grisées : le joueur doit voir ce
 	# que son ETH lui coûte, pas le déduire d'une liste qui rétrécit.
 	for a in manager.encounter_abilities(fighter):
 		var ability: AbilityData = a
-		var btn := _add_option(_ability_label(ability), func(): _on_ability_chosen(fighter, manager, ability))
+		var btn := _add_option(
+			_ability_label(ability), func(): _on_ability_chosen(fighter, manager, ability)
+		)
 		_set_energy_icon(btn, ability.energy)
 		btn.disabled = not fighter.can_afford(ability)
 		# « Ability description text area » du mockup : la description suit le focus.
@@ -324,6 +405,7 @@ func _show_abilities(fighter: EncounterFighter, manager: EncounterManager) -> vo
 		btn.mouse_entered.connect(func(): _set_description(tr(ability.desc_key())))
 	_add_option(tr("UI_ENCOUNTER_BACK"), func(): _show_actions(fighter, manager))
 	_focus_first_option()
+
 
 ## Inventaire en rencontre. La cible peut être soi/son coéquipier (« Use ») ou un rival
 ## (« Give ») : on propose donc les deux camps, contrairement au ciblage des capacités.
@@ -336,26 +418,37 @@ func _show_objects(fighter: EncounterFighter, manager: EncounterManager) -> void
 			continue  # slug d'inventaire sans ObjectData généré : on ne l'invente pas.
 		var count: int = GameSession.inventory[id]
 		var object_id: StringName = id
-		_add_option("%s ×%d" % [tr(obj.name_key()), count],
-			func(): _on_object_chosen(fighter, manager, object_id))
+		_add_option(
+			"%s ×%d" % [tr(obj.name_key()), count],
+			func(): _on_object_chosen(fighter, manager, object_id)
+		)
 	_add_option(tr("UI_ENCOUNTER_BACK"), func(): _show_actions(fighter, manager))
 	_focus_first_option()
 
-func _on_object_chosen(fighter: EncounterFighter, manager: EncounterManager, object_id: StringName) -> void:
+
+func _on_object_chosen(
+	fighter: EncounterFighter, manager: EncounterManager, object_id: StringName
+) -> void:
 	var obj: ObjectData = GameData.object(object_id)
-	var targets := manager.living_opponents(fighter) + manager.allies_of(fighter).filter(
-		func(f): return not f.is_dissolved())
+	var targets := (
+		manager.living_opponents(fighter)
+		+ manager.allies_of(fighter).filter(func(f): return not f.is_dissolved())
+	)
 	if targets.size() <= 1:
 		var action := EncounterAction.of_kind(EncounterAction.Kind.USE_OBJECT, targets)
 		action.object_id = object_id
 		_submit(action)
 		return
-	_show_targets(tr(obj.name_key()), targets,
+	_show_targets(
+		tr(obj.name_key()),
+		targets,
 		func(t):
 			var a := EncounterAction.of_kind(EncounterAction.Kind.USE_OBJECT, [t])
 			a.object_id = object_id
 			return a,
-		func(): _show_objects(fighter, manager))
+		func(): _show_objects(fighter, manager)
+	)
+
 
 func _ability_label(ability: AbilityData) -> String:
 	var name := tr(ability.name_key())
@@ -366,6 +459,7 @@ func _ability_label(ability: AbilityData) -> String:
 		name += " " + tr("UI_ENERGY_VARIABLE")
 	return name if ability.eth_cost() == 0 else "%s — ETH %d" % [name, ability.eth_cost()]
 
+
 ## Pose l'icône d'énergie (ancien jeu d'icônes) à gauche du bouton de capacité, bornée en
 ## largeur pour ne pas envahir le bouton. RANDOM/VARIABLE/NONE n'ont pas d'icône (cf.
 ## [method _ability_label] pour leur mention texte).
@@ -374,15 +468,22 @@ func _set_energy_icon(btn: Button, energy: GameEnums.Energy) -> void:
 		btn.icon = load(ENERGY_ICONS[energy])
 		btn.add_theme_constant_override("icon_max_width", 22)
 
-func _on_ability_chosen(fighter: EncounterFighter, manager: EncounterManager, ability: AbilityData) -> void:
+
+func _on_ability_chosen(
+	fighter: EncounterFighter, manager: EncounterManager, ability: AbilityData
+) -> void:
 	var targets := manager.candidate_targets(fighter, ability)
 	if targets.size() <= 1:
 		# Cible unique (capacité de soutien sur soi) ou plus personne à viser : aucun choix.
 		_submit(EncounterAction.use_ability(ability, targets))
 		return
-	_show_targets(tr(ability.name_key()), targets,
+	_show_targets(
+		tr(ability.name_key()),
+		targets,
 		func(t): return EncounterAction.use_ability(ability, [t]),
-		func(): _show_abilities(fighter, manager))
+		func(): _show_abilities(fighter, manager)
+	)
+
 
 ## Étape de ciblage générique. `make_action` construit l'action pour la cible choisie ;
 ## `on_back` rouvre le menu d'où l'on vient.
@@ -407,11 +508,13 @@ func _show_targets(title: String, targets: Array, make_action: Callable, on_back
 	_add_option(tr("UI_ENCOUNTER_BACK"), on_back)
 	_focus_first_option()
 
+
 ## Position (1-based) d'un combattant dans l'ordre du tour — même numéro que la timeline en
 ## vue de test. 0 si introuvable (ne devrait pas arriver pour une cible en lice).
 func _turn_number(fighter: EncounterFighter) -> int:
 	var order: Array = _manager.timeline.order if _manager.timeline else []
 	return order.find(fighter) + 1
+
 
 ## Éclaircit la planche du rival visé et estompe les autres.
 func _highlight_target(target: EncounterFighter) -> void:
@@ -424,15 +527,18 @@ func _highlight_target(target: EncounterFighter) -> void:
 			continue
 		art.modulate = Color(1, 1, 1) if f == target else Color(0.55, 0.55, 0.6)
 
+
 func _clear_highlight() -> void:
 	for c in _rivals_row.get_children():
 		var art := c as TextureRect
 		if art and art.has_meta("fighter"):
 			art.modulate = Color(1, 1, 1)
 
+
 func _submit(action: EncounterAction) -> void:
 	_close_menu()
 	_agent.submit(action)
+
 
 func _close_menu() -> void:
 	_acting_fighter = null
@@ -443,6 +549,7 @@ func _close_menu() -> void:
 	_clear_options()
 	_clear_highlight()
 
+
 ## Ouvre une liste verticale de sous-choix : elle remplace la barre d'actions, qui n'a
 ## pas la place d'afficher une dizaine de capacités de front.
 func _open_submenu() -> void:
@@ -452,19 +559,23 @@ func _open_submenu() -> void:
 	_clear_highlight()
 	_set_description("")
 
+
 func _set_description(text: String) -> void:
 	_description.text = text
 	_description.visible = text != ""
+
 
 func _clear_options() -> void:
 	for c in _options.get_children():
 		_options.remove_child(c)
 		c.queue_free()
 
+
 func _clear_bar() -> void:
 	for c in _action_bar.get_children():
 		_action_bar.remove_child(c)
 		c.queue_free()
+
 
 func _add_option(text: String, on_press: Callable) -> Button:
 	var b := Button.new()
@@ -472,6 +583,7 @@ func _add_option(text: String, on_press: Callable) -> Button:
 	b.pressed.connect(on_press)
 	_options.add_child(b)
 	return b
+
 
 ## Bouton de la barre d'actions. Grisé mais TOUJOURS visible s'il est indisponible :
 ## « Unusable actions remain visible in the list, but greyed ».
@@ -484,10 +596,12 @@ func _add_bar_action(text: String, enabled: bool, on_press: Callable) -> Button:
 	_action_bar.add_child(b)
 	return b
 
+
 func _focus_first_option() -> void:
 	var first := _first_enabled(_options)
 	if first:
 		first.grab_focus()
+
 
 ## Premier bouton cliquable d'un conteneur, ou null s'il n'y en a aucun.
 func _first_enabled(container: Node) -> Button:
@@ -496,7 +610,10 @@ func _first_enabled(container: Node) -> Button:
 			return c
 	return null
 
-func _on_turn_taken(fighter: EncounterFighter, action: EncounterAction, lines: PackedStringArray) -> void:
+
+func _on_turn_taken(
+	fighter: EncounterFighter, action: EncounterAction, lines: PackedStringArray
+) -> void:
 	# Un en-tête lisible par tour, puis les effets indentés dessous. Une capacité comme
 	# Opening up Closing produit plusieurs effets (dégâts, dégâts, fuite) : ils se lisent
 	# ainsi comme UNE action, au lieu d'une pile de lignes préfixées à l'identique.
@@ -506,6 +623,7 @@ func _on_turn_taken(fighter: EncounterFighter, action: EncounterAction, lines: P
 	# DEN/ETH, dissolutions et réordonnancements ont pu bouger : la timeline se relit.
 	_refresh_timeline()
 	_update_turn_label()
+
 
 ## Nom lisible et traduit de l'action, pour l'en-tête du journal. `action.label()` ne
 ## sert plus qu'au journal debug interne du manager (id brut / nom d'enum).
@@ -528,18 +646,23 @@ func _action_verb(action: EncounterAction) -> String:
 		_:
 			return tr("UI_ENCOUNTER_ACTION_PASS")
 
+
 ## Le manager signale les IFP gagnés ; c'est ici qu'ils rejoignent l'encyclopédie, avec
 ## les trois restrictions déjà portées par [method GameSession.award_ifp].
-func _on_ifp_earned(species_id: StringName, action: GameEnums.IfpAction, is_forlorn: bool, dialogue_effective: bool) -> void:
+func _on_ifp_earned(
+	species_id: StringName, action: GameEnums.IfpAction, is_forlorn: bool, dialogue_effective: bool
+) -> void:
 	var gained := GameSession.award_ifp(species_id, action, is_forlorn, dialogue_effective)
 	if gained > 0:
 		var sp: SpeciesData = GameData.species(species_id)
 		var sp_name := tr(sp.name_key()) if sp else String(species_id)
 		_append("    [color=#c9b060][i]+%d IFP — %s[/i][/color]" % [gained, sp_name])
 
+
 ## « Objects are all consumable items (removed from inventory after use) ».
 func _on_object_consumed(object_id: StringName) -> void:
 	GameSession.remove_object(object_id)
+
 
 func _on_ended(result: StringName) -> void:
 	_result = result
@@ -551,9 +674,11 @@ func _on_ended(result: StringName) -> void:
 	_append("\n[b]→ %s[/b]" % result)
 	_refresh_timeline()
 	if _result_label:
-		_result_label.text = tr("UI_ENCOUNTER_RESULT_%s" % result.to_upper()) \
-			+ "\n" + tr("UI_ENCOUNTER_CONTINUE")
+		_result_label.text = (
+			tr("UI_ENCOUNTER_RESULT_%s" % result.to_upper()) + "\n" + tr("UI_ENCOUNTER_CONTINUE")
+		)
 	_awaiting_close = true
+
 
 ## Réécrit le DEN/ETH final des fighters joueurs dans [GameSession] (persistance des
 ## dégâts subis). N'altère PAS les rivaux. À appeler une fois la rencontre résolue.
@@ -564,6 +689,7 @@ func _sync_back_to_session() -> void:
 		GameSession.set_den(slot, f.den)
 		GameSession.set_eth(slot, f.eth)
 
+
 func _unhandled_input(event: InputEvent) -> void:
 	# F1 : bascule la vue de test. Touche brute plutôt qu'une action de project.godot —
 	# c'est un outil de développement, pas une commande de jeu à remapper.
@@ -571,14 +697,22 @@ func _unhandled_input(event: InputEvent) -> void:
 		_toggle_debug_view()
 		get_viewport().set_input_as_handled()
 		return
-	if _awaiting_close and (event.is_action_pressed("ui_accept") or event.is_action_pressed("ui_cancel") \
-			or (event is InputEventMouseButton and event.pressed)):
+	if (
+		_awaiting_close
+		and (
+			event.is_action_pressed("ui_accept")
+			or event.is_action_pressed("ui_cancel")
+			or (event is InputEventMouseButton and event.pressed)
+		)
+	):
 		_awaiting_close = false
 		finished.emit(_result)
+
 
 func _append(line: String) -> void:
 	if _log:
 		_log.append_text(line + "\n")
+
 
 func _names(fighters: Array) -> String:
 	return ", ".join(fighters.map(func(f): return f.display_name()))

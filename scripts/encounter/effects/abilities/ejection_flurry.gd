@@ -3,6 +3,7 @@
 ## suivant. Si sa faiblesse est Fluide, les dégâts sont de l'énergie Fluide.
 extends AbilityScript
 
+
 func execute(ctx: EncounterContext) -> void:
 	var t = ctx.first_opponent_in_order()
 	if t == null:

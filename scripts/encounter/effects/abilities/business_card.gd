@@ -3,6 +3,7 @@
 ## avec lui (TODO) ; le user gagne X DEN chaque fois qu'un rival lui Parle (déclencheur TODO).
 extends AbilityScript
 
+
 func execute(ctx: EncounterContext) -> void:
 	ctx.recover_den(ctx.user, ctx.dmg(&"small"))
 	# TODO : bonus de dialogue (même origine) + gain de DEN quand un rival Parle au user.

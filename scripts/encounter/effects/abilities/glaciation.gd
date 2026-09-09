@@ -3,6 +3,7 @@
 ## les dégâts (et effets toxiques) du tour courant.
 extends AbilityScript
 
+
 func execute(ctx: EncounterContext) -> void:
 	var t = ctx.primary()
 	if t == null:

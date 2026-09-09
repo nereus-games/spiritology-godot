@@ -3,6 +3,7 @@
 ## Fluides ; la prochaine action du rival ciblé est Parler.
 extends AbilityScript
 
+
 func execute(ctx: EncounterContext) -> void:
 	for f in ctx.all_fighters:
 		if not f.is_dissolved():

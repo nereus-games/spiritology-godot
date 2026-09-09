@@ -3,6 +3,7 @@
 ## peut utiliser qu'Examiner ou des capacités Toxiques ce tour (= Dark Caroussel).
 extends AbilityScript
 
+
 func execute(ctx: EncounterContext) -> void:
 	var pool := ctx.others()
 	if pool.size() >= 2:

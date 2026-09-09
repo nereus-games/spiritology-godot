@@ -11,6 +11,7 @@
 ##     50 % que le rival disparaisse) — non bâtie ; la résolution de FLEE est un stub.
 extends "res://scripts/encounter/talents/talent_script.gd"
 
+
 func modify_menu(_manager, kinds: Array) -> void:
 	kinds.erase(EncounterAction.Kind.TALK)
 	if not kinds.has(EncounterAction.Kind.FLEE):

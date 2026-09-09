@@ -6,6 +6,7 @@ extends AbilityScript
 
 const WEAKNESS_CHANCE := 0.7
 
+
 func execute(ctx: EncounterContext) -> void:
 	ctx.request_ui(&"hide_rival_stats", {"until": "encounter_end", "cancel_on": "meditate"})
 	for o in ctx.others():

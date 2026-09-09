@@ -13,9 +13,11 @@ const ExplorationAction := preload("res://scripts/exploration/exploration_action
 ## Id de la capacité d'exploration requise (usage unique par visite comme les autres).
 const CRANNY_ABILITY := &"cranny_crossing"
 
+
 ## Un mur reste infranchissable au pas normal (on le traverse via l'action).
 func blocks_walk() -> bool:
 	return true
+
 
 ## Propose la traversée si la capacité n'a pas été utilisée et que la case au-delà (mur +
 ## direction regardée) est franchissable.
@@ -25,7 +27,14 @@ func on_adjacent_actions(who: Node, facing: Vector3i) -> Array:
 	var beyond := cell + facing
 	if _dungeon == null or not _dungeon.is_walkable(beyond):
 		return []
-	return [ExplorationAction.new(&"cranny_crossing", "UI_ACTION_CRANNY_CROSSING", Callable(self, "cross").bind(who, facing))]
+	return [
+		ExplorationAction.new(
+			&"cranny_crossing",
+			"UI_ACTION_CRANNY_CROSSING",
+			Callable(self, "cross").bind(who, facing)
+		)
+	]
+
 
 ## Traverse le mur : place le joueur sur la case au-delà et consomme la capacité.
 func cross(who: Node, facing: Vector3i) -> void:
@@ -37,6 +46,7 @@ func cross(who: Node, facing: Vector3i) -> void:
 	if who.has_method("teleport_to"):
 		who.teleport_to(beyond)
 	GameSession.mark_exploration_ability_used(CRANNY_ABILITY)
+
 
 func _spawn_visual() -> void:
 	_add_marker(Color(0.3, 0.28, 0.32), 0.95, 0.95)  # mur sombre, fissuré (une case pleine)

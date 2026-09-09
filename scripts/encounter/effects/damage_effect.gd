@@ -4,8 +4,10 @@
 class_name DamageEffect
 extends AbilityEffect
 
+
 func tag() -> StringName:
 	return &"damage"
+
 
 func execute(ctx: EncounterContext) -> void:
 	if ctx.ability.base_damage < 0:

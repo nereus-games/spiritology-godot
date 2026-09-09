@@ -13,6 +13,7 @@ const RIVAL_SCENE := preload("res://scenes/exploration/rival/rival.tscn")
 
 var _fails: Array[String] = []
 
+
 func _check(cond: bool, label: String) -> void:
 	if cond:
 		print("  OK   %s" % label)
@@ -20,13 +21,25 @@ func _check(cond: bool, label: String) -> void:
 		print("  FAIL %s" % label)
 		_fails.append(label)
 
+
 func _ready() -> void:
 	_run_all()
 
+
 func _run_all() -> void:
 	await get_tree().process_frame  # laisse les autoloads et la racine s'installer
-	for id in [&"movement", &"traps", &"gates", &"grounds", &"chests", &"walls", &"bridge",
-			&"bridge_rival", &"stairs", &"abilities"]:
+	for id in [
+		&"movement",
+		&"traps",
+		&"gates",
+		&"grounds",
+		&"chests",
+		&"walls",
+		&"bridge",
+		&"bridge_rival",
+		&"stairs",
+		&"abilities"
+	]:
 		await _run_scenario(id)
 	print("")
 	if _fails.is_empty():
@@ -34,6 +47,7 @@ func _run_all() -> void:
 	else:
 		print("ÉCHECS : %s" % [_fails])
 	get_tree().quit(0 if _fails.is_empty() else 1)
+
 
 func _run_scenario(id: StringName) -> void:
 	print("[%s]" % id)
@@ -49,7 +63,9 @@ func _run_scenario(id: StringName) -> void:
 	var cam_rig = player.get_node("CameraRig")
 	var eye_y: float = player.global_position.y + cam_rig.position.y
 	var floor_y: float = dm.cell_to_world(player.cell).y
-	_check(is_equal_approx(eye_y - floor_y, dm.EYE_HEIGHT), "yeux à %.2f m du sol" % (eye_y - floor_y))
+	_check(
+		is_equal_approx(eye_y - floor_y, dm.EYE_HEIGHT), "yeux à %.2f m du sol" % (eye_y - floor_y)
+	)
 	_check(eye_y - floor_y < dm.CELL_SIZE, "yeux sous le haut des murs")
 
 	# Géométrie générée : dalles minces (plafonds franchissables) et blocs de mur pleins.
@@ -77,7 +93,10 @@ func _run_scenario(id: StringName) -> void:
 				misplaced += 1
 		else:
 			too_thick += 1
-	_check(slabs > 0, "%d dalles minces (sol = plafond franchissable) + %d blocs de mur 1 m³" % [slabs, walls])
+	_check(
+		slabs > 0,
+		"%d dalles minces (sol = plafond franchissable) + %d blocs de mur 1 m³" % [slabs, walls]
+	)
 	_check(misplaced == 0, "toutes les dalles/murs alignés sur leur étage")
 	_check(too_thick == 0, "aucun sol rendu comme un bloc plein")
 	_check_no_double_ground(dm, slabs)
@@ -104,45 +123,66 @@ func _run_scenario(id: StringName) -> void:
 	get_tree().root.remove_child(scene)
 	scene.free()
 
+
 ## Rambardes (doc « Walls + Decors » / Guardrails) : posées sur l'arête comme une porte qui ne
 ## s'ouvre jamais, elles empêchent de franchir un bord d'étage SANS combler le vide derrière et
 ## sans coûter de case. Le même bord, deux cases plus loin, reste ouvert (et fait tomber).
 func _check_guardrails(dm) -> void:
 	var edge := Vector3i(1, 0, 0)
-	var railed := Vector3i(6, 4, 4)     # bord est protégé
+	var railed := Vector3i(6, 4, 4)  # bord est protégé
 	var open_edge := Vector3i(6, 4, 6)  # même bord, deux pas plus loin : rien
 	var rails: Array = dm.edge_mechanisms_between(railed, railed + edge)
 	_check(rails.size() == 1, "rambarde posée sur l'arête du bord est")
-	_check(dm.mechanisms_at(railed).is_empty() and dm.mechanisms_at(railed + edge).is_empty(),
-			"une rambarde n'occupe aucune case")
-	_check(dm.is_floor(railed) and dm.is_walkable(railed), "la case derrière la rambarde reste praticable")
-	_check(dm.is_edge_blocked(railed, railed + edge)
-			and dm.is_edge_blocked(railed + edge, railed),
-			"bord protégé : franchissement refusé dans les deux sens")
-	_check(dm.fall_landing(railed + edge) != railed + edge,
-			"le vide est toujours là derrière la rambarde (elle ne comble rien)")
-	_check(not dm.is_edge_blocked(open_edge, open_edge + edge),
-			"deux cases plus loin, le même bord est ouvert")
-	_check(dm.fall_landing(open_edge + edge) == Vector3i(7, 0, 6),
-			"et il fait tomber jusqu'en bas (4 unités)")
+	_check(
+		dm.mechanisms_at(railed).is_empty() and dm.mechanisms_at(railed + edge).is_empty(),
+		"une rambarde n'occupe aucune case"
+	)
+	_check(
+		dm.is_floor(railed) and dm.is_walkable(railed),
+		"la case derrière la rambarde reste praticable"
+	)
+	_check(
+		dm.is_edge_blocked(railed, railed + edge) and dm.is_edge_blocked(railed + edge, railed),
+		"bord protégé : franchissement refusé dans les deux sens"
+	)
+	_check(
+		dm.fall_landing(railed + edge) != railed + edge,
+		"le vide est toujours là derrière la rambarde (elle ne comble rien)"
+	)
+	_check(
+		not dm.is_edge_blocked(open_edge, open_edge + edge),
+		"deux cases plus loin, le même bord est ouvert"
+	)
+	_check(
+		dm.fall_landing(open_edge + edge) == Vector3i(7, 0, 6),
+		"et il fait tomber jusqu'en bas (4 unités)"
+	)
 	_check_rival_stopped_by_rail(dm)
 	if rails.size() == 1:
-		_check(rails[0].HEIGHT < dm.EYE_HEIGHT,
+		_check(
+			rails[0].HEIGHT < dm.EYE_HEIGHT,
+			(
 				"rambarde plus basse que les yeux (%.2f m < %.2f m) : ne coupe pas la vue"
-				% [rails[0].HEIGHT, dm.EYE_HEIGHT])
+				% [rails[0].HEIGHT, dm.EYE_HEIGHT]
+			)
+		)
+
 
 ## Une rambarde retient aussi les RIVAUX : un rival qui voudrait sauter pour poursuivre ne peut
 ## pas enjamber le bord protégé — il lui faut un bord ouvert.
 func _check_rival_stopped_by_rail(dm) -> void:
-	var post := Vector3i(6, 4, 4)          # derrière la rambarde du bord est
-	var below := Vector3i(7, 0, 4)         # ce qu'il viserait en sautant par-dessus
+	var post := Vector3i(6, 4, 4)  # derrière la rambarde du bord est
+	var below := Vector3i(7, 0, 4)  # ce qu'il viserait en sautant par-dessus
 	var rival = RIVAL_SCENE.instantiate()
 	rival.position = dm.cell_to_world(post)
 	dm.add_child(rival)
 	var brink: Vector3i = rival._open_drop_edge(below)
-	_check(brink != post + Vector3i(1, 0, 0),
-			"le rival ne saute pas par-dessus la rambarde (bord choisi : %s)" % brink)
+	_check(
+		brink != post + Vector3i(1, 0, 0),
+		"le rival ne saute pas par-dessus la rambarde (bord choisi : %s)" % brink
+	)
 	rival.queue_free()
+
 
 ## Doc « Walls + Decors » : un bloc de mur peut servir de sol à l'étage au-dessus. Une case de
 ## sol posée sur un mur ne doit donc PAS recevoir de dalle en plus (sinon deux faces hautes
@@ -163,15 +203,21 @@ func _check_no_double_ground(dm, slabs: int) -> void:
 	for c in dm._pit:
 		if dm.fall_landing(c) == c:
 			expected += 1
-	_check(slabs == expected,
-			"%d dalle(s) attendue(s), %d rendue(s) — %d sol(s) portés par un mur, sans dalle" \
-			% [expected, slabs, on_walls])
+	_check(
+		slabs == expected,
+		(
+			"%d dalle(s) attendue(s), %d rendue(s) — %d sol(s) portés par un mur, sans dalle"
+			% [expected, slabs, on_walls]
+		)
+	)
+
 
 ## `v` tombe-t-il sur un multiple de `step` (à l'erreur flottante près, y compris juste en
 ## dessous — fposmod y renvoie presque `step` et non presque 0) ?
 func _on_level(v: float, step: float) -> bool:
 	var r := fposmod(v, step)
 	return minf(r, step - r) < 0.001
+
 
 ## Doc « User Interface » : la mini-map ne montre pas les pièges. Un piège n'y figure qu'une
 ## fois CONNU (révélé, ou déclenché) — les scénarios de test, eux, les posent révélés.
@@ -192,7 +238,7 @@ func _check_disarray_mouse(player) -> void:
 	_check(aff.peek_move(), "file amenée sur un mouvement dévié")
 
 	# --- Gestes SANS rotation enclenchée : déviés, mais gratuits ---
-	var gesture := Vector2(12.0, -5.0)   # trop court pour franchir commit_angle
+	var gesture := Vector2(12.0, -5.0)  # trop court pour franchir commit_angle
 	var before: int = aff.remaining_disarray()
 	var deviated := 0
 	var bad_length := 0
@@ -213,11 +259,14 @@ func _check_disarray_mouse(player) -> void:
 		handler._process(handler.MOUSE_BURST_IDLE + 0.01)  # le curseur s'arrête : geste clos
 	_check(unstable == 0, "le décalage tient tout le geste (curseur tourné en cours de route)")
 	_check(bad_length == 0, "amplitude du geste inchangée (pas de rotation involontaire)")
-	_check(deviated == 24, "les 24 gestes sont déviés (%d) — l'entrée de tête ne bouge pas"
-			% deviated)
+	_check(
+		deviated == 24, "les 24 gestes sont déviés (%d) — l'entrée de tête ne bouge pas" % deviated
+	)
 	_check(bad_angle == 0, "toute déviation est un quart de tour (90 / 180 / 270°)")
-	_check(aff.remaining_disarray() == before,
-			"24 gestes sans rotation : rien décompté (%d)" % aff.remaining_disarray())
+	_check(
+		aff.remaining_disarray() == before,
+		"24 gestes sans rotation : rien décompté (%d)" % aff.remaining_disarray()
+	)
 
 	# --- Geste QUI enclenche une rotation : là, ça compte pour un mouvement ---
 	# Diagonale assez ample pour franchir commit_angle sur l'axe du lacet quel que soit le
@@ -226,11 +275,11 @@ func _check_disarray_mouse(player) -> void:
 	var turns := 0
 	var spent_wrong := 0
 	for i in range(8):
-		handler._yaw_offset = 0.0   # chaque balayage part du neutre (sinon le reliquat décide)
+		handler._yaw_offset = 0.0  # chaque balayage part du neutre (sinon le reliquat décide)
 		var turn_before: int = _dungeon_turn(player)
 		var left: int = aff.remaining_disarray()
 		handler._apply_mouse_look(sweep)
-		handler._process(0.016)                            # _fold_offset valide la rotation
+		handler._process(0.016)  # _fold_offset valide la rotation
 		var committed: int = _dungeon_turn(player) - turn_before
 		turns += committed
 		if aff.remaining_disarray() != left - committed:
@@ -243,12 +292,16 @@ func _check_disarray_mouse(player) -> void:
 	while aff.has_disarray():
 		aff.consume_move()
 	handler._process(handler.MOUSE_BURST_IDLE + 0.01)
-	_check(handler._disarrayed_mouse(gesture).is_equal_approx(gesture),
-			"disarray épuisé : le geste n'est plus dévié")
+	_check(
+		handler._disarrayed_mouse(gesture).is_equal_approx(gesture),
+		"disarray épuisé : le geste n'est plus dévié"
+	)
+
 
 ## Numéro de tour courant, lu depuis le donjon auquel le joueur est rattaché.
 func _dungeon_turn(player) -> int:
 	return player.get_parent().get_node("DungeonManager").turn_count
+
 
 func _check_traps_hidden_on_map(dm) -> void:
 	var shown := 0
@@ -267,6 +320,7 @@ func _check_traps_hidden_on_map(dm) -> void:
 		_check(m.shows_on_map(), "piège connu : présent sur la carte")
 	_check(traps > 0 and shown == traps, "%d piège(s) du scénario de test, tous révélés" % traps)
 
+
 ## Charte « Visuals + Sounds » : un sprite de rival tient dans 90 cm × 90 cm. On l'éprouve sur
 ## une espèce PLUS LARGE QUE HAUTE (jézal, 2000 × 1898) : caler sur la seule hauteur la ferait
 ## déborder sur les cases voisines.
@@ -280,18 +334,21 @@ func _check_rival_sprite_box(dm) -> void:
 		if sprite != null and sprite.texture != null:
 			var w: float = sprite.texture.get_width() * sprite.pixel_size
 			var h: float = sprite.texture.get_height() * sprite.pixel_size
-			_check(w <= rival.world_height + 0.001 and h <= rival.world_height + 0.001,
-					"sprite %s : %.2f × %.2f m, tient dans %.2f m" % [species, w, h, rival.world_height])
+			_check(
+				w <= rival.world_height + 0.001 and h <= rival.world_height + 0.001,
+				"sprite %s : %.2f × %.2f m, tient dans %.2f m" % [species, w, h, rival.world_height]
+			)
 			_check(is_equal_approx(sprite.position.y, h * 0.5), "sprite %s posé au sol" % species)
 		rival.queue_free()
+
 
 ## Chute SANS FOND : elle ne devrait pas exister — une case sans rien en dessous est rendue en
 ## mur. Mais si le level design marque un trou franc, entrer dedans dévitalise le duo (un sol
 ## qu'on n'atteint jamais est un sol trop bas pour qu'on y survive) au lieu de bloquer en
 ## silence.
 func _check_bottomless(dm, player) -> void:
-	var hole := Vector3i(3, 0, -1)      # devant le départ : normalement un mur de pourtour
-	var plain := Vector3i(2, 0, -1)     # même rangée, laissée telle quelle
+	var hole := Vector3i(3, 0, -1)  # devant le départ : normalement un mur de pourtour
+	var plain := Vector3i(2, 0, -1)  # même rangée, laissée telle quelle
 	_check(not dm.is_bottomless(plain), "case simplement absente = mur (pas de chute)")
 	dm.mark_hole(hole)
 	_check(dm.is_bottomless(hole), "trou franc = chute sans fond")
@@ -301,28 +358,37 @@ func _check_bottomless(dm, player) -> void:
 	await player.fall_forever(hole)
 	_check(wiped[0], "chute sans fond : duo dévitalisé (donc sorti du donjon)")
 
+
 ## Portes : sur l'arête, les deux cases restent praticables, le passage est barré tant que
 ## la porte est fermée, et l'action est offerte des deux côtés.
 func _check_gates(dm, player) -> void:
 	var a := Vector3i(1, 0, 3)
 	var b := Vector3i(1, 0, 4)
 	_check(dm.is_floor(a) and dm.is_floor(b), "les 2 cases autour d'une porte sont du sol")
-	_check(dm.mechanisms_at(a).is_empty() and dm.mechanisms_at(b).is_empty(),
-		"une porte n'occupe aucune case")
+	_check(
+		dm.mechanisms_at(a).is_empty() and dm.mechanisms_at(b).is_empty(),
+		"une porte n'occupe aucune case"
+	)
 	var gate = dm.edge_mechanisms_between(a, b)[0]
 	_check(gate != null, "porte trouvée sur l'arête")
 	_check(dm.edge_mechanisms_between(b, a).size() == 1, "arête symétrique (mêmes 2 sens)")
 	# Porte verrouillée (fermée) : barre le passage dans les deux sens, laisse les cases libres.
 	var la := Vector3i(1, 0, 6)
 	var lb := Vector3i(1, 0, 7)
-	_check(dm.is_edge_blocked(la, lb) and dm.is_edge_blocked(lb, la), "porte fermée : passage barré")
+	_check(
+		dm.is_edge_blocked(la, lb) and dm.is_edge_blocked(lb, la), "porte fermée : passage barré"
+	)
 	_check(dm.is_walkable(la) and dm.is_walkable(lb), "porte fermée : cases toujours praticables")
 	_check(not dm.can_step(la, lb), "can_step refuse de traverser une porte fermée")
 	# Actions accessibles des deux côtés (ouvrir / méditer).
 	var from_south: Array = dm.actions_for(la, Vector3i(0, 0, 1), player)
 	var from_north: Array = dm.actions_for(lb, Vector3i(0, 0, -1), player)
-	_check(from_south.size() == 1 and from_south[0].id == &"open_gate", "action « ouvrir » côté sud")
-	_check(from_north.size() == 1 and from_north[0].id == &"open_gate", "action « ouvrir » côté nord")
+	_check(
+		from_south.size() == 1 and from_south[0].id == &"open_gate", "action « ouvrir » côté sud"
+	)
+	_check(
+		from_north.size() == 1 and from_north[0].id == &"open_gate", "action « ouvrir » côté nord"
+	)
 	# Ouverture : le passage se libère.
 	var locked = dm.edge_mechanisms_between(la, lb)[0]
 	# Le prix est ANNONCÉ par la porte, sur ses deux faces (doc : « shown on the gate itself »,
@@ -346,8 +412,11 @@ func _check_gates(dm, player) -> void:
 	# Porte ouverte : le tas redevient visible, donc actionnable.
 	_check(not dm.is_edge_opaque(mz, mz + toward), "porte ouverte : arête transparente")
 	var after := _action_ids(dm.actions_for(mz, toward, player))
-	_check(&"examine" in after or &"recycle" in after,
-			"porte ouverte : les actions du décor derrière reviennent (%s)" % [after])
+	_check(
+		&"examine" in after or &"recycle" in after,
+		"porte ouverte : les actions du décor derrière reviennent (%s)" % [after]
+	)
+
 
 ## Une porte verrouillée affiche son prix sur CHAQUE face, à hauteur des yeux, tant qu'elle est
 ## fermée — et n'a plus rien à dire une fois ouverte.
@@ -357,15 +426,19 @@ func _check_locked_gate_price(locked) -> void:
 		if child is Label3D:
 			labels.append(child)
 	_check(labels.size() == 2, "prix inscrit sur les 2 faces de la porte (%d)" % labels.size())
-	var expected := "%d × %s" % [locked.locked_cost(),
-			tr(GameData.object(locked.cost_currency).name_key())]
+	var expected := (
+		"%d × %s" % [locked.locked_cost(), tr(GameData.object(locked.cost_currency).name_key())]
+	)
 	var shown := true
 	for label in labels:
 		if label.text != expected:
 			shown = false
-		_check(absf(label.position.y - DungeonManager.EYE_HEIGHT) < 0.01,
-				"prix à hauteur des yeux (y = %.2f m)" % label.position.y)
+		_check(
+			absf(label.position.y - DungeonManager.EYE_HEIGHT) < 0.01,
+			"prix à hauteur des yeux (y = %.2f m)" % label.position.y
+		)
 	_check(shown, "prix lisible sur les 2 faces (« %s »)" % expected)
+
 
 func _action_ids(actions: Array) -> Array:
 	var ids := []
@@ -373,9 +446,10 @@ func _action_ids(actions: Array) -> Array:
 		ids.append(a.id)
 	return ids
 
+
 ## Porte de méditation : doc « 3 CONSECUTIVE times in front of them » — la série ne compte que
 ## si le joueur tient son poste ; bouger ou se détourner la remet à zéro.
-func _check_meditation_streak(dm, player) -> void:
+func _check_meditation_streak(dm, _player) -> void:
 	var ma := Vector3i(1, 0, 9)
 	var toward := Vector3i(0, 0, 1)
 	var gate = dm.edge_mechanisms_between(ma, ma + toward)[0]
@@ -390,6 +464,7 @@ func _check_meditation_streak(dm, player) -> void:
 	# L'arête est libérée. (La case au-delà porte un tas, obstacle : c'est LUI qui bloque
 	# maintenant, plus la porte.)
 	_check(not dm.is_edge_blocked(ma, ma + toward), "porte de méditation ouverte : arête libérée")
+
 
 ## Pont étroit : chaque planche surplombe un vrai sol (une chute atterrit quelque part, avec
 ## les dégâts normaux ∝ profondeur), et la remontée depuis le fond ramène bien sur du sol.
@@ -406,9 +481,13 @@ func _check_bridge(dm) -> void:
 		if landing != c and landing.y < c.y:
 			landed += 1
 			depth = maxi(depth, c.y - landing.y)
-	_check(landed == planks.size(),
+	_check(
+		landed == planks.size(),
+		(
 			"chaque planche surplombe un sol (%d/%d, ravin de %d étages)"
-			% [landed, planks.size(), depth])
+			% [landed, planks.size(), depth]
+		)
+	)
 	_check(depth >= 2, "ravin de plus d'un étage (dégâts de chute ∝ profondeur)")
 	# Remontée : chaque volée montante part d'une case praticable et arrive sur du sol.
 	var flights := 0
@@ -418,9 +497,12 @@ func _check_bridge(dm) -> void:
 		flights += 1
 		var from: Vector3i = child.cell - child.face_dir  # case d'où l'on aborde la volée
 		var dest: Vector3i = child.stairs_destination(from, child.face_dir)
-		_check(dm.is_walkable(from) and dm.is_floor(dest),
-				"volée %s : %s -> %s praticable" % [child.cell, from, dest])
+		_check(
+			dm.is_walkable(from) and dm.is_floor(dest),
+			"volée %s : %s -> %s praticable" % [child.cell, from, dest]
+		)
 	_check(flights >= 2, "%d volées pour remonter du fond au départ" % flights)
+
 
 ## Le pont décompte le disarray case par case (une case franchie EST un mouvement), et la
 ## case d'arrivée n'a d'autre issue que le pont — sinon on gaspillerait le disarray à errer
@@ -451,8 +533,10 @@ func _check_bridge_disarray(scene, dm, player) -> void:
 	var before: int = player.affliction.remaining_disarray()
 	scene._advance_bridge_cell(player)
 	var after: int = player.affliction.remaining_disarray()
-	_check(after == before - 1,
-			"une case de pont décompte le disarray (%d -> %d)" % [before, after])
+	_check(
+		after == before - 1, "une case de pont décompte le disarray (%d -> %d)" % [before, after]
+	)
+
 
 ## Règles « rivaux » des ponts étroits (doc) : test d'équilibre simplifié tiré à la création,
 ## chute vers le sol du dessous avec dégâts, dévitalisation sur la carte, et croisement de
@@ -463,8 +547,10 @@ func _check_rival_on_bridge(dm) -> void:
 	if rivals.is_empty():
 		return
 	var r = rivals[0]
-	_check(r.bridge_fall_chance >= 0.01 and r.bridge_fall_chance <= 0.02,
-			"probabilité de chute tirée dans 1-2 %% (%.2f %%)" % (r.bridge_fall_chance * 100.0))
+	_check(
+		r.bridge_fall_chance >= 0.01 and r.bridge_fall_chance <= 0.02,
+		"probabilité de chute tirée dans 1-2 %% (%.2f %%)" % (r.bridge_fall_chance * 100.0)
+	)
 	_check(r.den == r.max_den, "DEN de carte plein au départ (%d)" % r.den)
 
 	# Chute depuis une planche : atterrit au fond du ravin et encaisse 2 étages.
@@ -477,23 +563,25 @@ func _check_rival_on_bridge(dm) -> void:
 	var alive: bool = r.fall_down(plank)
 	var expected: int = dm.fall_damage(2)  # doc : 2 unités de hauteur = 10 DEN
 	_check(alive and r.cell.y == 0, "le rival tombe au fond du ravin (%s)" % r.cell)
-	_check(den_before - r.den == expected,
-			"dégâts de chute du rival = %d DEN sur 2 étages (%d -> %d)"
-			% [expected, den_before, r.den])
+	_check(
+		den_before - r.den == expected,
+		"dégâts de chute du rival = %d DEN sur 2 étages (%d -> %d)" % [expected, den_before, r.den]
+	)
 
 	# Dévitalisé par une chute : dissous sur la carte, sans rencontre.
 	r.apply_map_damage(r.max_den)
 	await get_tree().process_frame
-	_check(dm.rivals().is_empty() and not is_instance_valid(r),
-			"un rival dévitalisé par la chute est dissous (sans rencontre)")
+	_check(
+		dm.rivals().is_empty() and not is_instance_valid(r),
+		"un rival dévitalisé par la chute est dissous (sans rencontre)"
+	)
 
 	# Croisement de deux rivaux sur une planche : les deux tombent, sur deux cases distinctes.
 	var a = ScenarioCatalog._spawn_rival(dm, &"ravbak", Vector3i(1, 2, 3))
 	var b = ScenarioCatalog._spawn_rival(dm, &"ravbak", Vector3i(1, 2, 5))
 	await get_tree().process_frame
 	b._collide_with_rival(Vector3i(1, 2, 3), a)
-	_check(a.cell.y == 0 and b.cell.y == 0,
-			"les deux rivaux tombent (%s / %s)" % [a.cell, b.cell])
+	_check(a.cell.y == 0 and b.cell.y == 0, "les deux rivaux tombent (%s / %s)" % [a.cell, b.cell])
 	_check(a.cell != b.cell, "ils atterrissent sur deux cases distinctes")
 
 	# Poursuite d'un CHANGEMENT D'ÉTAGE : le joueur remonte au départ, le rival le suit par
@@ -511,9 +599,14 @@ func _check_rival_on_bridge(dm) -> void:
 		turns_used += 1
 		if chaser.cell.y == top.y:
 			break
-	_check(chaser.cell.y == top.y,
+	_check(
+		chaser.cell.y == top.y,
+		(
 			"un rival suit le joueur d'un étage à l'autre par l'escalier (%s en %d tours)"
-			% [chaser.cell, turns_used])
+			% [chaser.cell, turns_used]
+		)
+	)
+
 
 ## Multi-étages : on marche SOUS les gradins, le barème de chute de la doc est respecté aux
 ## quatre hauteurs, et les deux formes d'ascenseur font l'aller-retour avec leur passager.
@@ -525,8 +618,10 @@ func _check_stairs(dm, player) -> void:
 	var walls: Dictionary = dm._derive_wall_cells()
 	_check(walls.has(pillar), "case retirée rendue en bloc de mur (pilier)")
 	_check(not dm.is_floor(pillar) and dm.is_floor(carried), "sol praticable posé sur le pilier")
-	_check(dm.cell_to_world(carried).y == dm.cell_to_world(pillar).y + dm.CELL_SIZE,
-			"le sol porté est exactement à la face haute du mur")
+	_check(
+		dm.cell_to_world(carried).y == dm.cell_to_world(pillar).y + dm.CELL_SIZE,
+		"le sol porté est exactement à la face haute du mur"
+	)
 
 	_check_guardrails(dm)
 
@@ -557,23 +652,31 @@ func _check_stairs(dm, player) -> void:
 	for y in range(0, 4):
 		if not by_level.has(y):
 			missing.append(y)
-	_check(missing.is_empty(),
-			"une volée praticable pour chaque palier 0→1→2→3→4 (manquants : %s)" % [missing])
+	_check(
+		missing.is_empty(),
+		"une volée praticable pour chaque palier 0→1→2→3→4 (manquants : %s)" % [missing]
+	)
 
 	# Barème de la doc : « 2+ height units → 10 damage, plus 5 per additional unit ».
 	for pair in [[1, 0], [2, 10], [3, 15], [4, 20]]:
-		_check(dm.fall_damage(pair[0]) == pair[1],
-				"chute de %d unité(s) : %d DEN (%d)" % [pair[0], pair[1], dm.fall_damage(pair[0])])
+		_check(
+			dm.fall_damage(pair[0]) == pair[1],
+			"chute de %d unité(s) : %d DEN (%d)" % [pair[0], pair[1], dm.fall_damage(pair[0])]
+		)
 
 	# Les quatre hauteurs doivent être atteignables : colonne EST (x = 6), rien n'arrête avant
 	# l'étage 0. Sortir du gradin y doit faire tomber de y unités.
 	for y in range(1, 5):
 		var landing: Vector3i = dm.fall_landing(Vector3i(7, y, 8))
-		_check(landing == Vector3i(7, 0, 8),
-				"sortir du gradin %d côté est = chute de %d unités (%s)" % [y, y, landing])
+		_check(
+			landing == Vector3i(7, 0, 8),
+			"sortir du gradin %d côté est = chute de %d unités (%s)" % [y, y, landing]
+		)
 	# Côté OUEST, chaque gradin surplombe le suivant : une seule unité, donc aucun dégât.
-	_check(dm.fall_landing(Vector3i(1, 2, 8)) == Vector3i(1, 1, 8),
-			"sortir d'un gradin côté ouest = chute d'1 unité (indolore)")
+	_check(
+		dm.fall_landing(Vector3i(1, 2, 8)) == Vector3i(1, 1, 8),
+		"sortir d'un gradin côté ouest = chute d'1 unité (indolore)"
+	)
 
 	# Ascenseurs : un vertical, un à trajet complexe (segments sur les trois axes).
 	var lifts := []
@@ -594,13 +697,20 @@ func _check_stairs(dm, player) -> void:
 		var prev: Vector3i = winding.cell
 		for wp in winding.path:
 			var d: Vector3i = wp - prev
-			if d.x != 0: axes["x"] = true
-			if d.y != 0: axes["y"] = true
-			if d.z != 0: axes["z"] = true
+			if d.x != 0:
+				axes["x"] = true
+			if d.y != 0:
+				axes["y"] = true
+			if d.z != 0:
+				axes["z"] = true
 			prev = wp
-		_check(axes.size() == 3,
+		_check(
+			axes.size() == 3,
+			(
 				"ascenseur %s : trajet complexe, %d segments sur %d axes"
-				% [winding.cell, winding.path.size(), axes.size()])
+				% [winding.cell, winding.path.size(), axes.size()]
+			)
+		)
 
 	# Aller-retour, sur chacun des deux, avec le joueur à bord.
 	for lift in lifts:
@@ -611,9 +721,13 @@ func _check_stairs(dm, player) -> void:
 		player.teleport_to(start)
 		dm.notify_entered(start, player)
 		await get_tree().process_frame
-		_check(player.cell == target and lift.cell == target,
-				"%s -> %s : la plateforme emmène son passager (%s)" % [start, target, player.cell])
+		_check(
+			player.cell == target and lift.cell == target,
+			"%s -> %s : la plateforme emmène son passager (%s)" % [start, target, player.cell]
+		)
 		dm.notify_entered(lift.cell, player)
 		await get_tree().process_frame
-		_check(player.cell == start and lift.cell == start,
-				"y remonter le ramène à son point de départ (%s)" % player.cell)
+		_check(
+			player.cell == start and lift.cell == start,
+			"y remonter le ramène à son point de départ (%s)" % player.cell
+		)

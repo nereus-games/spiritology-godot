@@ -3,6 +3,7 @@
 ## capacités de la même énergie que celle-ci.
 extends AbilityScript
 
+
 func execute(ctx: EncounterContext) -> void:
 	ctx.recover_den(ctx.user, ctx.dmg(&"normal"))
 	ctx.restrict_to(ctx.user, ["énergie = %s" % ctx.energy()])

@@ -17,14 +17,14 @@ extends VBoxContainer
 const SIZE_IDLE := 72.0
 const SIZE_ACTIVE := 104.0
 
-const COLOR_DEN := Color(0.94, 0.62, 0.24)   ## pastille orange (mockup)
-const COLOR_ETH := Color(0.42, 0.82, 0.87)   ## pastille cyan (mockup)
+const COLOR_DEN := Color(0.94, 0.62, 0.24)  ## pastille orange (mockup)
+const COLOR_ETH := Color(0.42, 0.82, 0.87)  ## pastille cyan (mockup)
 const COLOR_FRAME_IDLE := Color(0.24, 0.24, 0.28)
 const COLOR_FRAME_ACTIVE := Color(1, 1, 1)
 
 ## Fond de la case selon le camp (mockup « Encounter Rivals » : les personnages JOUEURS
 ## portent un petit fond de couleur, les rivaux un fond sombre neutre).
-const COLOR_BG_PLAYER := Color(0.10, 0.24, 0.22)   ## teal doux = allié
+const COLOR_BG_PLAYER := Color(0.10, 0.24, 0.22)  ## teal doux = allié
 const COLOR_BG_RIVAL := Color(0.06, 0.06, 0.08)
 
 ## Icônes de faiblesse de la TIMELINE (jeu d'icônes dédié du collègue). Toute case en a
@@ -48,6 +48,7 @@ var _portrait: TextureRect
 var _den_label: Label
 var _eth_label: Label
 var _weakness_icon: TextureRect
+
 
 func _init() -> void:
 	alignment = BoxContainer.ALIGNMENT_CENTER
@@ -90,6 +91,7 @@ func _init() -> void:
 	stats.add_child(_eth_label)
 	add_child(stats)
 
+
 func _make_pill(color: Color) -> Label:
 	var l := Label.new()
 	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -105,14 +107,16 @@ func _make_pill(color: Color) -> Label:
 	l.add_theme_stylebox_override("normal", box)
 	return l
 
+
 ## Peuple la case. `known` = espèce enregistrée dans l'encyclopédie ; `active` = c'est
 ## son tour ; `weakness` = énergie faible ce tour (NONE si aucune).
 ##
 ## `rank` (1-based) n'est renseigné qu'en vue de test : il affiche « 2. ravbak » sur
 ## TOUTES les cases. En jeu, seule la case active porte un nom, comme au mockup — mais
 ## pour tester il faut pouvoir lire l'ordre d'action d'un coup d'œil.
-func setup(fighter: EncounterFighter, known: bool, active: bool, weakness: GameEnums.Energy,
-		rank: int = 0) -> void:
+func setup(
+	fighter: EncounterFighter, known: bool, active: bool, weakness: GameEnums.Energy, rank: int = 0
+) -> void:
 	var side := SIZE_ACTIVE if active else SIZE_IDLE
 	_portrait.custom_minimum_size = Vector2(side, side)
 	_portrait.texture = _portrait_texture(fighter)
@@ -151,6 +155,7 @@ func setup(fighter: EncounterFighter, known: bool, active: bool, weakness: GameE
 		_weakness_icon.texture = load(WEAKNESS_ICONS[weakness])
 	else:
 		_weakness_icon.texture = load(ICON_NONE)  # aucune faiblesse à cette position ce tour
+
 
 ## Portrait carré taillé dans le haut de l'illustration (là où est la tête), plutôt
 ## qu'une pleine planche écrasée dans un carré.

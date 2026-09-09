@@ -16,7 +16,12 @@ const SPADE := &"spade"
 
 ## Spirimonstres dont un Dig peut livrer une info encyclo (doc Walls + Decors).
 const INFO_SPECIES: Array[StringName] = [
-	&"mastel", &"kurkab", &"sopiark", &"firulis", &"skorpis", &"yilir",
+	&"mastel",
+	&"kurkab",
+	&"sopiark",
+	&"firulis",
+	&"skorpis",
+	&"yilir",
 ]
 
 ## Objets qu'un creusage peut donner (placeholder ; loot précis à définir côté design).
@@ -30,6 +35,7 @@ const INFO_SPECIES: Array[StringName] = [
 
 var _dug := false
 
+
 ## Action Dig, seulement si le joueur est sur la case, qu'elle n'a pas déjà été creusée, et
 ## qu'il possède une pelle.
 func on_tile_actions(who: Node) -> Array:
@@ -37,15 +43,18 @@ func on_tile_actions(who: Node) -> Array:
 		return []
 	return [ExplorationAction.new(&"dig", "UI_ACTION_DIG", Callable(self, "dig").bind(who))]
 
+
 ## Vrai si la case a déjà été creusée cette visite (icône sur la carte).
 func has_been_dug() -> bool:
 	return _dug
+
 
 ## Déjà creusé cette visite : plus d'action Dig (règle transverse « épuisé »). C'est aussi ce
 ## que lit la carte pour marquer la case, comme le demande la doc (« an icon is shown on the
 ## dungeon map after it has been dug a first time »).
 func is_spent() -> bool:
 	return _dug
+
 
 ## Creuse : dépense une pelle, puis livre objet / info / piège. Sans pelle, ne fait rien.
 func dig(who: Node) -> void:
@@ -68,9 +77,11 @@ func dig(who: Node) -> void:
 		if aff != null:
 			aff.add_poison(trap_poison_turns, trap_poison_per_turn)
 
+
 func reset_between_visits() -> void:
 	_dug = false
 	_respawn_marker()  # creusable de nouveau : la terre retrouve sa couleur
+
 
 func _spawn_visual() -> void:
 	_add_marker(Color(0.5, 0.35, 0.2), 0.1, 0.9)  # sol terreux, très plat

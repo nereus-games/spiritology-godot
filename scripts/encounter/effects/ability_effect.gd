@@ -8,9 +8,11 @@
 class_name AbilityEffect
 extends RefCounted
 
+
 ## Tag Notion correspondant (cf. [member AbilityData.tags]).
 func tag() -> StringName:
 	return &""
+
 
 ## Applique l'effet à la rencontre. À surcharger.
 func execute(_ctx: EncounterContext) -> void:

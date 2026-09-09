@@ -2,6 +2,7 @@
 ## MÉCANIQUE : le rival ciblé perd une action au hasard à son prochain tour et perd X ETH.
 extends AbilityScript
 
+
 func execute(ctx: EncounterContext) -> void:
 	var t = ctx.primary()
 	if t:

@@ -36,16 +36,19 @@ var _origin: Vector3i
 var _at_far_end := false
 var _moving := false
 
+
 func _on_registered() -> void:
 	_origin = cell
 	if path.is_empty():
 		push_warning("[Elevator] en %s : aucun trajet renseigné." % cell)
+
 
 ## Autre bout du trajet : le dernier point de passage à l'aller, la case de départ au retour.
 func far_end() -> Vector3i:
 	if path.is_empty():
 		return cell
 	return _origin if _at_far_end else path[path.size() - 1]
+
 
 ## Points à parcourir, dans l'ordre, pour rejoindre l'autre bout depuis la position courante.
 func _route() -> Array:
@@ -60,10 +63,12 @@ func _route() -> Array:
 		return back
 	return path.duplicate()
 
+
 ## Poser le pied dessus suffit à l'actionner (doc). Vaut pour le joueur comme pour un rival :
 ## la doc « Rivals » veut qu'un rival suive le joueur par les moyens sans coût en DEN.
 func on_enter(who: Node) -> void:
 	ride(who)
+
 
 ## Emmène `who` et la plateforme à l'autre bout. Retourne la case d'arrivée (ou la case
 ## courante si le trajet n'a pas pu se faire).
@@ -91,12 +96,14 @@ func ride(who: Node) -> Vector3i:
 	tween.finished.connect(func() -> void: _moving = false)
 	return dest
 
+
 ## Enchaîne un déplacement le long de `route`, à `per_segment` secondes par point de passage.
 func _travel_tween(node: Node3D, route: Array, per_segment: float) -> Tween:
 	var tween := node.create_tween()
 	for wp in route:
 		tween.tween_property(node, "global_position", _dungeon.cell_to_world(wp), per_segment)
 	return tween
+
 
 ## Emporte le passager avec la plateforme : sa case change tout de suite (la logique de tour en
 ## dépend), mais son corps suit la trajectoire au lieu de se téléporter.
@@ -115,27 +122,35 @@ func _carry(who: Node, from: Vector3i, dest: Vector3i, route: Array, per_segment
 	if locked:
 		who.input_locked = true
 	var tween := _travel_tween(who, route, per_segment)
-	tween.finished.connect(func() -> void:
-		if locked and is_instance_valid(who):
-			who.input_locked = false)
+	tween.finished.connect(
+		func() -> void:
+			if locked and is_instance_valid(who):
+				who.input_locked = false
+	)
+
 
 # --- Changement d'étage (interface commune, cf. DungeonMechanism) ---
+
 
 ## Un ascenseur purement HORIZONTAL ne relie pas deux étages : il ne sert alors à rien pour la
 ## poursuite d'un rival, qui n'a qu'à marcher.
 func has_level_link() -> bool:
 	return far_end().y != cell.y
 
+
 ## On emprunte un ascenseur en MONTANT DESSUS : la case d'abord est la plateforme elle-même.
 func level_link_from() -> Vector3i:
 	return cell
 
+
 func level_link_to() -> Vector3i:
 	return far_end()
+
 
 ## Pas d'entrée « dans » le mécanisme : arriver sur la plateforme suffit ([method on_enter]).
 func level_link_needs_step_in() -> bool:
 	return false
+
 
 ## Plateforme : dalle épaisse posée au sol de la case, franchement colorée pour la repérer.
 func _spawn_visual() -> void:

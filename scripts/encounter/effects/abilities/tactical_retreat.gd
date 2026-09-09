@@ -3,6 +3,7 @@
 ## convertis en gain d'ETH jusqu'à son prochain tour (conversion : approximée par immunité).
 extends AbilityScript
 
+
 func execute(ctx: EncounterContext) -> void:
 	ctx.move_to_last(ctx.user)
 	ctx.grant_immunity(ctx.user, [GameEnums.Energy.ARCANE])

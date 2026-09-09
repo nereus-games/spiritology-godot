@@ -84,6 +84,7 @@ var _applied_input := 0.0
 var _fallen := false
 var _rng := RandomNumberGenerator.new()
 
+
 ## `seed_value >= 0` rend les perturbations déterministes (tests).
 func _init(seed_value := -1) -> void:
 	if seed_value >= 0:
@@ -92,6 +93,7 @@ func _init(seed_value := -1) -> void:
 		_rng.randomize()
 	_gust_timer = _rng.randf_range(GUST_MIN_PERIOD, GUST_MAX_PERIOD)
 
+
 ## Configure le test selon le score PSY, la longueur d'une case (toujours 1 : le test est
 ## continu, chaque case est un segment) et l'état disarray.
 func configure(psy_score: int, length: int = 1, disarrayed: bool = false) -> void:
@@ -99,11 +101,13 @@ func configure(psy_score: int, length: int = 1, disarrayed: bool = false) -> voi
 	forward_speed = 1.0 / (maxf(float(length), 1.0) * seconds_per_cell)
 	disarray_inertia = DISARRAY_INERTIA if disarrayed else 0.0
 
+
 ## Case franchie : on repart pour la suivante SANS remettre l'équilibre à plat. Le
 ## déséquilibre, la vitesse latérale, la bourrasque en cours et la commande déjà engagée
 ## sont conservés — sinon chaque bord de case effacerait l'élan (anti-inertie).
 func restart_cell() -> void:
 	progress = 0.0
+
 
 ## Avance d'un pas de temps. `lateral_input` ∈ [-1, 1] = correction latérale du joueur.
 func tick(delta: float, lateral_input: float) -> void:
@@ -120,8 +124,7 @@ func tick(delta: float, lateral_input: float) -> void:
 	# Inertie de commande : l'entrée met du temps à s'établir ET à retomber. Le disarray
 	# allonge cette constante de temps — la correction arrive en retard, donc dépasse.
 	var tau := COMMAND_INERTIA * (1.0 + disarray_inertia)
-	_applied_input = lerpf(_applied_input, clampf(lateral_input, -1.0, 1.0),
-			minf(1.0, delta / tau))
+	_applied_input = lerpf(_applied_input, clampf(lateral_input, -1.0, 1.0), minf(1.0, delta / tau))
 	# Pendule inversé : plus on est penché, plus la vitesse de chute augmente (instable).
 	lateral_velocity += imbalance * instability * delta
 	lateral_velocity += _gust * delta
@@ -135,11 +138,14 @@ func tick(delta: float, lateral_input: float) -> void:
 	if absf(imbalance) >= FALL_THRESHOLD:
 		_fallen = true
 
+
 func is_fallen() -> bool:
 	return _fallen
 
+
 func is_complete() -> bool:
 	return progress >= 1.0 and not _fallen
+
 
 ## En cours = engagé, ni tombé ni arrivé.
 func is_active() -> bool:

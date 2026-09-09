@@ -41,6 +41,7 @@ var _noise_t := 0.0
 var _idle_timer := 0.0
 var _cam_base_pos := Vector3.ZERO
 
+
 func _ready() -> void:
 	_player = get_parent() as PlayerController
 	_noise.noise_type = FastNoiseLite.TYPE_PERLIN
@@ -51,18 +52,22 @@ func _ready() -> void:
 		vp.size_changed.connect(_update_fov)
 	_update_fov()
 
+
 ## Regard vertical, en degrés (positif = vers le haut). Borné, appliqué immédiatement.
 func set_pitch(deg: float) -> void:
 	_pitch_deg = clampf(deg, pitch_min_deg, pitch_max_deg)
 	rotation.x = deg_to_rad(_pitch_deg)
+
 
 ## Roulis (inclinaison latérale) de la vue, en degrés — simule la perte d'équilibre sur un
 ## pont étroit. 0 = horizon droit.
 func set_roll(deg: float) -> void:
 	rotation.z = deg_to_rad(deg)
 
+
 func _process(delta: float) -> void:
 	_update_idle_noise(delta)
+
 
 ## Rogne le FOV vertical pour que le FOV horizontal reste sous [member max_hfov_deg].
 func _update_fov() -> void:
@@ -82,6 +87,7 @@ func _update_fov() -> void:
 		var clamped := rad_to_deg(2.0 * atan(tan(deg_to_rad(max_hfov_deg) * 0.5) / aspect))
 		_camera.fov = maxf(clamped, minf(min_fov, base_fov))
 
+
 func _update_idle_noise(delta: float) -> void:
 	if _camera == null:
 		return
@@ -89,8 +95,9 @@ func _update_idle_noise(delta: float) -> void:
 	_idle_timer = _idle_timer + delta if at_rest else 0.0
 	var intensity := 1.0 if _idle_timer > idle_delay else 0.0
 	_noise_t += delta * idle_frequency
-	var offset := Vector3(
-		_noise.get_noise_2d(_noise_t, 0.0),
-		_noise.get_noise_2d(0.0, _noise_t),
-		0.0) * idle_amplitude * intensity
+	var offset := (
+		Vector3(_noise.get_noise_2d(_noise_t, 0.0), _noise.get_noise_2d(0.0, _noise_t), 0.0)
+		* idle_amplitude
+		* intensity
+	)
 	_camera.position = _camera.position.lerp(_cam_base_pos + offset, delta * 8.0)

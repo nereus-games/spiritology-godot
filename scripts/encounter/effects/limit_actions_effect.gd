@@ -4,8 +4,10 @@ extends AbilityEffect
 
 const DEFAULT_AMOUNT := 1
 
+
 func tag() -> StringName:
 	return &"limit actions"
+
 
 func execute(ctx: EncounterContext) -> void:
 	for t in ctx.targets:

@@ -11,6 +11,7 @@ extends RefCounted
 const TalentScript := preload("res://scripts/encounter/talents/talent_script.gd")
 const IMPL_DIR := "res://scripts/encounter/talents/impl/"
 
+
 ## Instancie le script dédié d'un talent, champs `talent`/`owner`/`stacks` posés.
 ## `talent` peut être null (combattant sans talent) : renvoie alors un no-op neutre.
 static func script_for(talent: TalentData, owner: EncounterFighter, stacks: int) -> RefCounted:

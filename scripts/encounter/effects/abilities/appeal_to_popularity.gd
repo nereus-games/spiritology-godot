@@ -3,6 +3,7 @@
 ## les dégâts autant de fois que le plus grand groupe de même faiblesse.
 extends AbilityScript
 
+
 func execute(ctx: EncounterContext) -> void:
 	var n := ctx.largest_same_weakness_group()
 	if n < 2:

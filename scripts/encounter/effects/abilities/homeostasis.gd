@@ -4,6 +4,7 @@
 ## (Maintien de position = ne rien réordonner ; gain d'ETH au moment des dégâts : TODO.)
 extends AbilityScript
 
+
 func execute(ctx: EncounterContext) -> void:
 	# Conserve la position : aucune demande de réordonnancement.
 	ctx.recover_eth(ctx.user, ctx.dmg(&"small"))  # approx. du gain conditionnel

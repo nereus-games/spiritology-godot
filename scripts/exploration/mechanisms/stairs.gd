@@ -21,29 +21,37 @@ extends "res://scripts/exploration/mechanisms/dungeon_mechanism.gd"
 ## Direction horizontale que « regarde » l'escalier (pour l'orientation du visuel).
 @export var face_dir := Vector3i(0, 0, 1)
 
+
 ## Case d'arrivée quand on avance vers cet escalier depuis `from_cell` dans la direction
 ## `delta` : 2 cases plus loin + changement d'étage (modèle Unity `pos + dir*2 + up/down`).
 func stairs_destination(from_cell: Vector3i, delta: Vector3i) -> Vector3i:
 	return from_cell + delta * 2 + Vector3i(0, level_delta, 0)
 
+
 # --- Changement d'étage (interface commune, cf. DungeonMechanism) ---
+
 
 func has_level_link() -> bool:
 	return true
+
 
 ## On aborde un escalier depuis la case située dans son dos, en marchant vers lui.
 func level_link_from() -> Vector3i:
 	return cell - face_dir
 
+
 func level_link_to() -> Vector3i:
 	return stairs_destination(level_link_from(), face_dir)
+
 
 ## Un escalier se prend en ENTRANT dedans depuis la case d'abord.
 func level_link_needs_step_in() -> bool:
 	return true
 
+
 ## Nombre de marches (proto Unity : forme ProBuilder « Stairs » de 6 marches).
 const STEP_COUNT := 6
+
 
 ## Visuel : un BLOC PLEIN de la taille d'une case, taillé en marches sur sa face avant (modèle
 ## du proto Unity : ProBuilder Stairs 1×1×1, 6 marches, côtés fermés). Vu de côté ou de

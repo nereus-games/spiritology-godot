@@ -12,8 +12,10 @@ extends Node
 const ScenarioCatalog := preload("res://scripts/dev/scenario_catalog.gd")
 const EXPLORATION := preload("res://scenes/exploration/exploration.tscn")
 
+
 func _ready() -> void:
 	_run()
+
 
 func _run() -> void:
 	var args := OS.get_cmdline_user_args()
@@ -34,9 +36,20 @@ func _run() -> void:
 		pl.set_start_yaw(deg_to_rad(float(parts[1])))
 		await get_tree().process_frame
 	var cam: Camera3D = pl.get_node("CameraRig/Camera3D")
-	print("[shot] joueur %s cell=%s yaw=%.0f° | caméra %s regarde %s | current=%s fov=%.0f" % [
-		pl.global_position, pl.cell, rad_to_deg(pl.rotation.y),
-		cam.global_position, -cam.global_transform.basis.z, cam.current, cam.fov])
+	print(
+		(
+			"[shot] joueur %s cell=%s yaw=%.0f° | caméra %s regarde %s | current=%s fov=%.0f"
+			% [
+				pl.global_position,
+				pl.cell,
+				rad_to_deg(pl.rotation.y),
+				cam.global_position,
+				-cam.global_transform.basis.z,
+				cam.current,
+				cam.fov
+			]
+		)
+	)
 	if view == "top":
 		var top := Camera3D.new()
 		scene.add_child(top)

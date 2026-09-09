@@ -4,6 +4,7 @@
 ## type-faiblesse sont doublés pour tous ce tour (doublement global : TODO).
 extends AbilityScript
 
+
 func execute(ctx: EncounterContext) -> void:
 	var t = ctx.primary()
 	if t:

@@ -51,20 +51,25 @@ var _opened := false
 ## case (téléportation acceptée ou refusée), comme le choix détruire/subir du dieverting.
 var _pending := false
 
+
 func is_opened() -> bool:
 	return _opened
+
 
 ## Un coffre ouvert n'a plus rien à donner (règle transverse « épuisé »).
 func is_spent() -> bool:
 	return _opened
 
+
 ## Un choix téléportation oui/non est-il en attente sur cette case ?
 func is_pending() -> bool:
 	return _pending
 
+
 ## Révèle le coffre sur la carte sans l'ouvrir (talent « Trick to Reveal »).
 func reveal() -> void:
 	revealed = true
+
 
 func on_enter(who: Node) -> void:
 	if _opened:
@@ -87,17 +92,25 @@ func on_enter(who: Node) -> void:
 	_close()
 	_deliver(_roll_loot())
 
+
 ## Actions proposées tant que le choix « Reveal Traps » est en attente (doc : téléporter ou
 ## non, du butin dans les deux cas — davantage si l'on accepte).
 func on_tile_actions(who: Node) -> Array:
 	if _opened or not _pending:
 		return []
 	return [
-		ExplorationAction.new(&"chest_teleport", "UI_ACTION_CHEST_TELEPORT",
-				Callable(self, "accept_teleport").bind(who)),
-		ExplorationAction.new(&"chest_decline", "UI_ACTION_CHEST_DECLINE",
-				Callable(self, "decline_teleport").bind(who)),
+		ExplorationAction.new(
+			&"chest_teleport",
+			"UI_ACTION_CHEST_TELEPORT",
+			Callable(self, "accept_teleport").bind(who)
+		),
+		ExplorationAction.new(
+			&"chest_decline",
+			"UI_ACTION_CHEST_DECLINE",
+			Callable(self, "decline_teleport").bind(who)
+		),
 	]
+
 
 ## Choix « Reveal Traps » : accepter la téléportation, contre un butin plus généreux.
 func accept_teleport(who: Node) -> void:
@@ -107,6 +120,7 @@ func accept_teleport(who: Node) -> void:
 	_deliver(_pick_from_pool(trap_loot_accepted))
 	_teleport(who)
 
+
 ## Choix « Reveal Traps » : refuser la téléportation ; le coffre livre quand même du butin.
 ## Le piège ne se déclenche pas, donc il ne rompt pas l'invisibilité (règle fog mantel).
 func decline_teleport(_who: Node) -> void:
@@ -115,10 +129,12 @@ func decline_teleport(_who: Node) -> void:
 	_close()
 	_deliver(_pick_from_pool(trap_loot_declined))
 
+
 ## Le piège se déclenche : téléportation sèche, sans butin (cas ordinaire, sans talent).
 func _spring(who: Node) -> void:
 	_close()
 	_teleport(who)
+
 
 func _teleport(who: Node) -> void:
 	if _dungeon != null:
@@ -127,6 +143,7 @@ func _teleport(who: Node) -> void:
 	if is_instance_valid(who) and who.has_method("clear_invisibility"):
 		who.clear_invisibility()
 
+
 ## Marque le coffre comme ouvert : plus d'actions, et un visuel inerte (comme un piège
 ## épuisé) pour qu'on ne revienne pas dessus en espérant du butin.
 func _close() -> void:
@@ -134,11 +151,13 @@ func _close() -> void:
 	_pending = false
 	_mark_spent()
 
+
 ## Contenu du coffre : le contenu imposé s'il y en a un (dieverting), sinon un tirage.
 func _roll_loot() -> Array[StringName]:
 	if not fixed_loot.is_empty():
 		return fixed_loot.duplicate()
 	return _pick_from_pool(randi_range(loot_min, loot_max))
+
 
 ## `count` objets tirés au hasard dans [member loot_pool] (doublons possibles).
 func _pick_from_pool(count: int) -> Array[StringName]:
@@ -148,6 +167,7 @@ func _pick_from_pool(count: int) -> Array[StringName]:
 	for i in range(count):
 		picked.append(loot_pool[randi() % loot_pool.size()])
 	return picked
+
 
 ## Verse le butin à l'inventaire et l'annonce au joueur (bandeau de messages du HUD).
 func _deliver(loot: Array[StringName]) -> void:
@@ -161,10 +181,12 @@ func _deliver(loot: Array[StringName]) -> void:
 	if _dungeon != null:
 		_dungeon.post_message(tr("UI_CHEST_LOOT") % ", ".join(names))
 
+
 ## Les coffres ouverts le restent entre visites (pas de réarmement). Un choix laissé en
 ## suspens, lui, ne survit pas à la sortie du donjon : le coffre est de nouveau intact.
 func reset_between_visits() -> void:
 	_pending = false
+
 
 func _spawn_visual() -> void:
 	_add_marker(Color(0.75, 0.6, 0.25), 0.35, 0.55)  # coffre doré (piégé ou non : identique)

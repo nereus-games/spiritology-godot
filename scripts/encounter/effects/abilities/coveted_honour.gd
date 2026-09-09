@@ -3,6 +3,7 @@
 ## un rival au hasard subit des dégâts.
 extends AbilityScript
 
+
 func execute(ctx: EncounterContext) -> void:
 	var ally = ctx.last_of_team_in_order()
 	if ally:

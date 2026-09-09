@@ -8,6 +8,7 @@
 class_name EncounterAgent
 extends RefCounted
 
+
 ## Renvoie l'action de `fighter` pour ce tour, ou null s'il ne peut rien faire.
 ## Peut être une coroutine : le manager `await` toujours le résultat.
 func decide(_fighter: EncounterFighter, _manager: EncounterManager) -> EncounterAction:

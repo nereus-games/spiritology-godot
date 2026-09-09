@@ -41,6 +41,7 @@ var unpursued_moves := 0
 ## Espèce dont le joueur a l'apparence (costume), le cas échéant.
 var disguise_species := &""
 
+
 func _ready() -> void:
 	_dungeon = get_tree().get_first_node_in_group("dungeon") as DungeonManager
 	if _dungeon == null:
@@ -55,9 +56,11 @@ func _ready() -> void:
 	# souris, modèle Unity) ; le corps rejoint l'angle visé en continu dans _process.
 	_target_yaw_deg = rad_to_deg(rotation.y)
 
+
 ## Vrai si aucun déplacement/rotation en cours (autorise une nouvelle action).
 func is_at_rest() -> bool:
 	return not _busy
+
 
 ## Direction actuellement regardée, en delta de case (x, 0, z) — pour interroger les actions
 ## contextuelles de la case regardée. Basée sur l'orientation de DÉPLACEMENT (cardinale), pas
@@ -66,6 +69,7 @@ func facing_delta() -> Vector3i:
 	var world := Basis(Vector3.UP, deg_to_rad(_move_yaw_deg)) * Vector3.FORWARD
 	return Vector3i(roundi(world.x), 0, roundi(world.z))
 
+
 func _process(delta: float) -> void:
 	# Le corps rejoint en continu l'angle visé (regard libre + rotations 90°), par le chemin
 	# le plus court.
@@ -73,18 +77,22 @@ func _process(delta: float) -> void:
 	var step := deg_to_rad(yaw_follow_speed) * delta
 	rotation.y += clampf(angle_difference(rotation.y, target), -step, step)
 
+
 ## Fixe l'angle de lacet VISUEL visé (degrés), posé par [PlayerInputHandler].
 func set_yaw_target(deg: float) -> void:
 	_target_yaw_deg = deg
+
 
 ## Fixe l'angle de lacet de DÉPLACEMENT (degrés, multiple de 90°), posé par [PlayerInputHandler]
 ## une fois une rotation de 90° accomplie.
 func set_move_yaw(deg: float) -> void:
 	_move_yaw_deg = deg
 
+
 ## Angle de lacet visé courant (degrés) — lu par [PlayerInputHandler] pour s'initialiser.
 func current_yaw_deg() -> float:
 	return _target_yaw_deg
+
 
 ## Oriente immédiatement le joueur (corps + cible visuelle + déplacement) — au placement.
 func set_start_yaw(rad: float) -> void:
@@ -92,12 +100,14 @@ func set_start_yaw(rad: float) -> void:
 	_target_yaw_deg = rad_to_deg(rad)
 	_move_yaw_deg = rad_to_deg(rad)
 
+
 ## Une rotation vient d'être effectuée (au clavier, ou par dérive du regard libre au-delà de
 ## [member PlayerInputHandler.commit_angle]) :
 ## fait avancer le tour, comme un pas.
 func rotated_90() -> void:
 	if _dungeon != null:
 		_dungeon.advance_turn()
+
 
 ## Tente un pas dans une direction LOCALE (Vector3.FORWARD/BACK/LEFT/RIGHT).
 func try_move(local_dir: Vector3) -> void:
@@ -159,6 +169,7 @@ func try_move(local_dir: Vector3) -> void:
 	_dungeon.notify_entered(cell, self)
 	_dungeon.advance_turn()
 
+
 ## Chute vers `landing` (case de sol en contrebas) : descente animée, dégâts ∝ nombre de
 ## niveaux, puis résolution normale (mécanismes de la case + avance de tour).
 ##
@@ -180,6 +191,7 @@ func fall_to(landing: Vector3i, levels: int) -> void:
 	_dungeon.notify_entered(cell, self)
 	_dungeon.advance_turn()
 
+
 ## Chute SANS FOND (trou franc du level design) : le duo tombe hors du donjon et est dévitalisé
 ## — un sol qu'on n'atteint jamais est un sol trop bas pour qu'on y survive. On ne bloque pas
 ## silencieusement le pas : le donjon est en faute, ça doit se voir en jouant.
@@ -189,11 +201,17 @@ func fall_to(landing: Vector3i, levels: int) -> void:
 func fall_forever(into: Vector3i) -> void:
 	input_locked = true
 	_busy = true
-	push_warning("[PlayerController] chute sans fond en %s : le level design a laissé un trou sans sol." % into)
+	push_warning(
+		(
+			"[PlayerController] chute sans fond en %s : le level design a laissé un trou sans sol."
+			% into
+		)
+	)
 	var tween := create_tween()
 	tween.set_ease(Tween.EASE_IN)
-	tween.tween_property(self, "global_position",
-			_dungeon.cell_to_world(into) - Vector3(0.0, 6.0, 0.0), 0.8)
+	tween.tween_property(
+		self, "global_position", _dungeon.cell_to_world(into) - Vector3(0.0, 6.0, 0.0), 0.8
+	)
 	await tween.finished
 	_busy = false
 	GameSession.set_den(GameSession.PartySlot.MAIN, 0)
@@ -201,11 +219,13 @@ func fall_forever(into: Vector3i) -> void:
 	GameSession.resolve_party_wipe()  # dévitalisation : sortie du donjon
 	input_locked = false
 
+
 ## Une direction de translation locale au hasard, différente de `dir` (déviation disarray).
 func _random_translation_except(dir: Vector3) -> Vector3:
 	var dirs := [Vector3.FORWARD, Vector3.BACK, Vector3.LEFT, Vector3.RIGHT]
 	dirs.erase(dir)
 	return dirs[randi() % dirs.size()]
+
 
 ## Relocalisation instantanée sur une case (piège de téléportation). L'occupation est gérée
 ## par [method DungeonManager.teleport_actor] ; le joueur, lui, n'occupe pas de case.
@@ -213,12 +233,14 @@ func teleport_to(to_cell: Vector3i) -> void:
 	cell = to_cell
 	global_position = _dungeon.cell_to_world(to_cell)
 
+
 ## Escalier présent sur la case `c` (mécanisme exposant `stairs_destination`), ou null.
 func _stairs_at(c: Vector3i) -> Node:
 	for m in _dungeon.mechanisms_at(c):
 		if m.has_method("stairs_destination"):
 			return m
 	return null
+
 
 ## Franchit un escalier : montée/descente LISSE vers `dest` (autre étage, 2 cases plus loin),
 ## puis résolution normale (mécanismes de la case + avance de tour).
@@ -236,13 +258,16 @@ func _climb_step(dest: Vector3i) -> void:
 	_dungeon.notify_entered(cell, self)
 	_dungeon.advance_turn()
 
+
 # --------------------------------------------------------------------------
 # Discrétion (invisibilité / non-poursuite) — capacités & objets d'exploration
 # --------------------------------------------------------------------------
 
+
 ## Rend invisible des rivaux pour `tiles` déplacements (fog mantel). Prend le maximum.
 func set_invisible(tiles: int) -> void:
 	invisible_moves = maxi(invisible_moves, tiles)
+
 
 ## Empêche la poursuite pour `moves` déplacements (torment veil / costume).
 func set_unpursued(moves: int, species: StringName = &"") -> void:
@@ -250,19 +275,23 @@ func set_unpursued(moves: int, species: StringName = &"") -> void:
 	if species != &"":
 		disguise_species = species
 
+
 ## Le joueur est-il indétectable par les rivaux (invisible ou non-poursuivi) ?
 func is_hidden_from_rivals() -> bool:
 	return invisible_moves > 0 or unpursued_moves > 0
 
+
 ## Annule uniquement l'invisibilité (règle fog mantel : rompue par piège/rencontre).
 func clear_invisibility() -> void:
 	invisible_moves = 0
+
 
 ## Annule toute discrétion (à l'entrée d'une rencontre).
 func clear_hidden() -> void:
 	invisible_moves = 0
 	unpursued_moves = 0
 	disguise_species = &""
+
 
 ## Décompte les états de discrétion d'un déplacement.
 func _tick_hidden_on_move() -> void:
@@ -272,6 +301,7 @@ func _tick_hidden_on_move() -> void:
 		unpursued_moves -= 1
 		if unpursued_moves == 0:
 			disguise_species = &""
+
 
 ## Fin de tour : applique les afflictions persistantes. Le poison retire du DEN aux DEUX
 ## personnages du duo (le joueur sur la carte = le duo), et déclenche la sortie de donjon

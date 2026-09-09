@@ -3,8 +3,10 @@
 class_name ChangeWeaknessEffect
 extends AbilityEffect
 
+
 func tag() -> StringName:
 	return &"change weakness"
+
 
 func execute(ctx: EncounterContext) -> void:
 	for t in ctx.targets:

@@ -2,6 +2,7 @@
 ## MÉCANIQUE : le premier rival dans l'ordre du tour subit des dégâts.
 extends AbilityScript
 
+
 func execute(ctx: EncounterContext) -> void:
 	var t = ctx.first_opponent_in_order()
 	if t:

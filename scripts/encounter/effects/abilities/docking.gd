@@ -4,12 +4,18 @@
 ## de la cible devient celle du user ; puis petits dégâts à nouveau (deux fois).
 extends AbilityScript
 
+
 func execute(ctx: EncounterContext) -> void:
 	var order: Array = ctx.timeline.order if ctx.timeline else ctx.all_fighters
 	var i := order.find(ctx.user)
 	var t = null
 	for j in [i - 1, i + 1]:
-		if j >= 0 and j < order.size() and order[j].is_player != ctx.user.is_player and not order[j].is_dissolved():
+		if (
+			j >= 0
+			and j < order.size()
+			and order[j].is_player != ctx.user.is_player
+			and not order[j].is_dissolved()
+		):
 			t = order[j]
 			break
 	if t == null:

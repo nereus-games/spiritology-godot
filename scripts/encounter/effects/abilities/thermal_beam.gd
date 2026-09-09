@@ -3,6 +3,7 @@
 ## réduits si le user est bas en vie : small entre 50–75 % DEN, mini sous 50 %.
 extends AbilityScript
 
+
 func execute(ctx: EncounterContext) -> void:
 	var ratio := float(ctx.user.den) / maxf(ctx.user.max_den, 1)
 	var tier := &"normal"

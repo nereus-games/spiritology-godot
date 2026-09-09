@@ -38,6 +38,7 @@ const _ORDER: Array[StringName] = [
 static var _tag_map: Dictionary = {}
 static var _built := false
 
+
 static func _ensure_built() -> void:
 	if _built:
 		return
@@ -57,6 +58,7 @@ static func _ensure_built() -> void:
 		&"gives info/Examine bonus": ExamineBonusEffect,
 	}
 
+
 ## Renvoie l'orchestrateur d'effet d'une capacité : son script dédié s'il existe,
 ## sinon un [AbilityScript] générique (comportement par tags).
 static func script_for(ability: AbilityData) -> AbilityScript:
@@ -70,6 +72,7 @@ static func script_for(ability: AbilityData) -> AbilityScript:
 			return inst
 		push_warning("[EffectCatalog] %s n'étend pas AbilityScript." % path)
 	return AbilityScript.new()
+
 
 ## Briques d'effets génériques dérivées des tags, dans l'ordre canonique. Utilisé par
 ## le comportement par défaut d'[AbilityScript] et par les scripts dédiés qui veulent
@@ -87,6 +90,7 @@ static func tag_effects(tags: PackedStringArray) -> Array[AbilityEffect]:
 		if not _tag_map.has(tag):
 			push_warning("[EffectCatalog] tag d'effet non géré : '%s'" % tag)
 	return out
+
 
 ## Instancie une brique d'effet générique par tag (pour composition dans un script dédié).
 static func effect(tag: StringName) -> AbilityEffect:

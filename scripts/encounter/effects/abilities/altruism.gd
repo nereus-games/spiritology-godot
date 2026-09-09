@@ -3,6 +3,7 @@
 ## X DEN. (Destruction d'objet via l'inventaire de la session : TODO.)
 extends AbilityScript
 
+
 func execute(ctx: EncounterContext) -> void:
 	var t = ctx.primary()
 	if t == null:

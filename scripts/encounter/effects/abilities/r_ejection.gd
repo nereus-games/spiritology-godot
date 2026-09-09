@@ -4,6 +4,7 @@
 ## modification du tour) ; il est immunisé aux dégâts Fluide et Toxique jusqu'à son prochain tour.
 extends AbilityScript
 
+
 func execute(ctx: EncounterContext) -> void:
 	ctx.hide_weakness(ctx.user)
 	if ctx.rng.randf() < 0.5:

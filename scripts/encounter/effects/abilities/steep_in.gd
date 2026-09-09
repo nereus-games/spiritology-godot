@@ -3,6 +3,7 @@
 ## cible, puis sa propre faiblesse devient celle de la cible.
 extends AbilityScript
 
+
 func execute(ctx: EncounterContext) -> void:
 	ctx.set_energy(ctx.weakness_of(ctx.user))
 	var t = ctx.primary()

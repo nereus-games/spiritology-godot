@@ -16,6 +16,7 @@ var label_key: String
 ## À invoquer quand le joueur choisit l'action (déjà liée à sa cible/acteur).
 var callable: Callable
 
+
 func _init(p_id: StringName, p_label_key: String, p_callable: Callable) -> void:
 	id = p_id
 	label_key = p_label_key

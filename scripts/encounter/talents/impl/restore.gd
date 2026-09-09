@@ -16,6 +16,7 @@ extends "res://scripts/encounter/talents/talent_script.gd"
 const DEN_FRACTION := 0.2
 const ETH_FRACTION := 0.35
 
+
 func on_encounter_end(manager, result: StringName) -> void:
 	# Pas de résurrection : sur une défaite, le duo est dissous, « après la rencontre » n'a
 	# pas de sens. On ne rend que si l'équipe a survécu.
@@ -27,6 +28,7 @@ func on_encounter_end(manager, result: StringName) -> void:
 		f.recover_den(roundi(f.max_den * DEN_FRACTION))
 		f.recover_eth(roundi(f.max_eth * ETH_FRACTION))
 	manager.note_talent("%s : le duo récupère DEN/ETH en fin de rencontre." % _label())
+
 
 func _label() -> String:
 	return String(TranslationServer.translate(talent.name_key())) if talent else "Restore"

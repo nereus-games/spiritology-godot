@@ -4,6 +4,7 @@
 ## autre individu au hasard.
 extends AbilityScript
 
+
 func execute(ctx: EncounterContext) -> void:
 	var pool := ctx.others()
 	if not pool.is_empty():

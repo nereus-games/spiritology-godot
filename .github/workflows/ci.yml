@@ -68,3 +68,26 @@ jobs:
 
       - name: reuse lint
         run: reuse lint
+
+  style:
+    name: Format et lint GDScript
+    runs-on: ubuntu-latest
+
+    # Job séparé : gdtoolkit n'a pas besoin de Godot. `gdformat --check` échoue si un
+    # fichier n'est pas au format canonique, `gdlint` applique gdlintrc (dont chaque
+    # assouplissement est justifié dans le fichier lui-même).
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Installer gdtoolkit
+        run: pip install --quiet "gdtoolkit==4.*"
+
+      - name: gdformat --check
+        run: gdformat --check $(git ls-files '*.gd')
+
+      - name: gdlint
+        run: gdlint $(git ls-files '*.gd')

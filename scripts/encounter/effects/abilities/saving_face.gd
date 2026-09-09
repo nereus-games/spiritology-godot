@@ -4,6 +4,7 @@
 ## est Toxique).
 extends AbilityScript
 
+
 func execute(ctx: EncounterContext) -> void:
 	var t = ctx.user  # cible dans l'équipe
 	var w := ctx.weakness_of(t)

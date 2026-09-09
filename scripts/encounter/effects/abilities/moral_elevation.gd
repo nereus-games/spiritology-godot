@@ -4,6 +4,7 @@
 ## ne peut changer sa faiblesse jusqu'à son prochain tour. (Condition d'entraide : TODO.)
 extends AbilityScript
 
+
 func execute(ctx: EncounterContext) -> void:
 	ctx.recover_eth(ctx.user, ctx.user.max_eth)
 	ctx.remove_weakness(ctx.user)

@@ -3,6 +3,7 @@
 ## Méditer au prochain tour.
 extends AbilityScript
 
+
 func execute(ctx: EncounterContext) -> void:
 	var t = ctx.user  # cible dans l'équipe
 	ctx.recover_den(t, t.max_den)

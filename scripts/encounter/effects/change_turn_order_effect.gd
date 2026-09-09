@@ -4,8 +4,10 @@
 class_name ChangeTurnOrderEffect
 extends AbilityEffect
 
+
 func tag() -> StringName:
 	return &"change next TO"
+
 
 func execute(ctx: EncounterContext) -> void:
 	ctx.change_turn_order({"ability": ctx.ability.id})

@@ -3,6 +3,7 @@
 ## user) ; le user peut (ou non) lui choisir une nouvelle faiblesse parmi 2.
 extends AbilityScript
 
+
 func execute(ctx: EncounterContext) -> void:
 	var allies := ctx.allies()
 	var t = ctx.random_of(allies) if not allies.is_empty() else ctx.user

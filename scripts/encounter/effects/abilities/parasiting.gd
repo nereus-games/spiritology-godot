@@ -3,6 +3,7 @@
 ## jusqu'à la fin de la rencontre (arrondi sup., tirées au hasard, non cumulatif).
 extends AbilityScript
 
+
 func execute(ctx: EncounterContext) -> void:
 	var t = ctx.primary()
 	if t:

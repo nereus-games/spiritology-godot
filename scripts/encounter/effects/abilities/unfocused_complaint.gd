@@ -4,6 +4,7 @@
 ## les autres pour l'instant — à restreindre quand le système d'actions existera.)
 extends AbilityScript
 
+
 func execute(ctx: EncounterContext) -> void:
 	for o in ctx.others():
 		ctx.deal_damage(o, ctx.base_damage())  # TODO : seulement si o Médite ce tour

@@ -2,6 +2,7 @@
 ## MÉCANIQUE : la cible subit des dégâts, puis sa faiblesse devient Cristal.
 extends AbilityScript
 
+
 func execute(ctx: EncounterContext) -> void:
 	var t = ctx.primary()
 	if t:

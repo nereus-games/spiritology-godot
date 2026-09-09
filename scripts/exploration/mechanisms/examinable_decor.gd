@@ -20,15 +20,37 @@ enum DecorType { GOOEY_MARKS, POSTERS, SCRATCH_MARKS }
 ## pas de page — donc pas de `data/species/mazir.tres`. Elle était tirée sans jamais rien
 ## donner. À rétablir quand l'espèce existera.
 const POOLS := {
-	DecorType.GOOEY_MARKS: [
-		&"kurkab", &"malcouli", &"senskor", &"spodra", &"sadakbia",
-		&"fonechal", &"kalilk", &"sopiark",
+	DecorType.GOOEY_MARKS:
+	[
+		&"kurkab",
+		&"malcouli",
+		&"senskor",
+		&"spodra",
+		&"sadakbia",
+		&"fonechal",
+		&"kalilk",
+		&"sopiark",
 	],
-	DecorType.POSTERS: [
-		&"jezal", &"zuk", &"fopin", &"oleni", &"erzelak", &"ravbak", &"gelmi", &"niyat",
+	DecorType.POSTERS:
+	[
+		&"jezal",
+		&"zuk",
+		&"fopin",
+		&"oleni",
+		&"erzelak",
+		&"ravbak",
+		&"gelmi",
+		&"niyat",
 	],
-	DecorType.SCRATCH_MARKS: [
-		&"yadol", &"gaiaz", &"draka", &"kalilk", &"razel", &"erdouss", &"vernal",
+	DecorType.SCRATCH_MARKS:
+	[
+		&"yadol",
+		&"gaiaz",
+		&"draka",
+		&"kalilk",
+		&"razel",
+		&"erdouss",
+		&"vernal",
 	],
 }
 
@@ -36,18 +58,24 @@ const POOLS := {
 
 var _examined := false
 
+
 func has_been_examined() -> bool:
 	return _examined
+
 
 ## Décor déjà examiné : plus d'info à en tirer cette visite (règle transverse « épuisé »).
 func is_spent() -> bool:
 	return _examined
 
+
 ## Examine disponible depuis une case adjacente, une fois par visite.
 func on_adjacent_actions(who: Node, _facing: Vector3i) -> Array:
 	if _examined:
 		return []
-	return [ExplorationAction.new(&"examine", "UI_ACTION_EXAMINE", Callable(self, "examine").bind(who))]
+	return [
+		ExplorationAction.new(&"examine", "UI_ACTION_EXAMINE", Callable(self, "examine").bind(who))
+	]
+
 
 ## Examine : livre une info encyclo sur un spirimonstre du pool du type de décor.
 func examine(_who: Node) -> void:
@@ -63,10 +91,12 @@ func examine(_who: Node) -> void:
 	# ## TODO: si PSY élevé, chance de faire apparaître 1+ rivaux à proximité (pas sur la case
 	## du joueur). Seuil « how much? » non chiffré dans Notion ; nécessite un système de spawn.
 
+
 ## Persistance entre visites : un décor non examiné garde sa place ; un décor examiné disparaît
 ## et est remplacé ailleurs (géré au niveau donjon). Ici on conserve simplement l'état.
 func reset_between_visits() -> void:
 	pass
+
 
 func _spawn_visual() -> void:
 	_add_marker(Color(0.7, 0.3, 0.7), 0.65, 0.3)  # décor magenta, fin (affiche/marque)

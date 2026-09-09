@@ -4,9 +4,11 @@
 ## capacité (jusqu'à la fin de la rencontre, sauf changement par une autre capacité).
 extends AbilityScript
 
+
 func execute(ctx: EncounterContext) -> void:
-	var no_weakness := ctx.all_fighters.filter(func(f):
-		return not f.is_dissolved() and ctx.weakness_of(f) == GameEnums.Energy.NONE)
+	var no_weakness := ctx.all_fighters.filter(
+		func(f): return not f.is_dissolved() and ctx.weakness_of(f) == GameEnums.Energy.NONE
+	)
 	if no_weakness.is_empty():
 		return
 	for f in no_weakness:

@@ -54,6 +54,7 @@ extends Resource
 @export_file("*.png") var sprite_idle: String = ""
 @export_file("*.png") var sprite_forlorn: String = ""
 
+
 ## Renvoie la faiblesse active pour une position d'ordre du tour donnée.
 func weakness_for(position: GameEnums.TurnPosition) -> GameEnums.Energy:
 	match position:
@@ -64,6 +65,7 @@ func weakness_for(position: GameEnums.TurnPosition) -> GameEnums.Energy:
 		GameEnums.TurnPosition.LAST:
 			return weakness_last
 	return GameEnums.Energy.NONE
+
 
 ## Clé de traduction du nom affichable. Convention : SPECIES_<ID_MAJ_ASCII>_NAME.
 ## Accents pliés en ASCII via GameEnums.key_token (ex. id « razél » →

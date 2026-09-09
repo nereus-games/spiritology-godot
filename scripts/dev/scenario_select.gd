@@ -8,6 +8,7 @@ extends Control
 const ScenarioCatalog := preload("res://scripts/dev/scenario_catalog.gd")
 const EXPLORATION := "res://scenes/exploration/exploration.tscn"
 
+
 func _ready() -> void:
 	# L'exploration capture le curseur ; on le rend visible pour cliquer les boutons.
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
@@ -70,6 +71,7 @@ func _ready() -> void:
 		desc.add_theme_color_override("font_color", Color(0.68, 0.70, 0.76))
 		entry.add_child(desc)
 
+
 ## Réglage DEV du duo jouable : une liste par rôle, restreinte aux espèces que le mini-quiz
 ## peut donner à ce rôle (le principal n'a que 4 résultats possibles, le coéquipier 10 —
 ## doc « Mini Personality Quiz »). Les deux peuvent tomber sur la même espèce, c'est prévu.
@@ -77,16 +79,29 @@ func _build_duo_row() -> Control:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 8)
 	row.alignment = BoxContainer.ALIGNMENT_CENTER
-	row.add_child(_species_picker("Personnage principal", ScenarioCatalog.MAIN_SPECIES,
-		ScenarioCatalog.main_species,
-		func(id: StringName) -> void: ScenarioCatalog.main_species = id))
-	row.add_child(_species_picker("Coéquipier", ScenarioCatalog.TEAMMATE_SPECIES,
-		ScenarioCatalog.teammate_species,
-		func(id: StringName) -> void: ScenarioCatalog.teammate_species = id))
+	row.add_child(
+		_species_picker(
+			"Personnage principal",
+			ScenarioCatalog.MAIN_SPECIES,
+			ScenarioCatalog.main_species,
+			func(id: StringName) -> void: ScenarioCatalog.main_species = id
+		)
+	)
+	row.add_child(
+		_species_picker(
+			"Coéquipier",
+			ScenarioCatalog.TEAMMATE_SPECIES,
+			ScenarioCatalog.teammate_species,
+			func(id: StringName) -> void: ScenarioCatalog.teammate_species = id
+		)
+	)
 	return row
 
+
 ## Étiquette + liste déroulante d'espèces. `on_pick` reçoit le slug choisi.
-func _species_picker(label_text: String, species: Array, current: StringName, on_pick: Callable) -> Control:
+func _species_picker(
+	label_text: String, species: Array, current: StringName, on_pick: Callable
+) -> Control:
 	var cell := HBoxContainer.new()
 	cell.add_theme_constant_override("separation", 6)
 
@@ -107,6 +122,7 @@ func _species_picker(label_text: String, species: Array, current: StringName, on
 	cell.add_child(picker)
 	return cell
 
+
 ## Nom traduit de l'espèce (repli sur le slug si la clé n'est pas dans les .po).
 func _species_name(id: StringName) -> String:
 	var sp: SpeciesData = GameData.species(id)
@@ -114,6 +130,7 @@ func _species_name(id: StringName) -> String:
 		return String(id)
 	var name := String(TranslationServer.translate(sp.name_key()))
 	return String(id) if name == sp.name_key() else name
+
 
 ## Réglage DEV du DEN des rivaux. En vrai c'est le LEVEL DESIGN qui l'attribue, donjon par
 ## donjon ; ici on le choisit à la main pour les scénarios qui contiennent des rivaux. Les
@@ -134,9 +151,11 @@ func _build_rival_den_row() -> Control:
 	slider.custom_minimum_size = Vector2(260, 0)
 	slider.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 
-	slider.value_changed.connect(func(v: float) -> void:
-		ScenarioCatalog.rival_den_override = int(v)
-		value_label.text = _den_label(int(v)))
+	slider.value_changed.connect(
+		func(v: float) -> void:
+			ScenarioCatalog.rival_den_override = int(v)
+			value_label.text = _den_label(int(v))
+	)
 
 	row.add_child(value_label)
 	row.add_child(slider)
@@ -161,14 +180,19 @@ func _build_rival_den_row() -> Control:
 	value_label.text = _den_label(start)
 	return row
 
+
 ## « DEN des rivaux : 100 — M (mid) » quand la valeur tombe sur un ordre de grandeur de la doc.
 func _den_label(v: int) -> String:
 	var tag := ""
 	match v:
-		GameSession.RIVAL_DEN_EARLY: tag = "  — E (early)"
-		GameSession.RIVAL_DEN_MID: tag = "  — M (mid)"
-		GameSession.RIVAL_DEN_LATE: tag = "  — L (late)"
+		GameSession.RIVAL_DEN_EARLY:
+			tag = "  — E (early)"
+		GameSession.RIVAL_DEN_MID:
+			tag = "  — M (mid)"
+		GameSession.RIVAL_DEN_LATE:
+			tag = "  — L (late)"
 	return "DEN des rivaux : %d%s" % [v, tag]
+
 
 func _on_scenario_chosen(id: StringName) -> void:
 	ScenarioCatalog.selected_id = id

@@ -4,6 +4,7 @@
 ## toucher sont redirigés vers un coéquipier au hasard.
 extends AbilityScript
 
+
 func execute(ctx: EncounterContext) -> void:
 	ctx.deal_damage(ctx.user, ctx.dmg(&"mini"))
 	var mates := ctx.allies()

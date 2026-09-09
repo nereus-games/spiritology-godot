@@ -3,6 +3,7 @@
 ## fin de la rencontre (parmi ses actions par ailleurs disponibles).
 extends AbilityScript
 
+
 func execute(ctx: EncounterContext) -> void:
 	var t = ctx.primary()
 	if t:

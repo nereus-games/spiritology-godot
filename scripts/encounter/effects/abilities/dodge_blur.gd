@@ -4,6 +4,7 @@
 ## réduits de moitié.
 extends AbilityScript
 
+
 func execute(ctx: EncounterContext) -> void:
 	ctx.deal_damage(ctx.user, ctx.dmg(&"mini"))
 	ctx.modify_damage(ctx.user, 0.5)

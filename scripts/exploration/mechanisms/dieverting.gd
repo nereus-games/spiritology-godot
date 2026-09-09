@@ -29,11 +29,11 @@ const RIVAL_SCENE := preload("res://scenes/exploration/rival/rival.tscn")
 ## Les 6 issues du dé (doc).
 enum Outcome {
 	TELEPORT_ENTRANCE_LOSE_OBJECTS,  ## → entrée, perd des objets (placés dans un coffre)
-	TELEPORT_ENTRANCE_LOSE_ETH,      ## → entrée, chaque perso perd de l'ETH
-	SPAWN_RIVALS,                    ## jusqu'à 3 groupes de rivaux apparaissent
+	TELEPORT_ENTRANCE_LOSE_ETH,  ## → entrée, chaque perso perd de l'ETH
+	SPAWN_RIVALS,  ## jusqu'à 3 groupes de rivaux apparaissent
 	TELEPORT_EXIT_LOSE_OBJECTS_DEN,  ## → sortie, perd des objets + chaque perso perd du DEN
-	DESTROY_OBJECTS,                 ## détruit jusqu'à 3 objets au hasard
-	ADD_OBJECTS,                     ## ajoute jusqu'à 3 objets au hasard
+	DESTROY_OBJECTS,  ## détruit jusqu'à 3 objets au hasard
+	ADD_OBJECTS,  ## ajoute jusqu'à 3 objets au hasard
 }
 
 ## Objets capables de détruire un dieverting.
@@ -68,9 +68,12 @@ const PIP_SPACING := DIE_SIZE * 0.26
 
 ## Normale LOCALE de chaque face, faces opposées sommant à 7 (comme un vrai dé).
 const FACE_NORMALS := {
-	1: Vector3.UP, 6: Vector3.DOWN,
-	2: Vector3.BACK, 5: Vector3.FORWARD,
-	3: Vector3.RIGHT, 4: Vector3.LEFT,
+	1: Vector3.UP,
+	6: Vector3.DOWN,
+	2: Vector3.BACK,
+	5: Vector3.FORWARD,
+	3: Vector3.RIGHT,
+	4: Vector3.LEFT,
 }
 
 ## Disposition des points d'une face, en unités de [constant PIP_SPACING].
@@ -80,7 +83,8 @@ const PIP_LAYOUTS := {
 	3: [Vector2(-1, -1), Vector2(0, 0), Vector2(1, 1)],
 	4: [Vector2(-1, -1), Vector2(-1, 1), Vector2(1, -1), Vector2(1, 1)],
 	5: [Vector2(-1, -1), Vector2(-1, 1), Vector2(0, 0), Vector2(1, -1), Vector2(1, 1)],
-	6: [Vector2(-1, -1), Vector2(-1, 0), Vector2(-1, 1), Vector2(1, -1), Vector2(1, 0), Vector2(1, 1)],
+	6:
+	[Vector2(-1, -1), Vector2(-1, 0), Vector2(-1, 1), Vector2(1, -1), Vector2(1, 0), Vector2(1, 1)],
 }
 
 ## Durée de la culbute (s). 0 = pas d'animation (vérifications headless).
@@ -116,16 +120,20 @@ var _roll_axis := Vector3.UP
 var _roll_turns := 2.0
 var _roll_final := Quaternion.IDENTITY
 
+
 func is_active() -> bool:
 	return _active
+
 
 ## Un dé qui a roulé (ou qui a été détruit) est épuisé (règle transverse).
 func is_spent() -> bool:
 	return not _active
 
+
 ## Un choix détruire/subir est-il en attente sur cette case ?
 func is_pending() -> bool:
 	return _pending
+
 
 ## Le joueur peut-il détruire ce dieverting (possède pelle ou pierre runique) ?
 func is_destroyable_by(who: Node) -> bool:
@@ -135,6 +143,7 @@ func is_destroyable_by(who: Node) -> bool:
 		if GameSession.has_object(obj):
 			return true
 	return false
+
 
 ## Rencontre du dé : s'il n'est pas destructible par le joueur, il se déclenche aussitôt
 ## (« impatient »). S'il l'est, le choix passe par le menu d'actions.
@@ -148,21 +157,31 @@ func on_enter(who: Node) -> void:
 		return
 	submit(who)
 
+
 ## Actions proposées tant que le choix est en attente : détruire (contre un objet) ou subir.
 func on_tile_actions(who: Node) -> Array:
 	if not _active or not _pending:
 		return []
 	var actions: Array = []
 	if is_destroyable_by(who):
-		actions.append(ExplorationAction.new(&"destroy_dieverting", "UI_ACTION_DESTROY_DIEVERTING",
-				Callable(self, "destroy").bind(who)))
-	actions.append(ExplorationAction.new(&"submit_dieverting", "UI_ACTION_SUBMIT_DIEVERTING",
-			Callable(self, "submit").bind(who)))
+		actions.append(
+			ExplorationAction.new(
+				&"destroy_dieverting",
+				"UI_ACTION_DESTROY_DIEVERTING",
+				Callable(self, "destroy").bind(who)
+			)
+		)
+	actions.append(
+		ExplorationAction.new(
+			&"submit_dieverting", "UI_ACTION_SUBMIT_DIEVERTING", Callable(self, "submit").bind(who)
+		)
+	)
 	return actions
+
 
 ## Détruit le dieverting en consommant un objet destructeur (pelle en priorité). Retourne
 ## true si détruit.
-func destroy(who: Node) -> bool:
+func destroy(_who: Node) -> bool:
 	if not _active:
 		return false
 	for obj in DESTROYERS:
@@ -172,6 +191,7 @@ func destroy(who: Node) -> bool:
 			_post_message("UI_DIEVERTING_DESTROYED", [])
 			return true
 	return false
+
 
 ## Subit le dé : le lance (ou `forced` pour les tests), le fait rouler devant le joueur,
 ## annonce le résultat, puis applique l'issue. À AWAITER si l'on veut voir les effets appliqués
@@ -198,6 +218,7 @@ func submit(who: Node, forced: int = -1) -> int:
 	_apply(outcome, who)
 	return outcome
 
+
 func _apply(outcome: int, who: Node) -> void:
 	match outcome:
 		Outcome.TELEPORT_ENTRANCE_LOSE_OBJECTS:
@@ -217,6 +238,7 @@ func _apply(outcome: int, who: Node) -> void:
 		Outcome.ADD_OBJECTS:
 			_add_objects(max_objects_delta)
 
+
 ## Renvoi à l'ENTRÉE du donjon. Repli (aucune entrée déclarée, ex. scénario de dev) : une
 ## case au hasard, comme un piège de téléportation.
 func _teleport_to_entrance(who: Node) -> void:
@@ -227,6 +249,7 @@ func _teleport_to_entrance(who: Node) -> void:
 	else:
 		_dungeon.teleport_actor(who)
 
+
 ## Renvoi à une SORTIE du donjon, tirée au hasard s'il y en a plusieurs (doc). L'entrée
 ## compte parmi les sorties (cf. [method DungeonManager.set_entrance]).
 func _teleport_to_exit(who: Node) -> void:
@@ -236,6 +259,7 @@ func _teleport_to_exit(who: Node) -> void:
 		_dungeon.teleport_actor_to(who, _dungeon.random_exit())
 	else:
 		_dungeon.teleport_actor(who)
+
 
 ## Retire `count` objets au hasard de l'inventaire et retourne la liste de ce qui a été perdu
 ## (pour le coffre). Un objet possédé en plusieurs exemplaires peut sortir plusieurs fois.
@@ -250,6 +274,7 @@ func _lose_objects(count: int) -> Array[StringName]:
 		lost.append(object_id)
 	return lost
 
+
 ## Dépose les objets perdus dans un coffre posé LÀ OÙ ÉTAIT le dieverting (doc). Le dé, lui,
 ## est désormais inerte : les deux mécanismes cohabitent sur la case.
 func _drop_chest(lost: Array[StringName]) -> void:
@@ -260,11 +285,13 @@ func _drop_chest(lost: Array[StringName]) -> void:
 	chest.position = _dungeon.cell_to_world(cell)
 	_dungeon.add_child(chest)
 
+
 func _add_objects(max_count: int) -> void:
 	var n := randi_range(1, max_count)
 	for i in range(n):
 		if not add_pool.is_empty():
 			GameSession.add_object(add_pool[randi() % add_pool.size()], 1)
+
 
 ## Fait apparaître 1 à [member rival_spawn_max] groupes de rivaux près du joueur.
 func _spawn_rival_groups(who: Node) -> void:
@@ -279,23 +306,28 @@ func _spawn_rival_groups(who: Node) -> void:
 		rival.position = _dungeon.cell_to_world(spots[i])
 		_dungeon.add_child(rival)
 
+
 func _drain_party_eth(amount: int) -> void:
 	GameSession.spend_eth(GameSession.PartySlot.MAIN, amount)
 	GameSession.spend_eth(GameSession.PartySlot.TEAMMATE, amount)
+
 
 func _damage_party_den(amount: int) -> void:
 	GameSession.apply_den_damage(GameSession.PartySlot.MAIN, amount)
 	GameSession.apply_den_damage(GameSession.PartySlot.TEAMMATE, amount)
 	GameSession.resolve_party_wipe()
 
+
 func _deactivate() -> void:
 	_active = false
 	_pending = false
 	_mark_spent()
 
+
 ## Un dé consommé (roulé ou détruit) ne revient pas d'une visite à l'autre.
 func reset_between_visits() -> void:
 	pass
+
 
 ## Poste un message de feedback au joueur (le HUD l'affiche). `args` alimente le format.
 func _post_message(key: String, args: Array) -> void:
@@ -306,9 +338,11 @@ func _post_message(key: String, args: Array) -> void:
 		text = text % args
 	_dungeon.post_message(text)
 
+
 # --------------------------------------------------------------------------
 # Le dé : visuel et roulement
 # --------------------------------------------------------------------------
+
 
 func _spawn_visual() -> void:
 	var mesh := _add_marker(Color(0.9, 0.35, 0.1), DIE_SIZE, DIE_SIZE)  # cube orange
@@ -320,6 +354,7 @@ func _spawn_visual() -> void:
 		mat.emission = Color(0.9, 0.35, 0.1)
 		mat.emission_energy_multiplier = 0.45
 	_add_pips()
+
 
 ## Points des 6 faces, plaqués juste au-dessus de chaque face du cube. Enfants du marqueur :
 ## ils culbutent avec lui.
@@ -345,9 +380,13 @@ func _add_pips() -> void:
 			box.size = size
 			pip.mesh = box
 			pip.material_override = mat
-			pip.position = n * (half + PIP_DEPTH * 0.5) \
-				+ u * (offset.x * PIP_SPACING) + w * (offset.y * PIP_SPACING)
+			pip.position = (
+				n * (half + PIP_DEPTH * 0.5)
+				+ u * (offset.x * PIP_SPACING)
+				+ w * (offset.y * PIP_SPACING)
+			)
 			_marker.add_child(pip)
+
 
 ## Culbute : le dé saute dans le champ de vision du joueur, tourne en décélérant et s'arrête
 ## sur `face`, tournée vers lui. Retourne quand le dé est immobile (à awaiter).
@@ -360,14 +399,22 @@ func _play_roll(face: int, who: Node) -> void:
 	var air: Vector3 = _rest_position() + facing * AIR_DISTANCE + Vector3(0.0, AIR_HEIGHT, 0.0)
 	# Axe de culbute quelconque (un dé lancé ne tourne pas autour d'un axe choisi) et 2 à 3
 	# tours : assez pour lire le mouvement, pas assez pour brouiller la face finale.
-	_roll_axis = Vector3(randf_range(-1.0, 1.0), randf_range(-1.0, 1.0), randf_range(-1.0, 1.0)).normalized()
+	_roll_axis = (
+		Vector3(randf_range(-1.0, 1.0), randf_range(-1.0, 1.0), randf_range(-1.0, 1.0)).normalized()
+	)
 	_roll_turns = randf_range(2.0, 3.0)
 	_roll_final = Quaternion(_basis_for_face(face, -facing).orthonormalized())
 	var tween := create_tween()
 	tween.tween_method(_roll_step, 0.0, 1.0, roll_duration)
-	tween.parallel().tween_property(_marker, "position", air, roll_duration * 0.45) \
-		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	(
+		tween
+		. parallel()
+		. tween_property(_marker, "position", air, roll_duration * 0.45)
+		. set_trans(Tween.TRANS_QUAD)
+		. set_ease(Tween.EASE_OUT)
+	)
 	await tween.finished
+
 
 ## Un pas de culbute : rotation qui décélère, raccordée sur l'orientation finale à la fin.
 func _roll_step(t: float) -> void:
@@ -378,19 +425,26 @@ func _roll_step(t: float) -> void:
 	var blend := clampf((t - 0.6) / 0.4, 0.0, 1.0)
 	_marker.basis = Basis(tumble.slerp(_roll_final, blend))
 
+
 ## Le dé reste lisible en l'air le temps qu'on lise le message, puis retombe sur sa case.
 func _settle_back() -> void:
 	if _marker == null or roll_duration <= 0.0:
 		return
 	var tween := create_tween()
 	tween.tween_interval(roll_hold)
-	tween.tween_property(_marker, "position", _rest_position(), 0.3) \
-		.set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
+	(
+		tween
+		. tween_property(_marker, "position", _rest_position(), 0.3)
+		. set_trans(Tween.TRANS_BOUNCE)
+		. set_ease(Tween.EASE_OUT)
+	)
 	await tween.finished
+
 
 ## Position de repos du marqueur : posé au centre de sa case (cf. `_add_marker_box`).
 func _rest_position() -> Vector3:
 	return Vector3(0.0, DIE_SIZE * 0.5, 0.0)
+
 
 ## Orientation qui amène la face `value` sur la direction `toward` (LOCALE). Le roulis autour
 ## de cet axe est un quart de tour tiré au hasard (deux jets ne se ressemblent pas) plus un
@@ -401,6 +455,7 @@ func _basis_for_face(value: int, toward: Vector3) -> Basis:
 	var roll := (randi() % 4) * PI * 0.5 + randf_range(-0.22, 0.22)
 	return Basis(Quaternion(axis, roll) * Quaternion(n, axis))
 
+
 ## Direction « devant le joueur », exprimée dans le repère LOCAL du mécanisme.
 func _facing_of(who: Node) -> Vector3:
 	var dir := Vector3.BACK
@@ -409,6 +464,7 @@ func _facing_of(who: Node) -> Vector3:
 		if fd != Vector3i.ZERO:
 			dir = Vector3(fd.x, 0.0, fd.z).normalized()
 	return (global_transform.basis.inverse() * dir).normalized()
+
 
 ## Un dé qui a roulé n'est plus actionnable : il se GRISE comme tout mécanisme épuisé
 ## ([constant SPENT_COLOR]), au lieu de garder sa teinte vive de dé actif. Il garde en

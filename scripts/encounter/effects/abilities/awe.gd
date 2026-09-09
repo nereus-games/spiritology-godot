@@ -2,6 +2,7 @@
 ## MÉCANIQUE : un rival subit des dégâts pour chaque natif d'Ardent (Fiery) présent.
 extends AbilityScript
 
+
 func execute(ctx: EncounterContext) -> void:
 	var n := ctx.count_natives(GameEnums.Spiricosm.FIERY)
 	var t = ctx.primary()

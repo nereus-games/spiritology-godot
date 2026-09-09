@@ -29,9 +29,10 @@ extends RefCounted
 enum Kind { ABILITY, TALK, EXAMINE, MEDITATE, USE_OBJECT, FLEE, STEAL, PASS }
 
 var kind: Kind = Kind.ABILITY
-var ability: AbilityData = null   ## Kind.ABILITY uniquement
-var targets: Array = []           ## EncounterFighter visés
-var object_id: StringName = &""   ## Kind.USE_OBJECT uniquement
+var ability: AbilityData = null  ## Kind.ABILITY uniquement
+var targets: Array = []  ## EncounterFighter visés
+var object_id: StringName = &""  ## Kind.USE_OBJECT uniquement
+
 
 static func use_ability(p_ability: AbilityData, p_targets: Array) -> EncounterAction:
 	var a := EncounterAction.new()
@@ -40,11 +41,13 @@ static func use_ability(p_ability: AbilityData, p_targets: Array) -> EncounterAc
 	a.targets = p_targets
 	return a
 
+
 static func of_kind(p_kind: Kind, p_targets: Array = []) -> EncounterAction:
 	var a := EncounterAction.new()
 	a.kind = p_kind
 	a.targets = p_targets
 	return a
+
 
 ## Libellé court pour le journal de combat (debug). Les textes destinés au joueur
 ## passent par des clés de traduction, jamais par cette méthode.

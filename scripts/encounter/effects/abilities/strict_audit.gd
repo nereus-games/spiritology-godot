@@ -2,6 +2,7 @@
 ## MÉCANIQUE : un rival subit des dégâts pour chaque natif de Terne (Gloom).
 extends AbilityScript
 
+
 func execute(ctx: EncounterContext) -> void:
 	var n := ctx.count_natives(GameEnums.Spiricosm.GLOOM)
 	var t = ctx.primary()

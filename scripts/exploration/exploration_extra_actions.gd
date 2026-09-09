@@ -16,8 +16,10 @@ const Objects := preload("res://scripts/exploration/exploration_objects.gd")
 
 var _ctx
 
+
 func _init(ctx) -> void:
 	_ctx = ctx
+
 
 ## Construit la liste d'actions (capacités d'exploration non utilisées + objets utilisables).
 ##
@@ -36,22 +38,33 @@ func build() -> Array:
 	for id in Catalog.known_for_duo():
 		if GameSession.is_exploration_ability_used(id):
 			continue
-		actions.append(ExplorationAction.new(id, _ability_label_key(id), Callable(self, "_run_ability").bind(id)))
+		actions.append(
+			ExplorationAction.new(
+				id, _ability_label_key(id), Callable(self, "_run_ability").bind(id)
+			)
+		)
 	# Objets d'inventaire utilisables en exploration.
 	for object_id in GameSession.inventory.keys():
 		var data: ObjectData = GameData.object(object_id)
 		if data != null and Objects.usable_in_exploration(data.effect):
-			actions.append(ExplorationAction.new(object_id, data.name_key(), Callable(self, "_run_object").bind(object_id)))
+			actions.append(
+				ExplorationAction.new(
+					object_id, data.name_key(), Callable(self, "_run_object").bind(object_id)
+				)
+			)
 	return actions
+
 
 func _ability_label_key(id: StringName) -> String:
 	var ab: AbilityData = GameData.ability(id)
 	return ab.name_key() if ab != null else String(id)
 
+
 func _run_ability(id: StringName) -> void:
 	var ability = Catalog.script_for(id)
 	if ability.use(_ctx):
 		GameSession.mark_exploration_ability_used(id)
+
 
 func _run_object(object_id: StringName) -> void:
 	Objects.use_object(object_id, _ctx)

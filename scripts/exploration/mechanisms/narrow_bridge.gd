@@ -16,9 +16,11 @@ var _balance
 var _engaged := false
 var _dir := Vector3i(0, 0, 1)
 
+
 ## Un pont n'est pas un obstacle : on peut y entrer (ce qui engage le test).
 func blocks_walk() -> bool:
 	return false
+
 
 func on_enter(who: Node) -> void:
 	if _engaged:
@@ -31,12 +33,14 @@ func on_enter(who: Node) -> void:
 		disarrayed = aff.has_disarray()
 	engage(who.facing_delta(), disarrayed)
 
+
 ## Engage le test d'équilibre pour avancer d'UNE case dans la direction `dir`.
 func engage(dir: Vector3i, disarrayed: bool) -> void:
 	_dir = dir if dir != Vector3i.ZERO else Vector3i(0, 0, 1)
 	_balance = NarrowBridgeBalance.new()
 	_balance.configure(GameSession.psy_score, 1, disarrayed)  # 1 case
 	_engaged = true
+
 
 ## Reprend le test d'équilibre DÉJÀ EN COURS (traversée entamée sur la case précédente) au
 ## lieu d'en démarrer un neuf : le déséquilibre et la vitesse latérale traversent le bord de
@@ -46,6 +50,7 @@ func adopt_balance(running) -> void:
 		return
 	_balance = running
 	_balance.restart_cell()
+
 
 ## Fait avancer le test d'un pas de temps avec l'entrée latérale (∈ [-1, 1]). Retourne
 ## &"balancing", &"fell" ou &"complete".
@@ -61,11 +66,14 @@ func advance(delta: float, lateral_input: float) -> StringName:
 		return &"complete"
 	return &"balancing"
 
+
 func is_engaged() -> bool:
 	return _engaged
 
+
 func direction() -> Vector3i:
 	return _dir
+
 
 ## Accès au modèle d'équilibre (le pilote lit/écrit imbalance pour le chaînage).
 func balance():

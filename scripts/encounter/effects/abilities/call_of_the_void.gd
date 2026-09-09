@@ -3,6 +3,7 @@
 ## la faiblesse du user et de ses alliés devient Arcane.
 extends AbilityScript
 
+
 func execute(ctx: EncounterContext) -> void:
 	for r in ctx.opponents():
 		if ctx.weakness_of(r) == GameEnums.Energy.NONE:

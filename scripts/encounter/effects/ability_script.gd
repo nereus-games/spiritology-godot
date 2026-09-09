@@ -10,6 +10,7 @@
 class_name AbilityScript
 extends RefCounted
 
+
 ## Applique l'effet complet de la capacité à la rencontre.
 ## Défaut = comportement générique par tags ; à surcharger pour la mécanique propre.
 func execute(ctx: EncounterContext) -> void:

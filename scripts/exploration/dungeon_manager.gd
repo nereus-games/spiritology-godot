@@ -42,6 +42,7 @@ const FLOOR_THICKNESS := 0.1
 ## tienne de chaque côté.
 const EDGE_THICKNESS := 0.1
 
+
 ## Dégâts d'une chute de `levels` unités de hauteur.
 ##
 ## Doc « Game Design / Gameplay Elements / Mechanisms + Heights » : « when jumping down 2+
@@ -52,6 +53,7 @@ static func fall_damage(levels: int) -> int:
 	if levels < 2:
 		return 0
 	return 10 + 5 * (levels - 2)
+
 
 signal turn_advanced(turn: int)
 ## Émis quand un déplacement aboutit sur la case d'un individu adverse.
@@ -120,8 +122,10 @@ func _ready() -> void:
 # Conversions monde <-> grille
 # --------------------------------------------------------------------------
 
+
 func world_to_cell(pos: Vector3) -> Vector3i:
 	return Vector3i(roundi(pos.x / CELL_SIZE), roundi(pos.y / CELL_SIZE), roundi(pos.z / CELL_SIZE))
+
 
 ## Point monde au SOL de la case, en son centre : là où un acteur pose les pieds. Le volume
 ## de la case va de là jusqu'à [constant CELL_SIZE] au-dessus.
@@ -133,8 +137,10 @@ func cell_to_world(cell: Vector3i) -> Vector3:
 # Praticabilité & occupation
 # --------------------------------------------------------------------------
 
+
 func is_floor(cell: Vector3i) -> bool:
 	return _floor.has(cell)
+
 
 ## Une case est franchissable si c'est du sol, non occupée, et non bloquée par un mécanisme
 ## (obstacle indestructible…). Ne dit RIEN des portes, qui barrent une arête et non une case :
@@ -142,10 +148,12 @@ func is_floor(cell: Vector3i) -> bool:
 func is_walkable(cell: Vector3i) -> bool:
 	return _floor.has(cell) and not _occupants.has(cell) and not is_blocked_by_mechanism(cell)
 
+
 ## Un pas de `from_cell` vers `to_cell` (cases voisines) est-il possible ? = case d'arrivée
 ## franchissable ET arête non barrée (porte fermée entre les deux).
 func can_step(from_cell: Vector3i, to_cell: Vector3i) -> bool:
 	return is_walkable(to_cell) and not is_edge_blocked(from_cell, to_cell)
+
 
 ## Un mécanisme de la case interdit-il le passage ? (indépendant de l'occupation.)
 func is_blocked_by_mechanism(cell: Vector3i) -> bool:
@@ -154,8 +162,10 @@ func is_blocked_by_mechanism(cell: Vector3i) -> bool:
 			return true
 	return false
 
+
 func occupant_at(cell: Vector3i) -> Node:
 	return _occupants.get(cell)
+
 
 ## Réserve une case pour un occupant. Échoue si déjà occupée ou hors sol.
 func reserve(cell: Vector3i, who: Node) -> bool:
@@ -164,8 +174,10 @@ func reserve(cell: Vector3i, who: Node) -> bool:
 	_occupants[cell] = who
 	return true
 
+
 func release(cell: Vector3i) -> void:
 	_occupants.erase(cell)
+
 
 func move_occupant(from_cell: Vector3i, to_cell: Vector3i, who: Node) -> bool:
 	if not can_step(from_cell, to_cell):
@@ -179,22 +191,30 @@ func move_occupant(from_cell: Vector3i, to_cell: Vector3i, who: Node) -> bool:
 # Acteurs & tours
 # --------------------------------------------------------------------------
 
+
 func register_player(player: Node3D) -> void:
 	_player = player
 
+
 func player_cell() -> Vector3i:
 	return world_to_cell(_player.global_position) if _player else Vector3i.ZERO
+
 
 ## Vrai si `who` est le personnage joueur (et non un rival). Sert aux mécanismes qui ne
 ## profitent qu'au joueur (loot de coffre, dieverting…).
 func is_player(who: Node) -> bool:
 	return who != null and who == _player
 
+
 ## Vrai si les rivaux doivent ignorer le joueur (invisible / non-poursuivi via fog mantel,
 ## torment veil, costume…). Consulté par la détection des rivaux.
 func rivals_ignore_player() -> bool:
-	return is_instance_valid(_player) and _player.has_method("is_hidden_from_rivals") \
+	return (
+		is_instance_valid(_player)
+		and _player.has_method("is_hidden_from_rivals")
 		and _player.is_hidden_from_rivals()
+	)
+
 
 func register_rival(rival: Node) -> void:
 	if rival in _rivals:
@@ -202,8 +222,10 @@ func register_rival(rival: Node) -> void:
 	_rivals.append(rival)
 	reserve(world_to_cell(rival.global_position), rival)
 
+
 func unregister_rival(rival: Node) -> void:
 	_rivals.erase(rival)
+
 
 ## Avance d'un tour : notifie, fait jouer chaque rival, puis cadence les mécanismes et fait
 ## s'écouler les afflictions (poison…). Point d'intégration unique du modèle de tour.
@@ -232,6 +254,7 @@ func advance_turn() -> void:
 	# Effets persistants par acteur (poison), après le jeu des rivaux.
 	_tick_actor_afflictions()
 
+
 ## Fait s'écouler les afflictions du joueur et des rivaux. Chaque acteur applique lui-même
 ## son effet (poison → DEN), le manager reste découplé.
 func _tick_actor_afflictions() -> void:
@@ -241,22 +264,27 @@ func _tick_actor_afflictions() -> void:
 		if is_instance_valid(rival) and rival.has_method("on_turn_elapsed"):
 			rival.on_turn_elapsed()
 
+
 ## Poste un message de feedback à destination du joueur (texte DÉJÀ traduit).
 func post_message(text: String) -> void:
 	message_posted.emit(text)
 
+
 ## Demande de rencontre (relayée par le joueur ou un rival).
 func request_encounter(rival: Node, initiated_by_rival: bool) -> void:
 	encounter_requested.emit(rival, initiated_by_rival)
+
 
 ## Deux personnages se croisent sur la MÊME case de pont étroit : les deux tombent (doc).
 ## Le cas joueur+rival est arbitré par `exploration.gd`, qui pilote la traversée du joueur.
 func request_bridge_collision(rival: Node, tile: Vector3i) -> void:
 	bridge_collision.emit(rival, tile)
 
+
 ## Rivaux enregistrés (copie : l'appelant peut en dissoudre pendant l'itération).
 func rivals() -> Array[Node]:
 	return _rivals.duplicate()
+
 
 ## Un acteur vient de CHANGER D'ÉTAGE — chute, escalier, et demain ascenseur ou autre. Les
 ## rivaux qui l'ont vu partir peuvent le poursuivre par leurs propres moyens.
@@ -270,12 +298,14 @@ func notify_level_change(who: Node, from_cell: Vector3i, to_cell: Vector3i) -> v
 		if is_instance_valid(rival) and rival.has_method("witness_player_level_change"):
 			rival.witness_player_level_change(from_cell, to_cell)
 
+
 ## Une case de pont étroit ? (mécanisme exposant le test d'équilibre.)
 func is_narrow_bridge(cell: Vector3i) -> bool:
 	for m in mechanisms_at(cell):
 		if m.has_method("engage") and m.has_method("direction"):
 			return true
 	return false
+
 
 ## Case de sol libre la plus proche de `cell` (`cell` elle-même si elle est libre), pour
 ## poser un acteur sans casser l'invariant « un occupant par case ». Retourne `cell` si
@@ -288,6 +318,7 @@ func free_cell_near(cell: Vector3i) -> Vector3i:
 		if is_walkable(n) and occupant_at(n) == null:
 			return n
 	return cell
+
 
 ## Cases de sol libres AUTOUR de `cell`, au même étage, dans un rayon de `radius` cases
 ## (distance de Manhattan), mélangées. `cell` elle-même est exclue. Sert à faire apparaître
@@ -309,12 +340,14 @@ func free_cells_near(cell: Vector3i, radius: int) -> Array[Vector3i]:
 # Mécanismes de donjon (pièges, gates, sols spéciaux…)
 # --------------------------------------------------------------------------
 
+
 ## Enregistre un mécanisme sur une case (appelé par le nœud mécanisme au boot).
 func register_mechanism(cell: Vector3i, mechanism: Node) -> void:
 	var arr: Array = _mechanisms.get(cell, [])
 	if mechanism not in arr:
 		arr.append(mechanism)
 	_mechanisms[cell] = arr
+
 
 func unregister_mechanism(cell: Vector3i, mechanism: Node) -> void:
 	var arr: Array = _mechanisms.get(cell, [])
@@ -324,6 +357,7 @@ func unregister_mechanism(cell: Vector3i, mechanism: Node) -> void:
 	else:
 		_mechanisms[cell] = arr
 
+
 ## Mécanismes présents sur une case (vide si aucun).
 func mechanisms_at(cell: Vector3i) -> Array:
 	return _mechanisms.get(cell, [])
@@ -332,6 +366,7 @@ func mechanisms_at(cell: Vector3i) -> Array:
 # --------------------------------------------------------------------------
 # Mécanismes d'arête (portes) — entre les cases, pas sur une case
 # --------------------------------------------------------------------------
+
 
 ## Clé canonique de l'arête entre deux cases voisines : indépendante de l'ordre, donc la même
 ## depuis les deux côtés. Vector4i(x, y, z, axe) où (x,y,z) est la case la plus « basse » des
@@ -345,6 +380,7 @@ static func edge_key(from_cell: Vector3i, to_cell: Vector3i) -> Vector4i:
 	var axis := 0 if d.x != 0 else 1
 	return Vector4i(lo.x, lo.y, lo.z, axis)
 
+
 ## Enregistre un mécanisme sur l'arête entre deux cases voisines (appelé par le nœud au boot).
 func register_edge_mechanism(from_cell: Vector3i, to_cell: Vector3i, mechanism: Node) -> void:
 	var key := edge_key(from_cell, to_cell)
@@ -352,6 +388,7 @@ func register_edge_mechanism(from_cell: Vector3i, to_cell: Vector3i, mechanism: 
 	if mechanism not in arr:
 		arr.append(mechanism)
 	_edge_mechanisms[key] = arr
+
 
 func unregister_edge_mechanism(from_cell: Vector3i, to_cell: Vector3i, mechanism: Node) -> void:
 	var key := edge_key(from_cell, to_cell)
@@ -362,9 +399,11 @@ func unregister_edge_mechanism(from_cell: Vector3i, to_cell: Vector3i, mechanism
 	else:
 		_edge_mechanisms[key] = arr
 
+
 ## Mécanismes posés sur l'arête entre deux cases voisines (vide si aucun).
 func edge_mechanisms_between(from_cell: Vector3i, to_cell: Vector3i) -> Array:
 	return _edge_mechanisms.get(edge_key(from_cell, to_cell), [])
+
 
 ## Le passage d'une case à sa voisine est-il barré (porte fermée, rambarde) ? Symétrique.
 func is_edge_blocked(from_cell: Vector3i, to_cell: Vector3i) -> bool:
@@ -373,6 +412,7 @@ func is_edge_blocked(from_cell: Vector3i, to_cell: Vector3i) -> bool:
 			return true
 	return false
 
+
 ## L'arête est-elle OPAQUE (porte fermée) ? Une rambarde barre le pas mais pas la vue.
 func is_edge_opaque(from_cell: Vector3i, to_cell: Vector3i) -> bool:
 	for m in edge_mechanisms_between(from_cell, to_cell):
@@ -380,12 +420,14 @@ func is_edge_opaque(from_cell: Vector3i, to_cell: Vector3i) -> bool:
 			return true
 	return false
 
+
 ## Diffuse l'entrée d'un acteur sur une case à ses mécanismes (activation des pièges…).
 ## Appelé par le joueur / les rivaux après un pas logiquement abouti.
 func notify_entered(cell: Vector3i, who: Node) -> void:
 	for m in mechanisms_at(cell).duplicate():
 		if is_instance_valid(m):
 			m.on_enter(who)
+
 
 ## Actions contextuelles disponibles pour un acteur sur `from_cell` regardant `facing` :
 ## agrège les actions « sur la case » des mécanismes de `from_cell` (ex. Dig), les actions
@@ -407,6 +449,7 @@ func actions_for(from_cell: Vector3i, facing: Vector3i, who: Node) -> Array:
 		actions.append_array(m.on_adjacent_actions(who, facing))
 	return actions
 
+
 ## Une case de sol franchissable choisie au hasard, différente de `exclude`. Retourne
 ## `exclude` si aucune n'est disponible.
 func random_floor_cell(exclude: Vector3i) -> Vector3i:
@@ -418,11 +461,13 @@ func random_floor_cell(exclude: Vector3i) -> Vector3i:
 		return exclude
 	return candidates[randi() % candidates.size()]
 
+
 ## Téléporte un acteur vers une case de sol libre au hasard (piège de téléportation).
 ## Retourne la case d'arrivée (inchangée si aucune destination libre).
 func teleport_actor(who: Node) -> Vector3i:
 	var from: Vector3i = who.cell
 	return teleport_actor_to(who, random_floor_cell(from))
+
 
 ## Téléporte un acteur vers une case PRÉCISE (entrée / sortie de donjon, dieverting…). Se
 ## rabat sur une case libre voisine si la destination est occupée. Gère l'occupation (les
@@ -462,6 +507,7 @@ var _entrance: Vector3i
 var _has_entrance := false
 var _exits: Array[Vector3i] = []
 
+
 ## Déclare la case d'entrée. Elle compte AUSSI comme sortie (règle doc), inutile de
 ## l'ajouter deux fois.
 func set_entrance(cell: Vector3i) -> void:
@@ -469,24 +515,30 @@ func set_entrance(cell: Vector3i) -> void:
 	_has_entrance = true
 	add_exit(cell)
 
+
 func has_entrance() -> bool:
 	return _has_entrance
+
 
 ## Case d'entrée du donjon (Vector3i.ZERO tant qu'aucune n'est déclarée : tester
 ## [method has_entrance] avant de s'en servir).
 func entrance_cell() -> Vector3i:
 	return _entrance
 
+
 ## Déclare une case de sortie (secondaire ou principale).
 func add_exit(cell: Vector3i) -> void:
 	if cell not in _exits:
 		_exits.append(cell)
 
+
 func exit_cells() -> Array[Vector3i]:
 	return _exits.duplicate()
 
+
 func has_exit() -> bool:
 	return not _exits.is_empty()
+
 
 ## Une sortie au hasard (doc : « at random if more than one »). Retourne Vector3i.ZERO si
 ## aucune n'est déclarée : tester [method has_exit] avant.
@@ -500,13 +552,16 @@ func random_exit() -> Vector3i:
 # Construction de la grille
 # --------------------------------------------------------------------------
 
+
 func set_floor_cells(cells: Array) -> void:
 	_floor.clear()
 	for c in cells:
 		_floor[c] = true
 
+
 func add_floor(cell: Vector3i) -> void:
 	_floor[cell] = true
+
 
 ## Marque une case comme « fosse » : praticable, mais [method render_grid] n'y pose NI dalle
 ## normale NI mur — la case n'est tenue que par ce que le level design y met (planche de pont).
@@ -515,12 +570,15 @@ func add_floor(cell: Vector3i) -> void:
 func mark_pit(cell: Vector3i) -> void:
 	_pit[cell] = true
 
+
 ## Marque une case comme trou franc : pas de mur pour la boucher, et pas de fond non plus.
 func mark_hole(cell: Vector3i) -> void:
 	_hole[cell] = true
 
+
 func is_hole(cell: Vector3i) -> bool:
 	return _hole.has(cell)
+
 
 ## Entrer sur cette case déclenche-t-il une chute SANS FOND ? Une telle chute ne devrait pas
 ## exister (erreur de level design) : le pourtour d'une salle est rendu en mur justement parce
@@ -528,6 +586,7 @@ func is_hole(cell: Vector3i) -> bool:
 ## ce qu'elle est — un sol trop bas pour qu'on y survive : chute fatale, et non blocage muet.
 func is_bottomless(cell: Vector3i) -> bool:
 	return _hole.has(cell) and not _floor.has(cell) and fall_landing(cell) == cell
+
 
 ## Case d'atterrissage d'une chute depuis `cell` : première case de SOL sous `cell` (niveau
 ## inférieur). Retourne `cell` inchangée si aucune (donc pas de chute : mur).
@@ -537,6 +596,7 @@ func fall_landing(cell: Vector3i) -> Vector3i:
 		if _floor.has(below):
 			return below
 	return cell
+
 
 ## Génère la géométrie visible depuis la grille LOGIQUE : un bloc de mur d'une case sur chaque
 ## case non-sol adjacente à du sol (pourtour), et une DALLE MINCE (épaisseur
@@ -573,12 +633,15 @@ func render_grid() -> void:
 		var top_mat: StandardMaterial3D = floor_mat if _floor.has(w + Vector3i.UP) else null
 		add_child(_make_wall_block(cell_to_world(w), wall_mat, top_mat))
 
+
 ## Cases rendues en blocs de mur (vide tant que [method render_grid] n'a pas tourné).
 func wall_cells() -> Dictionary:
 	return _walls
 
+
 func is_wall(cell: Vector3i) -> bool:
 	return _walls.has(cell)
+
 
 ## TODO (2026-09-02) — DETTE D'AUTHORING. Murs et trous sont aujourd'hui DÉDUITS de la seule
 ## grille de sols : un mur, c'est « rien ici, et rien en dessous », et un trou franc n'existe que
@@ -599,9 +662,15 @@ func _derive_wall_cells() -> Dictionary:
 			var n: Vector3i = c + d
 			if _hole.has(n):
 				continue  # trou voulu : surtout pas de mur pour le boucher
-			if not _floor.has(n) and not _mechanisms.has(n) and not _pit.has(n) and fall_landing(n) == n:
+			if (
+				not _floor.has(n)
+				and not _mechanisms.has(n)
+				and not _pit.has(n)
+				and fall_landing(n) == n
+			):
 				wall_cells[n] = true
 	return wall_cells
+
 
 ## Dalle mince (sol/plafond) posée sur une case : sa face HAUTE est au niveau `floor_pos`,
 ## son épaisseur descend en dessous.
@@ -614,13 +683,15 @@ func _make_slab(floor_pos: Vector3, mat: StandardMaterial3D) -> MeshInstance3D:
 	mi.position = floor_pos + Vector3(0.0, -FLOOR_THICKNESS * 0.5, 0.0)
 	return mi
 
+
 ## Bloc de mur plein : un cube d'une case, qui remplit le volume de la case au-dessus de son
 ## sol (donc jamais plus haut qu'un étage — l'étage du dessus reste libre).
 ##
 ## `top_mat` non nul = une case de sol repose sur ce mur : on plaque le revêtement de sol sur
 ## sa face haute (aucune dalle n'est posée par-dessus, c'est le mur qui EST le sol).
-func _make_wall_block(floor_pos: Vector3, mat: StandardMaterial3D,
-		top_mat: StandardMaterial3D = null) -> MeshInstance3D:
+func _make_wall_block(
+	floor_pos: Vector3, mat: StandardMaterial3D, top_mat: StandardMaterial3D = null
+) -> MeshInstance3D:
 	var mi := MeshInstance3D.new()
 	var box := BoxMesh.new()
 	box.size = Vector3(CELL_SIZE, CELL_SIZE, CELL_SIZE)
@@ -637,6 +708,7 @@ func _make_wall_block(floor_pos: Vector3, mat: StandardMaterial3D,
 	mi.position = floor_pos + Vector3(0.0, CELL_SIZE * 0.5, 0.0)
 	return mi
 
+
 ## Construit une salle de démonstration : sol rectangulaire (niveau 0) avec quelques
 ## murs intérieurs, + un rendu minimal (sol plat + boîtes de murs). Échafaudage : les
 ## vrais donjons seront des scènes 3D authoring, dont la grille sera dérivée autrement.
@@ -652,6 +724,7 @@ func build_demo_room(width: int, depth: int, interior_walls: Array = []) -> void
 				cells.append(c)
 	set_floor_cells(cells)
 	_spawn_demo_visuals(width, depth, blocked)
+
 
 func _spawn_demo_visuals(width: int, depth: int, blocked: Dictionary) -> void:
 	# Sol unique (au niveau du sol des cases, y = 0).

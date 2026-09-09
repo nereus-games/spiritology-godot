@@ -31,6 +31,7 @@ const SAMPLE_ABILITY := &"anomaly"
 var _fails: Array[String] = []
 var _rng := RandomNumberGenerator.new()
 
+
 func _check(cond: bool, label: String) -> void:
 	if cond:
 		print("  OK   %s" % label)
@@ -38,8 +39,10 @@ func _check(cond: bool, label: String) -> void:
 		print("  FAIL %s" % label)
 		_fails.append(label)
 
+
 func _ready() -> void:
 	_run_all()
+
 
 func _run_all() -> void:
 	await get_tree().process_frame  # laisse les autoloads et la racine s'installer
@@ -55,9 +58,11 @@ func _run_all() -> void:
 		print("ÉCHECS : %s" % [_fails])
 	get_tree().quit(0 if _fails.is_empty() else 1)
 
+
 # --------------------------------------------------------------------------
 # Terrain de test
 # --------------------------------------------------------------------------
+
 
 ## Quatre combattants neufs : [j0, j1, r0, r1]. Reconstruits pour CHAQUE capacité, sinon
 ## une capacité qui dissout un camp priverait les suivantes de cibles.
@@ -69,6 +74,7 @@ func _fresh_fighters() -> Array:
 		out.append(EncounterManager.make_fighter(id, false))
 	return out
 
+
 ## Manager prêt à tourner. [EncounterManager] étant un Node jamais ajouté à l'arbre,
 ## l'appelant DOIT le `free()` — sinon Godot signale des instances fuitées en sortie.
 func _make_manager(seed: int = SEED) -> EncounterManager:
@@ -76,6 +82,7 @@ func _make_manager(seed: int = SEED) -> EncounterManager:
 	var m := EncounterManager.new()
 	m.setup([fighters[0], fighters[1]], [fighters[2], fighters[3]], seed)
 	return m
+
 
 func _ability_files() -> Array:
 	var out: Array = []
@@ -88,9 +95,11 @@ func _ability_files() -> Array:
 	out.sort()  # ordre stable : le journal du check reste comparable d'un run à l'autre
 	return out
 
+
 # --------------------------------------------------------------------------
 # Capacités : chacune s'exécute et laisse l'état de combat cohérent
 # --------------------------------------------------------------------------
+
 
 func _check_abilities() -> void:
 	print("— capacités —")
@@ -108,8 +117,14 @@ func _check_abilities() -> void:
 		if problem != "":
 			broken.append("%s (%s)" % [ability.id, problem])
 	_check(executed >= 100, "%d capacités de rencontre exécutées" % executed)
-	_check(broken.is_empty(), "état de combat sain après chaque capacité%s"
-		% ("" if broken.is_empty() else " — " + ", ".join(broken)))
+	_check(
+		broken.is_empty(),
+		(
+			"état de combat sain après chaque capacité%s"
+			% ("" if broken.is_empty() else " — " + ", ".join(broken))
+		)
+	)
+
 
 ## Exécute une capacité sur un terrain neuf. Renvoie "" si l'état reste cohérent,
 ## sinon la description du problème.
@@ -135,6 +150,7 @@ func _execute_ability(ability: AbilityData) -> String:
 		f.release_cross_references()
 	return problem
 
+
 ## Invariants que AUCUNE capacité ne doit pouvoir briser.
 func _state_problem(fighters: Array, timeline: EncounterTimeline) -> String:
 	for f in fighters:
@@ -152,9 +168,11 @@ func _state_problem(fighters: Array, timeline: EncounterTimeline) -> String:
 			return "%s absent de l'ordre du tour" % f.species_id()
 	return ""
 
+
 # --------------------------------------------------------------------------
 # Déterminisme : c'est lui qui rendra tout refactor de la boucle vérifiable
 # --------------------------------------------------------------------------
+
 
 func _check_determinism() -> void:
 	print("— déterminisme —")
@@ -172,7 +190,11 @@ func _check_determinism() -> void:
 		var m := _make_manager(SEED + i)
 		orders[",".join(m.timeline.order.map(func(f): return String(f.species_id())))] = true
 		m.free()
-	_check(orders.size() > 1, "seeds différents → ordres du tour différents (%d distincts sur 10)" % orders.size())
+	_check(
+		orders.size() > 1,
+		"seeds différents → ordres du tour différents (%d distincts sur 10)" % orders.size()
+	)
+
 
 func _run_once(seed: int) -> Dictionary:
 	var m := _make_manager(seed)
@@ -181,42 +203,61 @@ func _run_once(seed: int) -> Dictionary:
 	m.free()
 	return out
 
+
 # --------------------------------------------------------------------------
 # Boucle : positions, faiblesses, terminaison
 # --------------------------------------------------------------------------
+
 
 func _check_loop_invariants() -> void:
 	print("— boucle —")
 	var m := _make_manager()
 	var order := m.timeline.order
 	_check(order.size() == 4, "ordre du tour : %d combattants" % order.size())
-	_check(m.timeline.position_of(order[0]) == GameEnums.TurnPosition.FIRST,
-		"tête de l'ordre → position FIRST")
-	_check(m.timeline.position_of(order[1]) == GameEnums.TurnPosition.MIDDLE,
-		"milieu de l'ordre → position MIDDLE")
-	_check(m.timeline.position_of(order[3]) == GameEnums.TurnPosition.LAST,
-		"queue de l'ordre → position LAST")
+	_check(
+		m.timeline.position_of(order[0]) == GameEnums.TurnPosition.FIRST,
+		"tête de l'ordre → position FIRST"
+	)
+	_check(
+		m.timeline.position_of(order[1]) == GameEnums.TurnPosition.MIDDLE,
+		"milieu de l'ordre → position MIDDLE"
+	)
+	_check(
+		m.timeline.position_of(order[3]) == GameEnums.TurnPosition.LAST,
+		"queue de l'ordre → position LAST"
+	)
 	# La faiblesse active est dérivée de la POSITION, pas de l'individu : c'est la règle
 	# qui rend les capacités de réordonnancement offensives.
 	var head: EncounterFighter = order[0]
-	_check(head.active_weakness(GameEnums.TurnPosition.FIRST) == head.species.weakness_first
-		and head.active_weakness(GameEnums.TurnPosition.LAST) == head.species.weakness_last,
-		"faiblesse active dérivée de la position")
+	_check(
+		(
+			head.active_weakness(GameEnums.TurnPosition.FIRST) == head.species.weakness_first
+			and head.active_weakness(GameEnums.TurnPosition.LAST) == head.species.weakness_last
+		),
+		"faiblesse active dérivée de la position"
+	)
 	m.free()
 
 	# Terminaison : la boucle rend toujours une des trois issues et respecte max_rounds.
 	var m2 := _make_manager()
 	var res := await m2.run(3)
 	_check(res in [&"victory", &"defeat", &"timeout"], "issue valide : %s" % res)
-	_check(m2.round_number >= 1 and m2.round_number <= 3,
-		"rondes bornées par max_rounds (%d)" % m2.round_number)
+	_check(
+		m2.round_number >= 1 and m2.round_number <= 3,
+		"rondes bornées par max_rounds (%d)" % m2.round_number
+	)
 	_check(m2.result == res, "le champ result reflète l'issue rendue")
-	_check(not m2.battle_log.is_empty(), "la rencontre a produit un journal (%d lignes)" % m2.battle_log.size())
+	_check(
+		not m2.battle_log.is_empty(),
+		"la rencontre a produit un journal (%d lignes)" % m2.battle_log.size()
+	)
 	m2.free()
+
 
 # --------------------------------------------------------------------------
 # Talents : chacun résout vers son script dédié et répond à tous les hooks
 # --------------------------------------------------------------------------
+
 
 func _check_talents() -> void:
 	print("— talents —")
@@ -249,13 +290,16 @@ func _check_talents() -> void:
 		script.wants_reuse(m, owner, sample)
 		script.on_weakness_touched(m, owner, other, sample)
 		script.modify_examine_info(m, other, 1.0)
-		var kinds: Array = [EncounterAction.Kind.ABILITY, EncounterAction.Kind.TALK,
-			EncounterAction.Kind.EXAMINE]
+		var kinds: Array = [
+			EncounterAction.Kind.ABILITY, EncounterAction.Kind.TALK, EncounterAction.Kind.EXAMINE
+		]
 		script.modify_menu(m, kinds)
 		if kinds.is_empty():
 			problems.append("%s vide le menu d'actions" % td.id)
 		script.on_encounter_end(m, &"victory")
 	_check(resolved == 10, "%d talents résolus vers leur script dédié" % resolved)
-	_check(problems.is_empty(), "hooks de talents opérants%s"
-		% ("" if problems.is_empty() else " — " + ", ".join(problems)))
+	_check(
+		problems.is_empty(),
+		"hooks de talents opérants%s" % ("" if problems.is_empty() else " — " + ", ".join(problems))
+	)
 	m.free()

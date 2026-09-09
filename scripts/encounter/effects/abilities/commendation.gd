@@ -4,6 +4,7 @@
 ## (Approximé par un facteur moyen ×1.25.)
 extends AbilityScript
 
+
 func execute(ctx: EncounterContext) -> void:
 	var t = ctx.random_of(ctx.others())
 	if t == null:

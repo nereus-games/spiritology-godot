@@ -16,6 +16,7 @@ signal _submitted(action: EncounterAction)
 ## Combattant dont le choix est attendu (null si la boucle n'attend pas).
 var pending_fighter: EncounterFighter = null
 
+
 func decide(fighter: EncounterFighter, manager: EncounterManager) -> EncounterAction:
 	pending_fighter = fighter
 	# Émission DIFFÉRÉE, sinon un handler qui répond dans la foulée (ex. « aucune capacité
@@ -26,6 +27,7 @@ func decide(fighter: EncounterFighter, manager: EncounterManager) -> EncounterAc
 	var action: EncounterAction = await _submitted
 	pending_fighter = null
 	return action
+
 
 ## Valide le choix du joueur et relance la boucle. `null` = le combattant ne peut rien
 ## faire (tour perdu). À n'appeler qu'en réponse à [signal choice_requested].

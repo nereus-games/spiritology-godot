@@ -3,6 +3,7 @@
 ## capacité Chaleur jusqu'à la fin de la rencontre (ou jusqu'à ce qu'il Médite).
 extends AbilityScript
 
+
 func execute(ctx: EncounterContext) -> void:
 	var t = ctx.primary()
 	if t:

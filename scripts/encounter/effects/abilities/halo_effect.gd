@@ -4,6 +4,7 @@
 ## rempli) ; le user et la cible récupèrent X ETH. (Condition historique : TODO.)
 extends AbilityScript
 
+
 func execute(ctx: EncounterContext) -> void:
 	var t = ctx.random_of(ctx.others())
 	if t == null:

@@ -1,0 +1,15 @@
+Third-party material
+====================
+
+This repository currently embeds none. Every sprite, icon and line of code in it
+is original work by the authors listed in AUTHORS.
+
+That is not a detail: the project is copyleft on both sides (GPL-3.0-or-later for
+code, LAL-1.3 for content), and Nereus Games LLC also distributes proprietary
+binaries on some platforms. Third-party material under an incompatible licence
+would break the first; third-party material under *any* copyleft would break the
+second, quietly and permanently.
+
+So: anything added from elsewhere — a font, an icon, a sound, a snippet, a
+library — must be recorded here with its origin and licence, and must be
+compatible with both. When in doubt, do not add it.

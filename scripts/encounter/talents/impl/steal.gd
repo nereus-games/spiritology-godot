@@ -9,6 +9,7 @@
 ## inexistant (comme pour le double-Examine). Voir EncounterManager._resolve_steal.
 extends "res://scripts/encounter/talents/talent_script.gd"
 
+
 func modify_menu(_manager, kinds: Array) -> void:
 	kinds.erase(EncounterAction.Kind.TALK)
 	if not kinds.has(EncounterAction.Kind.STEAL):

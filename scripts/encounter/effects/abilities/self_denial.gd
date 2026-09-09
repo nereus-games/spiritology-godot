@@ -4,6 +4,7 @@
 ## annuler ces effets en Méditant.
 extends AbilityScript
 
+
 func execute(ctx: EncounterContext) -> void:
 	var t = ctx.primary()
 	if t:

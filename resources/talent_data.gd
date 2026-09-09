@@ -21,9 +21,11 @@ extends Resource
 ## explicitement défini pour ce talent.
 @export var stacks_in_duo: bool = true
 
+
 ## Clé de traduction du nom. Convention : TALENT_<ID_MAJ>_NAME.
 func name_key() -> String:
 	return "TALENT_%s_NAME" % GameEnums.key_token(id)
+
 
 ## Clé de traduction de la description. Convention : TALENT_<ID_MAJ>_DESC.
 func desc_key() -> String:

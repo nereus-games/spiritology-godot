@@ -7,8 +7,10 @@ extends AbilityEffect
 ## Facteur par défaut (placeholder à équilibrer). < 1 réduit, > 1 augmente, 0 = immunité.
 const DEFAULT_FACTOR := 0.5
 
+
 func tag() -> StringName:
 	return &"damage reduction/increase or immunity"
+
 
 func execute(ctx: EncounterContext) -> void:
 	for t in ctx.targets:

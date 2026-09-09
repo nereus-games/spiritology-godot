@@ -1,7 +1,9 @@
 ## Litmus Test — granop · [limit actions, recover ETH]
 ## MÉCANIQUE : les 2 dernières capacités utilisées par la cible lui deviennent inutilisables
-## jusqu'à la fin de la rencontre ; le user et la cible gagnent X ETH s'ils sont d'origine différente.
+## jusqu'à la fin de la rencontre ; le user et la cible gagnent X ETH s'ils sont
+## d'origine différente.
 extends AbilityScript
+
 
 func execute(ctx: EncounterContext) -> void:
 	var t = ctx.primary()

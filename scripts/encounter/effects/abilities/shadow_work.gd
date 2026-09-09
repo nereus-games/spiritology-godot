@@ -3,6 +3,7 @@
 ## rencontre ; il gagne X ETH si sa faiblesse est Arcane ou cachée aux rivaux.
 extends AbilityScript
 
+
 func execute(ctx: EncounterContext) -> void:
 	for f in ctx.all_fighters:
 		if not f.is_dissolved():

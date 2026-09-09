@@ -11,6 +11,7 @@ extends "res://scripts/encounter/talents/talent_script.gd"
 ## isolée en constante comme les autres magnitudes, pour être ajustée au ressenti si besoin.
 const REUSE_CHANCE := 0.5
 
+
 func wants_reuse(manager, user, ability) -> bool:
 	if user != owner or ability == null or not ability.single_use:
 		return false

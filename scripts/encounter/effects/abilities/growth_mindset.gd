@@ -4,6 +4,7 @@
 ## jusqu'à son prochain tour.
 extends AbilityScript
 
+
 func execute(ctx: EncounterContext) -> void:
 	if ctx.user.last_damager == null:
 		return  # condition non remplie

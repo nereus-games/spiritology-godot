@@ -4,6 +4,7 @@
 ## en bénéficient aussi. (Approximé au coup suivant via next_damage_factor.)
 extends AbilityScript
 
+
 func execute(ctx: EncounterContext) -> void:
 	ctx.modify_damage(ctx.user, 0.5)
 	ctx.grant_reflect(ctx.user)

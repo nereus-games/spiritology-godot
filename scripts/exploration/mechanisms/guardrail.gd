@@ -21,25 +21,31 @@ const WIDTH := 0.9
 ## Toujours une direction horizontale unitaire (±X ou ±Z).
 @export var edge_dir := Vector3i(0, 0, 1)
 
+
 ## Sur l'arête, pas sur la case : les deux cases voisines restent utilisables.
 func _register() -> void:
 	_dungeon.register_edge_mechanism(cell, cell + edge_dir, self)
 
+
 func _unregister() -> void:
 	_dungeon.unregister_edge_mechanism(cell, cell + edge_dir, self)
+
 
 ## Une rambarde barre son arête en permanence (elle ne s'ouvre jamais).
 func blocks_walk() -> bool:
 	return true
 
+
 ## Basse : on voit (et on agit) par-dessus, contrairement à un mur ou à une porte fermée.
 func blocks_sight() -> bool:
 	return false
+
 
 ## Couleur sur la mini-map : gris clair de décor, et non l'orange des mécanismes avec lesquels
 ## le joueur interagit (une rambarde ne s'actionne pas).
 func map_color() -> Color:
 	return Color(0.55, 0.57, 0.62)
+
 
 func _spawn_visual() -> void:
 	var thin := DungeonManager.EDGE_THICKNESS

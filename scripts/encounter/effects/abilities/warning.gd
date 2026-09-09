@@ -3,6 +3,7 @@
 ## capacité qui lui sont infligés sont réduits de moitié jusqu'à son prochain tour.
 extends AbilityScript
 
+
 func execute(ctx: EncounterContext) -> void:
 	var t = ctx.primary()
 	if t:

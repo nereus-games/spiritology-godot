@@ -3,6 +3,7 @@
 ## fin de la rencontre ; le user est immunisé aux dégâts Arcane jusqu'à son prochain tour.
 extends AbilityScript
 
+
 func execute(ctx: EncounterContext) -> void:
 	ctx.hide_weakness(ctx.user)
 	ctx.request_ui(&"hide_user_den_weakness", {"fighter": ctx.user.species_id()})

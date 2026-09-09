@@ -11,11 +11,12 @@ const ABILITIES_DIR := "res://data/abilities/"
 const DUNGEONS_DIR := "res://data/dungeons/"
 const OBJECTS_DIR := "res://data/objects/"
 
-var _species: Dictionary = {}    ## StringName id -> SpeciesData
+var _species: Dictionary = {}  ## StringName id -> SpeciesData
 var _abilities: Dictionary = {}  ## StringName id -> AbilityData
-var _talents: Dictionary = {}    ## StringName id -> TalentData (sous-ensemble Type=Talent)
-var _dungeons: Dictionary = {}   ## StringName id -> DungeonConfig
-var _objects: Dictionary = {}    ## StringName id -> ObjectData
+var _talents: Dictionary = {}  ## StringName id -> TalentData (sous-ensemble Type=Talent)
+var _dungeons: Dictionary = {}  ## StringName id -> DungeonConfig
+var _objects: Dictionary = {}  ## StringName id -> ObjectData
+
 
 func _ready() -> void:
 	_load_dir(SPECIES_DIR)
@@ -24,8 +25,19 @@ func _ready() -> void:
 	_load_dir(ABILITIES_DIR)
 	_load_dir(DUNGEONS_DIR)
 	_load_dir(OBJECTS_DIR)
-	print("[GameData] %d espèces, %d capacités, %d talents, %d donjons, %d objets chargés." % [
-		_species.size(), _abilities.size(), _talents.size(), _dungeons.size(), _objects.size()])
+	print(
+		(
+			"[GameData] %d espèces, %d capacités, %d talents, %d donjons, %d objets chargés."
+			% [
+				_species.size(),
+				_abilities.size(),
+				_talents.size(),
+				_dungeons.size(),
+				_objects.size()
+			]
+		)
+	)
+
 
 ## Charge tous les .tres d'un dossier et range chaque ressource dans le registre
 ## correspondant à son type, indexée par son `id`.
@@ -45,6 +57,7 @@ func _load_dir(path: String) -> void:
 			continue
 		_registry_for(res)[res.id] = res
 
+
 ## Renvoie le dictionnaire-registre adapté au type d'une ressource.
 func _registry_for(res: Resource) -> Dictionary:
 	if res is SpeciesData:
@@ -60,20 +73,26 @@ func _registry_for(res: Resource) -> Dictionary:
 	push_warning("[GameData] type de ressource non géré : %s" % res)
 	return {}
 
+
 func species(id: StringName) -> SpeciesData:
 	return _species.get(id)
+
 
 func ability(id: StringName) -> AbilityData:
 	return _abilities.get(id)
 
+
 func talent(id: StringName) -> TalentData:
 	return _talents.get(id)
+
 
 func dungeon(id: StringName) -> DungeonConfig:
 	return _dungeons.get(id)
 
+
 func object(id: StringName) -> ObjectData:
 	return _objects.get(id)
+
 
 func all_species() -> Array:
 	return _species.values()

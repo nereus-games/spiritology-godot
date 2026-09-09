@@ -4,6 +4,7 @@
 ## Parler et Examiner jusqu'au prochain tour du user.
 extends AbilityScript
 
+
 func execute(ctx: EncounterContext) -> void:
 	ctx.set_weakness(ctx.user, GameEnums.Energy.CRYSTAL)
 	ctx.limit_actions(ctx.user, 1)

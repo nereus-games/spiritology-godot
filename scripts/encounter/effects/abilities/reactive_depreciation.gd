@@ -5,6 +5,7 @@
 ## rival au hasard.)
 extends AbilityScript
 
+
 func execute(ctx: EncounterContext) -> void:
 	var t = ctx.random_opponent()
 	if t == null:

@@ -3,6 +3,7 @@
 ## Fluide, Toxique ou Cristal qui la touchent sont réduits de moitié.
 extends AbilityScript
 
+
 func execute(ctx: EncounterContext) -> void:
 	var t = ctx.user  # soi par défaut (cible alliée)
 	ctx.recover_eth(t, ctx.dmg(&"normal"))

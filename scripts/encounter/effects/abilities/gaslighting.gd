@@ -4,6 +4,7 @@
 ## dont la faiblesse est cachée (ou absente de l'encyclopédie).
 extends AbilityScript
 
+
 func execute(ctx: EncounterContext) -> void:
 	var mate = ctx.random_of(ctx.allies())
 	var foe = ctx.random_opponent()
@@ -13,5 +14,10 @@ func execute(ctx: EncounterContext) -> void:
 			ctx.change_weakness(x)
 	var t = ctx.primary()
 	if t:
-		var hidden := ctx.all_fighters.filter(func(f): return not f.is_dissolved() and f.weakness_hidden).size()
+		var hidden := (
+			ctx
+			. all_fighters
+			. filter(func(f): return not f.is_dissolved() and f.weakness_hidden)
+			. size()
+		)
 		ctx.deal_damage(t, ctx.base_damage() * maxi(hidden, 1))

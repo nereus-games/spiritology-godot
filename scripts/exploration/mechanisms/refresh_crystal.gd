@@ -12,9 +12,11 @@ const ExplorationAction := preload("res://scripts/exploration/exploration_action
 
 var _used := false
 
+
 ## Obstacle indestructible : toujours infranchissable.
 func blocks_walk() -> bool:
 	return true
+
 
 ## Action « rafraîchir » disponible depuis une case adjacente en le regardant, tant qu'il
 ## n'a pas déjà servi cette visite. (La direction du regard est gérée par
@@ -22,14 +24,21 @@ func blocks_walk() -> bool:
 func on_adjacent_actions(_who: Node, _facing: Vector3i) -> Array:
 	if _used:
 		return []
-	return [ExplorationAction.new(&"refresh_crystal", "UI_ACTION_REFRESH_CRYSTAL", Callable(self, "refresh"))]
+	return [
+		ExplorationAction.new(
+			&"refresh_crystal", "UI_ACTION_REFRESH_CRYSTAL", Callable(self, "refresh")
+		)
+	]
+
 
 func is_used() -> bool:
 	return _used
 
+
 ## Cristal déjà employé cette visite : plus rien à en tirer (règle transverse « épuisé »).
 func is_spent() -> bool:
 	return _used
+
 
 ## Rafraîchit toutes les capacités d'exploration utilisées (une seule fois par visite).
 func refresh() -> void:
@@ -41,9 +50,11 @@ func refresh() -> void:
 	# l'aplatir (l'aplatir ferait croire qu'on peut passer).
 	_grey_marker()
 
+
 func reset_between_visits() -> void:
 	_used = false
 	_respawn_marker()  # de nouveau utilisable : il retrouve son cyan
+
 
 func _spawn_visual() -> void:
 	_add_marker(Color(0.3, 0.8, 0.85), 1.0, 0.5)  # cristal cyan, haut (occupe toute la case)

@@ -4,6 +4,7 @@
 ## capacités utilisées : TODO → montant fixe par individu pour l'instant.)
 extends AbilityScript
 
+
 func execute(ctx: EncounterContext) -> void:
 	for f in ctx.all_fighters:
 		if not f.is_dissolved():

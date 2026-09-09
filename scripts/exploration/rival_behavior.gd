@@ -9,10 +9,10 @@ extends Node3D
 
 const AfflictionState := preload("res://scripts/exploration/mechanisms/affliction_state.gd")
 
-@export var species_id := &"ravbak"      ## espèce du rival (pour bâtir la rencontre)
-@export var vision_range := 5            ## portée de détection, en cases (Manhattan)
-@export var turns_between_actions := 1   ## 1 = agit chaque tour, 2 = un tour sur deux…
-@export var memory_turns := 2            ## tours de mémoire après perte de vue
+@export var species_id := &"ravbak"  ## espèce du rival (pour bâtir la rencontre)
+@export var vision_range := 5  ## portée de détection, en cases (Manhattan)
+@export var turns_between_actions := 1  ## 1 = agit chaque tour, 2 = un tour sur deux…
+@export var memory_turns := 2  ## tours de mémoire après perte de vue
 @export var move_duration := 0.18
 ## Encombrement maximal du sprite, en mètres : il tient dans un carré de ce côté (charte
 ## « Visuals + Sounds » : rival sprites max 90 cm × 90 cm). Une case fait
@@ -70,6 +70,7 @@ var _target_cell: Vector3i
 var _memory := 0
 var _cooldown := 0
 
+
 func _ready() -> void:
 	_fit_sprite()
 	den = max_den
@@ -84,6 +85,7 @@ func _ready() -> void:
 	cell = _dungeon.world_to_cell(global_position)
 	global_position = _dungeon.cell_to_world(cell)
 	_dungeon.register_rival(self)
+
 
 ## Fait tenir le sprite dans un carré de [member world_height] de côté, quelle que soit la
 ## résolution ET LES PROPORTIONS du PNG.
@@ -111,6 +113,7 @@ func _fit_sprite() -> void:
 	# Le quad est centré sur son origine : on le remonte d'une demi-hauteur RÉELLE pour qu'il
 	# pose sur le sol de la case au lieu d'être à moitié enterré (ou de flotter).
 	sprite.position.y = tex_height * sprite.pixel_size * 0.5
+
 
 ## Joué par le DungeonManager à chaque tour, avec la case courante du joueur.
 func take_turn(player_cell: Vector3i) -> void:
@@ -179,6 +182,7 @@ func take_turn(player_cell: Vector3i) -> void:
 		if _dungeon.is_narrow_bridge(cell) and randf() < bridge_fall_chance:
 			fall_down(cell)
 
+
 func _update_memory(player_cell: Vector3i) -> void:
 	if _can_see(player_cell):
 		_target_cell = player_cell
@@ -188,6 +192,7 @@ func _update_memory(player_cell: Vector3i) -> void:
 		_memory -= 1
 	else:
 		_has_target = false
+
 
 ## Vue simple : portée Manhattan, SANS occlusion.
 ##
@@ -206,18 +211,25 @@ func _can_see(player_cell: Vector3i) -> bool:
 	var d: Vector3i = (player_cell - cell).abs()
 	return d.x + d.z <= vision_range
 
+
 func _chase_dir(target: Vector3i) -> Vector3i:
 	var diff := target - cell
 	if absi(diff.x) > absi(diff.z):
 		return Vector3i(signi(diff.x), 0, 0)
 	return Vector3i(0, 0, signi(diff.z))
 
+
 func _random_dir() -> Vector3i:
 	match randi() % 4:
-		0: return Vector3i(1, 0, 0)
-		1: return Vector3i(-1, 0, 0)
-		2: return Vector3i(0, 0, 1)
-		_: return Vector3i(0, 0, -1)
+		0:
+			return Vector3i(1, 0, 0)
+		1:
+			return Vector3i(-1, 0, 0)
+		2:
+			return Vector3i(0, 0, 1)
+		_:
+			return Vector3i(0, 0, -1)
+
 
 func _step_to(next: Vector3i) -> void:
 	cell = next
@@ -227,15 +239,18 @@ func _step_to(next: Vector3i) -> void:
 	await tween.finished
 	_busy = false
 
+
 ## Relocalisation instantanée sur une case (piège de téléportation). L'occupation est gérée
 ## par [method DungeonManager.teleport_actor].
 func teleport_to(to_cell: Vector3i) -> void:
 	cell = to_cell
 	global_position = _dungeon.cell_to_world(to_cell)
 
+
 # --------------------------------------------------------------------------
 # Ponts étroits : chute, croisements, DEN de carte
 # --------------------------------------------------------------------------
+
 
 ## Le joueur vient de changer d'étage sous les yeux du rival (chute, escalier, ascenseur…) :
 ## celui-ci retient OÙ il est allé et le poursuit par ses propres moyens (cf. [method
@@ -245,6 +260,7 @@ func witness_player_level_change(from_cell: Vector3i, to_cell: Vector3i) -> void
 		return
 	_level_target = to_cell
 	_level_pursuit = level_pursuit_turns
+
 
 ## Un tour de poursuite vers l'étage du joueur. Retourne true si l'action du tour est
 ## consommée (le rival a sauté ou pris un escalier) ; false s'il lui reste à se déplacer,
@@ -282,6 +298,7 @@ func _pursue_level() -> bool:
 	_has_target = true
 	return false
 
+
 ## Bord ouvert le plus prometteur pour sauter vers `toward` : case voisine dans le vide, dont
 ## l'arête n'est barrée par rien (une RAMBARDE la protège comme elle protège le joueur) et sous
 ## laquelle il y a un sol. Retourne la case courante si aucun bord ne convient — le rival reste
@@ -302,6 +319,7 @@ func _open_drop_edge(toward: Vector3i) -> Vector3i:
 			best = n
 	return best
 
+
 ## Chance, CE TOUR-CI, de se jeter dans le vide pour poursuivre, une fois pesé ce que la chute
 ## coûterait. Le tirage étant refait à chaque occasion, c'est cette pondération qui empêche la
 ## poursuite d'être une quasi-certitude dès qu'on laisse passer quelques tours.
@@ -318,6 +336,7 @@ func fall_pursuit_chance(levels: int) -> float:
 		return 0.0
 	var risk := float(damage) / float(den)
 	return pursue_fall_chance * pow(1.0 - risk, fall_prudence)
+
 
 ## Passage vers un autre étage le plus proche (distance de Manhattan) allant dans le sens voulu,
 ## abordable depuis l'étage du rival. `direction` = +1 pour monter, -1 pour descendre.
@@ -343,12 +362,14 @@ func _nearest_level_link(direction: int) -> Node:
 			best = m
 	return best
 
+
 ## Mécanisme d'escalier posé sur la case `c`, ou null.
 func _stairs_at(c: Vector3i) -> Node:
 	for m in _dungeon.mechanisms_at(c):
 		if m.has_method("stairs_destination"):
 			return m
 	return null
+
 
 ## Emprunte le passage `link` depuis la case courante (escalier à gravir, etc.). Retourne
 ## false si l'arrivée n'est pas praticable ou est occupée.
@@ -364,6 +385,7 @@ func _use_level_link(link) -> bool:
 	_dungeon.notify_entered(dest, self)
 	return true
 
+
 ## Chute volontaire ou subie depuis `from_cell` : atterrit sur le sol en contrebas et encaisse
 ## les dégâts. Retourne false si le rival en est dévitalisé (donc dissous).
 func fall_down(from_cell: Vector3i) -> bool:
@@ -376,6 +398,7 @@ func fall_down(from_cell: Vector3i) -> bool:
 			return false
 		return true
 	return drop_to(landing, from_cell.y - landing.y)
+
 
 ## Pose le rival sur `target` au terme d'une chute de `levels` étages et lui applique les
 ## dégâts. Si `target` est occupée, il atterrit sur la case libre la plus proche : l'invariant
@@ -398,6 +421,7 @@ func drop_to(target: Vector3i, levels: int) -> bool:
 	_dungeon.notify_entered(dest, self)
 	return true
 
+
 ## Applique des dégâts subis SUR LA CARTE (chute). Le DEN restant est reporté dans la
 ## rencontre qui suit ; s'il tombe à 0, le rival est dévitalisé sur place et dissous, SANS
 ## rencontre (doc). Retourne true si le rival survit.
@@ -412,12 +436,14 @@ func apply_map_damage(amount: int) -> bool:
 	_dissolve()
 	return false
 
+
 ## Dévitalisé hors rencontre : le rival quitte la grille.
 func _dissolve() -> void:
 	_dungeon.release(cell)
 	_dungeon.unregister_rival(self)
 	_dungeon = null  # empêche _exit_tree de re-désenregistrer
 	queue_free()
+
 
 ## Deux rivaux se croisent sur une planche : les deux tombent, l'occupant sur la case du
 ## dessous, l'arrivant sur une case adjacente (doc).
@@ -430,10 +456,12 @@ func _collide_with_rival(tile: Vector3i, other: Node) -> void:
 		other.drop_to(landing, levels)
 	drop_to(_dungeon.free_cell_near(landing), levels)
 
+
 ## Fin de tour : fait s'écouler le poison. Pas de DEN sur la carte pour un rival → l'effet
 ## est simplement décompté (l'état sera transféré à la rencontre plus tard).
 func on_turn_elapsed() -> void:
 	affliction.tick_poison()
+
 
 func _exit_tree() -> void:
 	if _dungeon:

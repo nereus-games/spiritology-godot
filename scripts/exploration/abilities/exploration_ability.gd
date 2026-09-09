@@ -7,6 +7,7 @@
 ## Pas de `class_name` (piège du cache CLI) : `extends`/`preload` par chemin.
 extends RefCounted
 
+
 ## Applique l'effet de la capacité. Retourne true si la capacité a été effectivement utilisée
 ## (et doit donc être marquée comme consommée pour la visite). Défaut : rien.
 func use(_ctx) -> bool:

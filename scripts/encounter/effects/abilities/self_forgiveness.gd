@@ -3,6 +3,7 @@
 ## prochain tour ; s'il utilise une capacité au prochain tour, il n'en paie pas le coût ETH.
 extends AbilityScript
 
+
 func execute(ctx: EncounterContext) -> void:
 	ctx.recover_eth(ctx.user, ctx.dmg(&"normal"))
 	ctx.remove_weakness(ctx.user)

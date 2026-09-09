@@ -14,6 +14,7 @@ extends AbilityScript
 ## Probabilité de dégâts par individu (« X % » Notion — à équilibrer).
 const DAMAGE_CHANCE := 0.5
 
+
 func execute(ctx: EncounterContext) -> void:
 	var everyone: Array = ctx.all_fighters if not ctx.all_fighters.is_empty() else ctx.targets
 	for fighter in everyone:

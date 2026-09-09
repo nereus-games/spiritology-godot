@@ -42,16 +42,18 @@ enum Kind { DISARRAY, TELEPORT, POISON }
 ## Actif = pas encore déclenché depuis la dernière (ré)initialisation.
 var _active := true
 
+
 func on_enter(who: Node) -> void:
 	if not _active:
 		return
 	_trigger(who)
-	_active = false   # désactivé après déclenchement, mais reste visible (grisé)
-	revealed = true   # le joueur constate le piège (et son type)
-	_mark_spent()     # feedback visuel : piège épuisé (usage unique par visite)
+	_active = false  # désactivé après déclenchement, mais reste visible (grisé)
+	revealed = true  # le joueur constate le piège (et son type)
+	_mark_spent()  # feedback visuel : piège épuisé (usage unique par visite)
 	# Un piège qui se déclenche rompt l'invisibilité (règle fog mantel).
 	if who.has_method("clear_invisibility"):
 		who.clear_invisibility()
+
 
 ## Un piège n'apparaît sur la carte qu'une fois CONNU : révélé par un talent/une capacité, ou
 ## constaté en le déclenchant. Tant qu'il est caché, la carte n'en dit rien (doc « User
@@ -59,22 +61,27 @@ func on_enter(who: Node) -> void:
 func shows_on_map() -> bool:
 	return revealed
 
+
 ## Révèle le type du piège SANS le déclencher (futur talent `reveal_traps`).
 func reveal() -> void:
 	revealed = true
+
 
 ## Vrai tant que le piège n'a pas encore été déclenché depuis la dernière visite.
 func is_active() -> bool:
 	return _active
 
+
 func is_spent() -> bool:
 	return not _active
+
 
 func reset_between_visits() -> void:
 	if reactivates:
 		_active = true
 		revealed = false
 		_respawn_marker()  # restaure l'aspect « armé »
+
 
 func _trigger(who: Node) -> void:
 	match kind:
@@ -90,10 +97,12 @@ func _trigger(who: Node) -> void:
 			if _dungeon != null:
 				_dungeon.teleport_actor(who)
 
+
 ## AfflictionState porté par l'acteur, ou null s'il n'en a pas (duck-typing : joueur et
 ## rival exposent tous deux une propriété `affliction`).
 func _affliction_of(who: Node):
 	return who.get("affliction")
+
 
 func _spawn_visual() -> void:
 	var color := Color(0.6, 0.2, 0.8)  # POISON = violet

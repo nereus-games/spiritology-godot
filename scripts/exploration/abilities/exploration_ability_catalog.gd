@@ -17,12 +17,14 @@ const _CONTEXTUAL: Array[StringName] = [&"cranny_crossing"]
 ## (rempli par les scénarios de test). Fusionné dans [method known_for_duo].
 static var dev_granted: Array[StringName] = []
 
+
 ## Instance d'effet pour une capacité d'exploration (sous-classe dédiée ou base neutre).
 static func script_for(id: StringName):
 	var path := "res://scripts/exploration/abilities/impl/%s.gd" % id
 	if ResourceLoader.exists(path):
 		return load(path).new()
 	return _BASE.new()
+
 
 ## Capacités d'exploration connues du duo (union origin/also_used/encyclopaedia des deux
 ## membres, filtrée au type EXPLORATION). Exclut les capacités contextuelles (mur fissuré).

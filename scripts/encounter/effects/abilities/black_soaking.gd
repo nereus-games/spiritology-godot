@@ -3,6 +3,7 @@
 ## le suivant ; il est immunisé aux dégâts Arcane jusqu'à son prochain tour.
 extends AbilityScript
 
+
 func execute(ctx: EncounterContext) -> void:
 	ctx.change_weakness(ctx.user)  # nouvelle faiblesse (sélection auto parmi 3)
 	ctx.grant_immunity(ctx.user, [GameEnums.Energy.ARCANE])

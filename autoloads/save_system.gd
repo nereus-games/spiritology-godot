@@ -7,6 +7,7 @@ extends Node
 const SAVE_PATH := "user://spiritology_save.json"
 const SAVE_VERSION := 1
 
+
 ## Écrit l'état courant de la session sur le disque. Renvoie OK ou un code d'erreur.
 func save_game() -> Error:
 	var payload := {
@@ -23,11 +24,13 @@ func save_game() -> Error:
 		# Inventaire : slugs sérialisés en String (clés JSON), quantités int.
 		"inventory": _stringify_keys(GameSession.inventory),
 		# DEN/ETH persistants du duo, par emplacement (clés String pour JSON).
-		"party_den": {
+		"party_den":
+		{
 			"main": GameSession.get_den(GameSession.PartySlot.MAIN),
 			"teammate": GameSession.get_den(GameSession.PartySlot.TEAMMATE),
 		},
-		"party_eth": {
+		"party_eth":
+		{
 			"main": GameSession.get_eth(GameSession.PartySlot.MAIN),
 			"teammate": GameSession.get_eth(GameSession.PartySlot.TEAMMATE),
 		},
@@ -38,6 +41,7 @@ func save_game() -> Error:
 		return FileAccess.get_open_error()
 	file.store_string(JSON.stringify(payload, "\t"))
 	return OK
+
 
 ## Recharge la session depuis le disque. Renvoie true si une sauvegarde a été chargée.
 func load_game() -> bool:
@@ -66,18 +70,25 @@ func load_game() -> bool:
 	# DEN/ETH du duo : relecture tolérante, repli sur le maximum si clé absente.
 	var den: Dictionary = data.get("party_den", {})
 	GameSession.set_den(GameSession.PartySlot.MAIN, int(den.get("main", GameSession.MAX_DEN)))
-	GameSession.set_den(GameSession.PartySlot.TEAMMATE, int(den.get("teammate", GameSession.MAX_DEN)))
+	GameSession.set_den(
+		GameSession.PartySlot.TEAMMATE, int(den.get("teammate", GameSession.MAX_DEN))
+	)
 	var eth: Dictionary = data.get("party_eth", {})
 	GameSession.set_eth(GameSession.PartySlot.MAIN, int(eth.get("main", GameSession.MAX_ETH)))
-	GameSession.set_eth(GameSession.PartySlot.TEAMMATE, int(eth.get("teammate", GameSession.MAX_ETH)))
+	GameSession.set_eth(
+		GameSession.PartySlot.TEAMMATE, int(eth.get("teammate", GameSession.MAX_ETH))
+	)
 	return true
+
 
 func has_save() -> bool:
 	return FileAccess.file_exists(SAVE_PATH)
 
+
 func delete_save() -> void:
 	if FileAccess.file_exists(SAVE_PATH):
 		DirAccess.remove_absolute(SAVE_PATH)
+
 
 ## JSON n'accepte que des clés String ; on convertit les StringName en String.
 func _stringify_keys(d: Dictionary) -> Dictionary:
@@ -85,6 +96,7 @@ func _stringify_keys(d: Dictionary) -> Dictionary:
 	for k in d:
 		out[String(k)] = d[k]
 	return out
+
 
 ## Reconvertit les valeurs IFP (JSON les relit en float) en int.
 func _intify_values(d: Dictionary) -> Dictionary:

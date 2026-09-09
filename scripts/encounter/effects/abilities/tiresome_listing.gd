@@ -4,6 +4,7 @@
 ## connues : approximé par le nombre d'espèces complétées.)
 extends AbilityScript
 
+
 func execute(ctx: EncounterContext) -> void:
 	var known := maxi(ctx.completed_species.size(), 1)
 	var t = ctx.primary()

@@ -3,6 +3,7 @@
 ## la cible perd une action au tour suivant.
 extends AbilityScript
 
+
 func execute(ctx: EncounterContext) -> void:
 	var t = ctx.primary()
 	if t == null:

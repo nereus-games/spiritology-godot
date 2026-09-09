@@ -3,6 +3,7 @@
 ## Toxiques infligés aux autres individus sont amplifiés (normal/big).
 extends AbilityScript
 
+
 func execute(ctx: EncounterContext) -> void:
 	ctx.grant_immunity(ctx.user, [GameEnums.Energy.FLUID])
 	for o in ctx.others():

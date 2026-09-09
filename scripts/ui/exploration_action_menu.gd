@@ -23,6 +23,7 @@ var _selected := 0
 var _rows: Array[Label] = []
 var _box: VBoxContainer
 
+
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_box = VBoxContainer.new()
@@ -35,15 +36,18 @@ func _ready() -> void:
 	add_child(_box)
 	visible = false
 
+
 ## Vrai si au moins une action est proposée.
 func has_actions() -> bool:
 	return not _actions.is_empty()
+
 
 ## Id de l'action actuellement sélectionnée (&"" si aucune).
 func selected_id() -> StringName:
 	if _actions.is_empty():
 		return &""
 	return _actions[_selected].id
+
 
 ## Remplace la liste d'actions. Ne reconstruit que si les ids ont changé (évite le
 ## scintillement à chaque frame). Conserve la sélection sur le même id si possible.
@@ -59,12 +63,14 @@ func set_actions(actions: Array) -> void:
 			break
 	_rebuild()
 
+
 ## Cycle la sélection de `step` positions (avec bouclage).
 func cycle(step: int) -> void:
 	if _actions.is_empty():
 		return
 	_selected = wrapi(_selected + step, 0, _actions.size())
 	_update_highlight()
+
 
 ## Valide l'action sélectionnée : invoque son callable et émet [signal action_confirmed].
 ## Retourne false si aucune action n'est disponible.
@@ -77,6 +83,7 @@ func confirm() -> bool:
 	action_confirmed.emit(action.id)
 	return true
 
+
 func _same_ids(actions: Array) -> bool:
 	if actions.size() != _actions.size():
 		return false
@@ -84,6 +91,7 @@ func _same_ids(actions: Array) -> bool:
 		if actions[i].id != _actions[i].id:
 			return false
 	return true
+
 
 func _rebuild() -> void:
 	for child in _box.get_children():
@@ -97,6 +105,7 @@ func _rebuild() -> void:
 	visible = not _actions.is_empty()
 	_update_highlight()
 
+
 ## Libellé affiché : traduction de `label_key` si disponible, sinon l'id « joliment » (repli
 ## tant que les clés UI_ACTION_* ne sont pas dans les .po).
 func _label_for(action) -> String:
@@ -105,6 +114,9 @@ func _label_for(action) -> String:
 		t = String(action.id).capitalize()
 	return t
 
+
 func _update_highlight() -> void:
 	for i in _rows.size():
-		_rows[i].add_theme_color_override("font_color", SELECTED_COLOR if i == _selected else NORMAL_COLOR)
+		_rows[i].add_theme_color_override(
+			"font_color", SELECTED_COLOR if i == _selected else NORMAL_COLOR
+		)

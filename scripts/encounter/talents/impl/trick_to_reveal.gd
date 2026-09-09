@@ -12,12 +12,16 @@
 ## de dialogue (l'effectivité de Talk est elle-même un proxy, cf. EncounterManager._resolve_talk).
 extends "res://scripts/encounter/talents/talent_script.gd"
 
+
 func on_encounter_end(manager, result: StringName) -> void:
 	if result == &"defeat":
 		return
 	# TODO: si le dernier dialogue a été effectif, révéler un coffre/piège non révélé sur la
 	# carte — quand le framework de donjon existera.
-	manager.note_talent("%s : une révélation de carte pourrait suivre ce dialogue [à venir]." % _label())
+	manager.note_talent(
+		"%s : une révélation de carte pourrait suivre ce dialogue [à venir]." % _label()
+	)
+
 
 func _label() -> String:
 	return String(TranslationServer.translate(talent.name_key())) if talent else "Trick to Reveal"

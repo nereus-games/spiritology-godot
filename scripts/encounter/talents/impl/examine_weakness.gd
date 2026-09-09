@@ -9,19 +9,22 @@
 ## que EncounterContext.grant_examine_bonus).
 extends "res://scripts/encounter/talents/talent_script.gd"
 
+
 func on_weakness_touched(manager, attacker, defender, _ability) -> void:
 	var other = null
 	if attacker == owner:
-		other = defender    # info sur la cible
+		other = defender  # info sur la cible
 	elif defender == owner:
-		other = attacker    # info sur l'utilisateur de la capacité
+		other = attacker  # info sur l'utilisateur de la capacité
 	else:
 		return
 	if other == null:
 		return
 	# TODO: octroyer un fragment d'info encyclopédie sur `other` quand ce système existera.
-	manager.note_talent("%s : info glanée sur %s (faiblesse touchée) [à venir]." % [
-		_label(), other.display_name()])
+	manager.note_talent(
+		"%s : info glanée sur %s (faiblesse touchée) [à venir]." % [_label(), other.display_name()]
+	)
+
 
 func _label() -> String:
 	return String(TranslationServer.translate(talent.name_key())) if talent else "Examine Weakness"

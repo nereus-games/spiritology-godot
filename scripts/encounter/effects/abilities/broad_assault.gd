@@ -3,6 +3,7 @@
 ## deux rivaux au hasard subissent des dégâts.
 extends AbilityScript
 
+
 func execute(ctx: EncounterContext) -> void:
 	ctx.set_energy(ctx.weakness_of(ctx.user))
 	for t in ctx.random_opponents(2):

@@ -9,6 +9,7 @@
 ## [method ExplorationContext.scout_groups]).
 extends "res://scripts/exploration/abilities/exploration_ability.gd"
 
+
 func use(ctx) -> bool:
 	ctx.scout_groups()
 	return true

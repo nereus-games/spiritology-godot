@@ -5,6 +5,7 @@ extends AbilityScript
 
 const WEAKNESS_CHANCE := 0.5  ## X % (à équilibrer)
 
+
 func execute(ctx: EncounterContext) -> void:
 	for r in ctx.opponents():
 		ctx.deal_damage(r, ctx.base_damage())

@@ -2,6 +2,7 @@
 ## MÉCANIQUE : inflige des dégâts au user ET au rival ciblé ; le user fuit en fin de tour.
 extends AbilityScript
 
+
 func execute(ctx: EncounterContext) -> void:
 	var t = ctx.primary()
 	if t:

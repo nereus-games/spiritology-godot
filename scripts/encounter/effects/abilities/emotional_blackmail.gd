@@ -4,6 +4,7 @@
 ## ses coéquipiers, laquelle est changée au hasard. (Choix/refus : cas du refus appliqué.)
 extends AbilityScript
 
+
 func execute(ctx: EncounterContext) -> void:
 	var t = ctx.primary()
 	if t:

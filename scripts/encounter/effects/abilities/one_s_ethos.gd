@@ -3,6 +3,7 @@
 ## origine que le user dialoguent +5 % plus souvent jusqu'à la fin (TODO).
 extends AbilityScript
 
+
 func execute(ctx: EncounterContext) -> void:
 	var t = ctx.first_opponent_in_order()
 	if t:

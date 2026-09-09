@@ -3,6 +3,7 @@
 ## plein d'ETH. (Échange d'ETH selon les positions : TODO.)
 extends AbilityScript
 
+
 func execute(ctx: EncounterContext) -> void:
 	ctx.change_turn_order({"by": "shuffle"})
 	for f in ctx.all_fighters:

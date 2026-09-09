@@ -3,5 +3,6 @@
 ## Politique auto : se placer en tête.
 extends AbilityScript
 
+
 func execute(ctx: EncounterContext) -> void:
 	ctx.move_to_first(ctx.user)

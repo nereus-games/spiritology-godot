@@ -33,6 +33,7 @@ const PROFILES := {
 	"attentif": {"reaction": 0.18, "lookahead": 0.25, "deadzone": 0.05, "passive": false},
 }
 
+
 func _check(cond: bool, label: String) -> void:
 	if cond:
 		print("  OK   %s" % label)
@@ -40,8 +41,10 @@ func _check(cond: bool, label: String) -> void:
 		print("  FAIL %s" % label)
 		_fails.append(label)
 
+
 func _ready() -> void:
 	_run_all()
+
 
 func _run_all() -> void:
 	print("Pont de %d cases, %d traversées par mesure.\n" % [CELLS, RUNS])
@@ -52,15 +55,16 @@ func _run_all() -> void:
 		base[name] = _fall_rate(name, 0, false)
 		print("  %-9s %5.1f %%" % [name, base[name]])
 	_check(base["passif"] > 95.0, "ne rien faire fait tomber (%.1f %%)" % base["passif"])
-	_check(base["mou"] > 45.0,
-			"corriger trop peu fait tomber souvent (%.1f %%)" % base["mou"])
-	_check(base["normal"] > 3.0 and base["normal"] < 30.0,
-			"un joueur normal passe le plus souvent, sans que ce soit acquis (%.1f %%)"
-			% base["normal"])
-	_check(base["attentif"] < 5.0,
-			"anticiper suffit à traverser (%.1f %%)" % base["attentif"])
-	_check(base["mou"] > base["normal"] and base["normal"] > base["attentif"],
-			"le taux de chute décroît strictement avec la qualité du jeu")
+	_check(base["mou"] > 45.0, "corriger trop peu fait tomber souvent (%.1f %%)" % base["mou"])
+	_check(
+		base["normal"] > 3.0 and base["normal"] < 30.0,
+		"un joueur normal passe le plus souvent, sans que ce soit acquis (%.1f %%)" % base["normal"]
+	)
+	_check(base["attentif"] < 5.0, "anticiper suffit à traverser (%.1f %%)" % base["attentif"])
+	_check(
+		base["mou"] > base["normal"] and base["normal"] > base["attentif"],
+		"le taux de chute décroît strictement avec la qualité du jeu"
+	)
 
 	print("\n[effet du PSY — joueur normal, sans disarray]")
 	var psy_rates := []
@@ -68,20 +72,29 @@ func _run_all() -> void:
 		var r := _fall_rate("normal", psy, false)
 		psy_rates.append(r)
 		print("  PSY %-3d %5.1f %%" % [psy, r])
-	_check(psy_rates[4] > psy_rates[0] + 10.0,
-			"un PSY élevé durcit nettement le test (%.1f %% -> %.1f %%)"
-			% [psy_rates[0], psy_rates[4]])
-	_check(psy_rates[4] < 85.0,
-			"un PSY élevé ne rend pas le pont infranchissable (%.1f %%)" % psy_rates[4])
+	_check(
+		psy_rates[4] > psy_rates[0] + 10.0,
+		"un PSY élevé durcit nettement le test (%.1f %% -> %.1f %%)" % [psy_rates[0], psy_rates[4]]
+	)
+	_check(
+		psy_rates[4] < 85.0,
+		"un PSY élevé ne rend pas le pont infranchissable (%.1f %%)" % psy_rates[4]
+	)
 
-	print("\n[effet du disarray — inertie de commande +%.0f %%]"
-			% (NarrowBridgeBalance.DISARRAY_INERTIA * 100.0))
+	print(
+		(
+			"\n[effet du disarray — inertie de commande +%.0f %%]"
+			% (NarrowBridgeBalance.DISARRAY_INERTIA * 100.0)
+		)
+	)
 	for psy in [0, 20]:
 		var clean := _fall_rate("normal", psy, false)
 		var dis := _fall_rate("normal", psy, true)
 		print("  PSY %-3d %5.1f %%  ->  %5.1f %% sous disarray" % [psy, clean, dis])
-		_check(dis > clean, "PSY %d : le disarray rend le test plus dur (%.1f -> %.1f %%)"
-				% [psy, clean, dis])
+		_check(
+			dis > clean,
+			"PSY %d : le disarray rend le test plus dur (%.1f -> %.1f %%)" % [psy, clean, dis]
+		)
 
 	print("")
 	if _fails.is_empty():
@@ -90,6 +103,7 @@ func _run_all() -> void:
 		print("ÉCHECS : %s" % [_fails])
 	get_tree().quit(0 if _fails.is_empty() else 1)
 
+
 ## Taux de chute (%) sur [constant RUNS] traversées complètes.
 func _fall_rate(profile: String, psy: int, disarrayed: bool) -> float:
 	var fell := 0
@@ -97,6 +111,7 @@ func _fall_rate(profile: String, psy: int, disarrayed: bool) -> float:
 		if not _cross(profile, psy, disarrayed, i):
 			fell += 1
 	return 100.0 * float(fell) / float(RUNS)
+
 
 ## Une traversée complète : [constant CELLS] cases enchaînées sur le MÊME modèle (le
 ## déséquilibre et la vitesse latérale traversent les bords de case). Retourne `true` si

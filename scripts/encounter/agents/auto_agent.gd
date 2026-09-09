@@ -8,6 +8,7 @@
 class_name AutoAgent
 extends EncounterAgent
 
+
 func decide(fighter: EncounterFighter, manager: EncounterManager) -> EncounterAction:
 	var ability := _choose_ability(fighter, manager)
 	if ability == null:
@@ -18,6 +19,7 @@ func decide(fighter: EncounterFighter, manager: EncounterManager) -> EncounterAc
 		return EncounterAction.of_kind(EncounterAction.Kind.MEDITATE, [fighter])
 	var targets := manager.candidate_targets(fighter, ability)
 	return EncounterAction.use_ability(ability, [targets[0]] if not targets.is_empty() else [])
+
 
 func _choose_ability(fighter: EncounterFighter, manager: EncounterManager) -> AbilityData:
 	var fallback: AbilityData = null

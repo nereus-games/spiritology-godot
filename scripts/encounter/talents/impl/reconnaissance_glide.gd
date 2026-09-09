@@ -11,5 +11,6 @@ extends "res://scripts/encounter/talents/talent_script.gd"
 
 const EXAMINE_INFO_BONUS := 0.10  ## +10 % (valeur Notion), appliqué au gain de base.
 
+
 func modify_examine_info(_manager, _target, base: float) -> float:
 	return base * (1.0 + EXAMINE_INFO_BONUS)

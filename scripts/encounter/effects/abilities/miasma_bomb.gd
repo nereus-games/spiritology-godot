@@ -4,6 +4,7 @@
 ## suivant (pour tout le monde).
 extends AbilityScript
 
+
 func execute(ctx: EncounterContext) -> void:
 	for m in ctx.team():
 		ctx.deal_damage(m, ctx.dmg(&"mini"))

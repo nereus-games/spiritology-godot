@@ -12,13 +12,14 @@ const ScenarioCatalog := preload("res://scripts/dev/scenario_catalog.gd")
 var _pending_rival: Node
 
 # --- Pilote temps réel du pont étroit (par case, dans les deux sens) ---
-var _active_bridge           ## case de pont en cours, ou null
-var _bridge_dir: Vector3i    ## sens d'avancée (case)
-var _bridge_from: Vector3i   ## case de départ de l'avancée en cours
-var _bridge_balance          ## modèle d'équilibre de la traversée, porté de case en case
-var _in_bridge := false      ## une traversée est en cours
+var _active_bridge  ## case de pont en cours, ou null
+var _bridge_dir: Vector3i  ## sens d'avancée (case)
+var _bridge_from: Vector3i  ## case de départ de l'avancée en cours
+var _bridge_balance  ## modèle d'équilibre de la traversée, porté de case en case
+var _in_bridge := false  ## une traversée est en cours
 ## Roulis caméra maximal (deg) au déséquilibre extrême — simule la perte d'équilibre.
 const BRIDGE_ROLL_DEG := 28.0
+
 
 func _ready() -> void:
 	_dungeon.encounter_requested.connect(_on_encounter_requested)
@@ -47,6 +48,7 @@ func _ready() -> void:
 		if player.has_method("set_start_yaw"):
 			player.set_start_yaw(PI)
 
+
 func _on_encounter_requested(rival: Node, initiated_by_rival: bool) -> void:
 	if _pending_rival != null:
 		return
@@ -62,9 +64,14 @@ func _on_encounter_requested(rival: Node, initiated_by_rival: bool) -> void:
 	var rival_state := {}
 	if "den" in rival and "max_den" in rival:
 		rival_state = {"den": rival.den, "max_den": rival.max_den}
-	print("[Exploration] Rencontre avec '%s' (rival init=%s, état carte=%s)."
-			% [rival_id, initiated_by_rival, rival_state])
+	print(
+		(
+			"[Exploration] Rencontre avec '%s' (rival init=%s, état carte=%s)."
+			% [rival_id, initiated_by_rival, rival_state]
+		)
+	)
 	TransitionManager.open_encounter(_player_duo(), [rival_id], {}, [rival_state])
+
 
 func _on_encounter_finished(result: StringName) -> void:
 	print("[Exploration] Rencontre terminée : %s." % result)
@@ -77,6 +84,7 @@ func _on_encounter_finished(result: StringName) -> void:
 	# (déclenche _on_party_wiped pour sortir le duo du donjon).
 	GameSession.resolve_party_wipe()
 
+
 ## Le duo a été entièrement dévitalisé : le DEN est déjà restauré à 1 chacun par
 ## [GameSession] ; l'exploration doit sortir le duo du donjon courant.
 func _on_party_wiped() -> void:
@@ -84,15 +92,19 @@ func _on_party_wiped() -> void:
 	## TODO: ramener le duo hors du donjon (retour carte du monde / entrée du donjon)
 	## quand la navigation inter-scènes sera en place.
 
-func _on_turn_advanced(turn: int) -> void:
+
+func _on_turn_advanced(_turn: int) -> void:
 	pass  # hook tours (PSY, IFP, etc.)
+
 
 # --------------------------------------------------------------------------
 # Pilote temps réel du pont étroit (test d'équilibre)
 # --------------------------------------------------------------------------
 
+
 func _process(delta: float) -> void:
 	_drive_bridge(delta)
+
 
 func _drive_bridge(delta: float) -> void:
 	var player := get_node_or_null("Player")
@@ -121,6 +133,7 @@ func _drive_bridge(delta: float) -> void:
 	elif state == &"fell":
 		_fall_off_bridge(player)
 
+
 ## Début d'une avancée sur une case de pont (dans le sens du regard). Si une traversée est
 ## déjà en cours, la case REPREND le test d'équilibre courant (déséquilibre ET vitesse
 ## latérale conservés) au lieu d'en démarrer un neuf.
@@ -135,6 +148,7 @@ func _begin_bridge_cell(bridge, player) -> void:
 		_bridge_balance = bridge.balance()
 	player.input_locked = true
 	_hud_show_balance(_bridge_balance.imbalance)
+
 
 ## Case franchie : passe à la suivante ; enchaîne s'il y a encore du pont, sinon fin.
 ##
@@ -181,6 +195,7 @@ func _advance_bridge_cell(player) -> void:
 		_finish_bridge(player)  # arrivé sur du sol solide
 	_dungeon.advance_turn()
 
+
 ## Chute du pont : le personnage tombe sur le SOL en contrebas (à la profondeur qu'a voulue
 ## le level design) et subit les dégâts de chute NORMAUX, comme un pas dans le vide.
 func _fall_off_bridge(player) -> void:
@@ -188,8 +203,11 @@ func _fall_off_bridge(player) -> void:
 	# du segment ET que le vide s'ouvre bien dessous (sinon on surplombe déjà le sol solide).
 	var from_cell := _bridge_from
 	var ahead: Vector3i = _bridge_from + _bridge_dir
-	if _active_bridge != null and _active_bridge.balance().progress >= 0.5 \
-			and _dungeon.fall_landing(ahead) != ahead:
+	if (
+		_active_bridge != null
+		and _active_bridge.balance().progress >= 0.5
+		and _dungeon.fall_landing(ahead) != ahead
+	):
 		from_cell = ahead
 	_finish_bridge(player)
 	var landing := _dungeon.fall_landing(from_cell)
@@ -206,6 +224,7 @@ func _fall_off_bridge(player) -> void:
 	player.teleport_to(from_cell)
 	# (Les rivaux témoins sont prévenus par `fall_to` → `DungeonManager.notify_level_change`.)
 	await player.fall_to(landing, from_cell.y - landing.y)
+
 
 ## Un rival arrive sur la planche où se trouve le joueur : les deux tombent, atterrissent sur
 ## la MÊME case, et la rencontre s'engage là (doc). Le rival peut être dévitalisé par la
@@ -226,6 +245,7 @@ func _on_bridge_collision(rival, tile: Vector3i) -> void:
 	if rival_alive and is_instance_valid(rival):
 		_dungeon.request_encounter(rival, true)
 
+
 func _finish_bridge(player) -> void:
 	_active_bridge = null
 	_in_bridge = false
@@ -234,20 +254,24 @@ func _finish_bridge(player) -> void:
 	_set_camera_roll(player, 0.0)
 	_hud_hide_balance()
 
+
 ## Roulis de perte d'équilibre : appliqué au JOUEUR (pivot à l'origine ≈ pieds/sol), pas au
 ## rig caméra (qui pivoterait au niveau des yeux).
 func _set_camera_roll(player, imbalance: float) -> void:
 	player.rotation.z = deg_to_rad(imbalance * BRIDGE_ROLL_DEG)
+
 
 func _hud_show_balance(imbalance: float) -> void:
 	var hud := get_node_or_null("HudExploration")
 	if hud != null and hud.has_method("show_balance"):
 		hud.show_balance(imbalance)
 
+
 func _hud_hide_balance() -> void:
 	var hud := get_node_or_null("HudExploration")
 	if hud != null and hud.has_method("hide_balance"):
 		hud.hide_balance()
+
 
 ## Duo jouable depuis la session, avec repli de démo si la partie n'est pas initialisée.
 func _player_duo() -> Array:

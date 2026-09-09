@@ -4,6 +4,7 @@
 ## plus si infligés par son coéquipier). (Modulation par historique de dégâts : TODO.)
 extends AbilityScript
 
+
 func execute(ctx: EncounterContext) -> void:
 	ctx.grant_examine_bonus(ctx.user, 2)
 	# TODO : amplifier Examine/Meditate au prochain tour, modulé par les dégâts récents.

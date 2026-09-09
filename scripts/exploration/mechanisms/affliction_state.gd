@@ -23,6 +23,7 @@ var _disarray_queue: Array[bool] = []
 
 var _rng := RandomNumberGenerator.new()
 
+
 ## `seed_value >= 0` rend l'aléatoire (déviation disarray) déterministe pour les tests.
 func _init(seed_value := -1) -> void:
 	if seed_value >= 0:
@@ -30,11 +31,13 @@ func _init(seed_value := -1) -> void:
 	else:
 		_rng.randomize()
 
+
 ## Ajoute du poison. Cumul : la durée s'additionne, la magnitude prend le plus fort (doc :
 ## « only the duration is augmented »).
 func add_poison(turns: int, per_turn: int) -> void:
 	poison_turns += maxi(turns, 0)
 	poison_per_turn = maxi(poison_per_turn, maxi(per_turn, 0))
+
 
 ## Ajoute une salve de disarray de `moves` mouvements (cumulatif). Règle : 2 mouvements à 35 %,
 ## les `moves - 2` autres déviés à coup sûr, ordre mélangé.
@@ -56,18 +59,23 @@ func add_disarray(moves: int) -> void:
 		seg[j] = tmp
 	_disarray_queue.append_array(seg)
 
+
 func has_poison() -> bool:
 	return poison_turns > 0
 
+
 func has_disarray() -> bool:
 	return not _disarray_queue.is_empty()
+
 
 ## Nombre de mouvements de disarray restants (pour l'affichage HUD).
 func remaining_disarray() -> int:
 	return _disarray_queue.size()
 
+
 func is_afflicted() -> bool:
 	return has_poison() or has_disarray()
+
 
 ## Fait s'écouler un tour de poison. Retourne le DEN à retirer ce tour (0 si non empoisonné).
 func tick_poison() -> int:
@@ -76,12 +84,14 @@ func tick_poison() -> int:
 	poison_turns -= 1
 	return poison_per_turn
 
+
 ## Consulte le prochain mouvement SANS le consommer : `true` s'il serait dévié. Sert au regard
 ## libre, où la déviation s'applique au geste alors que le décompte n'a lieu que si ce geste
 ## enclenche vraiment une rotation (cf. [code]PlayerInputHandler._disarrayed_mouse[/code]) — un
 ## piège qu'on purgerait en agitant la souris sans jamais dépenser de tour n'en serait pas un.
 func peek_move() -> bool:
 	return _disarray_queue[0] if not _disarray_queue.is_empty() else false
+
 
 ## Consomme le prochain mouvement de la file de disarray. Retourne `true` si CE mouvement doit
 ## être dévié. Sans disarray restant, retourne toujours `false`.
@@ -103,6 +113,7 @@ func consume_move() -> bool:
 	if _disarray_queue.is_empty():
 		return false
 	return _disarray_queue.pop_front()
+
 
 ## Soigne intégralement le poison (objet Tea drop / [enum GameEnums.ObjectEffect] CURE_POISON).
 func cure_poison() -> void:

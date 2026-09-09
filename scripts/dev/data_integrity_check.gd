@@ -40,11 +40,12 @@ const EXTRA_SLUG_CONSTANTS := {
 
 var _fails: Array[String] = []
 
-var _species: Dictionary = {}    ## id -> SpeciesData
+var _species: Dictionary = {}  ## id -> SpeciesData
 var _abilities: Dictionary = {}  ## id -> AbilityData
-var _talents: Dictionary = {}    ## id -> TalentData
-var _objects: Dictionary = {}    ## id -> ObjectData
-var _dungeons: Dictionary = {}   ## id -> DungeonConfig
+var _talents: Dictionary = {}  ## id -> TalentData
+var _objects: Dictionary = {}  ## id -> ObjectData
+var _dungeons: Dictionary = {}  ## id -> DungeonConfig
+
 
 func _check(cond: bool, label: String) -> void:
 	if cond:
@@ -52,6 +53,7 @@ func _check(cond: bool, label: String) -> void:
 	else:
 		print("  FAIL %s" % label)
 		_fails.append(label)
+
 
 ## Échec listant les fautifs, tronqué : trente slugs en vrac noient l'information utile.
 func _check_empty(offenders: Array, label: String) -> void:
@@ -62,8 +64,10 @@ func _check_empty(offenders: Array, label: String) -> void:
 	var suffix := "" if offenders.size() <= 6 else " … (+%d)" % (offenders.size() - 6)
 	_check(false, "%s — %s%s" % [label, ", ".join(shown), suffix])
 
+
 func _ready() -> void:
 	_run_all()
+
 
 func _run_all() -> void:
 	await get_tree().process_frame  # laisse les autoloads (GameData) charger
@@ -80,9 +84,11 @@ func _run_all() -> void:
 		print("ÉCHECS : %s" % [_fails])
 	get_tree().quit(0 if _fails.is_empty() else 1)
 
+
 # --------------------------------------------------------------------------
 # Chargement : tout .tres se charge, se type, et son id colle à son nom de fichier
 # --------------------------------------------------------------------------
+
 
 func _check_loading() -> void:
 	print("— chargement —")
@@ -117,12 +123,25 @@ func _check_loading() -> void:
 	_check_empty(unloadable, "toutes les ressources se chargent")
 	_check_empty(untyped, "toutes les ressources ont un type et un id connus")
 	_check_empty(mismatched, "l'id de chaque ressource correspond à son nom de fichier")
-	print("  ·    %d espèces, %d capacités, %d talents, %d objets, %d donjons"
-		% [_species.size(), _abilities.size(), _talents.size(), _objects.size(), _dungeons.size()])
+	print(
+		(
+			"  ·    %d espèces, %d capacités, %d talents, %d objets, %d donjons"
+			% [
+				_species.size(),
+				_abilities.size(),
+				_talents.size(),
+				_objects.size(),
+				_dungeons.size()
+			]
+		)
+	)
 	# GameData refait ce tri au boot avec sa propre logique de routage : un écart
 	# signalerait que l'autoload ne voit pas les mêmes données que ce check.
-	_check(GameData.all_species().size() == _species.size(),
-		"GameData voit les mêmes espèces (%d)" % GameData.all_species().size())
+	_check(
+		GameData.all_species().size() == _species.size(),
+		"GameData voit les mêmes espèces (%d)" % GameData.all_species().size()
+	)
+
 
 func _tres_files(dir_path: String) -> Array:
 	var out: Array = []
@@ -134,6 +153,7 @@ func _tres_files(dir_path: String) -> Array:
 			out.append(f)
 	out.sort()
 	return out
+
 
 ## Registre correspondant au type d'une ressource, ou null si le type est inconnu.
 func _registry_for(res: Resource):
@@ -149,9 +169,11 @@ func _registry_for(res: Resource):
 		return _dungeons
 	return null
 
+
 # --------------------------------------------------------------------------
 # Enums : les .tres stockent des entiers nus, une valeur hors plage passe inaperçue
 # --------------------------------------------------------------------------
+
 
 func _check_enums() -> void:
 	print("— enums —")
@@ -172,13 +194,16 @@ func _check_enums() -> void:
 		_expect_enum(bad, id, "effect", _objects[id].effect, GameEnums.ObjectEffect)
 	_check_empty(bad, "toutes les valeurs d'enum sont dans leur plage")
 
+
 func _expect_enum(bad: Array, id, field: String, value, enum_dict: Dictionary) -> void:
 	if not enum_dict.values().has(int(value)):
 		bad.append("%s.%s = %s" % [id, field, value])
 
+
 # --------------------------------------------------------------------------
 # Références croisées : un slug mort ne se voit qu'au moment où il est suivi
 # --------------------------------------------------------------------------
+
 
 func _check_cross_refs() -> void:
 	print("— références —")
@@ -225,9 +250,11 @@ func _check_cross_refs() -> void:
 			unowned.append("%s (owner_species=%s)" % [id, owner])
 	_check_empty(unowned, "chaque talent est porté par l'espèce qui le déclare")
 
+
 # --------------------------------------------------------------------------
 # Espèces citées par le CODE : un slug mort n'y déclenche rien du tout
 # --------------------------------------------------------------------------
+
 
 ## Les mécanismes d'exploration codent en dur des listes d'espèces (quel spirimonstre une
 ## litière peut révéler, quel décor renvoie à qui). Un slug fautif y est INVISIBLE : la
@@ -255,6 +282,7 @@ func _check_code_species_refs() -> void:
 	_check(checked > 0, "%d slugs d'espèce cités dans le code" % checked)
 	_check_empty(dead, "toute espèce citée par le code existe dans data/species/")
 
+
 ## Slugs contenus dans une constante, qu'elle soit un tableau ou un dictionnaire de
 ## tableaux (les pools de décor sont indexés par type).
 func _flatten_slugs(value) -> Array:
@@ -267,6 +295,7 @@ func _flatten_slugs(value) -> Array:
 		for k in value:
 			out.append_array(_flatten_slugs(value[k]))
 	return out
+
 
 func _gd_files(dir_path: String) -> Array:
 	var out: Array = []
@@ -281,9 +310,11 @@ func _gd_files(dir_path: String) -> Array:
 	out.sort()
 	return out
 
+
 # --------------------------------------------------------------------------
 # Traductions : la clé manquante ne casse rien, elle affiche son propre nom
 # --------------------------------------------------------------------------
+
 
 func _check_translations() -> void:
 	print("— traductions —")
@@ -331,14 +362,20 @@ func _check_translations() -> void:
 	_check_empty(orphans, "aucune clé de donnée orpheline dans les .po")
 
 	# Décomptes, pas des échecs : contenu à écrire, pas incohérence.
-	print("  ·    %d clés en / %d fr ; %d msgstr vides en, %d fr"
-		% [en["keys"].size(), fr["keys"].size(), en["empty"], fr["empty"]])
+	print(
+		(
+			"  ·    %d clés en / %d fr ; %d msgstr vides en, %d fr"
+			% [en["keys"].size(), fr["keys"].size(), en["empty"], fr["empty"]]
+		)
+	)
+
 
 func _is_data_key(key: String) -> bool:
 	for prefix in DATA_PREFIXES:
 		if key.begins_with(prefix):
 			return true
 	return false
+
 
 ## Lecture minimale d'un .po : msgid/msgstr sur une ligne, ce qu'écrivent nos fichiers.
 ## Les continuations multi-lignes (en-tête) sont ignorées, sans incidence sur les clés.
@@ -350,7 +387,7 @@ func _parse_po(path: String) -> Dictionary:
 	var pending := ""
 	while not f.eof_reached():
 		var line := f.get_line().strip_edges()
-		if line.begins_with("msgid \"") and line.ends_with("\""):
+		if line.begins_with('msgid "') and line.ends_with('"'):
 			var key := line.substr(7, line.length() - 8)
 			if key == "":
 				pending = ""  # en-tête du .po
@@ -359,7 +396,7 @@ func _parse_po(path: String) -> Dictionary:
 				out["dupes"].append(key)
 			out["keys"][key] = ""
 			pending = key
-		elif line.begins_with("msgstr \"") and line.ends_with("\"") and pending != "":
+		elif line.begins_with('msgstr "') and line.ends_with('"') and pending != "":
 			var value := line.substr(8, line.length() - 9)
 			out["keys"][pending] = value
 			if value == "":
@@ -367,9 +404,11 @@ func _parse_po(path: String) -> Dictionary:
 			pending = ""
 	return out
 
+
 # --------------------------------------------------------------------------
 # Sprites : un chemin déclaré doit exister ; ne pas en déclarer est un manque d'art
 # --------------------------------------------------------------------------
+
 
 func _check_sprites() -> void:
 	print("— sprites —")

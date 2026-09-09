@@ -5,6 +5,7 @@
 ## sortants et info : TODO.)
 extends AbilityScript
 
+
 func execute(ctx: EncounterContext) -> void:
 	var t = ctx.random_of(ctx.allies())
 	if t:

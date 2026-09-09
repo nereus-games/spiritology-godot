@@ -3,6 +3,7 @@
 ## maximum, inflige des dégâts à chaque rival.
 extends AbilityScript
 
+
 func execute(ctx: EncounterContext) -> void:
 	for m in ctx.team():
 		ctx.recover_den(m, ctx.dmg(&"small"))

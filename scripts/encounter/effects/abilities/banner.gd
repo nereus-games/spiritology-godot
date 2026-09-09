@@ -3,6 +3,7 @@
 ## Cristal reçus par l'équipe sont réduits de moitié jusqu'à la fin du tour.
 extends AbilityScript
 
+
 func execute(ctx: EncounterContext) -> void:
 	var w := ctx.weakness_of(ctx.user)
 	for a in ctx.allies():

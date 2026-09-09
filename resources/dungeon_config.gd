@@ -23,6 +23,7 @@ extends Resource
 ## Musique d'ambiance du donjon (chemin, chargé contextuellement).
 @export_file("*.ogg", "*.wav") var ambient_music: String = ""
 
+
 ## Clé de traduction du nom affichable. Convention : DUNGEON_<ID_MAJ>_NAME.
 func name_key() -> String:
 	return "DUNGEON_%s_NAME" % GameEnums.key_token(id)

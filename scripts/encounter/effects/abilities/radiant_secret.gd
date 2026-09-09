@@ -3,6 +3,7 @@
 ## tour ; aux tours suivants, le rival ciblé dialogue plus volontiers (TODO).
 extends AbilityScript
 
+
 func execute(ctx: EncounterContext) -> void:
 	for m in ctx.team():
 		ctx.set_weakness(m, GameEnums.Energy.HEAT)

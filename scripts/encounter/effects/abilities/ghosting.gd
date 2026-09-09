@@ -3,6 +3,7 @@
 ## user fuit la rencontre (seul) ; le rival à qui il a parlé subit des dégâts.
 extends AbilityScript
 
+
 func execute(ctx: EncounterContext) -> void:
 	var t = ctx.primary()
 	if t:

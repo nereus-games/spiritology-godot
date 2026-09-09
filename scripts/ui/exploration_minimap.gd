@@ -29,9 +29,11 @@ const BG_COLOR := Color(0.05, 0.05, 0.07, 0.6)
 var _dungeon
 var _player
 
+
 func _ready() -> void:
 	custom_minimum_size = Vector2(170, 170)
 	clip_contents = true  # un grand donjon ne doit pas déborder sur le reste du HUD
+
 
 func _process(_delta: float) -> void:
 	if _dungeon == null:
@@ -39,6 +41,7 @@ func _process(_delta: float) -> void:
 	if _player == null:
 		_player = get_tree().get_first_node_in_group("player")
 	queue_redraw()
+
 
 func _draw() -> void:
 	draw_rect(Rect2(Vector2.ZERO, size), BG_COLOR)
@@ -66,15 +69,24 @@ func _draw() -> void:
 	# Dalles de sol : les étages inférieurs d'abord, l'étage courant par-dessus.
 	for c in floors:
 		if c.y < level:
-			draw_rect(Rect2(_cell_px(c, origin, maxx, maxz), Vector2(CELL_PX - 1.0, CELL_PX - 1.0)), FLOOR_BELOW_COLOR)
+			draw_rect(
+				Rect2(_cell_px(c, origin, maxx, maxz), Vector2(CELL_PX - 1.0, CELL_PX - 1.0)),
+				FLOOR_BELOW_COLOR
+			)
 	for c in floors:
 		if c.y == level:
-			draw_rect(Rect2(_cell_px(c, origin, maxx, maxz), Vector2(CELL_PX - 1.0, CELL_PX - 1.0)), FLOOR_COLOR)
+			draw_rect(
+				Rect2(_cell_px(c, origin, maxx, maxz), Vector2(CELL_PX - 1.0, CELL_PX - 1.0)),
+				FLOOR_COLOR
+			)
 	# Murs de l'étage courant, par-dessus les sols (un mur peut porter le sol de l'étage du
 	# dessus : à cet étage-ci, c'est un mur qu'on doit voir).
 	for w in _dungeon.wall_cells():
 		if w.y == level:
-			draw_rect(Rect2(_cell_px(w, origin, maxx, maxz), Vector2(CELL_PX - 1.0, CELL_PX - 1.0)), WALL_COLOR)
+			draw_rect(
+				Rect2(_cell_px(w, origin, maxx, maxz), Vector2(CELL_PX - 1.0, CELL_PX - 1.0)),
+				WALL_COLOR
+			)
 	# Mécanismes de l'étage courant : sur une case (pavé plein) ou sur une arête entre deux
 	# cases (barre fine, pour les portes — elles n'occupent aucune case).
 	for m in get_tree().get_nodes_in_group("dungeon_mechanism"):
@@ -89,11 +101,15 @@ func _draw() -> void:
 		if edge != null:
 			_draw_edge_mech(m.cell, edge, origin, maxx, maxz, color)
 		else:
-			draw_rect(Rect2(_cell_px(m.cell, origin, maxx, maxz), Vector2(CELL_PX - 1.0, CELL_PX - 1.0)), color)
+			draw_rect(
+				Rect2(_cell_px(m.cell, origin, maxx, maxz), Vector2(CELL_PX - 1.0, CELL_PX - 1.0)),
+				color
+			)
 	# Joueur : flèche orientée dans le sens du regard.
 	if is_instance_valid(_player):
 		var p := _cell_px(_player.cell, origin, maxx, maxz) + Vector2(CELL_PX, CELL_PX) * 0.5
 		_draw_player_arrow(p)
+
 
 ## Case -> pixel. La carte est tournée de 180° (axes inversés) pour que la position de départ
 ## soit EN BAS et l'avant du donjon (+z) VERS LE HAUT, avec gauche/droite cohérents avec le
@@ -101,9 +117,12 @@ func _draw() -> void:
 func _cell_px(c: Vector3i, origin: Vector2, maxx: int, maxz: int) -> Vector2:
 	return origin + Vector2((maxx - c.x) * CELL_PX, (maxz - c.z) * CELL_PX)
 
+
 ## Mécanisme d'arête (porte) : barre fine sur la frontière entre `cell` et `cell + edge_dir`,
 ## posée du côté qui correspond à l'inversion d'axes de la carte.
-func _draw_edge_mech(cell: Vector3i, edge_dir: Vector3i, origin: Vector2, maxx: int, maxz: int, color: Color) -> void:
+func _draw_edge_mech(
+	cell: Vector3i, edge_dir: Vector3i, origin: Vector2, maxx: int, maxz: int, color: Color
+) -> void:
 	const THICK := 2.0
 	var p := _cell_px(cell, origin, maxx, maxz)
 	# La carte inverse les deux axes : la voisine +x/+z est donc en -px sur la carte.
@@ -113,6 +132,7 @@ func _draw_edge_mech(cell: Vector3i, edge_dir: Vector3i, origin: Vector2, maxx: 
 	else:
 		var y := p.y + (0.0 if edge_dir.z > 0 else CELL_PX - THICK)
 		draw_rect(Rect2(Vector2(p.x, y), Vector2(CELL_PX - 1.0, THICK)), color)
+
 
 ## Petit triangle pointant dans la direction de DÉPLACEMENT du joueur (cardinale, multiple de
 ## 90°) — pas le regard libre : on anticipe ainsi les déplacements effectifs.
@@ -125,9 +145,11 @@ func _draw_player_arrow(center: Vector2) -> void:
 			dir = d.normalized()
 	var perp := Vector2(-dir.y, dir.x)
 	var r := CELL_PX * 0.6
-	var pts := PackedVector2Array([
-		center + dir * r,
-		center - dir * r * 0.7 + perp * r * 0.6,
-		center - dir * r * 0.7 - perp * r * 0.6,
-	])
+	var pts := PackedVector2Array(
+		[
+			center + dir * r,
+			center - dir * r * 0.7 + perp * r * 0.6,
+			center - dir * r * 0.7 - perp * r * 0.6,
+		]
+	)
 	draw_colored_polygon(pts, PLAYER_COLOR)

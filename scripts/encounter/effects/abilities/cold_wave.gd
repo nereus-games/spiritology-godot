@@ -4,6 +4,7 @@
 ## du prochain tour parmi Fluide, Chaleur et sa faiblesse actuelle.
 extends AbilityScript
 
+
 func execute(ctx: EncounterContext) -> void:
 	var r = ctx.user.last_damager
 	if r and not r.is_dissolved() and r.is_player != ctx.user.is_player:

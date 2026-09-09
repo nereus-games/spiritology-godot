@@ -4,6 +4,7 @@
 ## (moitié du % d'info connu sur son espèce). (Condition « agit sur le user » : approximée.)
 extends AbilityScript
 
+
 func execute(ctx: EncounterContext) -> void:
 	ctx.set_energy(ctx.weakness_of(ctx.user))
 	var t = ctx.random_opponent()

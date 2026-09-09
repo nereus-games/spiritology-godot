@@ -4,6 +4,7 @@
 ## approximée : appliquée aux alliés).
 extends AbilityScript
 
+
 func execute(ctx: EncounterContext) -> void:
 	ctx.remove_weakness(ctx.user)
 	for a in ctx.allies():

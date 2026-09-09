@@ -6,5 +6,6 @@
 ## n'est consommé). La traversée elle-même marque la capacité comme utilisée (via le mur).
 extends "res://scripts/exploration/abilities/exploration_ability.gd"
 
+
 func use(ctx) -> bool:
 	return ctx.cross_faced_cracked_wall()

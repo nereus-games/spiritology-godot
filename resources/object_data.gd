@@ -46,11 +46,13 @@ extends Resource
 ## les rencontres (précisée dans la description de l'objet). Vide si non pertinent.
 @export var secondary_species_id: StringName
 
+
 ## Clé de traduction du nom affichable. Convention : OBJECT_<ID_MAJ>_NAME.
 ## Les libellés EN/FR viendront des instances générées depuis Notion (translations/*.po),
 ## comme pour [SpeciesData] / [AbilityData] : le schéma n'ajoute aucune clé en dur.
 func name_key() -> String:
 	return "OBJECT_%s_NAME" % GameEnums.key_token(id)
+
 
 ## Clé de traduction de la description. Convention : OBJECT_<ID_MAJ>_DESC.
 func description_key() -> String:

@@ -3,6 +3,7 @@
 ## lui refait le plein d'ETH et lui fait choisir une faiblesse parmi 3 au hasard.
 extends AbilityScript
 
+
 func execute(ctx: EncounterContext) -> void:
 	ctx.deal_damage(ctx.user, ctx.dmg(&"mini"))  # TODO : normal aux utilisations suivantes
 	ctx.recover_eth(ctx.user, ctx.user.max_eth)

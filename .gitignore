@@ -1,14 +1,21 @@
-# Godot 4 — fichiers générés / cache de l'éditeur
+# Godot 4 — generated files and editor cache
 .godot/
 .import/
 export.cfg
 export_presets.cfg
 
-# Binaires exportés
+# NOTE: *.uid files ARE tracked on purpose. Godot 4.4+ writes one next to every script
+# and scene, and resolves references through them. Ignoring them — the usual reflex, since
+# they look generated — silently breaks those references on someone else's clone.
+
+# Exported binaries
 *.exe
 *.pck
 *.zip
 *.dmg
 
-# Système
+# Local tool state
+.claude/settings.local.json
+
+# OS
 .DS_Store

@@ -3,6 +3,7 @@
 ## (pour ce tour et le suivant — persistance approximée à la ronde).
 extends AbilityScript
 
+
 func execute(ctx: EncounterContext) -> void:
 	ctx.recover_den(ctx.user, ctx.dmg(&"normal"))
 	ctx.set_weakness(ctx.user, GameEnums.Energy.FLUID)

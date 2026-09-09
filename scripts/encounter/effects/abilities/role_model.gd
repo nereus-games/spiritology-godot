@@ -3,8 +3,11 @@
 ## si aucun n'a cette faiblesse, un rival est choisi au hasard.
 extends AbilityScript
 
+
 func execute(ctx: EncounterContext) -> void:
-	var targets := ctx.opponents().filter(func(r): return ctx.weakness_of(r) == GameEnums.Energy.FLUID)
+	var targets := ctx.opponents().filter(
+		func(r): return ctx.weakness_of(r) == GameEnums.Energy.FLUID
+	)
 	if targets.is_empty():
 		var r = ctx.random_opponent()
 		if r:

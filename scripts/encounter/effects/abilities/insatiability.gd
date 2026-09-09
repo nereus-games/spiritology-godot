@@ -3,6 +3,7 @@
 ## puis perd tout son ETH.
 extends AbilityScript
 
+
 func execute(ctx: EncounterContext) -> void:
 	var stolen := 0
 	for o in ctx.others():

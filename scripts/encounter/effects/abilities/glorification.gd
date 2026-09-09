@@ -4,6 +4,7 @@
 ## (Perte de cet ETH si la cible le blesse ensuite : TODO.)
 extends AbilityScript
 
+
 func execute(ctx: EncounterContext) -> void:
 	var t = ctx.primary()
 	if t == null:

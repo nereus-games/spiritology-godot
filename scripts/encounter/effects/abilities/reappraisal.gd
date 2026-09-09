@@ -3,6 +3,7 @@
 ## son prochain tour ; il choisit une nouvelle faiblesse parmi 2 (cachée et stable) ; +X ETH.
 extends AbilityScript
 
+
 func execute(ctx: EncounterContext) -> void:
 	ctx.hide_weakness(ctx.user)
 	ctx.change_weakness(ctx.user)

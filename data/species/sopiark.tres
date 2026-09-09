@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SpeciesData" format=3]
+
+[ext_resource type="Script" path="res://resources/species_data.gd" id="1_vb164"]
+
+[resource]
+script = ExtResource("1_vb164")
+id = &"sopiark"
+spiricosm = 1
+weakness_first = 4
+weakness_middle = 0
+weakness_last = 1
+talker_chance = 0.3
+origin_abilities = Array[StringName]([&"spirit_searching", &"overthrow", &"moral_elevation"])
+also_used_abilities = Array[StringName]([&"insatiability", &"troublesome_secret", &"awe", &"hypnotize", &"self_denial"])
+encyclopaedia_abilities = Array[StringName]([&"overthrow", &"moral_elevation"])
+forlorn_ability = &"spirit_searching"
+loot = Array[StringName]([&"rune_stone"])

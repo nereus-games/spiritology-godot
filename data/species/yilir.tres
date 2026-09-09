@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="SpeciesData" format=3]
+
+[ext_resource type="Script" path="res://resources/species_data.gd" id="1_f46m0"]
+
+[resource]
+script = ExtResource("1_f46m0")
+id = &"yilir"
+weakness_first = 2
+weakness_middle = 0
+weakness_last = 3
+origin_abilities = Array[StringName]([&"glaciation", &"denial_driven_fantasy", &"self_denial"])
+also_used_abilities = Array[StringName]([&"troublesome_secret", &"anodyne_excess", &"effort_of_neutrality", &"opening_up_closing", &"sad_song"])
+loot = Array[StringName]([&"rune_stone", &"spade"])

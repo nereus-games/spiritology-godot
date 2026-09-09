@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="AbilityData" format=3]
+
+[ext_resource type="Script" path="res://resources/ability_data.gd" id="1_337d8"]
+
+[resource]
+script = ExtResource("1_337d8")
+id = &"self_denial"
+origin_species = &"yilir"
+energy = 6
+tags = PackedStringArray("ETH loss", "change weakness")

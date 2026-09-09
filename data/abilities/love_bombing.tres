@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="AbilityData" format=3]
+
+[ext_resource type="Script" path="res://resources/ability_data.gd" id="1_biwnh"]
+
+[resource]
+script = ExtResource("1_biwnh")
+id = &"love_bombing"
+origin_species = &"yadol"
+cost = 2
+tags = PackedStringArray("ETH loss", "change weakness")

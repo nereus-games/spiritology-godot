@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SpeciesData" format=3]
+
+[ext_resource type="Script" path="res://resources/species_data.gd" id="1_xrwh7"]
+
+[resource]
+script = ExtResource("1_xrwh7")
+id = &"érdouss"
+spiricosm = 1
+weakness_first = 2
+weakness_middle = 4
+weakness_last = 0
+talker_chance = 0.26
+origin_abilities = Array[StringName]([&"awe", &"altruism", &"self_forgiveness"])
+also_used_abilities = Array[StringName]([&"overthrow", &"troublesome_secret", &"reappraisal", &"self_denial", &"self_disclosure", &"shadow_work"])
+encyclopaedia_abilities = Array[StringName]([&"awe", &"altruism"])
+forlorn_ability = &"self_forgiveness"
+loot = Array[StringName]([&"tea_drop"])

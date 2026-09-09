@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="AbilityData" format=3]
+
+[ext_resource type="Script" path="res://resources/ability_data.gd" id="1_nxloq"]
+
+[resource]
+script = ExtResource("1_nxloq")
+id = &"mushify"
+origin_species = &"malcouli"
+energy = 0
+cost = 4
+base_damage = 10
+tags = PackedStringArray("change weakness", "damage")

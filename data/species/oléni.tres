@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="SpeciesData" format=3]
+
+[ext_resource type="Script" path="res://resources/species_data.gd" id="1_5s6mj"]
+
+[resource]
+script = ExtResource("1_5s6mj")
+id = &"oléni"
+spiricosm = 1
+weakness_first = 3
+weakness_middle = 2
+weakness_last = 4
+talker_chance = 0.5
+can_join = true
+origin_abilities = Array[StringName]([&"halo_effect", &"social_capital", &"warning"])
+also_used_abilities = Array[StringName]([&"unfocused_complaint", &"effort_of_neutrality", &"giving_the_floor"])
+encyclopaedia_abilities = Array[StringName]([&"warning", &"social_capital"])
+forlorn_ability = &"halo_effect"
+loot = Array[StringName]([&"notice"])

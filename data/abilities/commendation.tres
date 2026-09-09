@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="AbilityData" format=3]
+
+[ext_resource type="Script" path="res://resources/ability_data.gd" id="1_clsjq"]
+
+[resource]
+script = ExtResource("1_clsjq")
+id = &"commendation"
+origin_species = &"lulupéa"
+tags = PackedStringArray("damage reduction/increase or immunity", "recover ETH")

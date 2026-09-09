@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="AbilityData" format=3]
+
+[ext_resource type="Script" path="res://resources/ability_data.gd" id="1_p1n83"]
+
+[resource]
+script = ExtResource("1_p1n83")
+id = &"altruism"
+origin_species = &"érdouss"
+energy = 1
+cost = 1
+tags = PackedStringArray("recover DEN")

@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="ObjectData" format=3]
+
+[ext_resource type="Script" path="res://resources/object_data.gd" id="1_h6h3n"]
+
+[resource]
+script = ExtResource("1_h6h3n")
+id = &"torment_veil"
+effect = 6
+duration_moves = 15

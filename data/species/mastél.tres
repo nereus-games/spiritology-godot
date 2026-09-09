@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="SpeciesData" format=3]
+
+[ext_resource type="Script" path="res://resources/species_data.gd" id="1_20v6b"]
+
+[resource]
+script = ExtResource("1_20v6b")
+id = &"mastél"
+spiricosm = 2
+weakness_first = 2
+weakness_middle = 0
+weakness_last = 0
+talker_chance = 0.1
+can_join = true
+origin_abilities = Array[StringName]([&"libation", &"resignation", &"numbing_secret"])
+also_used_abilities = Array[StringName]([&"oily_residue", &"miasma_bomb", &"steep_in"])
+loot = Array[StringName]([&"rune_stone", &"spade"])

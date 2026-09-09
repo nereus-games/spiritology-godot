@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://b0spbridgebal"]
+
+[ext_resource type="Script" path="res://scripts/dev/bridge_balance_check.gd" id="1"]
+
+[node name="BridgeBalanceCheck" type="Node"]
+script = ExtResource("1")

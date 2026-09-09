@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="AbilityData" format=3]
+
+[ext_resource type="Script" path="res://resources/ability_data.gd" id="1_ma74w"]
+
+[resource]
+script = ExtResource("1_ma74w")
+id = &"giving_the_floor"
+origin_species = &"korig"
+energy = 1
+single_use = true
+tags = PackedStringArray("force Talk", "limit actions")

@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="AbilityData" format=3]
+
+[ext_resource type="Script" path="res://resources/ability_data.gd" id="1_ngclc"]
+
+[resource]
+script = ExtResource("1_ngclc")
+id = &"hardening"
+origin_species = &"firulis"
+energy = 2
+cost = 2
+tags = PackedStringArray("damage reduction/increase or immunity")

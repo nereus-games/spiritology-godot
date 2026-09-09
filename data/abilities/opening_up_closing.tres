@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="AbilityData" format=3]
+
+[ext_resource type="Script" path="res://resources/ability_data.gd" id="1_pm5gd"]
+
+[resource]
+script = ExtResource("1_pm5gd")
+id = &"opening_up_closing"
+origin_species = &"ravbak"
+energy = 2
+base_damage = 7
+tags = PackedStringArray("damage")

@@ -1,0 +1,8 @@
+[gd_resource type="Resource" script_class="ObjectData" format=3]
+
+[ext_resource type="Script" path="res://resources/object_data.gd" id="1_3nmgp"]
+
+[resource]
+script = ExtResource("1_3nmgp")
+id = &"smoke_bomb"
+effect = 2

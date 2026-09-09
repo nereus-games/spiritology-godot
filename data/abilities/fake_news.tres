@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="AbilityData" format=3]
+
+[ext_resource type="Script" path="res://resources/ability_data.gd" id="1_en0s3"]
+
+[resource]
+script = ExtResource("1_en0s3")
+id = &"fake_news"
+origin_species = &"matzal"
+energy = 4
+cost = 4
+tags = PackedStringArray("damage reduction/increase or immunity")

@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="SpeciesData" format=3]
+
+[ext_resource type="Script" path="res://resources/species_data.gd" id="1_aefn7"]
+
+[resource]
+script = ExtResource("1_aefn7")
+id = &"matzal"
+weakness_first = 2
+weakness_middle = 0
+weakness_last = 3
+talker_chance = 0.18
+origin_abilities = Array[StringName]([&"placebo_sprinkle", &"fake_news", &"perpetual_motion"])
+also_used_abilities = Array[StringName]([&"self_sabotage"])
+encyclopaedia_abilities = Array[StringName]([&"perpetual_motion", &"perpetual_motion"])
+forlorn_ability = &"perpetual_motion"
+loot = Array[StringName]([&"tea_drop"])

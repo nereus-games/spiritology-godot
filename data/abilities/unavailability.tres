@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="AbilityData" format=3]
+
+[ext_resource type="Script" path="res://resources/ability_data.gd" id="1_uwlpj"]
+
+[resource]
+script = ExtResource("1_uwlpj")
+id = &"unavailability"
+origin_species = &"skorpis"
+energy = 4
+tags = PackedStringArray("ETH loss", "redirect next damage received")

@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="SpeciesData" format=3]
+
+[ext_resource type="Script" path="res://resources/species_data.gd" id="1_vgsau"]
+
+[resource]
+script = ExtResource("1_vgsau")
+id = &"kalilk"
+spiricosm = 1
+weakness_first = 3
+weakness_middle = 4
+weakness_last = 0
+origin_abilities = Array[StringName]([&"deflection", &"anomaly", &"insatiability"])
+also_used_abilities = Array[StringName]([&"hypnotize", &"squall"])
+encyclopaedia_abilities = Array[StringName]([&"anomaly", &"deflection"])
+forlorn_ability = &"insatiability"
+sprite_idle = "res://assets/sprites/spirimonsters/kalilk.png"

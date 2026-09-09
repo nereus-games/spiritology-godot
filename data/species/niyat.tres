@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="SpeciesData" format=3]
+
+[ext_resource type="Script" path="res://resources/species_data.gd" id="1_4btqe"]
+
+[resource]
+script = ExtResource("1_4btqe")
+id = &"niyat"
+weakness_first = 0
+weakness_middle = 1
+weakness_last = 3
+talker_chance = 0.05
+origin_abilities = Array[StringName]([&"avoidant_gaze", &"catatonia", &"unfocused_complaint"])
+also_used_abilities = Array[StringName]([&"saving_face"])
+loot = Array[StringName]([&"notice"])

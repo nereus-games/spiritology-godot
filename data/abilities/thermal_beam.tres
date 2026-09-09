@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="AbilityData" format=3]
+
+[ext_resource type="Script" path="res://resources/ability_data.gd" id="1_sdlj3"]
+
+[resource]
+script = ExtResource("1_sdlj3")
+id = &"thermal_beam"
+origin_species = &"razél"
+energy = 0
+cost = 2
+base_damage = 10
+tags = PackedStringArray("damage")

@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="AbilityData" format=3]
+
+[ext_resource type="Script" path="res://resources/ability_data.gd" id="1_t3mje"]
+
+[resource]
+script = ExtResource("1_t3mje")
+id = &"static_camouflage"
+type = 1
+tags = PackedStringArray()

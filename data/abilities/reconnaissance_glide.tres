@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="TalentData" format=3]
+
+[ext_resource type="Script" path="res://resources/talent_data.gd" id="1_kxmh7"]
+
+[resource]
+script = ExtResource("1_kxmh7")
+id = &"reconnaissance_glide"
+owner_species = &"ravbak"
+tags = PackedStringArray()

@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="AbilityData" format=3]
+
+[ext_resource type="Script" path="res://resources/ability_data.gd" id="1_8vioc"]
+
+[resource]
+script = ExtResource("1_8vioc")
+id = &"anodyne_excess"
+origin_species = &"vérnal"
+single_use = true
+tags = PackedStringArray("change weakness")

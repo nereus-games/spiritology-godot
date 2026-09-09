@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="SpeciesData" format=3]
+
+[ext_resource type="Script" path="res://resources/species_data.gd" id="1_vi0kc"]
+
+[resource]
+script = ExtResource("1_vi0kc")
+id = &"sénskor"
+spiricosm = 1
+weakness_first = 0
+weakness_middle = 3
+weakness_last = 1
+talker_chance = 0.05
+can_join = true
+origin_abilities = Array[StringName]([&"growing_expectation", &"r_ejection", &"saving_face"])
+also_used_abilities = Array[StringName]([&"prohibition", &"awe", &"hardening", &"miasma_bomb", &"steep_in"])
+loot = Array[StringName]([&"rune_stone", &"spade", &"tea_drop"])

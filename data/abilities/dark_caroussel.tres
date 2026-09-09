@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="AbilityData" format=3]
+
+[ext_resource type="Script" path="res://resources/ability_data.gd" id="1_krsdm"]
+
+[resource]
+script = ExtResource("1_krsdm")
+id = &"dark_caroussel"
+origin_species = &"yadol"
+energy = 3
+tags = PackedStringArray("change weakness", "limit actions")

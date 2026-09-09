@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="SpeciesData" format=3]
+
+[ext_resource type="Script" path="res://resources/species_data.gd" id="1_tvuo3"]
+
+[resource]
+script = ExtResource("1_tvuo3")
+id = &"ravbak"
+weakness_first = 0
+weakness_middle = 0
+weakness_last = 1
+talker_chance = 0.11
+talent = &"reconnaissance_glide"
+origin_abilities = Array[StringName]([&"opening_up_closing", &"hyping_up", &"bystander_effect"])
+also_used_abilities = Array[StringName]([&"strict_audit", &"saving_face", &"insatiability", &"role_model", &"self_demand", &"spirit_searching", &"squall"])
+encyclopaedia_abilities = Array[StringName]([&"hyping_up", &"bystander_effect"])
+forlorn_ability = &"opening_up_closing"
+loot = Array[StringName]([&"rune_stone", &"smoke_bomb", &"tea_drop"])
+sprite_idle = "res://assets/sprites/spirimonsters/ravbak.png"

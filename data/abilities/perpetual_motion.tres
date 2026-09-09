@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="AbilityData" format=3]
+
+[ext_resource type="Script" path="res://resources/ability_data.gd" id="1_j1gup"]
+
+[resource]
+script = ExtResource("1_j1gup")
+id = &"perpetual_motion"
+origin_species = &"matzal"
+tags = PackedStringArray("ETH loss")

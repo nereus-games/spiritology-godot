@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SpeciesData" format=3]
+
+[ext_resource type="Script" path="res://resources/species_data.gd" id="1_opgfe"]
+
+[resource]
+script = ExtResource("1_opgfe")
+id = &"malcouli"
+spiricosm = 1
+weakness_first = 4
+weakness_middle = 2
+weakness_last = 3
+talker_chance = 0.45
+origin_abilities = Array[StringName]([&"black_soaking", &"mushify", &"glorification"])
+also_used_abilities = Array[StringName]([&"tumult", &"anodyne_excess", &"homeostasis", &"love_bombing", &"miasma_bomb", &"parasiting", &"steep_in"])
+encyclopaedia_abilities = Array[StringName]([&"mushify", &"glorification"])
+forlorn_ability = &"black_soaking"
+loot = Array[StringName]([&"rune_stone", &"spade"])

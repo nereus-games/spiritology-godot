@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="AbilityData" format=3]
+
+[ext_resource type="Script" path="res://resources/ability_data.gd" id="1_e25x7"]
+
+[resource]
+script = ExtResource("1_e25x7")
+id = &"denial_driven_fantasy"
+origin_species = &"yilir"
+energy = 3
+cost = 1
+tags = PackedStringArray("recover ETH")

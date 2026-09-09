@@ -1,0 +1,14 @@
+# Godot 4 — fichiers générés / cache de l'éditeur
+.godot/
+.import/
+export.cfg
+export_presets.cfg
+
+# Binaires exportés
+*.exe
+*.pck
+*.zip
+*.dmg
+
+# Système
+.DS_Store

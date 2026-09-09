@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="AbilityData" format=3]
+
+[ext_resource type="Script" path="res://resources/ability_data.gd" id="1_ndfc2"]
+
+[resource]
+script = ExtResource("1_ndfc2")
+id = &"self_demand"
+origin_species = &"gaiaz"
+energy = 6
+cost = 2
+tags = PackedStringArray("limit actions", "recover DEN")

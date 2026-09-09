@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="AbilityData" format=3]
+
+[ext_resource type="Script" path="res://resources/ability_data.gd" id="1_acncf"]
+
+[resource]
+script = ExtResource("1_acncf")
+id = &"denial_of_choice"
+origin_species = &"kurkab"
+energy = 4
+cost = 4
+tags = PackedStringArray("change weakness", "recover DEN")

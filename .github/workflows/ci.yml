@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+env:
+  # Doit rester aligné sur `config/features` dans project.godot. Le nom de l'archive suit
+  # la convention des releases Godot : Godot_v<version>-stable_linux.x86_64.zip
+  GODOT_VERSION: "4.6.3"
+
+jobs:
+  checks:
+    name: Parsing et vérifications headless
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache du binaire Godot
+        uses: actions/cache@v4
+        with:
+          path: ~/godot
+          key: godot-${{ env.GODOT_VERSION }}-linux
+
+      - name: Installer Godot
+        run: |
+          set -euo pipefail
+          if [[ ! -x "$HOME/godot/godot" ]]; then
+            mkdir -p "$HOME/godot"
+            url="https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+            curl -fsSL "$url" -o /tmp/godot.zip
+            unzip -q /tmp/godot.zip -d "$HOME/godot"
+            mv "$HOME/godot"/Godot_v*_linux.x86_64 "$HOME/godot/godot"
+            chmod +x "$HOME/godot/godot"
+          fi
+          echo "GODOT=$HOME/godot/godot" >> "$GITHUB_ENV"
+
+      - name: Version de Godot
+        run: "$GODOT --headless --version"
+
+      # Les deux scripts reconstruisent d'eux-mêmes le cache de classes globales, absent
+      # d'un dépôt fraîchement cloné (.godot/ n'est pas versionné) — cf. tools/lib.sh.
+
+      - name: Parser tous les scripts
+        run: ./tools/parse_check.sh
+
+      - name: Vérifications headless
+        run: ./tools/run_checks.sh

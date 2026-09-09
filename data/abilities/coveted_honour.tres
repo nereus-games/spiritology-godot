@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="AbilityData" format=3]
+
+[ext_resource type="Script" path="res://resources/ability_data.gd" id="1_yb8cs"]
+
+[resource]
+script = ExtResource("1_yb8cs")
+id = &"coveted_honour"
+origin_species = &"fopin"
+energy = 3
+base_damage = 5
+tags = PackedStringArray("damage", "recover DEN")

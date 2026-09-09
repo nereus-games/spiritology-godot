@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="SpeciesData" format=3]
+
+[ext_resource type="Script" path="res://resources/species_data.gd" id="1_4bfs0"]
+
+[resource]
+script = ExtResource("1_4bfs0")
+id = &"hibulus"
+spiricosm = 2
+weakness_first = 2
+weakness_middle = 4
+weakness_last = 2
+talker_chance = 0.23
+origin_abilities = Array[StringName]([&"miasma_bomb", &"business_card", &"reappraisal"])
+also_used_abilities = Array[StringName]([&"libation", &"role_model", &"blockage", &"homeostasis", &"self_demand", &"steep_in"])
+loot = Array[StringName]([&"notice", &"rune_stone", &"smoke_bomb", &"tea_drop"])

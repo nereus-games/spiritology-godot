@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="AbilityData" format=3]
+
+[ext_resource type="Script" path="res://resources/ability_data.gd" id="1_e10jk"]
+
+[resource]
+script = ExtResource("1_e10jk")
+id = &"gaslighting"
+origin_species = &"zuk"
+energy = 4
+base_damage = 10
+tags = PackedStringArray("change weakness", "damage")

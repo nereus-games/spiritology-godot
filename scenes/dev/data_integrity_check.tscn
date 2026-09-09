@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://b0spdataintchk"]
+
+[ext_resource type="Script" path="res://scripts/dev/data_integrity_check.gd" id="1"]
+
+[node name="DataIntegrityCheck" type="Node"]
+script = ExtResource("1")

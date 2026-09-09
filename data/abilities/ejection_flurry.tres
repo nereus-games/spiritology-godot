@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="AbilityData" format=3]
+
+[ext_resource type="Script" path="res://resources/ability_data.gd" id="1_070f1"]
+
+[resource]
+script = ExtResource("1_070f1")
+id = &"ejection_flurry"
+origin_species = &"razél"
+energy = 3
+cost = 4
+base_damage = 15
+tags = PackedStringArray("change next TO", "damage")

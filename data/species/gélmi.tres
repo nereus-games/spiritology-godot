@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SpeciesData" format=3]
+
+[ext_resource type="Script" path="res://resources/species_data.gd" id="1_xs0sa"]
+
+[resource]
+script = ExtResource("1_xs0sa")
+id = &"gélmi"
+spiricosm = 1
+weakness_first = 3
+weakness_middle = 2
+weakness_last = 1
+can_join = true
+talent = &"examine_weakness"
+origin_abilities = Array[StringName]([&"active_listening", &"absorption_guard", &"critical_mass"])
+also_used_abilities = Array[StringName]([&"effort_of_neutrality"])
+encyclopaedia_abilities = Array[StringName]([&"absorption_guard", &"active_listening"])
+forlorn_ability = &"critical_mass"

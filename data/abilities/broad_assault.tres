@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="AbilityData" format=3]
+
+[ext_resource type="Script" path="res://resources/ability_data.gd" id="1_3j8hw"]
+
+[resource]
+script = ExtResource("1_3j8hw")
+id = &"broad_assault"
+origin_species = &"basipik"
+energy = 6
+cost = 3
+base_damage = 7
+tags = PackedStringArray("damage")

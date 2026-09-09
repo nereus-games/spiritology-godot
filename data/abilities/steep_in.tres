@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="AbilityData" format=3]
+
+[ext_resource type="Script" path="res://resources/ability_data.gd" id="1_2qo1d"]
+
+[resource]
+script = ExtResource("1_2qo1d")
+id = &"steep_in"
+origin_species = &"vérnal"
+energy = 6
+cost = 1
+tags = PackedStringArray("change weakness", "gives info/Examine bonus")

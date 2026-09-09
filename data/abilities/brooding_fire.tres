@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="AbilityData" format=3]
+
+[ext_resource type="Script" path="res://resources/ability_data.gd" id="1_a6jlt"]
+
+[resource]
+script = ExtResource("1_a6jlt")
+id = &"brooding_fire"
+origin_species = &"fliritus"
+energy = 0
+cost = 2
+tags = PackedStringArray("change weakness", "recover DEN", "recover ETH")

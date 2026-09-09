@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="AbilityData" format=3]
+
+[ext_resource type="Script" path="res://resources/ability_data.gd" id="1_v63wg"]
+
+[resource]
+script = ExtResource("1_v63wg")
+id = &"absorption_guard"
+origin_species = &"gélmi"
+energy = 6
+base_damage = 7
+tags = PackedStringArray("damage", "gives info/Examine bonus", "recover DEN")

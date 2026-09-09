@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SpeciesData" format=3]
+
+[ext_resource type="Script" path="res://resources/species_data.gd" id="1_l3kt1"]
+
+[resource]
+script = ExtResource("1_l3kt1")
+id = &"jézal"
+weakness_first = 1
+weakness_middle = 4
+weakness_last = 0
+talker_chance = 0.34
+talent = &"reuse"
+origin_abilities = Array[StringName]([&"dance_battle", &"sublimation", &"hypnotize"])
+also_used_abilities = Array[StringName]([&"strict_audit", &"perpetual_motion", &"sad_song"])
+encyclopaedia_abilities = Array[StringName]([&"hypnotize", &"dance_battle"])
+forlorn_ability = &"sublimation"
+sprite_idle = "res://assets/sprites/spirimonsters/jézal.png"

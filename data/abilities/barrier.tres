@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="AbilityData" format=3]
+
+[ext_resource type="Script" path="res://resources/ability_data.gd" id="1_1rri1"]
+
+[resource]
+script = ExtResource("1_1rri1")
+id = &"barrier"
+origin_species = &"razél"
+energy = 2
+cost = 3
+tags = PackedStringArray("damage reduction/increase or immunity", "recover ETH")

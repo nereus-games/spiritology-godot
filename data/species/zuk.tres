@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="SpeciesData" format=3]
+
+[ext_resource type="Script" path="res://resources/species_data.gd" id="1_ce7cu"]
+
+[resource]
+script = ExtResource("1_ce7cu")
+id = &"zuk"
+weakness_first = 3
+weakness_middle = 2
+weakness_last = 3
+talker_chance = 0.07
+can_join = true
+talent = &"run_away_2"
+origin_abilities = Array[StringName]([&"banner", &"sneak_attack", &"gaslighting"])
+also_used_abilities = Array[StringName]([&"opening_up_closing"])
+encyclopaedia_abilities = Array[StringName]([&"sneak_attack", &"banner"])
+forlorn_ability = &"gaslighting"
+loot = Array[StringName]([&"notice", &"smoke_bomb", &"spade"])

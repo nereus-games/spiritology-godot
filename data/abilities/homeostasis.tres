@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="AbilityData" format=3]
+
+[ext_resource type="Script" path="res://resources/ability_data.gd" id="1_xmoor"]
+
+[resource]
+script = ExtResource("1_xmoor")
+id = &"homeostasis"
+origin_species = &"lulupéa"
+energy = 2
+tags = PackedStringArray("change next TO", "recover ETH")

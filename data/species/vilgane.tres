@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="SpeciesData" format=3]
+
+[ext_resource type="Script" path="res://resources/species_data.gd" id="1_x7fev"]
+
+[resource]
+script = ExtResource("1_x7fev")
+id = &"vilgane"
+spiricosm = 1
+weakness_first = 1
+weakness_middle = 1
+weakness_last = 2
+origin_abilities = Array[StringName]([&"misty_secret", &"self_disclosure", &"distancing"])
+also_used_abilities = Array[StringName]([&"anodyne_excess", &"blockage", &"call_of_the_void", &"keep_the_distance", &"miasma_bomb"])

@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="AbilityData" format=3]
+
+[ext_resource type="Script" path="res://resources/ability_data.gd" id="1_mbquh"]
+
+[resource]
+script = ExtResource("1_mbquh")
+id = &"active_listening"
+origin_species = &"gélmi"
+energy = 3
+cost = 1
+base_damage = 7
+tags = PackedStringArray("damage reduction/increase or immunity", "gives info/Examine bonus")

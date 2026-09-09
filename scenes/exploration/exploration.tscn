@@ -1,0 +1,31 @@
+[gd_scene load_steps=6 format=3 uid="uid://b0spexploration"]
+
+[ext_resource type="Script" path="res://scripts/exploration/exploration.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/exploration/dungeon_manager.gd" id="2"]
+[ext_resource type="PackedScene" uid="uid://b0spexplplayer" path="res://scenes/exploration/player/player.tscn" id="3"]
+[ext_resource type="PackedScene" uid="uid://b0sphudexploration" path="res://ui/hud_exploration.tscn" id="5"]
+
+[sub_resource type="Environment" id="Environment_1"]
+background_mode = 1
+background_color = Color(0.09, 0.09, 0.12, 1)
+ambient_light_source = 2
+ambient_light_color = Color(0.5, 0.5, 0.55, 1)
+ambient_light_energy = 1.0
+
+[node name="Exploration" type="Node3D"]
+script = ExtResource("1")
+
+[node name="DungeonManager" type="Node3D" parent="."]
+script = ExtResource("2")
+demo_build = false
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_1")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.707, 0.707, 0, -0.707, 0.707, 0, 6, 0)
+
+[node name="Player" parent="." instance=ExtResource("3")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+
+[node name="HudExploration" parent="." instance=ExtResource("5")]

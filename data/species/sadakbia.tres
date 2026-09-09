@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="SpeciesData" format=3]
+
+[ext_resource type="Script" path="res://resources/species_data.gd" id="1_2c1em"]
+
+[resource]
+script = ExtResource("1_2c1em")
+id = &"sadakbia"
+spiricosm = 2
+weakness_first = 0
+weakness_middle = 3
+weakness_last = 2
+talker_chance = 0.38
+can_join = true
+origin_abilities = Array[StringName]([&"reflux", &"oily_residue", &"shuffle"])
+also_used_abilities = Array[StringName]([&"insatiability", &"love_bombing"])
+loot = Array[StringName]([&"notice", &"rune_stone", &"smoke_bomb", &"spade", &"tea_drop"])

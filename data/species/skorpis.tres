@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SpeciesData" format=3]
+
+[ext_resource type="Script" path="res://resources/species_data.gd" id="1_1nx4i"]
+
+[resource]
+script = ExtResource("1_1nx4i")
+id = &"skorpis"
+weakness_first = 1
+weakness_middle = 2
+weakness_last = 4
+talker_chance = 0.38
+can_join = true
+origin_abilities = Array[StringName]([&"anti_stress", &"unavailability", &"self_sabotage"])
+also_used_abilities = Array[StringName]([&"awe", &"hardening"])
+encyclopaedia_abilities = Array[StringName]([&"unavailability"])
+loot = Array[StringName]([&"rune_stone", &"tea_drop"])
+sprite_idle = "res://assets/sprites/spirimonsters/skorpis.png"

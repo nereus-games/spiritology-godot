@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="AbilityData" format=3]
+
+[ext_resource type="Script" path="res://resources/ability_data.gd" id="1_0to2b"]
+
+[resource]
+script = ExtResource("1_0to2b")
+id = &"shadow_work"
+origin_species = &"spodra"
+energy = 3
+cost = 4
+single_use = true
+tags = PackedStringArray("gives info/Examine bonus", "recover ETH")

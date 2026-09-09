@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SpeciesData" format=3]
+
+[ext_resource type="Script" path="res://resources/species_data.gd" id="1_cvnm5"]
+
+[resource]
+script = ExtResource("1_cvnm5")
+id = &"podargolo"
+weakness_first = 1
+weakness_middle = 3
+weakness_last = 4
+talker_chance = 0.32
+can_join = true
+origin_abilities = Array[StringName]([&"squall", &"dodge_blur", &"strong_gust"])
+also_used_abilities = Array[StringName]([&"insatiability"])
+encyclopaedia_abilities = Array[StringName]([&"squall", &"dodge_blur"])
+forlorn_ability = &"strong_gust"
+sprite_idle = "res://assets/sprites/spirimonsters/podargolo.png"

@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SpeciesData" format=3]
+
+[ext_resource type="Script" path="res://resources/species_data.gd" id="1_g8bp0"]
+
+[resource]
+script = ExtResource("1_g8bp0")
+id = &"spodra"
+weakness_first = 2
+weakness_middle = 3
+weakness_last = 0
+talker_chance = 0.17
+talent = &"serene_waves"
+origin_abilities = Array[StringName]([&"blockage", &"caustic_wave", &"shadow_work"])
+also_used_abilities = Array[StringName]([&"miasma_bomb"])
+encyclopaedia_abilities = Array[StringName]([&"caustic_wave", &"blockage"])
+forlorn_ability = &"shadow_work"
+loot = Array[StringName]([&"tea_drop"])

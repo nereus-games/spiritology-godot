@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SpeciesData" format=3]
+
+[ext_resource type="Script" path="res://resources/species_data.gd" id="1_chv7i"]
+
+[resource]
+script = ExtResource("1_chv7i")
+id = &"érzélak"
+weakness_first = 4
+weakness_middle = 2
+weakness_last = 0
+talker_chance = 0.5
+talent = &"trick_to_reveal"
+origin_abilities = Array[StringName]([&"tiresome_listing", &"effort_of_neutrality", &"outlet_note"])
+also_used_abilities = Array[StringName]([&"strict_audit", &"role_model", &"giving_the_floor"])
+encyclopaedia_abilities = Array[StringName]([&"outlet_note", &"tiresome_listing"])
+forlorn_ability = &"effort_of_neutrality"
+loot = Array[StringName]([&"notice"])

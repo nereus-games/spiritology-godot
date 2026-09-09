@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="SpeciesData" format=3]
+
+[ext_resource type="Script" path="res://resources/species_data.gd" id="1_cfp62"]
+
+[resource]
+script = ExtResource("1_cfp62")
+id = &"fopin"
+spiricosm = 1
+weakness_first = 4
+weakness_middle = 1
+weakness_last = 0
+talker_chance = 0.5
+talent = &"slick_merchant"
+origin_abilities = Array[StringName]([&"coveted_honour", &"priming", &"role_model"])
+also_used_abilities = Array[StringName]([&"strict_audit", &"business_card", &"reappraisal"])
+encyclopaedia_abilities = Array[StringName]([&"coveted_honour", &"priming"])
+forlorn_ability = &"reappraisal"
+loot = Array[StringName]([&"notice", &"tea_drop"])

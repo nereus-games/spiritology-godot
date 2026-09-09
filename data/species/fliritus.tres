@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="SpeciesData" format=3]
+
+[ext_resource type="Script" path="res://resources/species_data.gd" id="1_w5rvu"]
+
+[resource]
+script = ExtResource("1_w5rvu")
+id = &"fliritus"
+spiricosm = 2
+weakness_first = 1
+weakness_middle = 2
+weakness_last = 4
+talker_chance = 0.45
+can_join = true
+origin_abilities = Array[StringName]([&"brooding_fire", &"radiant_secret", &"ghosting"])
+also_used_abilities = Array[StringName]([&"troublesome_secret", &"gaslighting", &"halo_effect", &"self_disclosure"])
+encyclopaedia_abilities = Array[StringName]([&"brooding_fire", &"ghosting"])
+forlorn_ability = &"radiant_secret"
+sprite_idle = "res://assets/sprites/spirimonsters/fliritus.png"

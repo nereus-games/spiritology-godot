@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="SpeciesData" format=3]
+
+[ext_resource type="Script" path="res://resources/species_data.gd" id="1_ckwyf"]
+
+[resource]
+script = ExtResource("1_ckwyf")
+id = &"korig"
+weakness_first = 1
+weakness_middle = 2
+weakness_last = 0
+talker_chance = 0.39
+can_join = true
+origin_abilities = Array[StringName]([&"giving_the_floor", &"sad_song", &"worrisome_song"])
+also_used_abilities = Array[StringName]([&"insatiability", &"self_sabotage", &"call_of_the_void", &"squall"])

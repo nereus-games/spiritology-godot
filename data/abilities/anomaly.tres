@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="AbilityData" format=3]
+
+[ext_resource type="Script" path="res://resources/ability_data.gd" id="1_ggewa"]
+
+[resource]
+script = ExtResource("1_ggewa")
+id = &"anomaly"
+origin_species = &"kalilk"
+base_damage = 7
+tags = PackedStringArray("damage", "limit actions")

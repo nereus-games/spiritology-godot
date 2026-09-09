@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="AbilityData" format=3]
+
+[ext_resource type="Script" path="res://resources/ability_data.gd" id="1_tdojg"]
+
+[resource]
+script = ExtResource("1_tdojg")
+id = &"miasma_bomb"
+origin_species = &"hibulus"
+energy = 5
+base_damage = 5
+single_use = true
+tags = PackedStringArray("damage", "limit actions")

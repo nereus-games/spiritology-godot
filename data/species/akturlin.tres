@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="SpeciesData" format=3]
+
+[ext_resource type="Script" path="res://resources/species_data.gd" id="1_0g2i2"]
+
+[resource]
+script = ExtResource("1_0g2i2")
+id = &"akturlin"
+weakness_first = 0
+weakness_middle = 3
+weakness_last = 0
+talker_chance = 0.21
+can_join = true
+talent = &"restore"
+origin_abilities = Array[StringName]([&"tactical_retreat", &"one_s_ethos", &"retroflection"])
+also_used_abilities = Array[StringName]([&"blockage", &"effort_of_neutrality", &"homeostasis", &"self_demand"])
+encyclopaedia_abilities = Array[StringName]([&"one_s_ethos", &"tactical_retreat"])
+forlorn_ability = &"retroflection"
+loot = Array[StringName]([&"notice", &"rune_stone"])

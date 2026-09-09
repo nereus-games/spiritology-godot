@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SpeciesData" format=3]
+
+[ext_resource type="Script" path="res://resources/species_data.gd" id="1_w10ff"]
+
+[resource]
+script = ExtResource("1_w10ff")
+id = &"granop"
+spiricosm = 2
+weakness_first = 0
+weakness_middle = 4
+weakness_last = 2
+talker_chance = 0.33
+talent = &"steal"
+origin_abilities = Array[StringName]([&"victimism", &"appeal_to_popularity", &"litmus_test"])
+also_used_abilities = Array[StringName]([&"insatiability", &"business_card"])
+encyclopaedia_abilities = Array[StringName]([&"appeal_to_popularity", &"victimism"])
+forlorn_ability = &"litmus_test"

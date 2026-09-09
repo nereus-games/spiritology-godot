@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="AbilityData" format=3]
+
+[ext_resource type="Script" path="res://resources/ability_data.gd" id="1_uldtl"]
+
+[resource]
+script = ExtResource("1_uldtl")
+id = &"libation"
+origin_species = &"mastél"
+energy = 1
+cost = 1
+tags = PackedStringArray("change weakness", "recover DEN")

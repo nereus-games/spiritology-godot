@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="SpeciesData" format=3]
+
+[ext_resource type="Script" path="res://resources/species_data.gd" id="1_lgbtq"]
+
+[resource]
+script = ExtResource("1_lgbtq")
+id = &"yadol"
+spiricosm = 1
+weakness_first = 2
+weakness_middle = 1
+weakness_last = 3
+origin_abilities = Array[StringName]([&"dark_caroussel", &"dark_gambit", &"love_bombing"])
+also_used_abilities = Array[StringName]([&"libation", &"strict_audit", &"insatiability", &"emotional_blackmail", &"hypnotize", &"miasma_bomb", &"sad_song"])
+encyclopaedia_abilities = Array[StringName]([&"dark_gambit", &"dark_caroussel"])
+forlorn_ability = &"love_bombing"

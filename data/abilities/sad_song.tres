@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="AbilityData" format=3]
+
+[ext_resource type="Script" path="res://resources/ability_data.gd" id="1_ema43"]
+
+[resource]
+script = ExtResource("1_ema43")
+id = &"sad_song"
+origin_species = &"korig"
+energy = 3
+base_damage = 7
+tags = PackedStringArray("change weakness", "damage")

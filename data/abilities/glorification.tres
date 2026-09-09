@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="AbilityData" format=3]
+
+[ext_resource type="Script" path="res://resources/ability_data.gd" id="1_0c61s"]
+
+[resource]
+script = ExtResource("1_0c61s")
+id = &"glorification"
+origin_species = &"malcouli"
+tags = PackedStringArray("change weakness", "recover ETH")

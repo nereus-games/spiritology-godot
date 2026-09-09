@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SpeciesData" format=3]
+
+[ext_resource type="Script" path="res://resources/species_data.gd" id="1_bhij2"]
+
+[resource]
+script = ExtResource("1_bhij2")
+id = &"gaiaz"
+spiricosm = 2
+weakness_first = 4
+weakness_middle = 0
+weakness_last = 2
+talker_chance = 0.35
+origin_abilities = Array[StringName]([&"prohibition", &"flow_state", &"self_demand"])
+also_used_abilities = Array[StringName]([&"call_of_the_void", &"effort_of_neutrality", &"homeostasis", &"spirit_searching"])
+encyclopaedia_abilities = Array[StringName]([&"flow_state", &"flow_state"])
+forlorn_ability = &"flow_state"
+loot = Array[StringName]([&"rune_stone"])

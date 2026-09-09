@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="AbilityData" format=3]
+
+[ext_resource type="Script" path="res://resources/ability_data.gd" id="1_kngdk"]
+
+[resource]
+script = ExtResource("1_kngdk")
+id = &"dodge_blur"
+origin_species = &"podargolo"
+energy = 4
+cost = 3
+base_damage = 5
+tags = PackedStringArray("damage", "damage reduction/increase or immunity")

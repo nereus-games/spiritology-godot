@@ -1,0 +1,149 @@
+Spiritology — arborescence du projet Godot (référence)
+=======================================================
+
+Moteur : Godot 4.x | Langage : GDScript | Localisation : EN + FR (extensible)
+
+Ce document décrit l'état RÉEL du projet. Les entrées marquées « (prévu) » n'existent pas
+encore : elles sont là parce que la doc Notion les demande, pour qu'on sache où les poser.
+
+Principes :
+- Données (.tres) générées depuis l'export Notion, jamais saisies à la main.
+- Données légères chargées au boot ; sprites/audio chargés par donjon.
+- Rencontres ("encounter", pas "battle") en overlay additif sur l'exploration.
+- Ordre du tour fixé au début de la rencontre, modifié seulement par capacités.
+- Échelle : 1 unité = 1 m ; une case (et un bloc de mur) = 1 m³, yeux du duo à 0.6 m (on ne
+  voit jamais par-dessus un mur). Un sol d'étage est une dalle de 10 cm (= plafond de la case
+  du dessous : on peut marcher dessous). Portes (90 cm) et rambardes (30 cm) sont posées sur
+  l'arête ENTRE deux cases, épaisses de 10 cm.
+- Pas de `class_name` pour ce qui est chargé hors éditeur : le cache des classes globales n'est
+  régénéré que par l'éditeur, or le jeu se lance en CLI. On passe par `preload` / `extends`
+  chemin, et le manager manipule les mécanismes en duck-typing.
+
+proj godot/
+├── project.godot            # Autoloads + locales EN/FR déclarés ici
+│
+├── autoloads/               # Singletons Godot
+│   ├── game_session.gd      # Duo, DEN/ETH, inventaire, encyclopédie, PSY, FDE, états donjons
+│   ├── game_data.gd         # Registre central, charge toute la BDD (légère) au boot
+│   ├── save_system.gd       # Lecture/écriture JSON
+│   └── transition_manager.gd  # Transitions entre scènes (fade, overlay de rencontre)
+│
+├── resources/               # Les "schemas" — classes Resource typées
+│   ├── game_enums.gd        # GameEnums : Spiricosm, Energy, AbilityType, Cost, TurnPosition
+│   ├── species_data.gd      # class_name SpeciesData extends Resource
+│   ├── ability_data.gd      # class_name AbilityData extends Resource
+│   ├── talent_data.gd       # class_name TalentData extends Resource
+│   ├── object_data.gd       # class_name ObjectData extends Resource
+│   └── dungeon_config.gd    # class_name DungeonConfig extends Resource
+│
+├── data/                    # Instances .tres (texte, générées depuis Notion)
+│   ├── species/             # kalilk.tres, érzélak.tres… (36)
+│   ├── abilities/           # ghosting.tres, tumult.tres… (111)
+│   ├── objects/             # spade.tres, tea_drop.tres… (6)
+│   └── dungeons/            # config par donjon (rivaux possibles, etc.) — vide pour l'instant
+│
+├── tools/
+│   └── notion_to_tres.gd    # Générateur : parse l'export Notion → .tres + clés de trad
+│                            # NE PAS lancer pour « tester » : régénère tous les .tres/.po
+│
+├── scenes/
+│   ├── boot.tscn            # Vérifie save, langue, enchaîne (aujourd'hui : scenario_select)
+│   ├── title_screen.tscn    # (prévu) doc « User Interface / Menus »
+│   ├── main_map.tscn        # (prévu) carte 2D top-down, doc « Level Design / Main Map »
+│   ├── exploration/
+│   │   ├── exploration.tscn       # Scène 3D principale (persistante)
+│   │   ├── player/player.tscn     # PlayerController + CameraRig (yeux à 0.6 m) + InputHandler
+│   │   └── rival/rival.tscn       # RivalBehavior + sprite billboard Y-fixe
+│   ├── encounter/
+│   │   └── encounter.tscn         # Chargée en overlay additif sur l'exploration
+│   └── dev/                       # Outillage hors jeu : chaque .tscn est une SCÈNE PRINCIPALE
+│       │                          # à lancer en CLI (pas --script : les autoloads y manquent)
+│       ├── scenario_select.tscn       # Choix du scénario de test au lancement
+│       ├── screenshot.tscn            # PNG d'un scénario (vue subjective ou surplomb)
+│       ├── geometry_check.tscn        # Échelle, dalles/murs, portes et rambardes d'arête
+│       ├── bridge_balance_check.tscn  # Test d'équilibre du pont étroit
+│       ├── chest_check.tscn           # Coffres, butin, coffres piégés + talent reveal_traps
+│       ├── dieverting_check.tscn      # Les six issues du dé
+│       └── spent_visuals_check.tscn   # Mécanismes épuisés : grisés en 3D et sur la carte
+│
+├── scripts/
+│   ├── dev/
+│   │   ├── scenario_catalog.gd     # Scénarios de test bâtis par CODE (pas de .tscn authoring)
+│   │   ├── scenario_select.gd
+│   │   ├── screenshot.gd
+│   │   └── *_check.gd              # 1 par scène de contrôle ci-dessus (exit 1 si régression)
+│   │
+│   ├── exploration/
+│   │   ├── exploration.gd          # Racine : encounter_requested, tours, pilote du pont
+│   │   ├── dungeon_manager.gd      # DungeonManager : grille logique (sols, murs, arêtes,
+│   │   │                           # occupation, tours) — source de vérité de la navigation
+│   │   ├── player_controller.gd    # Pas case-par-case, rotation 90°, chutes
+│   │   ├── player_input_handler.gd # Entrées clavier/souris -> déplacement + regard
+│   │   ├── camera_rig.gd           # Pitch + FOV + micro-bruit d'inactivité (yaw = joueur)
+│   │   ├── rival_behavior.gd       # Chasse, mémoire, poursuite inter-étages, chutes
+│   │   ├── narrow_bridge_balance.gd  # Modèle d'équilibre pur (sans nœud ni rendu)
+│   │   ├── exploration_action.gd   # Descripteur d'action contextuelle (id, libellé, callable)
+│   │   ├── exploration_extra_actions.gd  # Capacités + objets d'exploration dans le menu
+│   │   ├── exploration_objects.gd  # Effets des objets utilisables hors rencontre
+│   │   ├── mechanisms/             # Framework de mécanismes de donjon (doc « Mechanisms »)
+│   │   │   ├── dungeon_mechanism.gd  # Base : enregistrement case OU arête, hooks, marqueurs
+│   │   │   ├── trap.gd               # Poison / téléport / disarray, révélé ou non
+│   │   │   ├── gateway.gd            # Portes d'ARÊTE : auto, verrouillée, méditation
+│   │   │   ├── guardrail.gd          # Rambarde d'ARÊTE : bord protégé, n'occulte pas la vue
+│   │   │   ├── stairs.gd             # Volée : bloc plein de 6 marches, porte 2 cases + 1 étage
+│   │   │   ├── elevator.gd           # Plateforme à trajet prédéfini
+│   │   │   ├── narrow_bridge.gd      # Case de pont : engage le test d'équilibre
+│   │   │   ├── crumbly_ground.gd     # Dig
+│   │   │   ├── litter.gd             # Examine + Recycle
+│   │   │   ├── chest.gd              # Butin, ou piège de téléportation déguisé
+│   │   │   ├── dieverting.gd         # Dé impatient (six issues)
+│   │   │   ├── refresh_crystal.gd    # Rafraîchit les capacités d'exploration
+│   │   │   ├── cracked_wall.gd       # Traversable via Cranny Crossing
+│   │   │   ├── examinable_decor.gd   # Affiches, marques… (encyclopédie)
+│   │   │   └── affliction_state.gd   # Poison / disarray portés par un acteur
+│   │   └── abilities/              # Capacités d'EXPLORATION
+│   │       ├── exploration_ability.gd + _catalog.gd + exploration_context.gd
+│   │       └── impl/               # fog_mantel, static_camouflage, cranny_crossing
+│   │
+│   ├── encounter/
+│   │   ├── encounter_manager.gd    # Boucle de rencontre (tours, agents, résolution)
+│   │   ├── encounter_fighter.gd    # Un combattant (DEN/ETH, faiblesse, talents)
+│   │   ├── encounter_timeline.gd   # Ordre du tour
+│   │   ├── encounter_action.gd     # Action choisie (capacité + cible)
+│   │   ├── encounter_ui.gd         # UI de rencontre, construite par code
+│   │   ├── agents/                 # Qui décide : encounter_agent.gd, ui_agent.gd, auto_agent.gd
+│   │   ├── talents/                # talent_catalog.gd + talent_script.gd
+│   │   │   └── impl/               # 10 talents (passifs événementiels)
+│   │   └── effects/                # Effets scriptables des capacités
+│   │       ├── ability_script.gd     # Orchestrateur d'une capacité (défaut = tags)
+│   │       ├── effect_catalog.gd     # script_for(id) + tag_effects
+│   │       ├── ability_effect.gd     # Brique d'effet de base
+│   │       ├── encounter_context.gd  # Point d'intégration runtime
+│   │       ├── damage_effect.gd …    # 12 briques génériques (1/tag) + ui_disrupt_effect.gd
+│   │       └── abilities/            # 1 script PAR capacité (mécanique Notion en docstring)
+│   │           ├── tumult.gd          #   ex. implémenté (override + RNG + UI)
+│   │           └── <id>.gd × 111      #   stubs @generated-stub → fallback générique
+│   │
+│   └── ui/
+│       ├── hud_exploration.gd      # HUD (mini-map, jauges, menu d'actions, bandeau d'état)
+│       ├── exploration_minimap.gd  # Carte : étage courant + murs, inférieurs assombris
+│       ├── exploration_action_menu.gd  # Liste d'actions contextuelles
+│       └── encounter_timeline_entry.gd # Portrait + jauges dans la file de rencontre
+│
+├── ui/                      # Scènes UI réutilisables
+│   ├── hud_exploration.tscn # (l'UI de rencontre, elle, est construite par code)
+│   ├── encyclopaedia.tscn   # (prévu) doc « Game Design / Encyclopaedia »
+│   ├── fragment_desk.tscn   # (prévu) bureau d'assemblage des fragments
+│   └── menus/               # (prévu) pause_exploration.tscn, pause_encounter.tscn
+│
+├── translations/
+│   ├── en.po
+│   └── fr.po
+│
+└── assets/
+    ├── audio/
+    ├── fonts/
+    ├── shaders/
+    └── sprites/
+        ├── spirimonsters/   # 1 PNG par espèce, calé à 90 cm max par le code
+        └── ui/

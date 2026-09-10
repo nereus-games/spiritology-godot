@@ -1,78 +1,76 @@
-## Orchestrateur d'une rencontre : ordre du tour, résolution des actions, fin de combat.
+## Runs an encounter: turn order, action resolution, and how it ends.
 ##
-## Branche le système d'effets ([EffectCatalog]) sur l'état de combat ([EncounterFighter],
-## [EncounterTimeline]). L'ordre du tour est fixé au départ et modifiable par les
-## capacités ; la position détermine la faiblesse active. Modèle par RONDE : à chaque
-## ronde, tout le monde agit une fois (état de tour réinitialisé en début, réordonnancement
-## appliqué en fin).
+## Wires the effect system ([EffectCatalog]) onto the combat state ([EncounterFighter],
+## [EncounterTimeline]). The model is per ROUND: everyone acts once, per-turn state is
+## wiped at the start, pending reordering is applied at the end.
 ##
-## Le manager ne DÉCIDE pas : il demande son action à chaque tour au [EncounterAgent] du
-## combattant ([method set_agent]). Par défaut tous les combattants sont en [AutoAgent] et
-## [method run] résout la rencontre d'une traite, sans suspension — c'est le mode auto
-## testable headless. Poser un [UiAgent] sur un combattant suffit à rendre ses tours
-## pilotables : la boucle, elle, ne change pas.
+## The manager does not DECIDE. Each turn it asks the fighter's [EncounterAgent]. By
+## default every fighter has an [AutoAgent], so [method run] resolves the whole encounter
+## in one go without ever suspending — that is what makes it testable headless. Putting a
+## [UiAgent] on a fighter makes its turns playable; the loop itself does not change.
 class_name EncounterManager
 extends Node
 
-## `action` est l'[EncounterAction] jouée ; `lines` le journal produit par ses effets.
+## `lines` is the log its effects produced.
 signal turn_taken(fighter: EncounterFighter, action: EncounterAction, lines: PackedStringArray)
 signal ended(result: StringName)  ## &"victory" / &"defeat" / &"timeout"
 
-## IFP d'encyclopédie gagnés par une action du joueur sur un rival (Examine / Talk /
-## dissolution). Le manager ne connaît PAS [GameSession] — il resterait sinon intestable
-## en `--script`, qui ne charge pas les autoloads : c'est l'UI de rencontre qui branche ce
-## signal sur [method GameSession.award_ifp], comme elle le fait déjà pour le DEN/ETH.
+## Info points earned by a player action on a rival — Examine, Talk, or dissolving it.
+##
+## The manager deliberately knows nothing of [GameSession]. Reaching for an autoload would
+## tie it to a running game and cost it the ability to be tested on its own, so it
+## announces what happened and the encounter UI relays it to
+## [method GameSession.award_ifp].
 signal ifp_earned(
 	species_id: StringName, action: GameEnums.IfpAction, is_forlorn: bool, dialogue_effective: bool
 )
 
-## Objet consommé par une action Use / Give (« Objects are all consumable items »). L'UI
-## le retire de l'inventaire [GameSession] — même raison que [signal ifp_earned].
+## An object was spent by a Use / Give action — "Objects are all consumable items". The UI
+## removes it from the inventory, for the same reason as [signal ifp_earned].
 signal object_consumed(object_id: StringName)
 
-## Résout un slug d'objet en [ObjectData]. Injecté par l'UI (`GameData.object`) : le
-## manager ne connaît pas les autoloads, sinon il ne serait plus testable en `--script`.
+## Turns an object slug into [ObjectData]. Injected by the UI, again so that the manager
+## needs no autoload.
 var object_provider: Callable = Callable()
 
 const ABILITY_DIR := "res://data/abilities/"
 
-## Résolveur des scripts de talents (passifs d'espèce). Chargé par preload : ni
-## [TalentCatalog] ni [TalentScript] n'ont de `class_name` (scripts neufs, absents du
-## cache de classes globales que seul l'éditeur régénère — le jeu se lance en CLI).
+## Resolves a talent to its script. Reached by preload rather than by name: neither
+## [TalentCatalog] nor [TalentScript] declares a `class_name`, because only the editor
+## regenerates the global class cache and this game is launched from the command line.
 const TalentCatalog := preload("res://scripts/encounter/talents/talent_catalog.gd")
 
 var players: Array = []
 var rivals: Array = []
 var timeline: EncounterTimeline
 var rng := RandomNumberGenerator.new()
-## Espèces à 100 % d'encyclopédie (modificateur de dégâts). species_id -> true.
+## Species whose encyclopaedia page is complete — one of the damage conditions.
 var completed_species: Dictionary = {}
 
-## Résultat de la rencontre une fois [method run] terminé (&"" tant qu'elle court).
-## [method run] étant une coroutine, sa valeur de retour n'est lisible qu'avec `await` :
-## les appelants qui ne peuvent pas attendre lisent ce champ ou le signal [signal ended].
+## How the encounter ended, &"" while it is still running.
+##
+## [method run] is a coroutine, so its return value is only reachable with `await`.
+## Callers that cannot wait read this field, or listen to [signal ended].
 var result := &""
 
-## Ronde en cours, 1-based (0 tant que la rencontre n'a pas démarré). Lu par l'UI.
+## Current round, 1-based; 0 before the encounter starts.
 var round_number := 0
 
 var battle_log: PackedStringArray = PackedStringArray()
 
-## Fournisseur d'action par combattant (EncounterFighter -> EncounterAgent). Les
-## combattants absents utilisent [member default_agent].
+## Per-fighter agents. Anyone absent from here uses [member default_agent].
 var _agents: Dictionary = {}
 var default_agent: EncounterAgent = AutoAgent.new()
 
-## Talents actifs de la rencontre : un [TalentScript] par combattant PORTEUR (les autres
-## n'en ont pas). Peuplé par [method _collect_talents] dans [method setup]. Le manager
-## appelle leurs hooks aux points clés de la boucle (début/fin, Talk, capacité consommée…).
+## One [TalentScript] per fighter that actually carries a talent. The manager calls their
+## hooks at the points of the loop that matter: start and end, a resolved Talk, a
+## single-use ability spent.
 var _talents: Array = []
 
 var _round_energy := GameEnums.Energy.NONE
 
 
-## Prépare la rencontre. `player_fighters` / `rival_fighters` = [EncounterFighter].
-## Réinitialise les agents : poser les [UiAgent] APRÈS cet appel.
+## Prepares the encounter. Resets the agents, so set any [UiAgent] AFTER calling this.
 func setup(
 	player_fighters: Array, rival_fighters: Array, seed: int = 0, completed: Dictionary = {}
 ) -> void:
@@ -83,18 +81,19 @@ func setup(
 	result = &""
 	_agents.clear()
 	timeline = EncounterTimeline.new()
-	# « Turn order is defined at random when the encounter begins » (doc, Encounters). Ce
-	# n'est pas cosmétique : la position dans l'ordre fixe la faiblesse active de chacun,
-	# donc un ordre figé figerait aussi les faiblesses. Tiré par le rng seedé ci-dessus →
-	# aléatoire d'une rencontre à l'autre, mais reproductible à seed égal.
+	# "Turn order is defined at random when the encounter begins". Not cosmetic: position
+	# decides which weakness each fighter exposes, so a fixed order would freeze the
+	# weaknesses too. Drawn from the seeded rng above — different every encounter, and
+	# reproducible for a given seed.
 	timeline.setup(players + rivals, rng)
 	_collect_talents()
 
 
-## Instancie un [TalentScript] par combattant qui porte un talent (via [member
-## SpeciesData.talent]). Le cumul en duo (deux individus de même espèce dans une équipe)
-## est porté par le champ `stacks` — compté sur le camp du porteur, borné à 1 si le talent
-## n'est pas cumulable ([member TalentData.stacks_in_duo]).
+## Builds a [TalentScript] for every fighter carrying a talent.
+##
+## Two individuals of the same species on one side stack the talent, which is what `stacks`
+## carries — counted on the bearer's own side, and held at 1 for talents the doc does not
+## make stackable.
 func _collect_talents() -> void:
 	_talents.clear()
 	for f in players + rivals:
@@ -109,9 +108,9 @@ func _collect_talents() -> void:
 		_talents.append(TalentCatalog.script_for(td, f, stacks))
 
 
-## Charge un [TalentData] par slug. Les talents sont générés dans le MÊME dossier que les
-## capacités (`data/abilities/`) mais sont d'un type distinct : le `as TalentData` renvoie
-## null pour un slug qui serait une capacité, ce qui est le comportement voulu.
+## Loads a [TalentData] by slug. Talents share `data/abilities/` with the abilities but are
+## a different type, so `as TalentData` yields null for an ability slug — which is exactly
+## what should happen.
 func _load_talent(slug: StringName) -> TalentData:
 	if slug == &"":
 		return null
@@ -119,13 +118,12 @@ func _load_talent(slug: StringName) -> TalentData:
 	return load(path) as TalentData if ResourceLoader.exists(path) else null
 
 
-## Ligne de journal produite par un talent (pas rattachée à un tour précis). Préfixée pour
-## se distinguer des lignes d'action dans le log de combat.
+## A log line from a talent rather than from a turn. Prefixed so the two are told apart.
 func note_talent(line: String) -> void:
 	battle_log.append("⁘ %s" % line)
 
 
-## Construit un combattant à partir d'un slug d'espèce (charge le SpeciesData).
+## Builds a fighter from a species slug.
 static func make_fighter(species_id: StringName, is_player: bool) -> EncounterFighter:
 	var sp: SpeciesData = load("res://data/species/%s.tres" % species_id)
 	if sp == null:
@@ -137,7 +135,7 @@ static func make_fighter(species_id: StringName, is_player: bool) -> EncounterFi
 # --- Agents ---
 
 
-## Assigne un fournisseur d'action à un combattant (sinon [member default_agent]).
+## Gives a fighter its own agent, in place of [member default_agent].
 func set_agent(fighter: EncounterFighter, agent: EncounterAgent) -> void:
 	_agents[fighter] = agent
 
@@ -146,12 +144,12 @@ func agent_for(fighter: EncounterFighter) -> EncounterAgent:
 	return _agents.get(fighter, default_agent)
 
 
-# --- Options offertes aux agents ---
+# --- What the agents may choose from ---
 
 
-## Capacités de RENCONTRE encore au répertoire de `fighter` (usage unique consommé exclu),
-## Y COMPRIS celles qu'il ne peut pas payer — le menu joueur les affiche grisées plutôt
-## que de les masquer. Cf. [method usable_abilities] pour les seules jouables.
+## Encounter abilities still in the fighter's repertoire, INCLUDING the ones it cannot
+## afford: the doc wants unusable actions greyed out, not hidden.
+## See [method usable_abilities] for the ones actually playable.
 func encounter_abilities(fighter: EncounterFighter) -> Array:
 	var out: Array = []
 	for aid in fighter.ability_ids:
@@ -161,15 +159,14 @@ func encounter_abilities(fighter: EncounterFighter) -> Array:
 	return out
 
 
-## Capacités que `fighter` peut jouer maintenant (payables et non consommées). Source de
-## la politique auto ; le menu joueur s'en sert pour détecter le tour perdu.
+## What the fighter can play right now. Drives the auto policy, and tells the menu when a
+## turn is lost for want of anything to do.
 func usable_abilities(fighter: EncounterFighter) -> Array:
 	return encounter_abilities(fighter).filter(func(a): return fighter.can_use(a))
 
 
-## Vrai si la capacité vise les adversaires. Heuristique d'ÉCHAFAUDAGE sur les tags, en
-## attendant que Notion décrive le ciblage capacité par capacité (les tags ne sont qu'une
-## catégorisation, cf. [EffectCatalog]).
+## Whether the ability is aimed at opponents. A SCAFFOLD built on the tags, standing in
+## until the doc describes targeting ability by ability.
 func is_offensive(ability: AbilityData) -> bool:
 	return (
 		ability.tags.has("damage")
@@ -179,11 +176,11 @@ func is_offensive(ability: AbilityData) -> bool:
 	)
 
 
-## Cibles possibles pour `fighter` jouant `ability` : les adversaires en lice si la
-## capacité est offensive, sinon lui-même. Règle unique partagée par la politique auto
-## ([AutoAgent]) et le ciblage du menu joueur — une seule candidate = aucun choix à faire.
-## Les capacités à portée globale (Tumult…) élargissent elles-mêmes leur portée à
-## l'exécution via [member EncounterContext.all_fighters] : ce ciblage ne les concerne pas.
+## Legal targets: opponents still standing if the ability is offensive, otherwise itself.
+##
+## One rule, shared by [AutoAgent] and the player's menu, so the two cannot drift. Abilities
+## with global reach (Tumult) widen their own scope at execution time through
+## [member EncounterContext.all_fighters] and are not concerned by this.
 func candidate_targets(fighter: EncounterFighter, ability: AbilityData) -> Array:
 	if is_offensive(ability):
 		return opponents_of(fighter).filter(func(f): return not f.is_dissolved())
@@ -194,17 +191,17 @@ func opponents_of(fighter: EncounterFighter) -> Array:
 	return rivals if fighter.is_player else players
 
 
-## Adversaires encore en lice : cibles de Talk / Examine / Give Object.
+## Opponents still standing — the targets of Talk, Examine and Give Object.
 func living_opponents(fighter: EncounterFighter) -> Array:
 	return opponents_of(fighter).filter(func(f): return not f.is_dissolved())
 
 
-## Actions « de base » (hors Meditate/Object, qui ont leur logique propre) offertes à un
-## fighter, APRÈS mutation par ses talents. Départ = ABILITY, TALK, EXAMINE ; un talent
-## peut retirer ABILITY/TALK et ajouter FLEE (Run Away) ou STEAL — run_away_2, steal,
-## slick_merchant l'expriment via [method TalentScript.modify_menu]. Le menu joueur et
-## l'IA consultent cette liste pour savoir quoi proposer. L'ordre initial est conservé ;
-## les ajouts arrivent en fin.
+## The base actions offered to a fighter, AFTER its talents have had their say.
+##
+## Starts at ABILITY, TALK, EXAMINE. A talent may remove one and add FLEE or STEAL —
+## run_away_2, steal and slick_merchant all do, through
+## [method TalentScript.modify_menu]. An action a talent removed is ABSENT rather than
+## greyed: the talent replaces it, it does not forbid it.
 func menu_kinds(fighter: EncounterFighter) -> Array:
 	var kinds: Array = [
 		EncounterAction.Kind.ABILITY, EncounterAction.Kind.TALK, EncounterAction.Kind.EXAMINE
@@ -215,8 +212,8 @@ func menu_kinds(fighter: EncounterFighter) -> Array:
 	return kinds
 
 
-## Cibles possibles d'un Talk du fighter : les rivaux vivants, plus ses alliés vivants si un
-## talent l'autorise (Serene Waves : parler à l'équipier le soigne). Le porteur est exclu.
+## Who this fighter may Talk to: living rivals, plus its own teammate if a talent allows it
+## (Serene Waves, where talking to the teammate heals them). Never itself.
 func talk_targets(fighter: EncounterFighter) -> Array:
 	var targets := living_opponents(fighter)
 	for t in _talents:
@@ -237,20 +234,20 @@ func resolve_ability(aid: StringName) -> AbilityData:
 	return load(path) as AbilityData if ResourceLoader.exists(path) else null
 
 
-# --- Boucle ---
+# --- The loop ---
 
 
-## Lance la boucle SANS attendre sa fin, pour les appelants qui réagissent au signal
-## [signal ended] / au champ [member result] plutôt qu'au retour (l'UI de rencontre, qui
-## rend la main à sa scène). [method run] étant une coroutine, GDScript refuse de
-## l'appeler sans `await` : l'appel dynamique ci-dessous est ce détour, assumé et isolé
-## ici. Utiliser `await run()` directement quand on peut attendre le résultat.
+## Starts the loop WITHOUT waiting for it, for callers that react to [signal ended] rather
+## than to a return value — the encounter UI, which has to hand control back to its scene.
+##
+## GDScript refuses to call a coroutine without `await`; the dynamic call below is the way
+## around that, deliberately isolated here. Prefer `await run()` when you can wait.
 func start(max_rounds: int = 30) -> void:
 	run.call(max_rounds)
 
 
-## Déroule la rencontre jusqu'à sa fin et renvoie le résultat. Coroutine : suspend sur
-## les tours pilotés par un [UiAgent], ne suspend jamais si tous les agents sont autos.
+## Runs the encounter to its end. A coroutine: it suspends on turns driven by a [UiAgent],
+## and never suspends at all when every agent is automatic.
 func run(max_rounds: int = 30) -> StringName:
 	for t in _talents:
 		t.on_encounter_start(self)
@@ -269,31 +266,31 @@ func run(max_rounds: int = 30) -> StringName:
 
 func _finish(res: StringName) -> StringName:
 	result = res
-	# Talents de fin de rencontre (Restore : soin du duo ; Trick to Reveal : révélation carte)
-	# AVANT d'émettre `ended` : l'UI resynchronise DEN/ETH vers GameSession sur ce signal, et
-	# doit donc voir l'état déjà soigné.
+	# End-of-encounter talents run BEFORE `ended` is emitted — Restore heals the duo, and the
+	# UI writes DEN/ETH back to GameSession on that signal, so it has to see the healed
+	# state, not the state before.
 	for t in _talents:
 		t.on_encounter_end(self, res)
 	ended.emit(res)
-	# APRÈS le signal : les écouteurs voient l'état complet, puis on casse les cycles de
-	# références entre combattants (cf. EncounterFighter.release_cross_references).
+	# AFTER the signal, so listeners still see the full state: break the reference cycles
+	# between fighters (see EncounterFighter.release_cross_references).
 	for f in players + rivals:
 		f.release_cross_references()
 	return res
 
 
 func _begin_round() -> void:
-	# Numéro de ronde, 1-based. Exposé pour l'UI : la doc veut le numéro du tour courant
-	# affiché en permanence dans le LOG, indépendamment du défilement.
+	# Exposed because the doc wants the current round shown permanently in the log,
+	# whatever the player has scrolled to.
 	round_number += 1
-	# Énergie aléatoire commune à la ronde (capacités Random/Variable).
+	# One random energy for the whole round, shared by every Random/Variable ability.
 	_round_energy = _random_energy()
 	for f in timeline.order:
 		f.clear_turn_state()
 
 
 func _take_turn(fighter: EncounterFighter) -> void:
-	# L'agent peut être synchrone (auto) ou coroutine (UI) : `await` couvre les deux.
+	# The agent may be synchronous or a coroutine; `await` covers both.
 	@warning_ignore("redundant_await")
 	var action: EncounterAction = await agent_for(fighter).decide(fighter, self)
 	if action == null:
@@ -305,9 +302,9 @@ func _take_turn(fighter: EncounterFighter) -> void:
 		_award_dissolutions(dissolved_before)
 
 
-## « Use Ability – upon dissolving rival » : les rivaux que CE tour du joueur vient de
-## dissoudre octroient leurs IFP. Un rival abattu par un autre rival (réflexion,
-## redirection) n'en octroie pas — d'où le garde `fighter.is_player` côté appelant.
+## "Use Ability – upon dissolving rival": rivals dissolved by THIS player turn yield their
+## info points. One brought down by another rival — through reflection or redirection —
+## yields nothing, which is why the caller guards on `fighter.is_player`.
 func _award_dissolutions(dissolved_before: Array) -> void:
 	for r in rivals:
 		if r.is_dissolved() and not dissolved_before.has(r):
@@ -333,19 +330,20 @@ func _resolve_action(fighter: EncounterFighter, action: EncounterAction) -> void
 		EncounterAction.Kind.FLEE:
 			_resolve_flee(fighter, action)
 		EncounterAction.Kind.PASS:
-			# Action « … » : passe le tour SANS changer l'ordre (doc UI).
+			# The doc's "…" action: passes the turn WITHOUT giving up your place.
 			_emit_turn(fighter, action, ["passe son tour."])
 		_:
 			_emit_turn(fighter, action, ["action « %s » pas encore résolue." % action.label()])
 
 
-## Use / Give Object : « select object and target (can be a rival) ; "Use" if target is
-## player character, "Give" if target is rival ». L'objet est CONSOMMÉ dans tous les cas
-## (« Objects are all consumable items »), y compris quand l'effet ne fait rien en
-## rencontre — le donner à un rival est en soi le geste utile (dialogues).
+## Use / Give Object: "select object and target (can be a rival); Use if target is player
+## character, Give if target is rival".
 ##
-## Le retrait de l'inventaire n'est PAS fait ici : le manager ne connaît pas [GameSession]
-## (cf. [signal ifp_earned]). Il émet [signal object_consumed], que l'UI relaie.
+## The object is spent EITHER WAY — "Objects are all consumable items" — including when the
+## effect does nothing in an encounter. Giving one to a rival is itself the useful gesture.
+##
+## Removing it from the inventory does not happen here; the manager announces
+## [signal object_consumed] and the UI relays it.
 func _resolve_object(fighter: EncounterFighter, action: EncounterAction) -> void:
 	var obj: ObjectData = (
 		object_provider.call(action.object_id) if object_provider.is_valid() else null
@@ -361,8 +359,8 @@ func _resolve_object(fighter: EncounterFighter, action: EncounterAction) -> void
 	var lines: Array = []
 	match obj.effect:
 		GameEnums.ObjectEffect.HEAL_DEN:
-			# « gives Y DEN to a target » — Y est un placeholder surligné dans Notion, donc
-			# magnitude vaut 0 tant qu'il n'est pas chiffré : on retombe sur l'équilibrage.
+			# "gives Y DEN to a target" — Y is a placeholder in the doc, so magnitude stays
+			# 0 and the balance value stands in.
 			var amount: int = (
 				obj.magnitude if obj.magnitude > 0 else BalanceData.current().object_heal_den
 			)
@@ -381,9 +379,9 @@ func _resolve_object(fighter: EncounterFighter, action: EncounterAction) -> void
 				)
 			)
 		GameEnums.ObjectEffect.FLEE_ENCOUNTER:
-			# « allows to Run away from an encounter ». La fuite elle-même (téléportation à
-			# 3-5 cases, 50 % de chance que le rival disparaisse) appartient à l'exploration,
-			# qui ne la gère pas encore — d'où le stub partagé avec la capacité de fuite.
+			# "allows to Run away from an encounter". Fleeing itself — teleporting 3-5 cells
+			# away, with a 50 % chance the rival disappears — belongs to exploration, which
+			# does not handle it yet.
 			lines.append(
 				(
 					"%s %s : fuite (TODO exploration)."
@@ -391,9 +389,9 @@ func _resolve_object(fighter: EncounterFighter, action: EncounterAction) -> void
 				)
 			)
 		_:
-			# NONE (Notice), CURE_POISON, DISGUISE, DIG, AVOID_PURSUIT : sans effet EN
-			# RENCONTRE. Notice est explicitement « no effect » et sert à être donné ; les
-			# autres relèvent de l'exploration (sols friables, poison, poursuite).
+			# NONE, CURE_POISON, DISGUISE, DIG, AVOID_PURSUIT do nothing IN AN ENCOUNTER.
+			# Notice is explicitly "no effect" and exists to be given away; the rest belong
+			# to exploration — crumbly ground, poison, pursuit.
 			lines.append(
 				(
 					"%s %s à %s."
@@ -403,12 +401,12 @@ func _resolve_object(fighter: EncounterFighter, action: EncounterAction) -> void
 	_emit_turn(fighter, action, lines)
 
 
-## Steal (talent granop) : « takes an object from the target, but has a risk of a member of
-## The Coal Vetch appearing ; if present, Steal has a 50 % chance of failing ».
-## STUB : voler un objet suppose que les rivaux en PORTENT (pas de telle donnée dans Notion),
-## et l'apparition du Coal Vetch est un système inexistant (comme le déclencheur d'Examine).
-## L'action est routée et journalisée pour que la chaîne menu→résolution soit complète le
-## jour où ces systèmes existeront.
+## Steal, from granop's talent: "takes an object from the target, but has a risk of a
+## member of The Coal Vetch appearing; if present, Steal has a 50 % chance of failing".
+##
+## A stub, because stealing supposes rivals CARRY objects — nothing says which — and the
+## Coal Vetch does not exist. The action is routed and logged anyway, so the chain from
+## menu to resolution is whole the day those systems arrive.
 func _resolve_steal(fighter: EncounterFighter, action: EncounterAction) -> void:
 	var target := _first_target(action)
 	if target == null:
@@ -421,18 +419,20 @@ func _resolve_steal(fighter: EncounterFighter, action: EncounterAction) -> void:
 	)
 
 
-## Run Away (action de menu donnée par un talent : run_away_2, slick_merchant). Quitter
-## réellement la rencontre suppose la téléportation en exploration (3-5 cases, 50 % que le
-## rival disparaisse), non bâtie — d'où le stub, partagé d'intention avec EncounterContext.flee.
-## slick_merchant coûte 10 ETH et un QTE (faillible) ; run_away_2 est gratuit et sûr — ces
-## conditions seront portées par le talent quand la fuite aboutira réellement.
+## Run Away, put in the menu by a talent (run_away_2, slick_merchant). Actually leaving
+## needs the exploration-side teleport, which is unbuilt — hence the stub.
+##
+## slick_merchant costs 10 ETH and a QTE that can fail; run_away_2 is free and certain.
+## Those conditions belong to the talents, and will be enforced once fleeing works.
 func _resolve_flee(fighter: EncounterFighter, action: EncounterAction) -> void:
 	_emit_turn(fighter, action, ["tente de fuir la rencontre [téléportation exploration à venir]."])
 
 
-## Meditate : « character recovers X ETH; damage +Y % until next turn ». Le +Y % porte sur
-## les dégâts INFLIGÉS (décision de design) et s'applique au PROCHAIN tour du méditant, seul
-## moment où il peut frapper — cf. EncounterFighter.grant_next_turn_damage_bonus.
+## Meditate: "character recovers X ETH; damage +Y % until next turn".
+##
+## The bonus applies to damage DEALT — a design decision, the doc does not say — and lands
+## on the meditating fighter's NEXT turn, the only moment it could strike anyway.
+## See EncounterFighter.grant_next_turn_damage_bonus for why that is done in two steps.
 func _resolve_meditate(fighter: EncounterFighter, action: EncounterAction) -> void:
 	var before := fighter.eth
 	var balance := BalanceData.current()
@@ -450,21 +450,21 @@ func _resolve_meditate(fighter: EncounterFighter, action: EncounterAction) -> vo
 	)
 
 
-## Talk : « initiate dialogue with rival ». N'octroie des IFP que si le dialogue est
-## effectif (restriction 2 de GameSession.award_ifp).
+## Talk: "initiate dialogue with rival". Earns info points only if the dialogue is
+## effective.
 func _resolve_talk(fighter: EncounterFighter, action: EncounterAction) -> void:
 	var target := _first_target(action)
 	if target == null:
 		_emit_turn(fighter, action, ["parle dans le vide."])
 		return
-	# Effectivité du dialogue : PLACEHOLDER assumé. La doc conditionne les IFP de Talk à un
-	# dialogue « effectif » sans jamais en donner la règle, et ses brouillons de dialogues la
-	# font dépendre d'objets donnés au rival — système inexistant. On se rabat sur le
-	# talker_chance de l'espèce, qui décrit en réalité la propension du RIVAL à engager le
-	# dialogue : proxy, pas la règle. À remplacer quand le système de dialogue existera.
+	# Whether a dialogue "works" is an admitted PLACEHOLDER. The doc conditions Talk's
+	# reward on an effective dialogue without ever giving the rule, and its dialogue drafts
+	# make it depend on objects given to the rival — which does not exist. So we fall back
+	# on the species' talker_chance, which actually describes how likely the RIVAL is to
+	# open a conversation. A proxy, not the rule. See docs/roadmap.md.
 	var chance: float = target.species.talker_chance if target.species else 0.0
-	# Les talents du camp du parleur peuvent ajuster l'effectivité (Slick Merchant : +15 %
-	# sur les 3 premiers tours — sur ce proxy `talker_chance`, faute de système de dialogue).
+	# Talents on the speaker's side may adjust it — Slick Merchant adds 15 % over the first
+	# three turns, applied to that same proxy.
 	var speaker_team := allies_of(fighter)
 	for t in _talents:
 		if speaker_team.has(t.owner):
@@ -483,16 +483,16 @@ func _resolve_talk(fighter: EncounterFighter, action: EncounterAction) -> void:
 			)
 		]
 	)
-	# Réactions de talents au Talk résolu (Serene Waves : soin de l'équipier ; Slick
-	# Merchant : la faiblesse du rival prend celle du parleur).
+	# Talents that react to a resolved Talk: Serene Waves heals the teammate, Slick Merchant
+	# gives the rival the speaker's own weakness.
 	for t in _talents:
 		if speaker_team.has(t.owner):
 			t.on_talk_resolved(self, fighter, target, effective)
 
 
-## Examine : « gets info on rival; reveals objects they carry; rival may react with Talk or
-## Challenge ». La révélation d'objets et la réaction du rival dépendent de systèmes non
-## bâtis ; les IFP, eux, sont octroyés (Examine « works all the time »).
+## Examine: "gets info on rival; reveals objects they carry; rival may react with Talk or
+## Challenge". Revealing objects and the rival's reaction both need systems that do not
+## exist; the info points, at least, are awarded — Examine "works all the time".
 func _resolve_examine(fighter: EncounterFighter, action: EncounterAction) -> void:
 	var target := _first_target(action)
 	if target == null:
@@ -501,26 +501,25 @@ func _resolve_examine(fighter: EncounterFighter, action: EncounterAction) -> voi
 	ifp_earned.emit(
 		target.species_id(), GameEnums.IfpAction.EXAMINE_RIVAL, _is_forlorn(target), true
 	)
-	# Recon Glide (ravbak) : le gain d'info d'Examine du porteur est majoré (+10 %). La
-	# magnitude de base d'un Examine n'est pas chiffrée (système d'info non bâti) : on part
-	# de 1.0 et on journalise le facteur obtenu — observable, mais sans effet tant que le
-	# gain d'info n'existe pas.
+	# Recon Glide (ravbak) raises the bearer's Examine yield by 10 %. How much information
+	# an Examine yields is not modelled at all, so we start from 1.0 and log the factor:
+	# observable, but with nothing yet to act on.
 	var info := 1.0
 	for t in _talents:
 		if t.owner == fighter:
 			info = t.modify_examine_info(self, target, info)
-	# TODO: « reveals objects they carry » — les rivaux ne portent pas d'objets (pas de
-	# base d'objets Notion), et la réaction Talk/Challenge du rival examiné reste à faire.
-	# TODO: Coal Vetch — 2 Examine sur le même rival (ou 1 capacité) déclenchent X % de
-	# chance qu'un agent apparaisse dans la rencontre. Système inexistant.
+	# TODO: "reveals objects they carry" — rivals carry none, and the examined rival's
+	# Talk/Challenge reaction is unwritten.
+	# TODO: Coal Vetch — two Examines on the same rival, or one ability, should give some
+	# chance of an agent appearing mid-encounter. No such system exists.
 	var suffix := " (info ×%.2f)" % info if not is_equal_approx(info, 1.0) else ""
 	_emit_turn(fighter, action, ["examine %s%s." % [target.display_name(), suffix]])
 
 
-## Vrai si ce combattant est la variante Forlorn de son espèce.
-## TODO: les variantes Forlorn ne sont pas modélisées sur EncounterFighter (SpeciesData ne
-## porte qu'une capacité et un sprite Forlorn). Tant que c'est le cas, les IFP majorés
-## Forlorn ne peuvent pas tomber — cf. restriction 3 de GameSession.award_ifp.
+## Whether this fighter is its species' Forlorn variant.
+## TODO: Forlorn variants are not modelled on the fighter at all — [SpeciesData] carries
+## only a Forlorn ability and sprite. Until they are, the higher Forlorn info points can
+## never be earned.
 func _is_forlorn(_fighter: EncounterFighter) -> bool:
 	return false
 
@@ -544,13 +543,11 @@ func _resolve_ability(fighter: EncounterFighter, action: EncounterAction) -> voi
 		_emit_turn(fighter, action, ["capacité introuvable."])
 		return
 	var ability := action.ability
-	# Cibles dont la faiblesse ACTIVE est touchée par l'énergie de la capacité — capturé
-	# AVANT l'effet (l'effet peut changer les faiblesses en cours de route). Sert au talent
-	# Examine Weakness. Détection best-effort, cf. [method _weakness_touched_targets].
+	# Which targets have their exposed weakness struck — captured BEFORE the effect runs,
+	# since the effect may change weaknesses on its way through. Feeds Examine Weakness.
 	var touched := _weakness_touched_targets(fighter, ability, action.targets)
-	# Coût payé AVANT l'effet : une capacité qui rend de l'ETH ne doit pas se rembourser.
-	# Les agents ne proposent que du payable ([method usable_abilities]) ; en cas de
-	# dépassement, pay_eth borne à 0 plutôt que de laisser filer l'ETH en négatif.
+	# Paid BEFORE the effect, so that an ability which restores ETH cannot refund itself.
+	# Agents only ever offer what is affordable; pay_eth clamps at 0 regardless.
 	fighter.pay_eth(ability.eth_cost())
 	var ctx := EncounterContext.new()
 	ctx.ability = ability
@@ -563,7 +560,7 @@ func _resolve_ability(fighter: EncounterFighter, action: EncounterAction) -> voi
 	ctx.resolved_energy = _round_energy
 	EffectCatalog.script_for(ability).execute(ctx)
 	fighter.mark_used(ability)
-	# Reuse (jézal) : une capacité à usage unique peut redevenir disponible.
+	# Reuse (jézal) can hand a single-use ability back.
 	if ability.single_use:
 		for t in _talents:
 			if t.owner == fighter and t.wants_reuse(self, fighter, ability):
@@ -572,7 +569,7 @@ func _resolve_ability(fighter: EncounterFighter, action: EncounterAction) -> voi
 					"%s : %s redevient disponible (Reuse)." % [fighter.display_name(), ability.id]
 				)
 				break
-	# Examine Weakness (gélmi) : info glanée quand une faiblesse est touchée (attaquant OU cible).
+	# Examine Weakness (gélmi): information gleaned whenever a weakness is struck.
 	for target in touched:
 		for t in _talents:
 			t.on_weakness_touched(self, fighter, target, ability)
@@ -581,10 +578,11 @@ func _resolve_ability(fighter: EncounterFighter, action: EncounterAction) -> voi
 	turn_taken.emit(fighter, action, ctx.log_lines)
 
 
-## Cibles dont la faiblesse active correspond à l'énergie effective de la capacité.
-## Best-effort : l'énergie Random/Variable est résolue via [member _round_energy] (comme le
-## fait [EncounterContext]), mais les overrides d'énergie internes à un effet ne sont pas vus.
-## Suffisant pour Examine Weakness, dont l'effet (gain d'info) est de toute façon un stub.
+## Targets whose exposed weakness matches the ability's effective energy.
+##
+## Best-effort: Random and Variable resolve through [member _round_energy], as
+## [EncounterContext] does, but an energy override applied inside an effect is not seen.
+## Enough for Examine Weakness, whose own effect is a stub anyway.
 func _weakness_touched_targets(
 	_user: EncounterFighter, ability: AbilityData, targets: Array
 ) -> Array:

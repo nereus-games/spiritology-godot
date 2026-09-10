@@ -1,40 +1,37 @@
-## Base d'un talent : passif d'espèce branché sur la boucle de rencontre.
+## Base of a talent: a species' passive, hooked into the encounter loop.
 ##
-## Analogue à [AbilityScript], mais ÉVÉNEMENTIEL. Une capacité s'exécute en un point
-## UNIQUE (au moment de l'usage, via [method AbilityScript.execute]). Un talent, lui,
-## RÉAGIT à des événements dispersés dans la boucle — début/fin de rencontre, Talk
-## résolu, capacité consommée, menu construit. D'où un jeu de HOOKS plutôt qu'un seul
-## `execute`. Chaque talent a son script dédié dans `talents/impl/<id>.gd` qui SURCHARGE
-## les seuls hooks qui le concernent ; tous les autres restent no-op ici.
+## The counterpart of [AbilityScript], but EVENT-DRIVEN. An ability runs at one single
+## point, when it is used. A talent REACTS to things scattered through the loop — the
+## encounter starting or ending, a Talk resolving, a single-use ability being spent, the
+## menu being built. Hence a set of HOOKS rather than one `execute`.
 ##
-## Le manager collecte un [TalentScript] par combattant porteur (cf. son `_collect_talents`)
-## et appelle ces hooks aux points de la boucle. Le `manager` ([EncounterManager]) est passé
-## à chaque hook : il expose l'état et les helpers (allies_of/opponents_of, timeline, rng…).
+## Each talent overrides only the hooks that concern it; everything else stays no-op here.
+## The manager is passed to every hook, since it holds both the state and the helpers.
 ##
-## PAS de `class_name` : script neuf, donc absent de `.godot/global_script_class_cache.cfg`
-## (que seul l'éditeur régénère). Comme le jeu se lance en CLI, un `class_name` neuf sortirait
-## « Identifier not declared ». On l'obtient par `preload` chez l'appelant, et les impl
-## étendent par CHEMIN (`extends "res://.../talent_script.gd"`).
+## No `class_name`: a newly added one is absent from the global class cache, which only the
+## editor regenerates, and this game is launched from the command line — it would fail with
+## "Identifier not declared". Callers preload it, and the implementations extend it BY
+## PATH.
 extends RefCounted
 
-## Talent source (données générées depuis Notion) — posé par [TalentCatalog].
+## The talent's data. Set by [TalentCatalog].
 var talent: TalentData
-## Combattant qui porte ce talent. Les hooks « pour ce personnage » comparent à lui.
+## Who carries it. Hooks that only concern the bearer compare against this.
 var owner: EncounterFighter
-## Nombre d'exemplaires du talent dans l'ÉQUIPE du porteur (duo de même espèce). 1 par
-## défaut ; >1 seulement si [member TalentData.stacks_in_duo]. Les talents à effet d'équipe
-## peuvent s'en servir pour cumuler ; les talents par-personnage l'ignorent.
+## How many copies the bearer's side carries — above 1 only when the duo shares a species
+## and the talent is meant to stack. Team-wide talents use it; per-character ones ignore
+## it.
 var stacks := 1
 
-# --- Cycle de vie ---
+# --- Lifecycle ---
 
 
-## Début de rencontre (avant la 1re ronde). Point des mises en place (révélations donjon…).
+## Before the first round. Where set-up belongs — dungeon reveals and the like.
 func on_encounter_start(_manager) -> void:
 	pass
 
 
-## Fin de rencontre. `result` = &"victory" / &"defeat" / &"timeout".
+## The encounter is over.
 func on_encounter_end(_manager, _result: StringName) -> void:
 	pass
 
@@ -42,47 +39,45 @@ func on_encounter_end(_manager, _result: StringName) -> void:
 # --- Talk ---
 
 
-## Ajuste la probabilité qu'un Talk soit « effectif ». Appelé pour chaque talent du camp
-## du `speaker`, avec la chance de base (proxy `talker_chance` de la cible). Renvoyer la
-## valeur ajustée (Slick Merchant : +15 % sur les 3 premiers tours).
+## Adjusts how likely a Talk is to be effective. Called for every talent on the speaker's
+## side, with the base chance — which is itself a proxy, see
+## [method EncounterManager._resolve_talk]. Return the adjusted value.
 func modify_talk_chance(_manager, _speaker, _target, base: float) -> float:
 	return base
 
 
-## Après qu'un Talk du camp du porteur a été résolu. `speaker` a parlé à `target` ;
-## `effective` dit si le dialogue a porté. Serene Waves (parler à l'équipier → soin +
-## retrait de faiblesse), Slick Merchant (Talk change la faiblesse du rival).
+## After a Talk from the bearer's side has resolved. Serene Waves heals the teammate that
+## was spoken to; Slick Merchant gives the rival the speaker's weakness.
 func on_talk_resolved(_manager, _speaker, _target, _effective: bool) -> void:
 	pass
 
 
-## Le porteur peut-il engager Talk avec un ÉQUIPIER (et pas seulement un rival) ? Le menu
-## ajoute alors les alliés vivants aux cibles de Talk. Serene Waves (spodra) : oui — parler
-## à l'équipier le revitalise. Défaut : non (Talk ne vise que les rivaux).
+## May the bearer Talk to its TEAMMATE, not only to rivals? Serene Waves (spodra) says yes,
+## because talking to the teammate revitalises them. By default Talk only reaches rivals.
 func allows_ally_talk(_manager) -> bool:
 	return false
 
 
-# --- Capacités ---
+# --- Abilities ---
 
 
-## Après qu'une capacité à usage UNIQUE du porteur a été consommée : renvoyer true pour la
-## rendre à nouveau disponible dans la rencontre (Reuse : 50 % de chance). Défaut false.
+## A single-use ability of the bearer's was just spent. Return true to hand it back —
+## Reuse does so half the time.
 func wants_reuse(_manager, _user, _ability) -> bool:
 	return false
 
 
-# --- Faiblesse / Examine (gain d'info encyclopédie) ---
+# --- Weakness and Examine: gathering encyclopaedia information ---
 
 
-## Le porteur a touché / a été touché sur une faiblesse active via une capacité.
-## Effet = gain d'info (encyclopédie-en-combat, système non bâti → journalisé).
+## An exposed weakness was struck, by the bearer or against it. The reward is information,
+## and gathering information mid-encounter is not built — so this only logs.
 func on_weakness_touched(_manager, _attacker, _defender, _ability) -> void:
 	pass
 
 
-## Ajuste le gain d'info d'un Examine du porteur (Recon Glide : +10 %). PLACEHOLDER —
-## le système d'info d'Examine n'est pas chiffré.
+## Adjusts what the bearer's Examine yields (Recon Glide: +10 %). How much an Examine
+## yields is not modelled, so this multiplies a number with no consequence yet.
 func modify_examine_info(_manager, _target, base: float) -> float:
 	return base
 
@@ -90,9 +85,8 @@ func modify_examine_info(_manager, _target, base: float) -> float:
 # --- Menu ---
 
 
-## Mute la liste d'actions offertes au porteur. `kinds` = Array[EncounterAction.Kind]
-## modifiable en place (Run Away remplace Talk ; Steal remplace Talk…). Le câblage
-## UI/agent viendra dans un second temps ; le hook est défini pour que les talents
-## l'expriment dès maintenant, et que le manager puisse le consulter.
+## Mutates the actions offered to the bearer, in place. Run Away and Steal both arrive
+## this way, each replacing Talk. An action a talent removes is ABSENT from the menu rather
+## than greyed out: the talent replaces it, it does not forbid it.
 func modify_menu(_manager, _kinds: Array) -> void:
 	pass

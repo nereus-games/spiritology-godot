@@ -1,31 +1,28 @@
-## Action choisie par un combattant pour son tour.
+## What a fighter chose to do this turn.
 ##
-## Vocabulaire commun entre les fournisseurs d'action ([EncounterAgent], qui décident)
-## et le résolveur ([EncounterManager], qui applique). Liste tirée de la doc Notion
-## (Game Design / Encounters) : « Talk, Examine, Use Ability (Challenge), Use / Give
-## Object, Meditate ».
+## The shared vocabulary between the agents that DECIDE ([EncounterAgent]) and the manager
+## that APPLIES. The list comes from the design doc, Game Design / Encounters: "Talk,
+## Examine, Use Ability (Challenge), Use / Give Object, Meditate".
 ##
-## [constant Kind.PASS] est l'action « … » de la doc UI : elle n'apparaît que si aucune
-## autre n'est disponible et fait passer le tour SANS perdre sa place dans l'ordre.
+## [constant Kind.PASS] is the doc's "…" action: offered only when nothing else is, and it
+## passes the turn WITHOUT giving up your place in the order.
 ##
-## [constant Kind.FLEE] est bien une action de MENU, mais jamais proposée par défaut : la
-## doc la qualifie de « special action from Abilities + Talents ». Deux voies distinctes :
-##   - un talent l'AJOUTE au menu, sous ses propres conditions — `run_away_2` (zuk) la
-##     donne en permanence en remplacement de Talk et réussit toujours, sans QTE ;
-##     `slick_merchant` (fopin) ne la donne qu'au 1er tour ou à ≤ 10 % de DEN, contre
-##     10 ETH, et avec un QTE (donc faillible) ;
-##   - une capacité l'EXÉCUTE directement, sans passer par le menu — cf. [method
-##     EncounterContext.flee], appelé par `ghosting` et `opening_up_closing`.
-## ## TODO: aucune des deux voies n'est branchée. La 1re attend le système de talents (les
-## 10 talents sont des passifs non scriptés, faute de point d'application) ; la 2de est un
-## stub journalisé. Dans les deux cas, quitter la rencontre suppose la téléportation en
-## exploration (3-5 cases, 50 % de chance que le rival disparaisse), non bâtie.
+## [constant Kind.FLEE] is a menu action but never offered by default — the doc calls it a
+## "special action from Abilities + Talents". Two separate routes reach it:
+##   - a talent ADDS it, on its own terms: `run_away_2` (zuk) offers it permanently in
+##     place of Talk and always succeeds; `slick_merchant` (fopin) offers it only on the
+##     first turn or below 10 % DEN, for 10 ETH, and behind a QTE that can fail;
+##   - an ability RUNS it directly, bypassing the menu — [method EncounterContext.flee],
+##     called by `ghosting` and `opening_up_closing`.
+## ## TODO: neither route actually leaves the encounter. Both end at the same wall —
+## fleeing means teleporting 3-5 cells away in exploration, with a 50 % chance the rival
+## disappears, and that is unbuilt. See docs/roadmap.md.
 class_name EncounterAction
 extends RefCounted
 
-## [constant Kind.STEAL] est, comme [constant Kind.FLEE], une action ajoutée au menu par un
-## talent — `steal` (granop) la donne en remplacement de Talk : elle prend un objet à la
-## cible, au risque de faire apparaître un membre du Coal Vetch (systèmes non bâtis → stub).
+## [constant Kind.STEAL], like FLEE, is added to the menu by a talent — `steal` (granop)
+## offers it in place of Talk. It takes an object from the target, at the risk of summoning
+## a member of the Coal Vetch. Neither rivals carrying objects nor the Coal Vetch exists.
 enum Kind { ABILITY, TALK, EXAMINE, MEDITATE, USE_OBJECT, FLEE, STEAL, PASS }
 
 var kind: Kind = Kind.ABILITY
@@ -49,8 +46,8 @@ static func of_kind(p_kind: Kind, p_targets: Array = []) -> EncounterAction:
 	return a
 
 
-## Libellé court pour le journal de combat (debug). Les textes destinés au joueur
-## passent par des clés de traduction, jamais par cette méthode.
+## A short label for debugging. Text meant for the player goes through translation keys,
+## never through here.
 func label() -> String:
 	if kind == Kind.ABILITY:
 		return String(ability.id) if ability else "?"

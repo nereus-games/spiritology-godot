@@ -1,6 +1,6 @@
-## Modifie l'ordre du tour à venir (Shuffle, Tumult…).
-## Règle : si plusieurs effets d'ordre s'appliquent à un même individu dans un tour,
-## seul le dernier compte ([EncounterTimeline] arbitre, à l'étape rencontre).
+## Changes the coming turn order (Shuffle, Tumult).
+## When several such effects land in one turn, only the last counts — [EncounterTimeline]
+## holds the requests and settles it at the end of the turn.
 class_name ChangeTurnOrderEffect
 extends AbilityEffect
 

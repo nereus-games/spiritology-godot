@@ -1,19 +1,18 @@
-## Résout le script d'effet d'un talent — analogue à [EffectCatalog] pour les capacités.
+## Resolves a talent to its script — what [EffectCatalog] is for abilities.
 ##
-## Chaque talent (généré depuis Notion, ligne Type=Talent) a sa logique dans un script
-## dédié `talents/impl/<id>.gd` étendant [TalentScript]. Tant qu'il n'existe pas, on
-## retombe sur un [TalentScript] no-op (talent présent dans les données mais non scripté).
+## Each talent's logic lives in `talents/impl/<id>.gd`, extending [TalentScript]. Without
+## one, a no-op [TalentScript] stands in: the talent exists in the data but does nothing.
 ##
-## PAS de `class_name` (cf. talent_script.gd) : obtenu par `preload` chez l'appelant
-## (le manager). La base est chargée ici par preload pour pouvoir tester `made is TalentScript`.
+## No `class_name` — see talent_script.gd. The base is preloaded here so that
+## `made is TalentScript` can be checked at all.
 extends RefCounted
 
 const TalentScript := preload("res://scripts/encounter/talents/talent_script.gd")
 const IMPL_DIR := "res://scripts/encounter/talents/impl/"
 
 
-## Instancie le script dédié d'un talent, champs `talent`/`owner`/`stacks` posés.
-## `talent` peut être null (combattant sans talent) : renvoie alors un no-op neutre.
+## Builds a talent's script with its fields set. A null `talent` — a fighter carrying
+## none — yields a harmless no-op.
 static func script_for(talent: TalentData, owner: EncounterFighter, stacks: int) -> RefCounted:
 	var inst: RefCounted = TalentScript.new()
 	if talent != null:

@@ -1,4 +1,4 @@
-## Donne des infos / un bonus d'examen sur la cible (remplissage encyclopédie facilité).
+## Grants information about the target, filling its encyclopaedia page faster.
 class_name ExamineBonusEffect
 extends AbilityEffect
 

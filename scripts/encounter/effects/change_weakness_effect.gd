@@ -1,5 +1,5 @@
-## Change la faiblesse active des cibles. La faiblesse dépend de la position dans
-## l'ordre du tour ; cet effet la force/permute indépendamment de la position.
+## Overrides the targets' exposed weakness. Normally the turn position decides it; this
+## forces it regardless of where they stand.
 class_name ChangeWeaknessEffect
 extends AbilityEffect
 

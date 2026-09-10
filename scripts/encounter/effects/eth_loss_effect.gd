@@ -1,8 +1,8 @@
-## Draine de l'ETH (énergie/mana) aux cibles.
+## Drains ETH from the targets.
 class_name EthLossEffect
 extends AbilityEffect
 
-## Montant drainé par défaut (à équilibrer).
+## ## TODO: not a figure the doc gives.
 const DEFAULT_AMOUNT := 5
 
 

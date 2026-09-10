@@ -1,4 +1,4 @@
-## Redirige les prochains dégâts reçus (ex. Victimism) de l'utilisateur vers une cible.
+## Sends the user's next incoming damage to someone else (Victimism).
 class_name RedirectDamageEffect
 extends AbilityEffect
 

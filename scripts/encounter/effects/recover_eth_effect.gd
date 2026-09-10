@@ -1,4 +1,4 @@
-## Régénère de l'ETH (énergie/mana) à l'utilisateur.
+## Restores ETH.
 class_name RecoverEthEffect
 extends AbilityEffect
 

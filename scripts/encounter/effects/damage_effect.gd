@@ -1,6 +1,6 @@
-## Inflige les dégâts de base de la capacité aux cibles.
-## Les modificateurs +36 %/condition (faiblesse, même Spiricosme, encyclopédie 100 %,
-## même espèce) sont appliqués côté [EncounterContext.deal_damage] (à l'étape rencontre).
+## Deals the ability's base damage.
+## The per-condition modifiers — weakness struck, shared Spiricosm, completed page, same
+## species — are applied by [method EncounterContext.deal_damage], not here.
 class_name DamageEffect
 extends AbilityEffect
 

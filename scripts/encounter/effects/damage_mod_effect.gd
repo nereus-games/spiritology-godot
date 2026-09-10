@@ -1,10 +1,10 @@
-## Réduction / augmentation des dégâts, ou immunité (facteur ; 0 = immunité).
-## Le sens exact (buff défensif sur soi vs debuff offensif sur l'ennemi) dépend de la
-## capacité : à raffiner par surcharge sur-mesure dans le registre si besoin.
+## Multiplies the next damage taken; 0 is immunity.
+## Whether it is a shield on oneself or a hex on the enemy depends on the ability, and is
+## settled by that ability's own script when it has one.
 class_name DamageModEffect
 extends AbilityEffect
 
-## Facteur par défaut (placeholder à équilibrer). < 1 réduit, > 1 augmente, 0 = immunité.
+## Below 1 mitigates, above 1 amplifies, 0 is immunity.
 const DEFAULT_FACTOR := 0.5
 
 

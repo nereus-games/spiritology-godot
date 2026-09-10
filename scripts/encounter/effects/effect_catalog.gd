@@ -1,25 +1,23 @@
-## Catalogue/résolveur des effets de capacités (utilitaire statique, pas d'autoload).
+## Resolves an ability to the code that runs it.
 ##
-## Chaque capacité a une logique UNIQUE, décrite dans sa page Notion. Le terrain est
-## préparé ainsi :
-##   - un script dédié par capacité dans `scripts/encounter/effects/abilities/<id>.gd`
-##     (mécanique rappelée en docstring) — [method script_for] le résout par id ;
-##   - tant qu'il n'est pas implémenté, son [AbilityScript] retombe sur les effets
-##     GÉNÉRIQUES dérivés des `tags` (briques [AbilityEffect]), via [method tag_effects].
-## Les `tags` ne sont qu'une catégorisation/garde-fou, pas la logique réelle.
+## Every ability has a UNIQUE mechanic, described on its own page in the design doc, and
+## its own script in `scripts/encounter/effects/abilities/<id>.gd` — [method script_for]
+## finds it by id. Until that mechanic is written, the script falls back on the GENERIC
+## effects derived from the ability's `tags` ([method tag_effects]).
 ##
-## Statique (et non autoload) pour être joignable depuis n'importe quel contexte —
-## y compris le comportement par défaut d'[AbilityScript], qui est un RefCounted.
+## The tags are a categorisation and a guard rail, never the real logic.
 ##
-## Usage (étape rencontre) :
+## Static rather than an autoload so it can be reached from anywhere — including
+## [AbilityScript]'s own default, which is a RefCounted with no scene tree around it.
+##
 ##   EffectCatalog.script_for(ability).execute(ctx)
 class_name EffectCatalog
 extends RefCounted
 
 const ABILITY_SCRIPTS_DIR := "res://scripts/encounter/effects/abilities/"
 
-## Ordre d'application déterministe des effets génériques : les modificateurs
-## (faiblesse, mitigation) s'appliquent avant les dégâts ; l'ordre du tour en fin.
+## A fixed order for the generic effects, so a fallback is at least deterministic:
+## modifiers (weakness, mitigation) before damage, reordering last.
 const _ORDER: Array[StringName] = [
 	&"change weakness",
 	&"damage reduction/increase or immunity",
@@ -59,8 +57,8 @@ static func _ensure_built() -> void:
 	}
 
 
-## Renvoie l'orchestrateur d'effet d'une capacité : son script dédié s'il existe,
-## sinon un [AbilityScript] générique (comportement par tags).
+## The ability's own script if it has one, otherwise a plain [AbilityScript] that will
+## fall back on the tags.
 static func script_for(ability: AbilityData) -> AbilityScript:
 	if ability == null:
 		return AbilityScript.new()
@@ -74,9 +72,8 @@ static func script_for(ability: AbilityData) -> AbilityScript:
 	return AbilityScript.new()
 
 
-## Briques d'effets génériques dérivées des tags, dans l'ordre canonique. Utilisé par
-## le comportement par défaut d'[AbilityScript] et par les scripts dédiés qui veulent
-## réutiliser une partie du pipeline générique.
+## The generic bricks a set of tags implies, in the canonical order. Used by
+## [AbilityScript]'s default, and by written mechanics that want part of the pipeline.
 static func tag_effects(tags: PackedStringArray) -> Array[AbilityEffect]:
 	_ensure_built()
 	var present := {}
@@ -92,7 +89,7 @@ static func tag_effects(tags: PackedStringArray) -> Array[AbilityEffect]:
 	return out
 
 
-## Instancie une brique d'effet générique par tag (pour composition dans un script dédié).
+## One brick by tag, for a written mechanic to compose with.
 static func effect(tag: StringName) -> AbilityEffect:
 	_ensure_built()
 	return _tag_map[tag].new() if _tag_map.has(tag) else null

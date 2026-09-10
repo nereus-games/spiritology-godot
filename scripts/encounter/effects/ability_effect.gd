@@ -1,19 +1,20 @@
-## Classe de base d'un effet de capacité (unité scriptable).
+## Base class of one scriptable effect brick.
 ##
-## Chaque tag d'effet de la doc Notion (« damage », « change weakness », « recover ETH »…)
-## a une sous-classe. Le registre [EncounterEffects] résout une [AbilityData] (générée
-## depuis Notion) en une liste d'AbilityEffect d'après ses `tags`, avec surcharges
-## sur-mesure pour les capacités à logique spéciale (Tumult, Anodyne Excess…).
-## Les effets ne mutent rien directement : ils passent par l'[EncounterContext].
+## Each effect tag in the design doc — "damage", "change weakness", "recover ETH" — has a
+## subclass here. [EffectCatalog] turns an ability's `tags` into a list of these, in a
+## fixed order, as the FALLBACK for abilities whose own mechanic is not written yet.
+##
+## Effects never mutate anything directly: everything goes through [EncounterContext],
+## which is where the damage rules and the logging live.
 class_name AbilityEffect
 extends RefCounted
 
 
-## Tag Notion correspondant (cf. [member AbilityData.tags]).
+## The tag this brick answers to.
 func tag() -> StringName:
 	return &""
 
 
-## Applique l'effet à la rencontre. À surcharger.
+## Override this.
 func execute(_ctx: EncounterContext) -> void:
 	pass

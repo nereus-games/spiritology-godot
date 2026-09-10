@@ -1,15 +1,17 @@
-## Fournisseur d'action : décide ce que fait un combattant à son tour.
+## Decides what a fighter does on its turn.
 ##
-## Sépare la BOUCLE de rencontre ([EncounterManager]) de la DÉCISION. Le manager fait
-## `await agent.decide(...)` : une implémentation synchrone ([AutoAgent]) répond
-## immédiatement et la rencontre se résout d'une traite (mode auto, testable headless) ;
-## une implémentation qui attend le joueur ([UiAgent]) suspend la boucle jusqu'au choix.
-## C'est le seul point d'entrée du pilotage — la boucle n'est écrite qu'une fois.
+## The seam between the encounter LOOP ([EncounterManager]) and the DECISION. The manager
+## always does `await agent.decide(...)`: a synchronous implementation ([AutoAgent])
+## answers at once and the encounter resolves in one go, headless and testable; one that
+## waits for a person ([UiAgent]) suspends the loop until a choice arrives.
+##
+## Because both go through the same await, the loop is written once and never branches on
+## who is playing.
 class_name EncounterAgent
 extends RefCounted
 
 
-## Renvoie l'action de `fighter` pour ce tour, ou null s'il ne peut rien faire.
-## Peut être une coroutine : le manager `await` toujours le résultat.
+## The fighter's action this turn, or null if it can do nothing at all.
+## May be a coroutine — the manager awaits the result either way.
 func decide(_fighter: EncounterFighter, _manager: EncounterManager) -> EncounterAction:
 	return null

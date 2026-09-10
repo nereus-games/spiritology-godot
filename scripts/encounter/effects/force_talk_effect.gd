@@ -1,4 +1,4 @@
-## Force la cible à « parler » (Talk), ouvrant la voie pacifique / dialogue.
+## Forces the target to Talk, opening the peaceful route.
 class_name ForceTalkEffect
 extends AbilityEffect
 

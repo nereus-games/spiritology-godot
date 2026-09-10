@@ -1,10 +1,9 @@
-## Effet sur-mesure qui perturbe l'UI de rencontre (capacités spéciales).
-## Exemples : Tumult déplace les éléments d'UI ; Anodyne Excess cache les stats des
-## rivaux. Le `kind` est interprété par hud_encounter ; les paramètres passent par `data`.
+## Disturbs the encounter UI itself — Tumult shuffles its elements, Anodyne Excess hides
+## the rivals' stats. The UI decides what each `kind` means; `data` carries its parameters.
 class_name UiDisruptEffect
 extends AbilityEffect
 
-## Identifiant de la perturbation (ex. &"shuffle_ui", &"hide_rival_stats").
+## Which disturbance to ask for.
 var kind: StringName
 
 

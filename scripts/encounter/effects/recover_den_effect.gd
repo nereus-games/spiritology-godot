@@ -1,4 +1,4 @@
-## Régénère de la DEN (vie) à l'utilisateur.
+## Restores DEN.
 class_name RecoverDenEffect
 extends AbilityEffect
 

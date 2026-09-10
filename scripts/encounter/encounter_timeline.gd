@@ -1,11 +1,14 @@
-## Ordre du tour d'une rencontre.
+## The turn order of an encounter.
 ##
-## Tiré au HASARD au début de la rencontre (règle Notion : « Turn order is defined at
-## random when the encounter begins »), puis modifiable par des capacités (Shuffle,
-## Tumult…). Détermine la POSITION de chaque combattant (first / in-between / last), dont
-## dépend sa faiblesse active. Règle Notion : si plusieurs effets d'ordre s'appliquent dans
-## un même tour, seul le DERNIER compte → les demandes de réordonnancement sont mises en
-## attente et appliquées en fin de tour ([method apply_pending]).
+## Drawn at RANDOM when the encounter begins ("Turn order is defined at random when the
+## encounter begins"), then changed by abilities such as Shuffle and Tumult.
+##
+## It decides each fighter's POSITION — first, in-between, last — and therefore which of
+## its three weaknesses is exposed. That is what makes reordering an attack rather than a
+## flourish.
+##
+## The doc's rule when several reordering effects land in one turn: only the LAST counts.
+## Requests are therefore held and applied at the end of the turn ([method apply_pending]).
 class_name EncounterTimeline
 extends RefCounted
 
@@ -13,8 +16,8 @@ var order: Array = []  ## EncounterFighter, dans l'ordre du tour
 var _pending: Variant = null  ## dernier réordonnancement demandé ce tour (last-wins)
 
 
-## Pose l'ordre initial. Passer le `rng` (seedé) du manager pour le tirer au hasard comme
-## le veut la doc ; sans `rng`, l'ordre reste celui de `fighters` (tests, cas déterministes).
+## Sets the initial order. Pass the manager's seeded `rng` to draw it at random as the doc
+## wants; without one, the order stays as given — which is what tests rely on.
 func setup(fighters: Array, rng: RandomNumberGenerator = null) -> void:
 	order = fighters.duplicate()
 	if rng != null:
@@ -22,7 +25,7 @@ func setup(fighters: Array, rng: RandomNumberGenerator = null) -> void:
 	_pending = null
 
 
-## Mélange Fisher-Yates en place, piloté par un rng seedé (donc reproductible).
+## Fisher-Yates in place, driven by a seeded rng and therefore reproducible.
 static func _shuffle(arr: Array, rng: RandomNumberGenerator) -> void:
 	for i in range(arr.size() - 1, 0, -1):
 		var j := rng.randi_range(0, i)
@@ -31,7 +34,6 @@ static func _shuffle(arr: Array, rng: RandomNumberGenerator) -> void:
 		arr[j] = tmp
 
 
-## Position d'un combattant : FIRST (tête), LAST (queue), sinon MIDDLE.
 func position_of(fighter) -> GameEnums.TurnPosition:
 	var i := order.find(fighter)
 	if i <= 0:
@@ -41,12 +43,12 @@ func position_of(fighter) -> GameEnums.TurnPosition:
 	return GameEnums.TurnPosition.MIDDLE
 
 
-## Demande un nouvel ordre (appliqué en fin de tour ; le dernier appel gagne).
+## Requests a whole new order. Applied at end of turn, and the last request wins.
 func request_reorder(new_order: Array) -> void:
 	_pending = new_order.duplicate()
 
 
-## Demande que `fighter` soit en queue de l'ordre du prochain tour.
+## Requests that `fighter` go last next turn.
 func request_move_last(fighter) -> void:
 	var o: Array = (_pending if _pending != null else order).duplicate()
 	o.erase(fighter)
@@ -54,7 +56,7 @@ func request_move_last(fighter) -> void:
 	_pending = o
 
 
-## Demande que `fighter` soit en tête de l'ordre du prochain tour.
+## Requests that `fighter` go first next turn.
 func request_move_first(fighter) -> void:
 	var o: Array = (_pending if _pending != null else order).duplicate()
 	o.erase(fighter)
@@ -62,14 +64,14 @@ func request_move_first(fighter) -> void:
 	_pending = o
 
 
-## Demande un mélange aléatoire de l'ordre (Shuffle/Tumult).
+## Requests a reshuffle — Shuffle, Tumult.
 func request_shuffle(rng: RandomNumberGenerator) -> void:
 	var shuffled := order.duplicate()
 	_shuffle(shuffled, rng)
 	_pending = shuffled
 
 
-## Applique le réordonnancement en attente (fin de tour). Renvoie true si changé.
+## Applies whatever reordering is pending. True if the order actually changed.
 func apply_pending() -> bool:
 	if _pending == null:
 		return false
@@ -78,6 +80,6 @@ func apply_pending() -> bool:
 	return true
 
 
-## Combattants encore en lice (non dissous).
+## Fighters still standing.
 func living() -> Array:
 	return order.filter(func(f): return not f.is_dissolved())

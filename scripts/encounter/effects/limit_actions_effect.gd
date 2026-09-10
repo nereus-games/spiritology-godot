@@ -1,4 +1,4 @@
-## Réduit le nombre d'actions disponibles des cibles au(x) prochain(s) tour(s).
+## Takes actions away from the targets on their coming turns.
 class_name LimitActionsEffect
 extends AbilityEffect
 

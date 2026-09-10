@@ -1,18 +1,19 @@
-## Orchestrateur de l'effet complet d'UNE capacité (logique unique).
+## The whole mechanic of ONE ability.
 ##
-## Chaque capacité a son script dédié dans `effects/abilities/<id>.gd`, avec sa mécanique
-## rappelée en docstring. Tant qu'une capacité n'est pas implémentée, son script garde le
-## comportement par défaut ci-dessous :
-## exécuter les effets génériques dérivés des `tags` (briques [AbilityEffect]). Une
-## capacité implémentée surcharge [method execute] avec sa mécanique précise (souvent
-## conditionnelle : cibles, faiblesses, ordre du tour, UI…), en composant les briques
-## [AbilityEffect] et/ou en appelant directement les helpers de l'[EncounterContext].
+## Every ability has its own script in `effects/abilities/<id>.gd`, with its mechanic
+## quoted from the design doc in the docstring. An implemented one overrides
+## [method execute] with that mechanic — usually conditional on targets, weaknesses, turn
+## order or the UI — composing [AbilityEffect] bricks or calling [EncounterContext]
+## directly.
+##
+## Until it is written, the default below stands in: run the generic effects derived from
+## the ability's tags. That is a scaffold, not the mechanic, and a script still carrying
+## `# @unimplemented` on its first line is one of those.
 class_name AbilityScript
 extends RefCounted
 
 
-## Applique l'effet complet de la capacité à la rencontre.
-## Défaut = comportement générique par tags ; à surcharger pour la mécanique propre.
+## Override with the ability's real mechanic.
 func execute(ctx: EncounterContext) -> void:
 	for effect in EffectCatalog.tag_effects(ctx.ability.tags):
 		effect.execute(ctx)

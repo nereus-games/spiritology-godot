@@ -1,4 +1,4 @@
-## Rend des actions à l'utilisateur (ou aux alliés).
+## Gives actions back.
 class_name RecoverActionsEffect
 extends AbilityEffect
 

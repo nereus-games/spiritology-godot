@@ -1,23 +1,24 @@
-## Contexte d'exécution d'un effet de capacité pendant une rencontre.
+## What an ability's effect is given to work with.
 ##
-## Passé à [method AbilityEffect.execute] / [method AbilityScript.execute]. Point
-## d'intégration unique entre les effets (code scriptable) et l'état de la rencontre
-## (combattants [EncounterFighter], ordre du tour [EncounterTimeline], UI). Applique les
-## règles Notion : modificateurs de dégâts +36 %/condition (additionnés puis arrondis au
-## supérieur), faiblesse active selon la position de tour, mitigation/immunité, redirection.
+## The single seam between the effects — 111 small scripts — and the state of the
+## encounter: the fighters, the turn order, the UI. Effects never touch that state
+## directly; they ask this, and this applies the rules.
+##
+## Which is where the rules live: the per-condition damage modifiers, the weakness a
+## position exposes, mitigation and immunity, redirection. Written once here rather than
+## 111 times over there.
 class_name EncounterContext
 extends RefCounted
 
 
-## % de dégâts ajouté par condition remplie (faiblesse, même Spiricosme, encyclopédie
-## 100 %, même espèce). Les conditions s'additionnent avant application. Réglé dans
-## `data/balance.tres`.
+## Damage added per condition met — weakness struck, shared Spiricosm, completed page,
+## same species. Conditions add up before being applied. Tuned in `data/balance.tres`.
 static func _modifier_per_condition() -> float:
 	return BalanceData.current().modifier_per_condition
 
 
-## Demande à l'UI un effet spécial (Tumult déplace les éléments, Anodyne Excess cache
-## les stats des rivaux…). `kind` identifie l'effet, `data` porte ses paramètres.
+## Asks the UI for something only it can do — Tumult moving its elements, Anodyne Excess
+## hiding the rivals' stats.
 signal ui_requested(kind: StringName, data: Dictionary)
 
 var ability: AbilityData
@@ -27,14 +28,14 @@ var all_fighters: Array = []  ## tous les individus (portée globale, ex. Tumult
 var timeline: EncounterTimeline
 var rng: RandomNumberGenerator
 
-## Énergie effective de la capacité ce tour (résout Random/Variable ; posé par le manager).
+## The ability's energy for this turn, with Random and Variable already resolved.
 var resolved_energy := GameEnums.Energy.NONE
-## Espèces dont l'encyclopédie est à 100 % (modificateur de dégâts). species_id -> true.
+## Species whose encyclopaedia page is complete — one of the damage conditions.
 var completed_species: Dictionary = {}
-## Override d'énergie effective (ex. « énergie = faiblesse du user »). NONE = inactif.
+## Forced energy, for abilities that take on the user's own weakness. NONE means off.
 var energy_override := GameEnums.Energy.NONE
 
-## Journal lisible des effets appliqués ce tour (debug + log de combat).
+## What this effect did, in readable lines. Reaches the player through the combat log.
 var log_lines: PackedStringArray = PackedStringArray()
 
 
@@ -42,7 +43,7 @@ func note(line: String) -> void:
 	log_lines.append(line)
 
 
-# --- Dégâts (avec modificateurs, mitigation, redirection) ---
+# --- Damage: modifiers, mitigation, redirection ---
 
 
 func deal_damage(target, base_amount: int) -> void:
@@ -73,8 +74,8 @@ func deal_damage(target, base_amount: int) -> void:
 	note("%d dégâts à %s." % [amount, _name(victim)])
 
 
-## Modificateurs +36 % par condition (additionnés puis arrondis au supérieur), plus le
-## bonus de dégâts infligés du user s'il a médité au tour précédent.
+## Conditions add up, then the user's own outgoing bonus if it meditated last turn, and
+## the result is rounded up.
 func _apply_modifiers(target, base_amount: int) -> int:
 	if not (target is EncounterFighter) or not (user is EncounterFighter):
 		return base_amount
@@ -104,7 +105,7 @@ func _effective_energy() -> GameEnums.Energy:
 	return ability.energy if ability else GameEnums.Energy.NONE
 
 
-# --- Autres mutations ---
+# --- Other mutations ---
 
 
 func drain_eth(target, amount: int) -> void:
@@ -127,7 +128,7 @@ func recover_eth(target, amount: int) -> void:
 	note("%s récupère %d ETH." % [_name(target), amount])
 
 
-## Change la faiblesse active de la cible pour ce tour (au hasard, différente).
+## Swaps the target's exposed weakness for another, at random — never the same one.
 func change_weakness(target) -> void:
 	if target is EncounterFighter:
 		target.override_weakness(
@@ -140,7 +141,7 @@ func change_weakness(target) -> void:
 	note("la faiblesse de %s change." % _name(target))
 
 
-## Réduction / augmentation / immunité (0) des prochains dégâts de la cible.
+## Multiplies the target's next incoming damage; 0 is immunity.
 func modify_damage(target, factor: float) -> void:
 	if target is EncounterFighter:
 		target.next_damage_factor = factor
@@ -158,7 +159,9 @@ func redirect_next_damage(from_target, to_target) -> void:
 	)
 
 
-# Stubs (systèmes à venir) : actions/dialogue/examen.
+# Stubs, waiting on systems that do not exist: actions, dialogue, information gain.
+# They log what would have happened so the mechanic is at least visible. See
+# docs/roadmap.md.
 func limit_actions(target, amount: int) -> void:
 	note("%s perd %d action(s) [à venir]." % [_name(target), amount])
 
@@ -181,50 +184,50 @@ func change_turn_order(_payload: Dictionary = {}) -> void:
 	note("l'ordre du tour est bouleversé.")
 
 
-## Place la cible en queue de l'ordre du prochain tour.
+## Sends the target to the back of next turn's order.
 func move_to_last(target) -> void:
 	if timeline:
 		timeline.request_move_last(target)
 	note("%s passera en dernier au prochain tour." % _name(target))
 
 
-## Place la cible en tête de l'ordre du prochain tour.
+## Brings the target to the front of next turn's order.
 func move_to_first(target) -> void:
 	if timeline:
 		timeline.request_move_first(target)
 	note("%s passera en premier au prochain tour." % _name(target))
 
 
-## Demande de plomberie vers l'UI : ne produit AUCUNE ligne de journal (l'effet qui
-## l'appelle a déjà noté ce qui est visible pour le joueur). Journaliser le tag interne
-## et son dictionnaire polluait le journal (« ui 'flee' {...} »).
+## Plumbing towards the UI, and deliberately silent: the effect calling it has already
+## logged whatever the player should read. Logging the internal tag and its dictionary
+## only cluttered the combat log.
 func request_ui(kind: StringName, data: Dictionary = {}) -> void:
 	ui_requested.emit(kind, data)
 
 
-# --- Ciblage ---
+# --- Targeting ---
 
 
-## Camp du user (joueurs OU rivaux), vivants — user inclus.
+## The user's own side, still standing, itself included.
 func team() -> Array:
 	return all_fighters.filter(
 		func(f): return f.is_player == _user_is_player() and not f.is_dissolved()
 	)
 
 
-## Alliés du user (camp moins lui-même).
+## The user's side, itself excluded.
 func allies() -> Array:
 	return team().filter(func(f): return f != user)
 
 
-## Adversaires vivants.
+## Opponents still standing.
 func opponents() -> Array:
 	return all_fighters.filter(
 		func(f): return f.is_player != _user_is_player() and not f.is_dissolved()
 	)
 
 
-## Tous les autres individus (hors user), vivants.
+## Everyone else still standing, on either side.
 func others() -> Array:
 	return all_fighters.filter(func(f): return f != user and not f.is_dissolved())
 
@@ -241,12 +244,12 @@ func random_opponent():
 	return random_of(opponents())
 
 
-## Cible principale : la cible désignée par le manager, sinon un adversaire au hasard.
+## The target the manager designated, or a random opponent if it named none.
 func primary():
 	return targets[0] if not targets.is_empty() else random_opponent()
 
 
-## n cibles tirées parmi les adversaires (avec répétition possible si autorisée).
+## n opponents drawn at random, optionally without repeats.
 func random_opponents(n: int, allow_repeat := true) -> Array:
 	var pool := opponents()
 	var out: Array = []
@@ -260,7 +263,7 @@ func random_opponents(n: int, allow_repeat := true) -> Array:
 	return out
 
 
-## Adversaire en tête / en queue de l'ordre du tour (parmi les vivants).
+## The opponent standing first, or last, in the turn order.
 func first_opponent_in_order():
 	for f in _living_order():
 		if f.is_player != _user_is_player():
@@ -284,20 +287,20 @@ func _user_is_player() -> bool:
 	return user is EncounterFighter and user.is_player
 
 
-# --- Niveaux de dégâts (mini / small / normal / big) ---
+# --- Damage tiers ---
 
 
-## Paliers de dégâts nommés. Chiffrés dans `data/balance.tres` ([BalanceData]).
+## Named damage tiers. The figures live in `data/balance.tres`.
 func dmg(tier: StringName) -> int:
 	return BalanceData.current().damage(tier)
 
 
-## Dégâts principaux de la capacité : valeur Notion si fournie, sinon « normal ».
+## The ability's own damage if the doc gives a number, otherwise the "normal" tier.
 func base_damage() -> int:
 	return ability.base_damage if ability and ability.base_damage > 0 else dmg(&"normal")
 
 
-# --- Faiblesse (set / remove / reset) ---
+# --- Weakness ---
 
 
 func set_weakness(target, energy: GameEnums.Energy) -> void:
@@ -316,7 +319,7 @@ func reset_weakness(target) -> void:
 	note("faiblesse de %s rétablie." % _name(target))
 
 
-## Échange les faiblesses actives de deux combattants (Dark Gambit / Caroussel).
+## Trades two fighters' exposed weaknesses (Dark Gambit, Dark Caroussel).
 func swap_weakness(a, b) -> void:
 	if a is EncounterFighter and b is EncounterFighter:
 		var wa := weakness_of(a)
@@ -337,7 +340,7 @@ func hide_weakness(target) -> void:
 	note("la faiblesse de %s est masquée." % _name(target))
 
 
-# --- Immunités / verrous ---
+# --- Immunities and locks ---
 
 
 func grant_immunity(target, energies: Array) -> void:
@@ -351,21 +354,21 @@ func grant_immunity(target, energies: Array) -> void:
 	)
 
 
-## Immunité à TOUT sauf l'énergie donnée (ex. immune to all non-arcane).
+## Immune to everything EXCEPT this energy.
 func grant_immunity_except(target, energy: GameEnums.Energy) -> void:
 	if target is EncounterFighter:
 		target.immune_all_except = energy
 	note("%s devient immunisé sauf à %s." % [_name(target), _energy_name(energy)])
 
 
-## Multiplie les dégâts d'une énergie donnée reçus par la cible ce tour (0.5 = moitié).
+## Multiplies what one energy does to the target this turn.
 func set_energy_damage_factor(target, energy: GameEnums.Energy, factor: float) -> void:
 	if target is EncounterFighter:
 		target.energy_damage_factor[energy] = target.energy_damage_factor.get(energy, 1.0) * factor
 	note("dégâts %s reçus par %s ×%.2f." % [_energy_name(energy), _name(target), factor])
 
 
-## Position du combattant en queue de l'ordre du tour parmi le camp du user (vivants).
+## The last of the user's own side in the turn order.
 func last_of_team_in_order():
 	var found = null
 	for f in _living_order():
@@ -396,21 +399,21 @@ func grant_full_immunity(target) -> void:
 	note("%s devient totalement immunisé." % _name(target))
 
 
-## Restreint les actions disponibles de la cible (système d'actions à venir → journalisé).
+## Narrows what the target may do. The action system does not exist; this logs.
 func restrict_to(target, allowed: Array) -> void:
 	note("%s ne peut plus faire que : %s [à venir]." % [_name(target), ", ".join(allowed)])
 
 
-## Fait fuir un combattant de la rencontre (mécanique de fuite à venir → journalisée).
+## Makes a fighter flee. Fleeing does not exist; this logs.
 func flee(target) -> void:
 	note("%s prend la fuite [à venir]." % _name(target))
 	request_ui(&"flee", {"fighter": target.species_id() if target is EncounterFighter else target})
 
 
-# --- Comptages / requêtes ---
+# --- Counting and asking ---
 
 
-## Nombre d'individus (vivants) dont le Spiricosme d'origine est donné.
+## How many standing fighters come from a given Spiricosm.
 func count_natives(spiricosm: GameEnums.Spiricosm) -> int:
 	return (
 		all_fighters
@@ -421,7 +424,7 @@ func count_natives(spiricosm: GameEnums.Spiricosm) -> int:
 	)
 
 
-## Plus grand groupe d'individus partageant la même faiblesse active.
+## The size of the largest group exposing the same weakness.
 func largest_same_weakness_group() -> int:
 	var counts := {}
 	var best := 0
@@ -446,13 +449,13 @@ func weakness_of(fighter) -> GameEnums.Energy:
 	return GameEnums.Energy.NONE
 
 
-## Force l'énergie effective de la capacité (ex. « énergie = faiblesse du user »).
-## Affecte les modificateurs de dégâts et les immunités.
+## Forces the ability's effective energy — for the ones that take on the user's own
+## weakness. Changes both the damage conditions and which immunities apply.
 func set_energy(energy: GameEnums.Energy) -> void:
 	energy_override = energy
 
 
-## Énergie effective de la capacité ce tour (résout Random/Variable et l'override).
+## The energy actually in play, override and Random/Variable resolved.
 func energy() -> GameEnums.Energy:
 	return _effective_energy()
 
@@ -478,7 +481,7 @@ func _name(target) -> String:
 	return str(target)
 
 
-## Nom lisible d'une énergie (l'enum s'imprimerait sinon comme un entier brut).
+## A readable energy name; the enum would otherwise print as a bare integer.
 const _ENERGY_NAMES := {
 	GameEnums.Energy.HEAT: "chaleur",
 	GameEnums.Energy.FLUID: "fluide",

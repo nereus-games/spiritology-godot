@@ -101,9 +101,11 @@ preferences, and the engine traps that have each cost somebody an afternoon.
 | `assets/`, `data/`, `translations/` | [LAL-1.3](LICENSES/LAL-1.3.txt) — Free Art License |
 | everything else | [GPL-3.0-or-later](LICENSES/GPL-3.0-or-later.txt) |
 
-> GitHub shows a single licence badge, and it does not recognise the Free Art License, so
-> the interface will report this repository as GPL only. Half of it is not. `REUSE.toml`
-> is authoritative, and `reuse lint` runs in CI.
+> **GitHub reports no licence for this repository, and that is misleading.** Its detector
+> looks for a `LICENSE` file at the root; the REUSE specification puts licence texts in
+> `LICENSES/` instead. The repository is licensed — twice over, as above. `REUSE.toml` is
+> authoritative, `reuse lint` runs in CI, and it currently reports every one of the 674
+> files as covered.
 
 Nereus Games LLC also distributes proprietary binaries of the game on some platforms. See
 [CONTRIBUTING.md](CONTRIBUTING.md) — it matters if you intend to contribute.

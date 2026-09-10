@@ -15,10 +15,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Cache du binaire Godot
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/godot
           key: godot-${{ env.GODOT_VERSION }}-linux
@@ -56,9 +56,9 @@ jobs:
     # tard. C'est le seul moyen que la frontière code/contenu reste vraie dans six mois.
     # Job séparé : il n'a pas besoin de Godot et tourne en parallèle du reste.
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
 
@@ -77,9 +77,9 @@ jobs:
     # fichier n'est pas au format canonique, `gdlint` applique gdlintrc (dont chaque
     # assouplissement est justifié dans le fichier lui-même).
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
 

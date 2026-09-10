@@ -1,6 +1,7 @@
 version = 1
 SPDX-PackageName = "Spiritology"
 SPDX-PackageSupplier = "Nereus Games LLC"
+SPDX-PackageDownloadLocation = "https://github.com/nereus-games/spiritology-godot"
 
 # Ce dépôt est en DOUBLE LICENCE, et la frontière suit l'arborescence : un fichier est
 # couvert par le dossier qui le contient, sans exception ni en-tête à lire. C'est ce qui

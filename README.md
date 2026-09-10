@@ -33,6 +33,10 @@ This is a work in progress, and the parts that do not work yet are worth stating
   they can only be settled by playing. `docs/data-model.md` lists every one of them.
 - No audio, no save/load UI, no dungeon content beyond the test scenarios.
 
+The 81 `TODO` markers in the source are indexed in **[docs/roadmap.md](docs/roadmap.md)**,
+grouped by what they are waiting on. Most are not debt: they are one system waiting on
+another that does not exist yet.
+
 ## Running it
 
 Requires **Godot 4.6**. No build step — open the project, or launch it straight from the
@@ -79,7 +83,7 @@ Set `GODOT` if the binary is not at the macOS default path.
 | `scripts/exploration/` | dungeon, mechanisms, rival AI |
 | `scripts/dev/` | regression harnesses and the test-scenario catalogue |
 | `translations/` | `en.po` / `fr.po` — all displayed text, no string is hard-coded |
-| `docs/` | [data model](docs/data-model.md) |
+| `docs/` | [data model](docs/data-model.md), [what isn't built](docs/roadmap.md) |
 
 ## Licence
 

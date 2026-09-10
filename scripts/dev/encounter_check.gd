@@ -32,6 +32,18 @@ var _fails: Array[String] = []
 var _rng := RandomNumberGenerator.new()
 
 
+## Agent qui joue des actions imposées, pour éprouver les chemins que l'[AutoAgent] ne
+## prend jamais : il ne joue que des capacités et Meditate, donc Talk, Examine, Use Object,
+## Steal et Flee ne seraient exercés par rien.
+class ScriptedAgent:
+	extends EncounterAgent
+
+	var queued: Array = []
+
+	func decide(_fighter: EncounterFighter, _manager: EncounterManager) -> EncounterAction:
+		return queued.pop_front() if not queued.is_empty() else null
+
+
 func _check(cond: bool, label: String) -> void:
 	if cond:
 		print("  OK   %s" % label)
@@ -48,6 +60,7 @@ func _run_all() -> void:
 	await get_tree().process_frame  # laisse les autoloads et la racine s'installer
 	_rng.seed = SEED
 	_check_abilities()
+	await _check_actions()
 	await _check_determinism()
 	await _check_loop_invariants()
 	_check_talents()
@@ -167,6 +180,78 @@ func _state_problem(fighters: Array, timeline: EncounterTimeline) -> String:
 		if not timeline.order.has(f):
 			return "%s absent de l'ordre du tour" % f.species_id()
 	return ""
+
+
+# --------------------------------------------------------------------------
+# Actions : chaque type de tour se résout et laisse l'état cohérent
+# --------------------------------------------------------------------------
+
+
+## Éprouve les huit [enum EncounterAction.Kind] via la boucle PUBLIQUE — un agent scripté
+## impose l'action, `run()` la résout. Passer par `_resolve_action()` directement testerait
+## le résolveur sans son contexte ; ici on teste ce que le jeu exécute vraiment.
+func _check_actions() -> void:
+	print("— actions —")
+	var untested: Array[String] = []
+	var broken: Array[String] = []
+	for kind in EncounterAction.Kind.values():
+		var m := _make_manager()
+		var actor: EncounterFighter = m.players[0]
+		var target: EncounterFighter = m.rivals[0]
+		# Le manager ignore les autoloads : c'est l'UI qui lui résout les objets en jeu.
+		m.object_provider = func(id): return load("res://data/objects/%s.tres" % id)
+		var agent := ScriptedAgent.new()
+		agent.queued = [_action_of_kind(kind, actor, target, m)]
+		m.set_agent(actor, agent)
+		# On écoute le tour de CET acteur : `run(1)` fait aussi jouer les autres, donc la
+		# taille du journal grossirait même si l'action imposée ne produisait rien.
+		var spoke := [false]
+		m.turn_taken.connect(
+			func(f, _a, lines):
+				if f == actor and not lines.is_empty():
+					spoke[0] = true
+		)
+		await m.run(1)
+		if not spoke[0]:
+			untested.append(EncounterAction.Kind.keys()[kind])
+		var problem := _state_problem(m.players + m.rivals, m.timeline)
+		if problem != "":
+			broken.append("%s (%s)" % [EncounterAction.Kind.keys()[kind], problem])
+		m.free()
+	_check(
+		untested.is_empty(),
+		(
+			"chaque type d'action produit une ligne de journal%s"
+			% ("" if untested.is_empty() else " — muets : " + ", ".join(untested))
+		)
+	)
+	_check_empty(broken, "état de combat sain après chaque type d'action")
+
+
+func _action_of_kind(
+	kind: int, actor: EncounterFighter, target: EncounterFighter, m: EncounterManager
+) -> EncounterAction:
+	match kind:
+		EncounterAction.Kind.ABILITY:
+			var usable := m.usable_abilities(actor)
+			var ability: AbilityData = usable[0] if not usable.is_empty() else null
+			return EncounterAction.use_ability(ability, [target])
+		EncounterAction.Kind.USE_OBJECT:
+			var a := EncounterAction.of_kind(EncounterAction.Kind.USE_OBJECT, [target])
+			a.object_id = &"rune_stone"
+			return a
+		EncounterAction.Kind.MEDITATE, EncounterAction.Kind.PASS:
+			return EncounterAction.of_kind(kind, [actor])
+		_:
+			return EncounterAction.of_kind(kind, [target])
+
+
+## Échec listant les fautifs (même forme que les autres checks du projet).
+func _check_empty(offenders: Array, label: String) -> void:
+	if offenders.is_empty():
+		_check(true, label)
+		return
+	_check(false, "%s — %s" % [label, ", ".join(offenders)])
 
 
 # --------------------------------------------------------------------------

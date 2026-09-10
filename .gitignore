@@ -19,3 +19,6 @@ export_presets.cfg
 
 # OS
 .DS_Store
+
+# Local Notion export — a throwaway working copy, never versioned
+notion-export/

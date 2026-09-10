@@ -1,7 +1,14 @@
 # Working on Spiritology
 
 Short and operational. Background is in [docs/architecture.md](docs/architecture.md),
-[docs/data-model.md](docs/data-model.md) and [docs/game-design.md](docs/game-design.md).
+[docs/data-model.md](docs/data-model.md) and
+[docs/design/game-design.md](docs/design/game-design.md).
+
+The design document itself lives in Notion, outside this repository, and that is where the
+two of us actually write it. A local HTML export may sit in `notion-export/` — gitignored,
+disposable, refreshed by hand, and usually stale. Read it for detail the repository does not
+carry; take nothing from it as current without checking, and ask rather than guess if the
+directory is empty.
 
 ## Commands
 

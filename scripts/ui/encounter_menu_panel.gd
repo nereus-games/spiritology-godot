@@ -1,16 +1,16 @@
-## Bas d'écran de la rencontre : l'invite, la barre d'actions, la liste de sous-choix et la
-## ligne de description.
+## The encounter's bottom panel: the prompt, the action bar, the sub-choice list and the
+## description line.
 ##
-## Purement WIDGET. Il ne connaît ni combattant, ni capacité, ni [EncounterManager] : on lui
-## demande d'afficher un bouton et de rappeler un [Callable] quand on le presse. Le QUOI
-## afficher — quelles actions, quelles cibles — reste dans [EncounterUi], où il est couplé à
-## l'état de la rencontre, et c'est très bien ainsi.
+## Purely a WIDGET. It knows nothing of fighters, abilities or the [EncounterManager] — you
+## ask it to show a button and call back when pressed. WHICH buttons, and which targets,
+## stays in the encounter UI where it is coupled to the state of the encounter, and that is
+## where it belongs.
 ##
-## Pas de `class_name` (piège du cache de classes en CLI) : obtenu par `preload`.
+## No `class_name`: preloaded instead, for the reason in CLAUDE.md.
 extends RefCounted
 
-## Icônes d'énergie posées sur les boutons de capacité. Jeu DISTINCT de celui de la
-## timeline (`assets/sprites/ui/timeline/`), qui répond à un autre besoin de lecture.
+## Energy icons for ability buttons. A DIFFERENT set from the turn order's, which answers
+## a different reading need.
 const ENERGY_ICONS := {
 	GameEnums.Energy.HEAT: "res://assets/sprites/ui/weaknesses/heat.png",
 	GameEnums.Energy.FLUID: "res://assets/sprites/ui/weaknesses/fluid.png",
@@ -19,7 +19,7 @@ const ENERGY_ICONS := {
 	GameEnums.Energy.TOXIC: "res://assets/sprites/ui/weaknesses/toxic.png",
 }
 
-## Largeur maximale d'une icône d'énergie sur un bouton, en pixels.
+## Maximum width of an energy icon on a button, in pixels.
 const ICON_WIDTH := 22
 
 var _prompt: Label
@@ -50,7 +50,7 @@ func show_bar(visible: bool) -> void:
 	_action_bar.visible = visible
 
 
-## Vide tout et referme le panneau : plus d'invite, plus de boutons, plus de description.
+## Empties the panel completely: no prompt, no buttons, no description.
 func clear() -> void:
 	_action_bar.visible = false
 	_description.visible = false
@@ -59,8 +59,8 @@ func clear() -> void:
 	clear_options()
 
 
-## Prépare une liste verticale de sous-choix : elle remplace la barre d'actions, qui n'a
-## pas la place d'afficher une dizaine de capacités de front.
+## Switches to a vertical list of sub-choices, replacing the action bar — which has no room
+## for a dozen abilities side by side.
 func begin_submenu() -> void:
 	clear_options()
 	clear_bar()
@@ -88,11 +88,11 @@ func add_option(text: String, on_press: Callable) -> Button:
 	return b
 
 
-## Bouton de la barre d'actions. Grisé mais TOUJOURS visible s'il est indisponible :
+## A button on the action bar. Greyed but ALWAYS visible when unavailable:
 ## « Unusable actions remain visible in the list, but greyed ».
 func add_bar_action(text: String, enabled: bool, on_press: Callable) -> Button:
 	var b := Button.new()
-	b.text = text.to_upper()  # la casse est un parti pris visuel, pas une chaîne traduite
+	b.text = text.to_upper()  # a visual choice, not part of the translated string
 	b.flat = true
 	b.disabled = not enabled
 	b.pressed.connect(on_press)
@@ -100,13 +100,13 @@ func add_bar_action(text: String, enabled: bool, on_press: Callable) -> Button:
 	return b
 
 
-## Remonte un bouton en tête de la barre d'actions. L'action « … » n'apparaît que si plus
-## rien n'est jouable, et la doc la veut en PREMIER — d'où ce déplacement après coup.
+## Moves a button to the front of the bar. The "…" action only appears when nothing else
+## is playable, and the doc wants it FIRST — hence moving it after the fact.
 func move_bar_action_first(btn: Button) -> void:
 	_action_bar.move_child(btn, 0)
 
 
-## Premier bouton cliquable de la BARRE (et non de la liste de sous-choix).
+## First clickable button on the BAR, as opposed to the sub-choice list.
 func first_enabled_bar_action() -> Button:
 	return first_enabled(_action_bar)
 
@@ -123,7 +123,7 @@ func focus_first_option() -> void:
 		first.grab_focus()
 
 
-## Premier bouton cliquable d'un conteneur, ou null s'il n'y en a aucun.
+## First clickable button in a container, or null if there is none.
 func first_enabled(container: Node) -> Button:
 	for c in container.get_children():
 		if c is Button and not c.disabled:

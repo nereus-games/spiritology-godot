@@ -1,39 +1,35 @@
-## UI de rencontre (overlay 2D au-dessus de l'exploration).
+## The encounter screen — a 2D overlay above the running exploration scene.
 ##
-## Le duo du joueur est piloté par un [UiAgent] : à chaque tour d'un de ses membres, la
-## boucle du [EncounterManager] se suspend, le menu s'ouvre (capacité puis cible), et le
-## choix validé la relance. Les rivaux restent sur l'agent auto par défaut. Émet [signal
-## finished] quand le joueur ferme l'overlay ; le [TransitionManager] nettoie alors et
-## relance l'exploration.
+## The player's duo is driven by a single [UiAgent]: on each of their turns the
+## [EncounterManager] loop suspends, the menu opens, and the submitted choice resumes it.
+## Rivals keep the manager's automatic agent. [signal finished] tells [TransitionManager]
+## to tear the overlay down and unpause exploration.
 ##
-## Mise en page : celle du mockup Notion (User Interface / Encounters).
-## - haut gauche : boutons LOG et MENU ;
-## - haut centre : la timeline (ordre du tour), une case par combattant ;
-## - centre : les pleines planches des rivaux ;
-## - bas : la barre d'actions horizontale, qui cède la place à une liste verticale pour
-##   les sous-choix (capacité, objet, cible).
+## Layout follows the design doc's mockup (User Interface / Encounters): LOG and MENU top
+## left, the turn order across the top with one cell per fighter, the rivals' full artwork
+## in the centre, and at the bottom a horizontal action bar that gives way to a vertical
+## list for sub-choices.
 ##
-## Le LOG n'est plus affiché en permanence : c'est un panneau que l'on ouvre, comme dans
-## le mockup, avec le numéro de ronde épinglé hors défilement.
+## The log is a panel you open rather than a permanent fixture, with the round number
+## pinned outside the scroll.
 extends CanvasLayer
 
 signal finished(result: StringName)
 
-## Chargé par preload et non par `class_name` : voir l'en-tête du script visé.
+## Preloaded rather than named: see that script's header.
 const TimelineEntry := preload("res://scripts/ui/encounter_timeline_entry.gd")
 const MenuPanel := preload("res://scripts/ui/encounter_menu_panel.gd")
 
-## DEV : écran de sélection des scénarios, cible du bouton MENU (comme dans le HUD
-## d'exploration) tant que la pause de rencontre n'existe pas.
+## Where MENU goes for now, since the encounter pause screen does not exist.
 const SCENARIO_SELECT := "res://scenes/dev/scenario_select.tscn"
 
-## Largeur du journal adossé en vue de test.
+## Width of the docked log in the debug view.
 const DEBUG_LOG_WIDTH := 380.0
 
-## Vue de test : révèle la densité et la faiblesse des rivaux même hors encyclopédie, et
-## adosse le journal au bord droit en permanence. Rien de tout ça n'est destiné au
-## joueur — d'où l'adossement à [method OS.is_debug_build], qui l'éteint tout seul dans
-## un export release. Bascule à chaud avec F1.
+## Debug view: shows rivals' density and weakness even when the encyclopaedia would hide
+## them, and docks the log permanently to the right edge. None of it is meant for players,
+## which is why it hangs off [method OS.is_debug_build] and switches itself off in a
+## release export. F1 toggles it live.
 var _debug_view := OS.is_debug_build()
 
 @onready var _manager: EncounterManager = $EncounterManager
@@ -50,22 +46,21 @@ var _debug_view := OS.is_debug_build()
 @onready var _log: RichTextLabel = $Root/LogPanel/VBox/Log
 @onready var _result_label: Label = $Root/Result
 
-## Bas d'écran (invite, barre d'actions, sous-choix, description). Assemblé dans
-## _ready() : les @onready ne sont pas résolus à l'initialisation des champs.
+## The bottom panel. Built in _ready(), because @onready fields are not resolved yet when
+## the members above are initialised.
 var _menu: MenuPanel
 
 var _result := &""
 var _awaiting_close := false
 
-## Combattant dont c'est le tour, ou null hors choix : la timeline s'en sert pour savoir
-## quelle case agrandir.
+## Whose turn it is, or null between choices. The turn order uses it to enlarge a cell.
 var _acting_fighter: EncounterFighter = null
 
-## Un seul agent pour tout le duo : [member UiAgent.pending_fighter] dit de qui c'est le tour.
+## One agent for the whole duo; [member UiAgent.pending_fighter] says whose turn it is.
 var _agent := UiAgent.new()
 
-## Fighters joueurs avec leur emplacement de duo, pour réécrire le DEN/ETH persistant
-## dans [GameSession] à la fin de la rencontre. Liste de { fighter, slot }.
+## Player fighters paired with their party slot, so DEN/ETH can be written back to
+## [GameSession] when the encounter ends.
 var _player_slots: Array = []
 
 
@@ -73,18 +68,19 @@ func _ready() -> void:
 	_menu = MenuPanel.new(_prompt, _description, _action_bar, _options)
 
 
-## Referme le menu et rend l'écran au déroulé : le panneau se vide, et l'écran oublie qui
-## agissait (la timeline cesse d'agrandir sa case) et éteint la surbrillance de cible.
+## Closes the menu and hands the screen back to the encounter: the panel empties, the
+## screen forgets who was acting, and the target highlight goes out.
 func _close_menu() -> void:
 	_acting_fighter = null
 	_menu.clear()
 	_clear_highlight()
 
 
-## Configure et lance la rencontre. `player_ids`/`rival_ids` = slugs d'espèces.
-## Point d'intégration persistance : les fighters JOUEURS sont initialisés depuis le
-## DEN/ETH persistant de leur emplacement ([GameSession]) et réécrits à la fin
-## ([method _sync_back_to_session]). Les rivaux gardent leurs stats placeholder.
+## Sets up and starts the encounter.
+##
+## The persistence seam: PLAYER fighters are seeded from their slot's stored DEN/ETH and
+## written back at the end ([method _sync_back_to_session]), so damage carries between
+## encounters. Rivals keep their own stats.
 func begin(
 	player_ids: Array,
 	rival_ids: Array,
@@ -97,8 +93,8 @@ func begin(
 		var f := EncounterManager.make_fighter(StringName(player_ids[i]), true)
 		if f:
 			pf.append(f)
-			# Index 0 = personnage principal, 1 = coéquipier (cf. Exploration._player_duo).
-			# Repli sur MAIN au-delà du duo standard (ne devrait pas arriver).
+			# 0 is the main character, 1 the teammate. Anything beyond a duo falls back to
+			# MAIN, which should not happen.
 			var slot := GameSession.PartySlot.TEAMMATE if i == 1 else GameSession.PartySlot.MAIN
 			f.load_persistent_state(GameSession.get_den(slot), GameSession.get_eth(slot))
 			_player_slots.append({"fighter": f, "slot": slot})
@@ -107,9 +103,9 @@ func begin(
 		var f := EncounterManager.make_fighter(StringName(rival_ids[i]), false)
 		if f == null:
 			continue
-		# État de carte : le MAXIMUM est un réglage de level design (les ordres de grandeur de
-		# la doc sont dans GameSession.RIVAL_DEN_*), et le courant reporte les dégâts déjà subis
-		# en exploration (doc « Rivals »). Poser le max AVANT le report, qui borne à ce max.
+		# Map state: the MAXIMUM is a level design setting (the doc's magnitudes are in
+		# GameSession.RIVAL_DEN_*), while the current value carries over damage already
+		# taken while exploring. Set the max FIRST — the carry-over clamps to it.
 		var state: Dictionary = rival_states[i] if i < rival_states.size() else {}
 		var map_max: int = int(state.get("max_den", 0))
 		if map_max > 0:
@@ -124,24 +120,23 @@ func begin(
 	_manager.ended.connect(_on_ended)
 	_manager.ifp_earned.connect(_on_ifp_earned)
 	_manager.object_consumed.connect(_on_object_consumed)
-	# Le manager ignore les autoloads : on lui injecte de quoi résoudre un slug d'objet.
+	# The manager knows no autoloads, so it is handed a way to resolve object slugs.
 	_manager.object_provider = func(id: StringName) -> ObjectData: return GameData.object(id)
-	# `seed` < 0 = rencontre normale, ordre du tour tiré au hasard. Le fixer rend le
-	# déroulé reproductible, ce dont la capture d'écran a besoin pour être comparable
-	# d'une version à l'autre (cf. scenes/dev/encounter_shot.tscn).
+	# A negative `seed` means an ordinary encounter, with the turn order drawn at random.
+	# Fixing it makes the whole encounter reproducible, which is what the screenshot scene
+	# needs for one version to be comparable with the next.
 	_manager.setup(pf, rf, randi() if seed < 0 else seed)
-	# APRÈS setup() : il réinitialise les agents. Le duo devient pilotable, les rivaux
-	# gardent l'agent auto par défaut du manager.
+	# AFTER setup(), which resets the agents. Only the duo becomes playable.
 	_agent.choice_requested.connect(_on_choice_requested)
 	for f in pf:
 		_manager.set_agent(f, _agent)
 
 	_log_button.pressed.connect(_toggle_log)
 	_log_button.text = tr("UI_ENCOUNTER_LOG")
-	# MENU ouvrira la pause de rencontre (Monstropaedia / Réglages / Leave The Gloom). Aucun
-	# de ces écrans n'existe encore : tant qu'on teste des scénarios, il ramène à l'écran de
-	# sélection, comme le bouton MENU du HUD d'exploration. Surtout pas `disabled` : un bouton
-	# désactivé est sauté par la navigation clavier, donc injoignable au Tab.
+	# MENU will open the encounter pause — Monstropaedia, Settings, Leave The Gloom. None of
+	# those screens exists, so for now it returns to the scenario picker. Deliberately not
+	# `disabled`: a disabled button is skipped by keyboard navigation and becomes
+	# unreachable by Tab.
 	_menu_button.text = tr("UI_ENCOUNTER_MENU")
 	_menu_button.pressed.connect(_on_menu_pressed)
 
@@ -152,10 +147,10 @@ func begin(
 	_manager.start()
 
 
-# --- Mise en page : planches des rivaux, timeline, journal ---
+# --- Layout: rival artwork, turn order, log ---
 
 
-## Pleines planches des rivaux, au centre de l'écran (mockup : jusqu'à 3 de front).
+## The rivals' full artwork, centre screen — up to three abreast in the mockup.
 func _build_rival_art(rivals: Array) -> void:
 	for c in _rivals_row.get_children():
 		c.queue_free()
@@ -172,8 +167,8 @@ func _build_rival_art(rivals: Array) -> void:
 		_rivals_row.add_child(art)
 
 
-## Reconstruit la timeline dans l'ordre du tour courant. Appelée à chaque tour joué :
-## l'ordre lui-même est modifiable en cours de rencontre (Shuffle, Tumult…).
+## Rebuilds the turn order display. Called after every turn, because the order itself can
+## change mid-encounter.
 func _refresh_timeline() -> void:
 	for c in _timeline_row.get_children():
 		c.queue_free()
@@ -190,7 +185,7 @@ func _refresh_timeline() -> void:
 			fighter.active_weakness(position),
 			(i + 1) if _debug_view else 0
 		)
-	# Planches des rivaux dissous : estompées, comme leur case de timeline.
+	# A dissolved rival fades, like its cell in the turn order.
 	for c in _rivals_row.get_children():
 		var art := c as TextureRect
 		if art and art.has_meta("fighter"):
@@ -198,19 +193,19 @@ func _refresh_timeline() -> void:
 			art.modulate.a = 0.25 if f.is_dissolved() else 1.0
 
 
-## Espèce enregistrée dans l'encyclopédie ? Conditionne l'affichage de la densité et de
-## la faiblesse d'un rival dans la timeline (règle doc). La vue de test lève le voile.
+## Whether the species is in the encyclopaedia at all, which is what the doc makes the
+## display of a rival's density and weakness depend on. The debug view lifts the veil.
 func _knows(fighter: EncounterFighter) -> bool:
 	return _debug_view or fighter.is_player or GameSession.knows_species(fighter.species_id())
 
 
-## MENU (DEV) : retour à l'écran de sélection des scénarios.
+## Back to the scenario picker.
 ##
-## La rencontre est FERMÉE d'abord : son overlay vit sous `/root` et non dans la scène
-## courante, un simple changement de scène le laisserait affiché par-dessus le nouvel écran.
-## Émettre `finished` passe par le démontage normal de [TransitionManager] (overlay libéré,
-## exploration dépausée), après quoi le changement de scène emporte l'exploration.
-## ## TODO: brancher la vraie pause (Monstropaedia / Réglages / Leave The Gloom).
+## The encounter is CLOSED first. Its overlay lives under `/root` rather than in the current
+## scene, so a plain scene change would leave it drawn on top of the new screen. Emitting
+## `finished` goes through [TransitionManager]'s normal teardown, after which changing the
+## scene takes exploration with it.
+## ## TODO: wire the real pause screen.
 func _on_menu_pressed() -> void:
 	finished.emit(&"menu")
 	TransitionManager.change_scene(SCENARIO_SELECT)
@@ -229,8 +224,8 @@ func _update_turn_label() -> void:
 		_turn_label.text += "  ·  F1"
 
 
-## Applique (ou retire) la disposition de test : journal adossé au bord droit, ouvert en
-## permanence, plutôt que le panneau central modal qu'ouvre le bouton JOURNAL.
+## Applies or removes the debug layout: the log docked to the right edge and permanently
+## open, instead of the modal centre panel the LOG button opens.
 func _apply_debug_view() -> void:
 	if _debug_view:
 		_log_panel.anchor_left = 1.0
@@ -243,7 +238,7 @@ func _apply_debug_view() -> void:
 		_log_panel.offset_bottom = -12.0
 		_log_panel.visible = true
 	else:
-		# Retour au panneau centré défini dans la scène.
+		# Back to the centred panel the scene defines.
 		_log_panel.anchor_left = 0.5
 		_log_panel.anchor_top = 0.5
 		_log_panel.anchor_right = 0.5
@@ -262,17 +257,16 @@ func _toggle_debug_view() -> void:
 	_refresh_timeline()
 
 
-# --- Menu : actions -> (capacités) -> cibles ---
+# --- The menu: actions -> (abilities) -> targets ---
 #
-# Liste d'actions de la doc Notion (Game Design / Encounters). Règle d'affichage de la
-# doc UI : « Unusable actions remain visible in the list, but greyed » — on grise, on ne
-# masque jamais. L'action « … » n'est ajoutée EN TÊTE que si plus rien n'est disponible.
+# The action list comes from the design doc, and so does the display rule: "Unusable
+# actions remain visible in the list, but greyed" — grey them, never hide them. The "…"
+# action is added ON TOP, and only when nothing else is available at all.
 #
-# Flee / Steal ([constant EncounterAction.Kind.FLEE] / [constant EncounterAction.Kind.STEAL])
-# ne sont PAS des actions de base : un talent les AJOUTE au menu (run_away_2, slick_merchant,
-# steal), en remplaçant Talk / Use Ability. La liste des kinds offerts est calculée par
-# [method EncounterManager.menu_kinds] (qui applique les talents du fighter) ; le menu ci-dessous
-# n'affiche que les kinds présents — une action retirée par un talent est absente, pas grisée.
+# Flee and Steal are NOT base actions: a talent ADDS them, replacing Talk or Use Ability.
+# [method EncounterManager.menu_kinds] applies the fighter's talents and returns what is
+# actually on offer; an action a talent removed is ABSENT, not greyed, because the talent
+# replaces it rather than forbidding it.
 
 
 func _on_choice_requested(fighter: EncounterFighter, manager: EncounterManager) -> void:
@@ -281,7 +275,7 @@ func _on_choice_requested(fighter: EncounterFighter, manager: EncounterManager) 
 	_show_actions(fighter, manager)
 
 
-## Barre d'actions horizontale du mockup, dans son ordre :
+## The mockup's horizontal action bar, in its order:
 ## MEDITATE · CHALLENGE · TALK · EXAMINE · OBJECTS.
 func _show_actions(fighter: EncounterFighter, manager: EncounterManager) -> void:
 	_menu.set_prompt(
@@ -291,12 +285,11 @@ func _show_actions(fighter: EncounterFighter, manager: EncounterManager) -> void
 	_menu.clear_bar()
 	_menu.set_description("")
 	var foes := manager.living_opponents(fighter)
-	# Actions de base APRÈS mutation par les talents : ABILITY/TALK peuvent être retirés
-	# (remplacés), FLEE/STEAL ajoutés — run_away_2, steal, slick_merchant. Une action retirée
-	# par un talent n'est pas grisée mais ABSENTE : le talent la remplace, il ne la bride pas.
+	# Base actions AFTER the talents have had their say.
 	var kinds := manager.menu_kinds(fighter)
 
-	# Meditate n'a ni coût ni cible, aucun talent ne le touche : filet de sécurité du joueur.
+	# Meditate costs nothing, needs no target, and no talent removes it — the player's
+	# safety net.
 	_menu.add_bar_action(
 		tr("UI_ENCOUNTER_ACTION_MEDITATE"),
 		true,
@@ -309,7 +302,7 @@ func _show_actions(fighter: EncounterFighter, manager: EncounterManager) -> void
 			func(): _show_abilities(fighter, manager)
 		)
 	if kinds.has(EncounterAction.Kind.TALK):
-		# Cibles de Talk élargies aux alliés si un talent l'autorise (Serene Waves).
+		# Serene Waves widens Talk to the teammate.
 		var talkable := manager.talk_targets(fighter)
 		_menu.add_bar_action(
 			tr("UI_ENCOUNTER_ACTION_TALK"),
@@ -341,16 +334,16 @@ func _show_actions(fighter: EncounterFighter, manager: EncounterManager) -> void
 		not GameSession.inventory.is_empty(),
 		func(): _show_objects(fighter, manager)
 	)
-	# Actions AJOUTÉES par un talent (jamais de base) :
+	# Actions a talent added; never available by default.
 	if kinds.has(EncounterAction.Kind.FLEE):
-		# Run Away : sans cible (quitter la rencontre). La fuite réelle est encore un stub.
+		# Run Away takes no target. Actually leaving is still a stub.
 		_menu.add_bar_action(
 			tr("UI_ENCOUNTER_ACTION_FLEE"),
 			true,
 			func(): _submit(EncounterAction.of_kind(EncounterAction.Kind.FLEE))
 		)
 	if kinds.has(EncounterAction.Kind.STEAL):
-		# Steal (granop) : vise un rival, comme Examine.
+		# Steal aims at a rival, like Examine.
 		_menu.add_bar_action(
 			tr("UI_ENCOUNTER_ACTION_STEAL"),
 			not foes.is_empty(),
@@ -366,8 +359,9 @@ func _show_actions(fighter: EncounterFighter, manager: EncounterManager) -> void
 
 	var first := _menu.first_enabled_bar_action()
 	if first == null:
-		# « If for some reason no action is available (not even Meditate), a “…” action is
-		# added on top of the list » — passe le tour en gardant sa place dans l'ordre.
+		# "If for some reason no action is available (not even Meditate), a '…' action is
+		# added on top of the list" — passes the turn without losing your place in the
+		# order.
 		var pass_btn := _menu.add_bar_action(
 			tr("UI_ENCOUNTER_ACTION_PASS"),
 			true,
@@ -379,8 +373,8 @@ func _show_actions(fighter: EncounterFighter, manager: EncounterManager) -> void
 	first.grab_focus()  # « TALK » encadré du mockup : il y a toujours un focus visible
 
 
-## Cible d'une action non-combat parmi `targets` : immédiate s'il n'y en a qu'une, sinon
-## étape de choix. Utilisé par Talk (cibles possiblement élargies aux alliés), Examine, Steal.
+## Picks the target of a non-combat action: immediate when there is only one, a choice
+## otherwise. Used by Talk, Examine and Steal.
 func _pick_target(
 	fighter: EncounterFighter,
 	manager: EncounterManager,
@@ -404,8 +398,8 @@ func _show_abilities(fighter: EncounterFighter, manager: EncounterManager) -> vo
 		tr("UI_ENCOUNTER_CHOOSE_ABILITY") % [fighter.display_name(), fighter.eth, fighter.max_eth]
 	)
 	_menu.begin_submenu()
-	# Les capacités non payables restent visibles mais grisées : le joueur doit voir ce
-	# que son ETH lui coûte, pas le déduire d'une liste qui rétrécit.
+	# Unaffordable abilities stay visible and greyed: the player should see what their ETH
+	# is costing them, not infer it from a list that quietly shrinks.
 	for a in manager.encounter_abilities(fighter):
 		var ability: AbilityData = a
 		var btn := _menu.add_option(
@@ -413,15 +407,15 @@ func _show_abilities(fighter: EncounterFighter, manager: EncounterManager) -> vo
 		)
 		_menu.set_energy_icon(btn, ability.energy)
 		btn.disabled = not fighter.can_afford(ability)
-		# « Ability description text area » du mockup : la description suit le focus.
+		# The mockup's "ability description text area": the description follows the focus.
 		btn.focus_entered.connect(func(): _menu.set_description(tr(ability.desc_key())))
 		btn.mouse_entered.connect(func(): _menu.set_description(tr(ability.desc_key())))
 	_menu.add_option(tr("UI_ENCOUNTER_BACK"), func(): _show_actions(fighter, manager))
 	_menu.focus_first_option()
 
 
-## Inventaire en rencontre. La cible peut être soi/son coéquipier (« Use ») ou un rival
-## (« Give ») : on propose donc les deux camps, contrairement au ciblage des capacités.
+## The inventory, in an encounter. The target may be oneself or the teammate ("Use") or a
+## rival ("Give"), so both sides are offered — unlike ability targeting.
 func _show_objects(fighter: EncounterFighter, manager: EncounterManager) -> void:
 	_menu.set_prompt(tr("UI_ENCOUNTER_CHOOSE_OBJECT") % fighter.display_name())
 	_menu.begin_submenu()
@@ -465,7 +459,8 @@ func _on_object_chosen(
 
 func _ability_label(ability: AbilityData) -> String:
 	var name := tr(ability.name_key())
-	# Énergies sans icône : on les signale dans le libellé pour qu'on sache toujours l'énergie.
+	# Energies with no icon are named in the label instead, so the energy is never a
+	# mystery.
 	if ability.energy == GameEnums.Energy.RANDOM:
 		name += " " + tr("UI_ENERGY_RANDOM")
 	elif ability.energy == GameEnums.Energy.VARIABLE:
@@ -478,7 +473,7 @@ func _on_ability_chosen(
 ) -> void:
 	var targets := manager.candidate_targets(fighter, ability)
 	if targets.size() <= 1:
-		# Cible unique (capacité de soutien sur soi) ou plus personne à viser : aucun choix.
+		# One target, or none left: nothing to choose.
 		_submit(EncounterAction.use_ability(ability, targets))
 		return
 	_show_targets(
@@ -489,38 +484,36 @@ func _on_ability_chosen(
 	)
 
 
-## Étape de ciblage générique. `make_action` construit l'action pour la cible choisie ;
-## `on_back` rouvre le menu d'où l'on vient.
+## The generic targeting step. `make_action` builds the action for whichever target is
+## picked; `on_back` reopens the menu it came from.
 func _show_targets(title: String, targets: Array, make_action: Callable, on_back: Callable) -> void:
 	_menu.set_prompt(tr("UI_ENCOUNTER_CHOOSE_TARGET") % title)
 	_menu.begin_submenu()
 	for t in targets:
 		var target: EncounterFighter = t
-		# En vue de test, préfixe le NUMÉRO d'ordre du tour (comme la timeline) : les portraits
-		# étant vides tant que les sprites n'existent pas, c'est le seul moyen de distinguer deux
-		# cibles de même espèce (« draka, draka »). Retiré hors debug — en version finale les
-		# sprites des personnages suffiront à identifier la cible.
+		# In the debug view, prefix the turn-order NUMBER. With no sprites yet the portraits
+		# are blank, and this is the only way to tell two targets of the same species apart
+		# ("draka, draka"). Dropped outside debug: the artwork will do the job.
 		var label := "%s — DEN %d/%d" % [target.display_name(), target.den, target.max_den]
 		if _debug_view:
 			label = "%d · %s" % [_turn_number(target), label]
 		var btn := _menu.add_option(label, func(): _submit(make_action.call(target)))
-		# Surlignage de la cible visée, version sobre du mockup (qui prévoit en plus une
-		# flèche sautillante et un léger zoom sur la planche) : la planche du rival visé
-		# s'éclaircit au survol, et la timeline le met en avant.
+		# A restrained version of the mockup's highlight, which also calls for a bouncing
+		# arrow and a slight zoom: the aimed-at rival's artwork brightens, and the turn
+		# order picks it out.
 		btn.focus_entered.connect(func(): _highlight_target(target))
 		btn.mouse_entered.connect(func(): _highlight_target(target))
 	_menu.add_option(tr("UI_ENCOUNTER_BACK"), on_back)
 	_menu.focus_first_option()
 
 
-## Position (1-based) d'un combattant dans l'ordre du tour — même numéro que la timeline en
-## vue de test. 0 si introuvable (ne devrait pas arriver pour une cible en lice).
+## A fighter's 1-based place in the turn order — the number the debug view shows.
 func _turn_number(fighter: EncounterFighter) -> int:
 	var order: Array = _manager.timeline.order if _manager.timeline else []
 	return order.find(fighter) + 1
 
 
-## Éclaircit la planche du rival visé et estompe les autres.
+## Brightens the aimed-at rival's artwork and dims the rest.
 func _highlight_target(target: EncounterFighter) -> void:
 	for c in _rivals_row.get_children():
 		var art := c as TextureRect
@@ -547,19 +540,19 @@ func _submit(action: EncounterAction) -> void:
 func _on_turn_taken(
 	fighter: EncounterFighter, action: EncounterAction, lines: PackedStringArray
 ) -> void:
-	# Un en-tête lisible par tour, puis les effets indentés dessous. Une capacité comme
-	# Opening up Closing produit plusieurs effets (dégâts, dégâts, fuite) : ils se lisent
-	# ainsi comme UNE action, au lieu d'une pile de lignes préfixées à l'identique.
+	# One readable header per turn, with the effects indented under it. An ability like
+	# Opening up Closing produces several — damage, damage, flee — and this way they read
+	# as ONE action instead of a stack of identically prefixed lines.
 	_append("[b]%s[/b] — %s" % [fighter.display_name(), _action_verb(action)])
 	for l in lines:
 		_append("    [color=#b9b9c4]%s[/color]" % l)
-	# DEN/ETH, dissolutions et réordonnancements ont pu bouger : la timeline se relit.
+	# DEN, ETH, dissolutions and reordering may all have moved.
 	_refresh_timeline()
 	_update_turn_label()
 
 
-## Nom lisible et traduit de l'action, pour l'en-tête du journal. `action.label()` ne
-## sert plus qu'au journal debug interne du manager (id brut / nom d'enum).
+## The action's translated name, for the log header. `action.label()` is now only used by
+## the manager's own debug log, where a raw id is what you want.
 func _action_verb(action: EncounterAction) -> String:
 	match action.kind:
 		EncounterAction.Kind.ABILITY:
@@ -580,8 +573,8 @@ func _action_verb(action: EncounterAction) -> String:
 			return tr("UI_ENCOUNTER_ACTION_PASS")
 
 
-## Le manager signale les IFP gagnés ; c'est ici qu'ils rejoignent l'encyclopédie, avec
-## les trois restrictions déjà portées par [method GameSession.award_ifp].
+## The manager announces info points; this is where they reach the encyclopaedia, with the
+## restrictions [method GameSession.award_ifp] already enforces.
 func _on_ifp_earned(
 	species_id: StringName, action: GameEnums.IfpAction, is_forlorn: bool, dialogue_effective: bool
 ) -> void:
@@ -592,7 +585,7 @@ func _on_ifp_earned(
 		_append("    [color=#c9b060][i]+%d IFP — %s[/i][/color]" % [gained, sp_name])
 
 
-## « Objects are all consumable items (removed from inventory after use) ».
+## "Objects are all consumable items (removed from inventory after use)".
 func _on_object_consumed(object_id: StringName) -> void:
 	GameSession.remove_object(object_id)
 
@@ -600,8 +593,8 @@ func _on_object_consumed(object_id: StringName) -> void:
 func _on_ended(result: StringName) -> void:
 	_result = result
 	_close_menu()
-	# Compteur FDE (« murderous spree ») : une rencontre où TOUS les rivaux sont dissous
-	# incrémente, toute autre issue remet à zéro.
+	# The FDE counter — the hidden "murderous spree". Dissolving EVERY rival increments it;
+	# any other outcome resets it.
 	GameSession.register_encounter_end(_manager.rivals.all(func(f): return f.is_dissolved()))
 	_sync_back_to_session()
 	_append("\n[b]→ %s[/b]" % result)
@@ -613,8 +606,8 @@ func _on_ended(result: StringName) -> void:
 	_awaiting_close = true
 
 
-## Réécrit le DEN/ETH final des fighters joueurs dans [GameSession] (persistance des
-## dégâts subis). N'altère PAS les rivaux. À appeler une fois la rencontre résolue.
+## Writes the player fighters' final DEN/ETH back to [GameSession], which is what makes
+## damage persist between encounters. Rivals are left alone.
 func _sync_back_to_session() -> void:
 	for entry in _player_slots:
 		var f: EncounterFighter = entry["fighter"]
@@ -624,8 +617,8 @@ func _sync_back_to_session() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	# F1 : bascule la vue de test. Touche brute plutôt qu'une action de project.godot —
-	# c'est un outil de développement, pas une commande de jeu à remapper.
+	# A raw key rather than an action in project.godot: this is a development tool, not a
+	# game command anyone should be remapping.
 	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_F1:
 		_toggle_debug_view()
 		get_viewport().set_input_as_handled()

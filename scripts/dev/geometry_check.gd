@@ -182,7 +182,7 @@ func _check_rival_stopped_by_rail(dm) -> void:
 ## dalles attendu : sols hors fosse sans mur dessous, plus le fond des fosses qui ne surplombent
 ## rien.
 func _check_no_double_ground(dm, slabs: int) -> void:
-	var walls: Dictionary = dm._derive_wall_cells()
+	var walls: Dictionary = dm.derive_wall_cells()
 	var expected := 0
 	var on_walls := 0
 	for c in dm._floor:
@@ -344,7 +344,7 @@ func _check_bottomless(dm, player) -> void:
 	_check(not dm.is_bottomless(plain), "case simplement absente = mur (pas de chute)")
 	dm.mark_hole(hole)
 	_check(dm.is_bottomless(hole), "trou franc = chute sans fond")
-	_check(not dm._derive_wall_cells().has(hole), "un trou franc n'est pas bouché par un mur")
+	_check(not dm.derive_wall_cells().has(hole), "un trou franc n'est pas bouché par un mur")
 	var wiped := [false]
 	GameSession.party_wiped.connect(func() -> void: wiped[0] = true, CONNECT_ONE_SHOT)
 	await player.fall_forever(hole)
@@ -607,7 +607,7 @@ func _check_stairs(dm, player) -> void:
 	# et c'est ce mur qui porte le sol de la case du dessus, sans dalle supplémentaire.
 	var pillar := Vector3i(1, 0, 8)
 	var carried := pillar + Vector3i.UP
-	var walls: Dictionary = dm._derive_wall_cells()
+	var walls: Dictionary = dm.derive_wall_cells()
 	_check(walls.has(pillar), "case retirée rendue en bloc de mur (pilier)")
 	_check(not dm.is_floor(pillar) and dm.is_floor(carried), "sol praticable posé sur le pilier")
 	_check(

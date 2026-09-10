@@ -20,6 +20,8 @@ class_name DungeonManager
 extends Node3D
 
 ## Taille d'une case en unités monde (mètres). Un bloc de mur = 1 m × 1 m × 1 m.
+const DungeonRenderer := preload("res://scripts/exploration/dungeon_renderer.gd")
+
 const CELL_SIZE := 1.0
 
 ## Hauteur des yeux d'un personnage, en mètres. Sous la hauteur d'un mur : on ne voit
@@ -598,40 +600,22 @@ func fall_landing(cell: Vector3i) -> Vector3i:
 	return cell
 
 
-## Génère la géométrie visible depuis la grille LOGIQUE : un bloc de mur d'une case sur chaque
-## case non-sol adjacente à du sol (pourtour), et une DALLE MINCE (épaisseur
-## [constant FLOOR_THICKNESS], qui fait aussi office de plafond pour la case du dessous) sur
-## chaque case de sol qui n'a PAS de mur en dessous — là où il y a un mur, c'est sa face haute
-## qui sert de sol (doc « Walls + Decors »). Les cases portant un mécanisme ne reçoivent pas de
-## mur (le mécanisme pose son propre marqueur). À appeler après avoir peuplé le sol et les
-## mécanismes (ex. par un scénario de test).
+## Cases de sol de la grille logique (lecture seule : cellule -> true).
+func floor_cells() -> Dictionary:
+	return _floor
+
+
+## Cases marquées « fosse » (lecture seule : cellule -> true).
+func pit_cells() -> Dictionary:
+	return _pit
+
+
+## Génère la géométrie visible depuis la grille logique. Le dessin lui-même vit dans
+## [DungeonRenderer] : ce manager tient le MODÈLE, pas les maillages.
 func render_grid() -> void:
-	var floor_mat := StandardMaterial3D.new()
-	floor_mat.albedo_color = Color(0.24, 0.24, 0.30)
-	# Les murs sont dérivés d'abord : une case de sol posée SUR un mur n'a pas besoin de dalle.
-	var wall_cells := _derive_wall_cells()
-	_walls = wall_cells  # mémorisés pour la mini-map, qui les redessine à chaque frame
-	for c in _floor:
-		if _pit.has(c):
-			continue  # dalle abaissée rendue plus bas (planche du pont posée par-dessus)
-		if wall_cells.has(c + Vector3i.DOWN):
-			continue  # un bloc de mur tient lieu de sol : pas de dalle par-dessus
-		add_child(_make_slab(cell_to_world(c), floor_mat))
-	# Fosses : dalle de fond sombre en contrebas UNIQUEMENT s'il n'y a pas déjà un vrai sol
-	# plus bas (sinon on masquerait le ravin dans lequel on est censé pouvoir tomber).
-	var pit_mat := StandardMaterial3D.new()
-	pit_mat.albedo_color = Color(0.12, 0.12, 0.16)
-	for c in _pit:
-		if fall_landing(c) != c:
-			continue  # un étage inférieur sert déjà de fond
-		add_child(_make_slab(cell_to_world(c) + Vector3(0.0, -PIT_DEPTH, 0.0), pit_mat))
-	var wall_mat := StandardMaterial3D.new()
-	wall_mat.albedo_color = Color(0.14, 0.14, 0.17)
-	for w in wall_cells:
-		# Un mur surmonté d'une case de sol porte le revêtement de sol sur sa face haute :
-		# c'est LUI le sol de l'étage au-dessus.
-		var top_mat: StandardMaterial3D = floor_mat if _floor.has(w + Vector3i.UP) else null
-		add_child(_make_wall_block(cell_to_world(w), wall_mat, top_mat))
+	# Mémorisés pour la mini-map, qui les redessine à chaque frame.
+	_walls = derive_wall_cells()
+	DungeonRenderer.render_grid(self, _walls)
 
 
 ## Cases rendues en blocs de mur (vide tant que [method render_grid] n'a pas tourné).
@@ -650,12 +634,15 @@ func is_wall(cell: Vector3i) -> bool:
 ##  - « a wall can serve as ground on the floor above it » (pas de dalle au-dessus d'un mur) ;
 ##  - « if an endless fall happens anyway, it devitalises » (le trou franc).
 ## Quand le format d'authoring de donjon existera, les murs et les trous devront être DÉCLARÉS
-## (comme les sols le sont), et [method _derive_wall_cells] ne servira plus que d'échafaudage
+## (comme les sols le sont), et [method derive_wall_cells] ne servira plus que d'échafaudage
 ## pour les scénarios de test bâtis par code.
 ##
 ## Cases rendues comme blocs de mur : cases non-sol adjacentes à du sol, sans mécanisme ni
 ## fosse, et sans sol en contrebas (un bord de chute reste ouvert, pas muré).
-func _derive_wall_cells() -> Dictionary:
+##
+## Public : c'est une requête sur le MODÈLE (« où la grille implique-t-elle un mur ? »), pas
+## une affaire de rendu — les contrôles de géométrie s'en servent pour leurs assertions.
+func derive_wall_cells() -> Dictionary:
 	var wall_cells := {}
 	for c in _floor:
 		for d in [Vector3i(1, 0, 0), Vector3i(-1, 0, 0), Vector3i(0, 0, 1), Vector3i(0, 0, -1)]:
@@ -672,46 +659,8 @@ func _derive_wall_cells() -> Dictionary:
 	return wall_cells
 
 
-## Dalle mince (sol/plafond) posée sur une case : sa face HAUTE est au niveau `floor_pos`,
-## son épaisseur descend en dessous.
-func _make_slab(floor_pos: Vector3, mat: StandardMaterial3D) -> MeshInstance3D:
-	var mi := MeshInstance3D.new()
-	var box := BoxMesh.new()
-	box.size = Vector3(CELL_SIZE, FLOOR_THICKNESS, CELL_SIZE)
-	mi.mesh = box
-	mi.material_override = mat
-	mi.position = floor_pos + Vector3(0.0, -FLOOR_THICKNESS * 0.5, 0.0)
-	return mi
-
-
-## Bloc de mur plein : un cube d'une case, qui remplit le volume de la case au-dessus de son
-## sol (donc jamais plus haut qu'un étage — l'étage du dessus reste libre).
-##
-## `top_mat` non nul = une case de sol repose sur ce mur : on plaque le revêtement de sol sur
-## sa face haute (aucune dalle n'est posée par-dessus, c'est le mur qui EST le sol).
-func _make_wall_block(
-	floor_pos: Vector3, mat: StandardMaterial3D, top_mat: StandardMaterial3D = null
-) -> MeshInstance3D:
-	var mi := MeshInstance3D.new()
-	var box := BoxMesh.new()
-	box.size = Vector3(CELL_SIZE, CELL_SIZE, CELL_SIZE)
-	mi.mesh = box
-	mi.material_override = mat
-	if top_mat != null:
-		var skin := MeshInstance3D.new()
-		var plane := PlaneMesh.new()
-		plane.size = Vector2(CELL_SIZE, CELL_SIZE)
-		skin.mesh = plane
-		skin.material_override = top_mat
-		skin.position = Vector3(0.0, CELL_SIZE * 0.5 + 0.002, 0.0)  # juste au-dessus de la face
-		mi.add_child(skin)
-	mi.position = floor_pos + Vector3(0.0, CELL_SIZE * 0.5, 0.0)
-	return mi
-
-
-## Construit une salle de démonstration : sol rectangulaire (niveau 0) avec quelques
-## murs intérieurs, + un rendu minimal (sol plat + boîtes de murs). Échafaudage : les
-## vrais donjons seront des scènes 3D authoring, dont la grille sera dérivée autrement.
+## Construit une salle de démonstration : sol rectangulaire (niveau 0) avec quelques murs
+## intérieurs, plus son rendu. Échafaudage : les vrais donjons seront des scènes 3D authoring.
 func build_demo_room(width: int, depth: int, interior_walls: Array = []) -> void:
 	var blocked := {}
 	for w in interior_walls:
@@ -723,28 +672,4 @@ func build_demo_room(width: int, depth: int, interior_walls: Array = []) -> void
 			if not blocked.has(c):
 				cells.append(c)
 	set_floor_cells(cells)
-	_spawn_demo_visuals(width, depth, blocked)
-
-
-func _spawn_demo_visuals(width: int, depth: int, blocked: Dictionary) -> void:
-	# Sol unique (au niveau du sol des cases, y = 0).
-	var floor_mi := MeshInstance3D.new()
-	var plane := PlaneMesh.new()
-	plane.size = Vector2(width * CELL_SIZE, depth * CELL_SIZE)
-	floor_mi.mesh = plane
-	floor_mi.position = Vector3((width - 1) * CELL_SIZE * 0.5, 0.0, (depth - 1) * CELL_SIZE * 0.5)
-	add_child(floor_mi)
-	# Murs : pourtour + murs intérieurs.
-	var wall_cells := {}
-	for x in range(-1, width + 1):
-		wall_cells[Vector3i(x, 0, -1)] = true
-		wall_cells[Vector3i(x, 0, depth)] = true
-	for z in range(-1, depth + 1):
-		wall_cells[Vector3i(-1, 0, z)] = true
-		wall_cells[Vector3i(width, 0, z)] = true
-	for w in blocked:
-		wall_cells[w] = true
-	var wall_mat := StandardMaterial3D.new()
-	wall_mat.albedo_color = Color(0.14, 0.14, 0.17)
-	for cell in wall_cells:
-		add_child(_make_wall_block(cell_to_world(cell), wall_mat))
+	DungeonRenderer.build_demo_visuals(self, width, depth, blocked)

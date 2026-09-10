@@ -20,6 +20,10 @@ const DEFAULT_RIVALS := "ravbak,skorpis"
 ## Nombre de frames laissées à l'UI pour se poser (police, disposition, timeline).
 const SETTLE_FRAMES := 40
 
+## Seed imposé à la rencontre : sans lui, l'ordre du tour est tiré au hasard et deux
+## captures du MÊME code diffèrent, ce qui rend la comparaison A/B inutilisable.
+const SEED := 20260909
+
 
 func _ready() -> void:
 	_run()
@@ -34,7 +38,7 @@ func _run() -> void:
 	await get_tree().process_frame  # la racine finit d'installer ses enfants
 	var ui := ENCOUNTER.instantiate()
 	get_tree().root.add_child(ui)
-	ui.begin(players.split(","), rivals.split(","))
+	ui.begin(players.split(","), rivals.split(","), {}, [], SEED)
 
 	for _i in range(SETTLE_FRAMES):
 		await get_tree().process_frame

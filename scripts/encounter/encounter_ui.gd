@@ -21,17 +21,7 @@ signal finished(result: StringName)
 
 ## Chargé par preload et non par `class_name` : voir l'en-tête du script visé.
 const TimelineEntry := preload("res://scripts/ui/encounter_timeline_entry.gd")
-
-## Icônes d'ÉNERGIE des capacités (menu). On réutilise l'ANCIEN jeu (`ui/weaknesses/`) —
-## la timeline, elle, a désormais son propre jeu d'icônes de faiblesse. RANDOM/VARIABLE/NONE
-## n'ont pas d'icône ; le libellé de la capacité les signale alors en toutes lettres.
-const ENERGY_ICONS := {
-	GameEnums.Energy.HEAT: "res://assets/sprites/ui/weaknesses/heat.png",
-	GameEnums.Energy.FLUID: "res://assets/sprites/ui/weaknesses/fluid.png",
-	GameEnums.Energy.CRYSTAL: "res://assets/sprites/ui/weaknesses/crystal.png",
-	GameEnums.Energy.ARCANE: "res://assets/sprites/ui/weaknesses/arcane.png",
-	GameEnums.Energy.TOXIC: "res://assets/sprites/ui/weaknesses/toxic.png",
-}
+const MenuPanel := preload("res://scripts/ui/encounter_menu_panel.gd")
 
 ## DEV : écran de sélection des scénarios, cible du bouton MENU (comme dans le HUD
 ## d'exploration) tant que la pause de rencontre n'existe pas.
@@ -60,6 +50,10 @@ var _debug_view := OS.is_debug_build()
 @onready var _log: RichTextLabel = $Root/LogPanel/VBox/Log
 @onready var _result_label: Label = $Root/Result
 
+## Bas d'écran (invite, barre d'actions, sous-choix, description). Assemblé dans
+## _ready() : les @onready ne sont pas résolus à l'initialisation des champs.
+var _menu: MenuPanel
+
 var _result := &""
 var _awaiting_close := false
 
@@ -75,12 +69,28 @@ var _agent := UiAgent.new()
 var _player_slots: Array = []
 
 
+func _ready() -> void:
+	_menu = MenuPanel.new(_prompt, _description, _action_bar, _options)
+
+
+## Referme le menu et rend l'écran au déroulé : le panneau se vide, et l'écran oublie qui
+## agissait (la timeline cesse d'agrandir sa case) et éteint la surbrillance de cible.
+func _close_menu() -> void:
+	_acting_fighter = null
+	_menu.clear()
+	_clear_highlight()
+
+
 ## Configure et lance la rencontre. `player_ids`/`rival_ids` = slugs d'espèces.
 ## Point d'intégration persistance : les fighters JOUEURS sont initialisés depuis le
 ## DEN/ETH persistant de leur emplacement ([GameSession]) et réécrits à la fin
 ## ([method _sync_back_to_session]). Les rivaux gardent leurs stats placeholder.
 func begin(
-	player_ids: Array, rival_ids: Array, _completed: Dictionary = {}, rival_states: Array = []
+	player_ids: Array,
+	rival_ids: Array,
+	_completed: Dictionary = {},
+	rival_states: Array = [],
+	seed: int = -1
 ) -> void:
 	var pf: Array = []
 	for i in player_ids.size():
@@ -116,7 +126,10 @@ func begin(
 	_manager.object_consumed.connect(_on_object_consumed)
 	# Le manager ignore les autoloads : on lui injecte de quoi résoudre un slug d'objet.
 	_manager.object_provider = func(id: StringName) -> ObjectData: return GameData.object(id)
-	_manager.setup(pf, rf, randi())
+	# `seed` < 0 = rencontre normale, ordre du tour tiré au hasard. Le fixer rend le
+	# déroulé reproductible, ce dont la capture d'écran a besoin pour être comparable
+	# d'une version à l'autre (cf. scenes/dev/encounter_shot.tscn).
+	_manager.setup(pf, rf, randi() if seed < 0 else seed)
 	# APRÈS setup() : il réinitialise les agents. Le duo devient pilotable, les rivaux
 	# gardent l'agent auto par défaut du manager.
 	_agent.choice_requested.connect(_on_choice_requested)
@@ -271,12 +284,12 @@ func _on_choice_requested(fighter: EncounterFighter, manager: EncounterManager) 
 ## Barre d'actions horizontale du mockup, dans son ordre :
 ## MEDITATE · CHALLENGE · TALK · EXAMINE · OBJECTS.
 func _show_actions(fighter: EncounterFighter, manager: EncounterManager) -> void:
-	_prompt.text = (
+	_menu.set_prompt(
 		tr("UI_ENCOUNTER_CHOOSE_ACTION") % [fighter.display_name(), fighter.eth, fighter.max_eth]
 	)
-	_clear_options()
-	_clear_bar()
-	_description.visible = false
+	_menu.clear_options()
+	_menu.clear_bar()
+	_menu.set_description("")
 	var foes := manager.living_opponents(fighter)
 	# Actions de base APRÈS mutation par les talents : ABILITY/TALK peuvent être retirés
 	# (remplacés), FLEE/STEAL ajoutés — run_away_2, steal, slick_merchant. Une action retirée
@@ -284,13 +297,13 @@ func _show_actions(fighter: EncounterFighter, manager: EncounterManager) -> void
 	var kinds := manager.menu_kinds(fighter)
 
 	# Meditate n'a ni coût ni cible, aucun talent ne le touche : filet de sécurité du joueur.
-	_add_bar_action(
+	_menu.add_bar_action(
 		tr("UI_ENCOUNTER_ACTION_MEDITATE"),
 		true,
 		func(): _submit(EncounterAction.of_kind(EncounterAction.Kind.MEDITATE, [fighter]))
 	)
 	if kinds.has(EncounterAction.Kind.ABILITY):
-		_add_bar_action(
+		_menu.add_bar_action(
 			tr("UI_ENCOUNTER_ACTION_ABILITY"),
 			not manager.usable_abilities(fighter).is_empty(),
 			func(): _show_abilities(fighter, manager)
@@ -298,7 +311,7 @@ func _show_actions(fighter: EncounterFighter, manager: EncounterManager) -> void
 	if kinds.has(EncounterAction.Kind.TALK):
 		# Cibles de Talk élargies aux alliés si un talent l'autorise (Serene Waves).
 		var talkable := manager.talk_targets(fighter)
-		_add_bar_action(
+		_menu.add_bar_action(
 			tr("UI_ENCOUNTER_ACTION_TALK"),
 			not talkable.is_empty(),
 			func():
@@ -311,7 +324,7 @@ func _show_actions(fighter: EncounterFighter, manager: EncounterManager) -> void
 				)
 		)
 	if kinds.has(EncounterAction.Kind.EXAMINE):
-		_add_bar_action(
+		_menu.add_bar_action(
 			tr("UI_ENCOUNTER_ACTION_EXAMINE"),
 			not foes.is_empty(),
 			func():
@@ -323,7 +336,7 @@ func _show_actions(fighter: EncounterFighter, manager: EncounterManager) -> void
 					foes
 				)
 		)
-	_add_bar_action(
+	_menu.add_bar_action(
 		tr("UI_ENCOUNTER_ACTION_OBJECT"),
 		not GameSession.inventory.is_empty(),
 		func(): _show_objects(fighter, manager)
@@ -331,14 +344,14 @@ func _show_actions(fighter: EncounterFighter, manager: EncounterManager) -> void
 	# Actions AJOUTÉES par un talent (jamais de base) :
 	if kinds.has(EncounterAction.Kind.FLEE):
 		# Run Away : sans cible (quitter la rencontre). La fuite réelle est encore un stub.
-		_add_bar_action(
+		_menu.add_bar_action(
 			tr("UI_ENCOUNTER_ACTION_FLEE"),
 			true,
 			func(): _submit(EncounterAction.of_kind(EncounterAction.Kind.FLEE))
 		)
 	if kinds.has(EncounterAction.Kind.STEAL):
 		# Steal (granop) : vise un rival, comme Examine.
-		_add_bar_action(
+		_menu.add_bar_action(
 			tr("UI_ENCOUNTER_ACTION_STEAL"),
 			not foes.is_empty(),
 			func():
@@ -351,18 +364,18 @@ func _show_actions(fighter: EncounterFighter, manager: EncounterManager) -> void
 				)
 		)
 
-	var first := _first_enabled(_action_bar)
+	var first := _menu.first_enabled_bar_action()
 	if first == null:
 		# « If for some reason no action is available (not even Meditate), a “…” action is
 		# added on top of the list » — passe le tour en gardant sa place dans l'ordre.
-		var pass_btn := _add_bar_action(
+		var pass_btn := _menu.add_bar_action(
 			tr("UI_ENCOUNTER_ACTION_PASS"),
 			true,
 			func(): _submit(EncounterAction.of_kind(EncounterAction.Kind.PASS))
 		)
-		_action_bar.move_child(pass_btn, 0)
+		_menu.move_bar_action_first(pass_btn)
 		first = pass_btn
-	_action_bar.visible = true
+	_menu.show_bar(true)
 	first.grab_focus()  # « TALK » encadré du mockup : il y a toujours un focus visible
 
 
@@ -387,43 +400,43 @@ func _pick_target(
 
 
 func _show_abilities(fighter: EncounterFighter, manager: EncounterManager) -> void:
-	_prompt.text = (
+	_menu.set_prompt(
 		tr("UI_ENCOUNTER_CHOOSE_ABILITY") % [fighter.display_name(), fighter.eth, fighter.max_eth]
 	)
-	_open_submenu()
+	_menu.begin_submenu()
 	# Les capacités non payables restent visibles mais grisées : le joueur doit voir ce
 	# que son ETH lui coûte, pas le déduire d'une liste qui rétrécit.
 	for a in manager.encounter_abilities(fighter):
 		var ability: AbilityData = a
-		var btn := _add_option(
+		var btn := _menu.add_option(
 			_ability_label(ability), func(): _on_ability_chosen(fighter, manager, ability)
 		)
-		_set_energy_icon(btn, ability.energy)
+		_menu.set_energy_icon(btn, ability.energy)
 		btn.disabled = not fighter.can_afford(ability)
 		# « Ability description text area » du mockup : la description suit le focus.
-		btn.focus_entered.connect(func(): _set_description(tr(ability.desc_key())))
-		btn.mouse_entered.connect(func(): _set_description(tr(ability.desc_key())))
-	_add_option(tr("UI_ENCOUNTER_BACK"), func(): _show_actions(fighter, manager))
-	_focus_first_option()
+		btn.focus_entered.connect(func(): _menu.set_description(tr(ability.desc_key())))
+		btn.mouse_entered.connect(func(): _menu.set_description(tr(ability.desc_key())))
+	_menu.add_option(tr("UI_ENCOUNTER_BACK"), func(): _show_actions(fighter, manager))
+	_menu.focus_first_option()
 
 
 ## Inventaire en rencontre. La cible peut être soi/son coéquipier (« Use ») ou un rival
 ## (« Give ») : on propose donc les deux camps, contrairement au ciblage des capacités.
 func _show_objects(fighter: EncounterFighter, manager: EncounterManager) -> void:
-	_prompt.text = tr("UI_ENCOUNTER_CHOOSE_OBJECT") % fighter.display_name()
-	_open_submenu()
+	_menu.set_prompt(tr("UI_ENCOUNTER_CHOOSE_OBJECT") % fighter.display_name())
+	_menu.begin_submenu()
 	for id in GameSession.inventory:
 		var obj: ObjectData = GameData.object(id)
 		if obj == null:
 			continue  # slug d'inventaire sans ObjectData généré : on ne l'invente pas.
 		var count: int = GameSession.inventory[id]
 		var object_id: StringName = id
-		_add_option(
+		_menu.add_option(
 			"%s ×%d" % [tr(obj.name_key()), count],
 			func(): _on_object_chosen(fighter, manager, object_id)
 		)
-	_add_option(tr("UI_ENCOUNTER_BACK"), func(): _show_actions(fighter, manager))
-	_focus_first_option()
+	_menu.add_option(tr("UI_ENCOUNTER_BACK"), func(): _show_actions(fighter, manager))
+	_menu.focus_first_option()
 
 
 func _on_object_chosen(
@@ -460,15 +473,6 @@ func _ability_label(ability: AbilityData) -> String:
 	return name if ability.eth_cost() == 0 else "%s — ETH %d" % [name, ability.eth_cost()]
 
 
-## Pose l'icône d'énergie (ancien jeu d'icônes) à gauche du bouton de capacité, bornée en
-## largeur pour ne pas envahir le bouton. RANDOM/VARIABLE/NONE n'ont pas d'icône (cf.
-## [method _ability_label] pour leur mention texte).
-func _set_energy_icon(btn: Button, energy: GameEnums.Energy) -> void:
-	if ENERGY_ICONS.has(energy):
-		btn.icon = load(ENERGY_ICONS[energy])
-		btn.add_theme_constant_override("icon_max_width", 22)
-
-
 func _on_ability_chosen(
 	fighter: EncounterFighter, manager: EncounterManager, ability: AbilityData
 ) -> void:
@@ -488,8 +492,8 @@ func _on_ability_chosen(
 ## Étape de ciblage générique. `make_action` construit l'action pour la cible choisie ;
 ## `on_back` rouvre le menu d'où l'on vient.
 func _show_targets(title: String, targets: Array, make_action: Callable, on_back: Callable) -> void:
-	_prompt.text = tr("UI_ENCOUNTER_CHOOSE_TARGET") % title
-	_open_submenu()
+	_menu.set_prompt(tr("UI_ENCOUNTER_CHOOSE_TARGET") % title)
+	_menu.begin_submenu()
 	for t in targets:
 		var target: EncounterFighter = t
 		# En vue de test, préfixe le NUMÉRO d'ordre du tour (comme la timeline) : les portraits
@@ -499,14 +503,14 @@ func _show_targets(title: String, targets: Array, make_action: Callable, on_back
 		var label := "%s — DEN %d/%d" % [target.display_name(), target.den, target.max_den]
 		if _debug_view:
 			label = "%d · %s" % [_turn_number(target), label]
-		var btn := _add_option(label, func(): _submit(make_action.call(target)))
+		var btn := _menu.add_option(label, func(): _submit(make_action.call(target)))
 		# Surlignage de la cible visée, version sobre du mockup (qui prévoit en plus une
 		# flèche sautillante et un léger zoom sur la planche) : la planche du rival visé
 		# s'éclaircit au survol, et la timeline le met en avant.
 		btn.focus_entered.connect(func(): _highlight_target(target))
 		btn.mouse_entered.connect(func(): _highlight_target(target))
-	_add_option(tr("UI_ENCOUNTER_BACK"), on_back)
-	_focus_first_option()
+	_menu.add_option(tr("UI_ENCOUNTER_BACK"), on_back)
+	_menu.focus_first_option()
 
 
 ## Position (1-based) d'un combattant dans l'ordre du tour — même numéro que la timeline en
@@ -538,77 +542,6 @@ func _clear_highlight() -> void:
 func _submit(action: EncounterAction) -> void:
 	_close_menu()
 	_agent.submit(action)
-
-
-func _close_menu() -> void:
-	_acting_fighter = null
-	_action_bar.visible = false
-	_description.visible = false
-	_prompt.text = ""
-	_clear_bar()
-	_clear_options()
-	_clear_highlight()
-
-
-## Ouvre une liste verticale de sous-choix : elle remplace la barre d'actions, qui n'a
-## pas la place d'afficher une dizaine de capacités de front.
-func _open_submenu() -> void:
-	_clear_options()
-	_clear_bar()
-	_action_bar.visible = false
-	_clear_highlight()
-	_set_description("")
-
-
-func _set_description(text: String) -> void:
-	_description.text = text
-	_description.visible = text != ""
-
-
-func _clear_options() -> void:
-	for c in _options.get_children():
-		_options.remove_child(c)
-		c.queue_free()
-
-
-func _clear_bar() -> void:
-	for c in _action_bar.get_children():
-		_action_bar.remove_child(c)
-		c.queue_free()
-
-
-func _add_option(text: String, on_press: Callable) -> Button:
-	var b := Button.new()
-	b.text = text
-	b.pressed.connect(on_press)
-	_options.add_child(b)
-	return b
-
-
-## Bouton de la barre d'actions. Grisé mais TOUJOURS visible s'il est indisponible :
-## « Unusable actions remain visible in the list, but greyed ».
-func _add_bar_action(text: String, enabled: bool, on_press: Callable) -> Button:
-	var b := Button.new()
-	b.text = text.to_upper()  # la casse est un parti pris visuel, pas une chaîne traduite
-	b.flat = true
-	b.disabled = not enabled
-	b.pressed.connect(on_press)
-	_action_bar.add_child(b)
-	return b
-
-
-func _focus_first_option() -> void:
-	var first := _first_enabled(_options)
-	if first:
-		first.grab_focus()
-
-
-## Premier bouton cliquable d'un conteneur, ou null s'il n'y en a aucun.
-func _first_enabled(container: Node) -> Button:
-	for c in container.get_children():
-		if c is Button and not c.disabled:
-			return c
-	return null
 
 
 func _on_turn_taken(

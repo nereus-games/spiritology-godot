@@ -39,6 +39,7 @@ path = [
     "project.godot",
     ".gitignore",
     "REUSE.toml",
+    "gdlintrc",
     "README.md",
     "CONTRIBUTING.md",
     "AUTHORS",

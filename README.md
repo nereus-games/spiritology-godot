@@ -83,7 +83,14 @@ Set `GODOT` if the binary is not at the macOS default path.
 | `scripts/exploration/` | dungeon, mechanisms, rival AI |
 | `scripts/dev/` | regression harnesses and the test-scenario catalogue |
 | `translations/` | `en.po` / `fr.po` — all displayed text, no string is hard-coded |
-| `docs/` | [data model](docs/data-model.md), [what isn't built](docs/roadmap.md) |
+| `docs/` | [architecture](docs/architecture.md), [data model](docs/data-model.md), [what isn't built](docs/roadmap.md), [the systems](docs/design/game-design.md) |
+
+## Contributing, or just reading
+
+[docs/architecture.md](docs/architecture.md) is the place to start: the three pillars, the
+seams between them, and the reasoning behind the parts that are not obvious.
+[CLAUDE.md](CLAUDE.md) is the short operational one — commands, the conventions that are not
+preferences, and the engine traps that have each cost somebody an afternoon.
 
 ## Licence
 

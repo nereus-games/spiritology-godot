@@ -44,6 +44,8 @@ path = [
     "CONTRIBUTING.md",
     "AUTHORS",
     "NOTICE",
+    "CLAUDE.md",
+    "AGENTS.md",
 ]
 precedence = "aggregate"
 SPDX-FileCopyrightText = "2026 Nereus Games LLC and the Spiritology authors (see AUTHORS)"
@@ -53,8 +55,10 @@ SPDX-License-Identifier = "GPL-3.0-or-later"
 # la DERNIÈRE (vérifié avec `reuse spdx`). Ce bloc doit donc rester après celui du code,
 # sinon `docs/**` reprend les captures et les fait basculer en GPL.
 [[annotations]]
-path = ["docs/images/**"]
+path = ["docs/images/**", "docs/design/**"]
 precedence = "aggregate"
 SPDX-FileCopyrightText = "2026 Nereus Games LLC and the Spiritology authors (see AUTHORS)"
-# Une capture d'écran montre l'art du jeu : elle en dérive, et suit donc sa licence.
+# Une capture montre l'art du jeu : elle en dérive. docs/design/ EST du game design, par
+# opposition à la documentation technique de docs/ — c'est la distinction annoncée dans
+# CONTRIBUTING.md.
 SPDX-License-Identifier = "LAL-1.3"

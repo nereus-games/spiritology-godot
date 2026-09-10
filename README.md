@@ -7,9 +7,14 @@ about them. Fights are not the only way through an encounter — talking to a ri
 examining it, or handing it an object all earn information points, and a species whose
 page you have completed becomes easier to face.
 
+![An encounter: turn order along the top, two spirimonsters facing off, the action menu below](docs/images/encounter.png)
+
+*An encounter. Turn order runs along the top — position in it decides which weakness each
+individual currently exposes, which is why abilities that reorder the turn are attacks.*
+
 ![A dungeon corridor, a chest, and a rival ahead](docs/images/exploration.png)
 
-*Graphics are placeholder geometry. The art exists for 7 of the 36 species so far.*
+*Exploration. The dungeon geometry is placeholder blocks; species art exists for 7 of the 36.*
 
 ## Status
 
@@ -43,8 +48,16 @@ the duo's species is chosen in the header. Walking into a rival opens an encount
 ## Checks
 
 ```bash
-./tools/run_checks.sh     # headless regression suite (~20 s)
+./tools/run_checks.sh     # headless regression suite (~25 s)
 ./tools/parse_check.sh    # parses every GDScript file (~45 s)
+```
+
+Two things headless checks cannot judge are covered by screenshot scenes, which open a
+window briefly and write a PNG — no editor involved:
+
+```bash
+godot --path . res://scenes/dev/encounter_shot.tscn -- shot.png
+godot --path . res://scenes/dev/screenshot.tscn -- chests shot.png
 ```
 
 `run_checks.sh` runs every `scenes/dev/*_check.tscn`, each a real regression harness that

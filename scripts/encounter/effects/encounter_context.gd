@@ -8,9 +8,13 @@
 class_name EncounterContext
 extends RefCounted
 
+
 ## % de dégâts ajouté par condition remplie (faiblesse, même Spiricosme, encyclopédie
-## 100 %, même espèce). Les conditions s'additionnent avant application.
-const MODIFIER_PER_CONDITION := 0.36
+## 100 %, même espèce). Les conditions s'additionnent avant application. Réglé dans
+## `data/balance.tres`.
+static func _modifier_per_condition() -> float:
+	return BalanceData.current().modifier_per_condition
+
 
 ## Demande à l'UI un effet spécial (Tumult déplace les éléments, Anodyne Excess cache
 ## les stats des rivaux…). `kind` identifie l'effet, `data` porte ses paramètres.
@@ -88,7 +92,7 @@ func _apply_modifiers(target, base_amount: int) -> int:
 	if user.species_id() == target.species_id():
 		conditions += 1
 	return ceili(
-		base_amount * (1.0 + MODIFIER_PER_CONDITION * conditions + user.outgoing_damage_bonus)
+		base_amount * (1.0 + _modifier_per_condition() * conditions + user.outgoing_damage_bonus)
 	)
 
 
@@ -282,11 +286,10 @@ func _user_is_player() -> bool:
 
 # --- Niveaux de dégâts (mini / small / normal / big) ---
 
-const DMG := {&"mini": 5, &"small": 7, &"normal": 10, &"big": 14}
 
-
+## Paliers de dégâts nommés. Chiffrés dans `data/balance.tres` ([BalanceData]).
 func dmg(tier: StringName) -> int:
-	return DMG.get(tier, 10)
+	return BalanceData.current().damage(tier)
 
 
 ## Dégâts principaux de la capacité : valeur Notion si fournie, sinon « normal ».

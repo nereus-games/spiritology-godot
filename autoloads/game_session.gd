@@ -59,7 +59,7 @@ const RIVAL_DEN_LATE := 125
 
 ## ETH (Ether) maximum d'un personnage joueur.
 ## ## TODO: max ETH par espèce quand Notion le chiffrera (placeholder cohérent avec
-## EncounterFighter.BASE_ETH).
+## BalanceData.base_eth).
 const MAX_ETH := 50
 
 ## Emplacements du duo jouable. Indexe [member party_den] / [member party_eth].

@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="BalanceData" format=3]
+
+[ext_resource type="Script" path="res://resources/balance_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+base_den = 100
+base_eth = 50
+cost_mini = 3
+cost_normal = 6
+cost_medium = 10
+cost_a_lot = 15
+damage_mini = 5
+damage_small = 7
+damage_normal = 10
+damage_big = 14
+modifier_per_condition = 0.36
+meditate_eth = 12
+meditate_damage_bonus = 0.36
+object_heal_den = 25

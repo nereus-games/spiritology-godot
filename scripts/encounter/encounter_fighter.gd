@@ -8,9 +8,6 @@
 class_name EncounterFighter
 extends RefCounted
 
-const BASE_DEN := 100  ## TODO: stats par espèce quand la doc les fournira.
-const BASE_ETH := 50
-
 var species: SpeciesData
 var is_player: bool
 var max_den: int
@@ -57,8 +54,9 @@ var _weakness_energy := GameEnums.Energy.NONE  ## faiblesse forcée pour le tour
 func _init(p_species: SpeciesData, p_is_player: bool) -> void:
 	species = p_species
 	is_player = p_is_player
-	max_den = BASE_DEN
-	max_eth = BASE_ETH
+	var balance := BalanceData.current()
+	max_den = balance.base_den
+	max_eth = balance.base_eth
 	den = max_den
 	eth = max_eth
 	if species:

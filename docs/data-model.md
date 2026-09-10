@@ -149,14 +149,22 @@ would be worse than the gap.
 These numbers are **not** design decisions taken here — Notion states them as `X %` and
 `Y DEN`, literally highlighted placeholders. They can only be settled by playing.
 
-| Constant | Value | Where |
+They all live in one place — **`data/balance.tres`** — precisely because they are meant to
+be tuned by playing rather than argued about in code. Editing it needs no programming, and
+`data_integrity_check` only refuses values that would break the game silently (a negative
+cost would *give* ETH back), never a particular balance.
+
+| Field | Value | What Notion says |
 |---|---|---|
-| `ObjectData.magnitude` | `0` | left unset; consumers fall back to their own default |
-| `OBJECT_HEAL_DEN` | 25 | `EncounterManager` |
-| `MEDITATE_ETH` / `MEDITATE_DAMAGE_BONUS` | 12 / +36 % | `EncounterManager` |
-| `EncounterContext.DMG` | 5 / 7 / 10 / 14 | damage tiers |
-| `AbilityData.COST_ETH` | 0 / 3 / 6 / 10 / 15 | ETH per cost tier |
-| `EncounterFighter.BASE_DEN` / `BASE_ETH` | 100 / 50 | no per-species stats in Notion yet |
+| `base_den` / `base_eth` | 100 / 50 | no per-species stats yet |
+| `cost_mini` … `cost_a_lot` | 3 / 6 / 10 / 15 | only MINI/NORMAL/MEDIUM/A_LOT, no numbers |
+| `damage_mini` … `damage_big` | 5 / 7 / 10 / 14 | tier names only |
+| `modifier_per_condition` | +36 % | the one figure the doc does give |
+| `meditate_eth` / `meditate_damage_bonus` | 12 / +36 % | "recovers X ETH; damage +Y %" |
+| `object_heal_den` | 25 | "gives Y DEN to a target" |
+
+`ObjectData.magnitude` stays `0`, meaning "not stated by Notion"; consumers fall back to
+the balance value above.
 
 ## Updating after a Notion export
 

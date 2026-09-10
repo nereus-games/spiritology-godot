@@ -37,21 +37,12 @@ extends Resource
 ## Sert au moteur d'effets et au filtrage UI.
 @export var tags: PackedStringArray = PackedStringArray()
 
-## Chiffrage des paliers de coût. PLACEHOLDER (même statut que EncounterContext.DMG) :
-## Notion ne décrit le coût que qualitativement (MINI/NORMAL/MEDIUM/A_LOT). Repère :
-## EncounterFighter.BASE_ETH = 50, soit ~8 capacités NORMAL ou ~3 A_LOT par rencontre.
-const COST_ETH := {
-	GameEnums.Cost.NONE: 0,
-	GameEnums.Cost.MINI: 3,
-	GameEnums.Cost.NORMAL: 6,
-	GameEnums.Cost.MEDIUM: 10,
-	GameEnums.Cost.A_LOT: 15,
-}
-
 
 ## Coût en ETH de la capacité (0 si gratuite). Payé à l'usage par le [EncounterManager].
+## Le chiffrage des paliers vit dans `data/balance.tres` ([BalanceData]) : Notion ne décrit
+## le coût que qualitativement (MINI/NORMAL/MEDIUM/A_LOT).
 func eth_cost() -> int:
-	return COST_ETH.get(cost, 0)
+	return BalanceData.current().cost_eth(cost)
 
 
 ## Clé de traduction du nom. Convention : ABILITY_<ID_MAJ>_NAME.

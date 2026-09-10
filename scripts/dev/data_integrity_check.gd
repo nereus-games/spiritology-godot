@@ -75,6 +75,7 @@ func _run_all() -> void:
 	await get_tree().process_frame  # laisse les autoloads (GameData) charger
 	_check_loading()
 	_check_enums()
+	_check_balance()
 	_check_cross_refs()
 	_check_code_species_refs()
 	_check_translations()
@@ -203,6 +204,38 @@ func _check_enums() -> void:
 func _expect_enum(bad: Array, id, field: String, value, enum_dict: Dictionary) -> void:
 	if not enum_dict.values().has(int(value)):
 		bad.append("%s.%s = %s" % [id, field, value])
+
+
+# --------------------------------------------------------------------------
+# Équilibrage : des chiffres à régler, mais pas n'importe lesquels
+# --------------------------------------------------------------------------
+
+
+## `data/balance.tres` existe pour être RÉGLÉ à la main — c'est bien pour ça qu'il est en
+## données. Ces bornes n'imposent donc aucune valeur : elles interdisent seulement celles
+## qui casseraient le jeu en silence (un coût négatif rendrait de l'ETH, un DEN de base nul
+## dissoudrait tout le monde au premier tour).
+func _check_balance() -> void:
+	print("— équilibrage —")
+	var b := BalanceData.current()
+	_check(b != null, "data/balance.tres se charge")
+	if b == null:
+		return
+	var bad: Array = []
+	for field in [
+		"base_den", "base_eth", "damage_mini", "damage_small", "damage_normal", "damage_big"
+	]:
+		if int(b.get(field)) <= 0:
+			bad.append("%s = %s (doit être > 0)" % [field, b.get(field)])
+	for field in [
+		"cost_mini", "cost_normal", "cost_medium", "cost_a_lot", "object_heal_den", "meditate_eth"
+	]:
+		if int(b.get(field)) < 0:
+			bad.append("%s = %s (doit être >= 0)" % [field, b.get(field)])
+	for field in ["modifier_per_condition", "meditate_damage_bonus"]:
+		if float(b.get(field)) < 0.0:
+			bad.append("%s = %s (doit être >= 0)" % [field, b.get(field)])
+	_check_empty(bad, "les valeurs d'équilibrage restent jouables")
 
 
 # --------------------------------------------------------------------------

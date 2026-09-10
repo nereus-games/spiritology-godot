@@ -29,7 +29,7 @@ func _init(ctx) -> void:
 ## CONTEXTUELLE d'une porte de méditation ([code]gateway.on_adjacent_actions[/code]), et qu'elle
 ## ne rend aucun ETH. Il faut : (1) l'ajouter à cette liste, (2) lui faire récupérer X ETH au duo
 ## (montant NON CHIFFRÉ par la doc ; la rencontre utilise 12, cf.
-## [constant EncounterManager.MEDITATE_ETH]), (3) faire que la version portière ne soit plus
+## [member BalanceData.meditate_eth]), (3) faire que la version portière ne soit plus
 ## qu'un effet de bord de la même action quand on fait face à une porte — sinon deux « méditer »
 ## cohabiteront dans le menu.
 func build() -> Array:

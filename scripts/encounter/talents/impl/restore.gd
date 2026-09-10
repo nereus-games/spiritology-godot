@@ -12,7 +12,7 @@
 extends "res://scripts/encounter/talents/talent_script.gd"
 
 ## PLACEHOLDERS — Notion écrit « X % DEN / Y % ETH » sans les chiffrer (même statut que les
-## paliers d'ETH ou OBJECT_HEAL_DEN). À trancher en jouant.
+## paliers d'ETH ou [member BalanceData.object_heal_den]). À trancher en jouant.
 const DEN_FRACTION := 0.2
 const ETH_FRACTION := 0.35
 

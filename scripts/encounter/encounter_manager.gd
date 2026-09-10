@@ -41,17 +41,6 @@ const ABILITY_DIR := "res://data/abilities/"
 ## cache de classes globales que seul l'éditeur régénère — le jeu se lance en CLI).
 const TalentCatalog := preload("res://scripts/encounter/talents/talent_catalog.gd")
 
-## Rune stone : « gives Y DEN to a target ». PLACEHOLDER — Notion écrit « Y DEN », pas un
-## chiffre. Utilisé quand [member ObjectData.magnitude] vaut 0 (non renseigné).
-const OBJECT_HEAL_DEN := 25
-
-## Meditate : ETH récupéré, et bonus de dégâts INFLIGÉS au tour suivant.
-## PLACEHOLDERS — la doc écrit « recovers X ETH; damage +Y % until next turn » sans jamais
-## chiffrer X ni Y (même statut que [constant EncounterContext.DMG]). Repère : BASE_ETH = 50,
-## une capacité NORMAL coûte 6. Le bonus reprend le pas de +36 % déjà utilisé par le jeu.
-const MEDITATE_ETH := 12
-const MEDITATE_DAMAGE_BONUS := 0.36
-
 var players: Array = []
 var rivals: Array = []
 var timeline: EncounterTimeline
@@ -373,8 +362,10 @@ func _resolve_object(fighter: EncounterFighter, action: EncounterAction) -> void
 	match obj.effect:
 		GameEnums.ObjectEffect.HEAL_DEN:
 			# « gives Y DEN to a target » — Y est un placeholder surligné dans Notion, donc
-			# magnitude vaut 0 tant qu'il n'est pas chiffré : on retombe sur OBJECT_HEAL_DEN.
-			var amount := obj.magnitude if obj.magnitude > 0 else OBJECT_HEAL_DEN
+			# magnitude vaut 0 tant qu'il n'est pas chiffré : on retombe sur l'équilibrage.
+			var amount: int = (
+				obj.magnitude if obj.magnitude > 0 else BalanceData.current().object_heal_den
+			)
 			var before := target.den
 			target.recover_den(amount)
 			lines.append(
@@ -444,15 +435,16 @@ func _resolve_flee(fighter: EncounterFighter, action: EncounterAction) -> void:
 ## moment où il peut frapper — cf. EncounterFighter.grant_next_turn_damage_bonus.
 func _resolve_meditate(fighter: EncounterFighter, action: EncounterAction) -> void:
 	var before := fighter.eth
-	fighter.recover_eth(MEDITATE_ETH)
-	fighter.grant_next_turn_damage_bonus(MEDITATE_DAMAGE_BONUS)
+	var balance := BalanceData.current()
+	fighter.recover_eth(balance.meditate_eth)
+	fighter.grant_next_turn_damage_bonus(balance.meditate_damage_bonus)
 	_emit_turn(
 		fighter,
 		action,
 		[
 			(
 				"médite : ETH %d -> %d, dégâts +%d %% au prochain tour."
-				% [before, fighter.eth, roundi(MEDITATE_DAMAGE_BONUS * 100.0)]
+				% [before, fighter.eth, roundi(balance.meditate_damage_bonus * 100.0)]
 			)
 		]
 	)

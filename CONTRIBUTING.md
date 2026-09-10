@@ -13,9 +13,12 @@ A single merged contribution without a signed agreement would end that permanent
 code could not be relicensed, and the only remedies would be tracking down its author or
 ripping the work back out. There is no undo.
 
-A contributor licence agreement is planned, and will be put in place when the project
-actually starts receiving contributions. Until it exists, the honest thing is to say so
-rather than to accept patches we could not use — hence this section.
+The authors' own rights are settled: Néd J. Édoire and al ultré co-founded and co-own
+Nereus Games LLC, and the arrangement covers everything in this repository today. What is
+not settled is anyone else's, and that is what a contributor licence agreement is for. One
+is planned, and will be put in place when the project actually starts receiving
+contributions. Until it exists, the honest thing is to say so rather than to accept patches
+we could not use — hence this section.
 
 **What you can do in the meantime, and what genuinely helps:** open an issue. Bug reports,
 reproduction steps, design questions, and pointing out that something is wrong are all

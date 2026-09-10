@@ -127,7 +127,7 @@ func note_talent(line: String) -> void:
 static func make_fighter(species_id: StringName, is_player: bool) -> EncounterFighter:
 	var sp: SpeciesData = load("res://data/species/%s.tres" % species_id)
 	if sp == null:
-		push_error("[EncounterManager] espèce introuvable : %s" % species_id)
+		push_error("[EncounterManager] unknown species: %s" % species_id)
 		return null
 	return EncounterFighter.new(sp, is_player)
 

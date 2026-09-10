@@ -111,7 +111,7 @@ Nereus Games LLC also distributes proprietary binaries of the game on some platf
 ## Credits
 
 - **Nereus Games LLC** — production
-- **al** — game design, programming
-- **Néd J.** — game design, level design, art
+- **Néd J. Édoire** — game design, level design, art
+- **al ultré** — game design, programming
 
 Both licences require attribution; see [AUTHORS](AUTHORS).

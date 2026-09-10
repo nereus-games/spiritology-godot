@@ -23,7 +23,7 @@ static func script_for(talent: TalentData, owner: EncounterFighter, stacks: int)
 			if made is TalentScript:
 				inst = made
 			else:
-				push_warning("[TalentCatalog] %s n'étend pas TalentScript." % path)
+				push_warning("[TalentCatalog] %s does not extend TalentScript." % path)
 	inst.talent = talent
 	inst.owner = owner
 	inst.stacks = maxi(stacks, 1)

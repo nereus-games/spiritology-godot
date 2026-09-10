@@ -68,7 +68,7 @@ static func script_for(ability: AbilityData) -> AbilityScript:
 		var inst = script.new()
 		if inst is AbilityScript:
 			return inst
-		push_warning("[EffectCatalog] %s n'étend pas AbilityScript." % path)
+		push_warning("[EffectCatalog] %s does not extend AbilityScript." % path)
 	return AbilityScript.new()
 
 
@@ -85,7 +85,7 @@ static func tag_effects(tags: PackedStringArray) -> Array[AbilityEffect]:
 			out.append(_tag_map[tag].new())
 	for tag in present:
 		if not _tag_map.has(tag):
-			push_warning("[EffectCatalog] tag d'effet non géré : '%s'" % tag)
+			push_warning("[EffectCatalog] unhandled effect tag: '%s'" % tag)
 	return out
 
 

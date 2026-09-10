@@ -1,5 +1,5 @@
 # @unimplemented
-## Fog Mantel — Exploration · from — · — · cost — · damage — · usage unique
+## Fog Mantel — Exploration · from — · — · cost — · damage — · single use
 ##
 ## MECHANIC (from the design doc):
 ##   📖

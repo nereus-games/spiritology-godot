@@ -1,4 +1,4 @@
-## Headless check of the dungeon's geometry: scale (a cell is 1 m, eyes at 0.6 m), thin slabs
+## Headless check of the dungeon's geometry: scale (a tile is 1 m, eyes at 0.6 m), thin slabs
 ## (you can walk under a storey), gateways sitting on edges. Walks every test scenario and exits
 ## 1 if any of them regresses.
 ##
@@ -51,15 +51,15 @@ func _run_scenario(id: StringName) -> void:
 	var player = scene.get_node("Player")
 
 	# Scale: a wall block is 1 m³, and eyes sit below the top of the wall.
-	_check(dm.CELL_SIZE == 1.0, "cell is 1 m")
+	_check(dm.TILE_SIZE == 1.0, "tile is 1 m")
 	var cam_rig = player.get_node("CameraRig")
 	var eye_y: float = player.global_position.y + cam_rig.position.y
-	var floor_y: float = dm.cell_to_world(player.cell).y
+	var floor_y: float = dm.tile_to_world(player.tile).y
 	_check(
 		is_equal_approx(eye_y - floor_y, dm.EYE_HEIGHT),
 		"eyes %.2f m above the floor" % (eye_y - floor_y)
 	)
-	_check(eye_y - floor_y < dm.CELL_SIZE, "eyes below the top of the walls")
+	_check(eye_y - floor_y < dm.TILE_SIZE, "eyes below the top of the walls")
 
 	# Generated geometry: thin slabs (ceilings you can walk under) and solid wall blocks.
 	var slabs := 0
@@ -71,18 +71,18 @@ func _run_scenario(id: StringName) -> void:
 		if mi == null or not (mi.mesh is BoxMesh):
 			continue
 		var s: Vector3 = mi.mesh.size
-		if not is_equal_approx(s.x, dm.CELL_SIZE):
+		if not is_equal_approx(s.x, dm.TILE_SIZE):
 			continue  # a mechanism's visual, not part of the grid
 		var top: float = mi.position.y + s.y * 0.5
 		if is_equal_approx(s.y, dm.FLOOR_THICKNESS):
 			slabs += 1
 			# Top face level with a storey's floor, or a pit's, offset by PIT_DEPTH.
-			if not (_on_level(top, dm.CELL_SIZE) or _on_level(top + dm.PIT_DEPTH, dm.CELL_SIZE)):
+			if not (_on_level(top, dm.TILE_SIZE) or _on_level(top + dm.PIT_DEPTH, dm.TILE_SIZE)):
 				misplaced += 1
-		elif is_equal_approx(s.y, dm.CELL_SIZE):
+		elif is_equal_approx(s.y, dm.TILE_SIZE):
 			walls += 1
-			# The block fills ITS OWN cell's volume, without biting into the storey above.
-			if not _on_level(top, dm.CELL_SIZE):
+			# The block fills ITS OWN tile's volume, without biting into the storey above.
+			if not _on_level(top, dm.TILE_SIZE):
 				misplaced += 1
 		else:
 			too_thick += 1
@@ -122,7 +122,7 @@ func _run_scenario(id: StringName) -> void:
 
 ## Guardrails ("Walls + Decors / Guardrails"): laid on the edge like a gateway that never opens,
 ## they stop a storey's edge being crossed WITHOUT filling in the drop behind it and without
-## costing a cell. The same edge, two cells further, stays open — and drops you.
+## costing a tile. The same edge, two tiles further, stays open — and drops you.
 func _check_guardrails(dm) -> void:
 	var edge := Vector3i(1, 0, 0)
 	var railed := Vector3i(6, 4, 4)  # the protected east edge
@@ -131,11 +131,11 @@ func _check_guardrails(dm) -> void:
 	_check(rails.size() == 1, "guardrail sitting on the east edge")
 	_check(
 		dm.mechanisms_at(railed).is_empty() and dm.mechanisms_at(railed + edge).is_empty(),
-		"a guardrail occupies no cell"
+		"a guardrail occupies no tile"
 	)
 	_check(
 		dm.is_floor(railed) and dm.is_walkable(railed),
-		"the cell behind the guardrail stays walkable"
+		"the tile behind the guardrail stays walkable"
 	)
 	_check(
 		dm.is_edge_blocked(railed, railed + edge) and dm.is_edge_blocked(railed + edge, railed),
@@ -147,7 +147,7 @@ func _check_guardrails(dm) -> void:
 	)
 	_check(
 		not dm.is_edge_blocked(open_edge, open_edge + edge),
-		"two cells further, the same edge is open"
+		"two tiles further, the same edge is open"
 	)
 	_check(
 		dm.fall_landing(open_edge + edge) == Vector3i(7, 0, 6),
@@ -170,7 +170,7 @@ func _check_rival_stopped_by_rail(dm) -> void:
 	var post := Vector3i(6, 4, 4)  # behind the east edge's guardrail
 	var below := Vector3i(7, 0, 4)  # what it would aim for jumping over
 	var rival = RIVAL_SCENE.instantiate()
-	rival.position = dm.cell_to_world(post)
+	rival.position = dm.tile_to_world(post)
 	dm.add_child(rival)
 	var brink: Vector3i = rival._open_drop_edge(below)
 	_check(
@@ -181,12 +181,12 @@ func _check_rival_stopped_by_rail(dm) -> void:
 
 
 ## Per the design doc's "Walls + Decors", a wall block can serve as the floor of the storey
-## above. A floor cell resting on a wall must therefore NOT get an extra slab — that would put
+## above. A floor tile resting on a wall must therefore NOT get an extra slab — that would put
 ## two top faces exactly coplanar, doubling the geometry and z-fighting. The exact expected slab
 ## count is checked: non-pit floors with no wall below, plus the bottom of the pits that overhang
 ## nothing.
 func _check_no_double_ground(dm, slabs: int) -> void:
-	var walls: Dictionary = dm.derive_wall_cells()
+	var walls: Dictionary = dm.derive_wall_tiles()
 	var expected := 0
 	var on_walls := 0
 	for c in dm._floor:
@@ -317,12 +317,12 @@ func _check_traps_hidden_on_map(dm) -> void:
 
 ## The design doc's "Visuals + Sounds": a rival sprite fits in 90 cm x 90 cm. Tried on a species
 ## WIDER THAN IT IS TALL (jézal, 2000 x 1898), where fitting on height alone would spill into the
-## neighbouring cells.
+## neighbouring tiles.
 func _check_rival_sprite_box(dm) -> void:
 	for species in [&"jezal", &"jezal", &"fliritus", &"ravbak"]:
 		var rival = RIVAL_SCENE.instantiate()
 		rival.species_id = species
-		rival.position = dm.cell_to_world(Vector3i(0, 0, 0))
+		rival.position = dm.tile_to_world(Vector3i(0, 0, 0))
 		dm.add_child(rival)
 		var sprite := rival.get_node_or_null("Sprite3D") as Sprite3D
 		if sprite != null and sprite.texture != null:
@@ -339,42 +339,42 @@ func _check_rival_sprite_box(dm) -> void:
 		rival.queue_free()
 
 
-## A BOTTOMLESS fall should not exist: a cell with nothing below it is rendered as a wall. But if
+## A BOTTOMLESS fall should not exist: a tile with nothing below it is rendered as a wall. But if
 ## level design marks an outright hole, entering it devitalises the duo — a floor you never reach
 ## is a floor too far down to survive — instead of blocking silently.
 func _check_bottomless(dm, player) -> void:
 	var hole := Vector3i(3, 0, -1)  # in front of the start: normally a perimeter wall
 	var plain := Vector3i(2, 0, -1)  # same row, left as it is
-	_check(not dm.is_bottomless(plain), "a merely absent cell is a wall, and no fall")
+	_check(not dm.is_bottomless(plain), "a merely absent tile is a wall, and no fall")
 	dm.mark_hole(hole)
 	_check(dm.is_bottomless(hole), "an outright hole is a bottomless fall")
-	_check(not dm.derive_wall_cells().has(hole), "an outright hole is not plugged by a wall")
+	_check(not dm.derive_wall_tiles().has(hole), "an outright hole is not plugged by a wall")
 	var wiped := [false]
 	GameSession.party_wiped.connect(func() -> void: wiped[0] = true, CONNECT_ONE_SHOT)
 	await player.fall_forever(hole)
 	_check(wiped[0], "bottomless fall: duo devitalised, and so out of the dungeon")
 
 
-## Gateways: on the edge, both cells stay walkable, the passage is barred while the gateway is
+## Gateways: on the edge, both tiles stay walkable, the passage is barred while the gateway is
 ## closed, and the action is offered from either side.
 func _check_gates(dm, player) -> void:
 	var a := Vector3i(1, 0, 3)
 	var b := Vector3i(1, 0, 4)
-	_check(dm.is_floor(a) and dm.is_floor(b), "both cells around a gateway are floor")
+	_check(dm.is_floor(a) and dm.is_floor(b), "both tiles around a gateway are floor")
 	_check(
 		dm.mechanisms_at(a).is_empty() and dm.mechanisms_at(b).is_empty(),
-		"a gateway occupies no cell"
+		"a gateway occupies no tile"
 	)
 	var gate = dm.edge_mechanisms_between(a, b)[0]
 	_check(gate != null, "gateway found on the edge")
 	_check(dm.edge_mechanisms_between(b, a).size() == 1, "symmetric edge, same from both sides")
-	# A locked, closed gateway bars the passage both ways and leaves the cells free.
+	# A locked, closed gateway bars the passage both ways and leaves the tiles free.
 	var la := Vector3i(1, 0, 6)
 	var lb := Vector3i(1, 0, 7)
 	_check(
 		dm.is_edge_blocked(la, lb) and dm.is_edge_blocked(lb, la), "closed gateway: passage barred"
 	)
-	_check(dm.is_walkable(la) and dm.is_walkable(lb), "closed gateway: cells still walkable")
+	_check(dm.is_walkable(la) and dm.is_walkable(lb), "closed gateway: tiles still walkable")
 	_check(not dm.can_step(la, lb), "can_step refuses to cross a closed gateway")
 	# Actions reachable from both sides: open, meditate.
 	var from_south: Array = dm.actions_for(la, Vector3i(0, 0, 1), player)
@@ -457,7 +457,7 @@ func _check_meditation_streak(dm, _player) -> void:
 	_check(not gate.meditate(ma, toward), "after the break, back to 1/3")
 	_check(not gate.meditate(ma, toward), "2/3")
 	_check(gate.meditate(ma, toward), "3 consecutive meditations: gateway open")
-	# The edge is clear. The cell beyond carries a heap, an obstacle, so THAT is what blocks now,
+	# The edge is clear. The tile beyond carries a heap, an obstacle, so THAT is what blocks now,
 	# not the gateway.
 	_check(not dm.is_edge_blocked(ma, ma + toward), "meditation gateway open: edge cleared")
 
@@ -468,8 +468,8 @@ func _check_bridge(dm) -> void:
 	var planks := []
 	for child in dm.get_children():
 		if child.has_method("engage") and child.has_method("direction"):
-			planks.append(child.cell)
-	_check(planks.size() > 0, "%d bridge cells" % planks.size())
+			planks.append(child.tile)
+	_check(planks.size() > 0, "%d bridge tiles" % planks.size())
 	var landed := 0
 	var depth := 0
 	for c in planks:
@@ -485,34 +485,34 @@ func _check_bridge(dm) -> void:
 		)
 	)
 	_check(depth >= 2, "ravine more than one storey deep, so fall damage scales with depth")
-	# The climb back: each upward flight starts from a walkable cell and arrives on floor.
+	# The climb back: each upward flight starts from a walkable tile and arrives on floor.
 	var flights := 0
 	for child in dm.get_children():
 		if not child.has_method("stairs_destination") or child.level_delta <= 0:
 			continue
 		flights += 1
-		var from: Vector3i = child.cell - child.face_dir  # the cell the flight is approached from
+		var from: Vector3i = child.tile - child.face_dir  # the tile the flight is approached from
 		var dest: Vector3i = child.stairs_destination(from, child.face_dir)
 		_check(
 			dm.is_walkable(from) and dm.is_floor(dest),
-			"flight %s: %s -> %s walkable" % [child.cell, from, dest]
+			"flight %s: %s -> %s walkable" % [child.tile, from, dest]
 		)
 	_check(flights >= 2, "%d flights to climb from the bottom back to the start" % flights)
 
 
-## The bridge counts disarray down cell by cell, because a cell crossed IS a move, and the arrival
-## cell has no way out but the bridge — otherwise the disarray would be wasted wandering a
+## The bridge counts disarray down tile by tile, because a tile crossed IS a move, and the arrival
+## tile has no way out but the bridge — otherwise the disarray would be wasted wandering a
 ## platform instead of testing the bridge under it.
 func _check_bridge_disarray(scene, dm, player) -> void:
 	var arrival := Vector3i(1, 2, 7)
-	_check(dm.is_floor(arrival), "arrival cell %s" % arrival)
+	_check(dm.is_floor(arrival), "arrival tile %s" % arrival)
 	var ways_out := 0
 	for d in [Vector3i(1, 0, 0), Vector3i(-1, 0, 0), Vector3i(0, 0, 1), Vector3i(0, 0, -1)]:
 		if dm.is_walkable(arrival + d):
 			ways_out += 1
 	_check(ways_out == 1, "arrival walled in: %d way out, the bridge" % ways_out)
 
-	# A bridge cell crossed consumes one disarray move.
+	# A bridge tile crossed consumes one disarray move.
 	var first := Vector3i(1, 2, 2)
 	var bridge = null
 	for m in dm.mechanisms_at(first):
@@ -527,14 +527,14 @@ func _check_bridge_disarray(scene, dm, player) -> void:
 	scene._bridge_dir = Vector3i(0, 0, 1)
 	player.affliction.add_disarray(5)
 	var before: int = player.affliction.remaining_disarray()
-	scene._advance_bridge_cell(player)
+	scene._advance_bridge_tile(player)
 	var after: int = player.affliction.remaining_disarray()
-	_check(after == before - 1, "a bridge cell counts disarray down (%d -> %d)" % [before, after])
+	_check(after == before - 1, "a bridge tile counts disarray down (%d -> %d)" % [before, after])
 
 
 ## The design doc's rival rules for narrow bridges: a simplified balance test rolled at creation,
 ## a fall to the floor below with damage, devitalisation on the map, and two rivals meeting on a
-## plank both falling, onto two distinct cells.
+## plank both falling, onto two distinct tiles.
 func _check_rival_on_bridge(dm) -> void:
 	var rivals: Array = dm.rivals()
 	_check(rivals.size() == 1, "%d rival on the map" % rivals.size())
@@ -549,14 +549,14 @@ func _check_rival_on_bridge(dm) -> void:
 
 	# Falling off a plank: lands at the bottom of the ravine and takes 2 storeys' worth.
 	var plank := Vector3i(1, 2, 4)
-	_check(dm.is_narrow_bridge(plank), "cell %s recognised as a plank" % plank)
-	dm.release(r.cell)
+	_check(dm.is_narrow_bridge(plank), "tile %s recognised as a plank" % plank)
+	dm.release(r.tile)
 	dm.reserve(plank, r)
-	r.cell = plank
+	r.tile = plank
 	var den_before: int = r.den
 	var alive: bool = r.fall_down(plank)
 	var expected: int = dm.fall_damage(2)  # the design doc: 2 height units is 10 DEN
-	_check(alive and r.cell.y == 0, "the rival falls to the bottom of the ravine (%s)" % r.cell)
+	_check(alive and r.tile.y == 0, "the rival falls to the bottom of the ravine (%s)" % r.tile)
 	_check(
 		den_before - r.den == expected,
 		"rival fall damage is %d DEN over 2 storeys (%d -> %d)" % [expected, den_before, r.den]
@@ -570,13 +570,13 @@ func _check_rival_on_bridge(dm) -> void:
 		"a rival devitalised by a fall is dissolved, with no encounter"
 	)
 
-	# Two rivals meeting on a plank: both fall, onto two distinct cells.
+	# Two rivals meeting on a plank: both fall, onto two distinct tiles.
 	var a = ScenarioCatalog._spawn_rival(dm, &"ravbak", Vector3i(1, 2, 3))
 	var b = ScenarioCatalog._spawn_rival(dm, &"ravbak", Vector3i(1, 2, 5))
 	await get_tree().process_frame
 	b._collide_with_rival(Vector3i(1, 2, 3), a)
-	_check(a.cell.y == 0 and b.cell.y == 0, "both rivals fall (%s / %s)" % [a.cell, b.cell])
-	_check(a.cell != b.cell, "they land on two distinct cells")
+	_check(a.tile.y == 0 and b.tile.y == 0, "both rivals fall (%s / %s)" % [a.tile, b.tile])
+	_check(a.tile != b.tile, "they land on two distinct tiles")
 
 	# Chasing a FLOOR CHANGE: the player climbs back to the start, and the rival follows by the two
 	# flights of stairs — a free route, so no hesitation, unlike a fall.
@@ -591,13 +591,13 @@ func _check_rival_on_bridge(dm) -> void:
 		for f in range(3):
 			await get_tree().process_frame
 		turns_used += 1
-		if chaser.cell.y == top.y:
+		if chaser.tile.y == top.y:
 			break
 	_check(
-		chaser.cell.y == top.y,
+		chaser.tile.y == top.y,
 		(
 			"a rival follows the player between storeys by the stairs (%s in %d turns)"
-			% [chaser.cell, turns_used]
+			% [chaser.tile, turns_used]
 		)
 	)
 
@@ -605,15 +605,15 @@ func _check_rival_on_bridge(dm) -> void:
 ## Multi-storey: you walk UNDER the tiers, the design doc's fall scale holds at all four heights,
 ## and both shapes of elevator make the round trip with their rider.
 func _check_stairs(dm, player) -> void:
-	# The pillar: cell (1,0,8) was removed from storey 0, so it is rendered as a wall block — and
-	# that wall carries the floor of the cell above, with no extra slab.
+	# The pillar: tile (1,0,8) was removed from storey 0, so it is rendered as a wall block — and
+	# that wall carries the floor of the tile above, with no extra slab.
 	var pillar := Vector3i(1, 0, 8)
 	var carried := pillar + Vector3i.UP
-	var walls: Dictionary = dm.derive_wall_cells()
-	_check(walls.has(pillar), "removed cell rendered as a wall block (the pillar)")
+	var walls: Dictionary = dm.derive_wall_tiles()
+	_check(walls.has(pillar), "removed tile rendered as a wall block (the pillar)")
 	_check(not dm.is_floor(pillar) and dm.is_floor(carried), "walkable floor resting on the pillar")
 	_check(
-		dm.cell_to_world(carried).y == dm.cell_to_world(pillar).y + dm.CELL_SIZE,
+		dm.tile_to_world(carried).y == dm.tile_to_world(pillar).y + dm.TILE_SIZE,
 		"the carried floor sits exactly at the wall's top face"
 	)
 
@@ -621,9 +621,9 @@ func _check_stairs(dm, player) -> void:
 
 	var under := Vector3i(3, 0, 6)
 	var above := Vector3i(3, 1, 6)
-	_check(dm.is_walkable(under), "walkable cell under the tier")
-	_check(dm.is_floor(above), "a tier above that cell")
-	var headroom: float = dm.cell_to_world(above).y - dm.FLOOR_THICKNESS - dm.cell_to_world(under).y
+	_check(dm.is_walkable(under), "walkable tile under the tier")
+	_check(dm.is_floor(above), "a tier above that tile")
+	var headroom: float = dm.tile_to_world(above).y - dm.FLOOR_THICKNESS - dm.tile_to_world(under).y
 	_check(headroom > dm.EYE_HEIGHT, "headroom under the ceiling = %.2f m, above eyes" % headroom)
 	var levels := 0
 	for y in range(0, 6):
@@ -679,14 +679,14 @@ func _check_stairs(dm, player) -> void:
 	var winding = null
 	for m in lifts:
 		if m.path.size() == 1:
-			_check(m.far_end().y != m.cell.y, "elevator %s: vertical route" % m.cell)
+			_check(m.far_end().y != m.tile.y, "elevator %s: vertical route" % m.tile)
 		elif m.path.size() > 1:
 			winding = m
 	if winding == null:
 		_check(false, "one elevator on a complex route")
 	else:
 		var axes := {}
-		var prev: Vector3i = winding.cell
+		var prev: Vector3i = winding.tile
 		for wp in winding.path:
 			var d: Vector3i = wp - prev
 			if d.x != 0:
@@ -700,7 +700,7 @@ func _check_stairs(dm, player) -> void:
 			axes.size() == 3,
 			(
 				"elevator %s: complex route, %d segments across %d axes"
-				% [winding.cell, winding.path.size(), axes.size()]
+				% [winding.tile, winding.path.size(), axes.size()]
 			)
 		)
 
@@ -708,18 +708,18 @@ func _check_stairs(dm, player) -> void:
 	for lift in lifts:
 		lift.segment_duration = 0.0
 		lift.rider_segment_duration = 0.0
-		var start: Vector3i = lift.cell
+		var start: Vector3i = lift.tile
 		var target: Vector3i = lift.far_end()
 		player.teleport_to(start)
 		dm.notify_entered(start, player)
 		await get_tree().process_frame
 		_check(
-			player.cell == target and lift.cell == target,
-			"%s -> %s: the platform carries its rider (%s)" % [start, target, player.cell]
+			player.tile == target and lift.tile == target,
+			"%s -> %s: the platform carries its rider (%s)" % [start, target, player.tile]
 		)
-		dm.notify_entered(lift.cell, player)
+		dm.notify_entered(lift.tile, player)
 		await get_tree().process_frame
 		_check(
-			player.cell == start and lift.cell == start,
-			"stepping back on returns it to its starting point (%s)" % player.cell
+			player.tile == start and lift.tile == start,
+			"stepping back on returns it to its starting point (%s)" % player.tile
 		)

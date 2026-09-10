@@ -5,7 +5,7 @@ extends AbilityScript
 
 
 func execute(ctx: EncounterContext) -> void:
-	var t = ctx.user  # cible dans l'équipe
+	var t = ctx.user  # a target on the team
 	var w := ctx.weakness_of(t)
 	var same := ctx.team().filter(func(f): return f != t and ctx.weakness_of(f) == w).size()
 	ctx.recover_den(t, ctx.dmg(&"normal") + ctx.dmg(&"small") * same)

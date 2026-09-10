@@ -6,5 +6,3 @@
 script = ExtResource("1_aba44")
 id = &"gates"
 order = 2
-title = "Portes (auto · verrouillée · méditation)"
-description = "Les portes sont ENTRE deux cases (fines) : on peut se tenir de chaque côté. Grise = s'ouvre/ferme seule au fil des tours. Dorée = fais face + action « ouvrir » (paie 2 pelles). Verte = fais face + action « méditer » ×3, CONSÉCUTIVES (bouge ou détourne-toi et le compteur retombe à 0). Derrière la verte, un tas vert : ses actions n'apparaissent qu'une fois la porte ouverte — on n'agit pas sur ce qu'on ne voit pas."

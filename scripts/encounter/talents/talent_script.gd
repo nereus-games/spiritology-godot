@@ -17,11 +17,20 @@ extends RefCounted
 ## The talent's data. Set by [TalentCatalog].
 var talent: TalentData
 ## Who carries it. Hooks that only concern the bearer compare against this.
-var owner: EncounterFighter
+var owner: EncounterIndividual
 ## How many copies the bearer's side carries — above 1 only when the duo shares a species
 ## and the talent is meant to stack. Team-wide talents use it; per-character ones ignore
 ## it.
 var stacks := 1
+
+# --- Logging ---
+
+
+## Every line a talent logs goes through here, so that none of them is ever written out in
+## one language. See the LOG_TALENT_* block in `translations/en.po`.
+func _tr(key: String) -> String:
+	return String(TranslationServer.translate(key))
+
 
 # --- Lifecycle ---
 

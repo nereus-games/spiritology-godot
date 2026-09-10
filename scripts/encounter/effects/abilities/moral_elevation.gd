@@ -1,4 +1,4 @@
-## Moral Elevation — sopiark · normal (10) · usage unique · [change weakness, immunity, recover ETH]
+## Moral Elevation — sopiark · normal (10) · single use · [change weakness, immunity, recover ETH]
 ## MECHANIC: usable only if someone recently helped a rival recover ETH or DEN, or gave it an
 ## object. The user refills its ETH, loses its weakness, and nobody can change that weakness
 ## until its next turn. The mutual-aid condition is a TODO.

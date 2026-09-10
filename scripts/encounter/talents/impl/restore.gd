@@ -2,7 +2,7 @@
 ## Refresh crystals restore 100 % ETH."
 ##
 ## At the end of an encounter, gives a percentage of DEN and ETH back to the bearer's team. The
-## manager mutates the player [EncounterFighter]s directly, and the encounter UI then syncs those
+## manager mutates the player [EncounterIndividual]s directly, and the encounter UI then syncs those
 ## values back into the persistent [GameSession] state, as it does for damage taken. Stacking in a
 ## duo (two akturlin) falls out naturally: one [TalentScript] per bearer, so the hook runs once
 ## per copy.
@@ -27,7 +27,7 @@ func on_encounter_end(manager, result: StringName) -> void:
 			continue
 		f.recover_den(roundi(f.max_den * DEN_FRACTION))
 		f.recover_eth(roundi(f.max_eth * ETH_FRACTION))
-	manager.note_talent("%s : le duo récupère DEN/ETH en fin de rencontre." % _label())
+	manager.note_talent(_tr("LOG_TALENT_RESTORE") % _label())
 
 
 func _label() -> String:

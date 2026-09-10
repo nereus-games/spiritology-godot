@@ -3,7 +3,7 @@
 ## Deliberately built IN CODE and kept minimal — an adjustable placeholder. Shows the duo's two
 ## slots ([enum GameSession.PartySlot]) with a name, a DEN bar, an ETH bar and current/max text
 ## (element 2 in the design doc), plus a contextual action menu bottom-left (element 3) fed by
-## [method DungeonManager.actions_for] from the player's cell and facing. Navigation:
+## [method DungeonManager.actions_for] from the player's tile and facing. Navigation:
 ## `cycle_action` (Tab) cycles, `cycle_action_reverse` (Shift+Tab) cycles back, `interact`
 ## (Space/Enter) confirms. It updates live from [GameSession]'s DEN/ETH signals.
 ## TODO, from the design doc's "User Interface": the mini-map (element 1), the stack of known
@@ -202,13 +202,13 @@ func _process(_delta: float) -> void:
 	_update_status()
 
 
-## Rebuilds the menu: the mechanisms' actions, for the current cell and the one being faced, plus
+## Rebuilds the menu: the mechanisms' actions, for the current tile and the one being faced, plus
 ## exploration abilities and objects, through a persistent [ExplorationExtraActions] whose
 ## callables stay valid as long as the menu shows them.
 func _refresh_actions() -> void:
 	if _extra_actions == null:
 		_extra_actions = ExplorationExtraActions.new(ExplorationContext.new(_dungeon, _player))
-	var actions := _dungeon.actions_for(_player.cell, _player.facing_delta(), _player)
+	var actions := _dungeon.actions_for(_player.tile, _player.facing_delta(), _player)
 	actions.append_array(_extra_actions.build())
 	# The MENU button is always there. DEV: it goes back to the scenario selection.
 	actions.append(
@@ -235,9 +235,9 @@ func _update_status() -> void:
 		return
 	var parts: Array[String] = []
 	if aff.has_poison():
-		parts.append("☠ Poison : %d tour(s) (-%d DEN)" % [aff.poison_turns, aff.poison_per_turn])
+		parts.append(tr("UI_STATUS_POISON") % [aff.poison_turns, aff.poison_per_turn])
 	if aff.has_disarray():
-		parts.append("✦ Désorienté : %d mouvement(s)" % aff.remaining_disarray())
+		parts.append(tr("UI_STATUS_DISARRAY") % aff.remaining_disarray())
 	_status_label.text = "\n".join(parts)
 
 
@@ -330,7 +330,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("interact"):
 		_action_menu.confirm()
-		# The state may have changed — a cell dug, a gateway opened, an ability spent — so
+		# The state may have changed — a tile dug, a gateway opened, an ability spent — so
 		# refresh.
 		if _dungeon != null and _player != null:
 			_refresh_actions()

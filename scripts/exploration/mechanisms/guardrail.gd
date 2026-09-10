@@ -1,9 +1,9 @@
 ## A guardrail, protecting the edge of a storey.
 ##
 ## Per the design doc ("Walls + Decors / Guardrails") this is geometrically a gateway that never
-## opens: [constant DungeonManager.EDGE_THICKNESS] laid on the EDGE between two cells rather
-## than a whole cell. It stops that edge being crossed — and so stops the fall — for the player
-## and for the rivals alike, without costing a cell or getting in the way on either side.
+## opens: [constant DungeonManager.EDGE_THICKNESS] laid on the EDGE between two tiles rather
+## than a whole tile. It stops that edge being crossed — and so stops the fall — for the player
+## and for the rivals alike, without costing a tile or getting in the way on either side.
 ##
 ## Low ([constant HEIGHT], against 1 m for a wall), so you see over it and it does not cut the
 ## line of sight. That is what tells it apart from a wall along the edge.
@@ -17,18 +17,18 @@ const HEIGHT := 0.3
 ## The rail's width: nearly the whole edge, leaving a gap for the posts.
 const WIDTH := 0.9
 
-## The edge being protected: the guardrail sits between [member cell] and `cell + edge_dir`.
+## The edge being protected: the guardrail sits between [member tile] and `tile + edge_dir`.
 ## Always a unit horizontal direction (±X or ±Z).
 @export var edge_dir := Vector3i(0, 0, 1)
 
 
-## On the edge, not on the cell: both neighbouring cells stay usable.
+## On the edge, not on the tile: both neighbouring tiles stay usable.
 func _register() -> void:
-	_dungeon.register_edge_mechanism(cell, cell + edge_dir, self)
+	_dungeon.register_edge_mechanism(tile, tile + edge_dir, self)
 
 
 func _unregister() -> void:
-	_dungeon.unregister_edge_mechanism(cell, cell + edge_dir, self)
+	_dungeon.unregister_edge_mechanism(tile, tile + edge_dir, self)
 
 
 ## A guardrail bars its edge permanently: it never opens.
@@ -54,5 +54,5 @@ func _spawn_visual() -> void:
 		size.x = thin
 	else:
 		size.z = thin
-	var offset := Vector3(edge_dir.x, 0.0, edge_dir.z) * DungeonManager.CELL_SIZE * 0.5
+	var offset := Vector3(edge_dir.x, 0.0, edge_dir.z) * DungeonManager.TILE_SIZE * 0.5
 	_add_marker_box(Color(0.62, 0.64, 0.70), size, offset)

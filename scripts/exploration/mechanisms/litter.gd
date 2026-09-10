@@ -1,7 +1,7 @@
 ## Litter: the Examine and Recycle actions.
 ##
 ## From the design doc ("Mechanisms / Litter" and "Walls + Decors"). Until it is recycled, litter
-## is an OBSTACLE — its cell is impassable — so the player acts on it from an ADJACENT cell. Two
+## is an OBSTACLE — its tile is impassable — so the player acts on it from an ADJACENT tile. Two
 ## actions:
 ##  - Examine hands out one encyclopaedia info about a spirimonster from the associated pool,
 ##    once per visit;
@@ -42,7 +42,7 @@ func blocks_walk() -> bool:
 	return not _recycled
 
 
-## Available from an adjacent cell, while not yet recycled.
+## Available from an adjacent tile, while not yet recycled.
 func on_adjacent_actions(who: Node, _facing: Vector3i) -> Array:
 	if _recycled:
 		return []
@@ -63,7 +63,7 @@ func is_recycled() -> bool:
 	return _recycled
 
 
-## Recycled litter has no actions left: the cell has become ordinary floor.
+## Recycled litter has no actions left: the tile has become ordinary floor.
 func is_spent() -> bool:
 	return _recycled
 
@@ -87,7 +87,7 @@ func recycle(_who: Node) -> void:
 	if _recycled:
 		return
 	_recycled = true
-	# The cell becomes ORDINARY FLOOR, so the heap goes away entirely. Greying it out would read
+	# The tile becomes ORDINARY FLOOR, so the heap goes away entirely. Greying it out would read
 	# as a dead obstacle, when in fact you walk over it.
 	_remove_marker()
 	var n := randi_range(loot_min, loot_max)

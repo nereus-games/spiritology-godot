@@ -1,4 +1,4 @@
-## What a fighter chose to do this turn.
+## What an individual chose to do this turn.
 ##
 ## The shared vocabulary between the agents that DECIDE ([EncounterAgent]) and the manager
 ## that APPLIES. The list comes from the design doc, Game Design / Encounters: "Talk,
@@ -15,7 +15,7 @@
 ##   - an ability RUNS it directly, bypassing the menu — [method EncounterContext.flee],
 ##     called by `ghosting` and `opening_up_closing`.
 ## ## TODO: neither route actually leaves the encounter. Both end at the same wall —
-## fleeing means teleporting 3-5 cells away in exploration, with a 50 % chance the rival
+## fleeing means teleporting 3-5 tiles away in exploration, with a 50 % chance the rival
 ## disappears, and that is unbuilt. See docs/roadmap.md.
 class_name EncounterAction
 extends RefCounted
@@ -27,7 +27,7 @@ enum Kind { ABILITY, TALK, EXAMINE, MEDITATE, USE_OBJECT, FLEE, STEAL, PASS }
 
 var kind: Kind = Kind.ABILITY
 var ability: AbilityData = null  ## Kind.ABILITY uniquement
-var targets: Array = []  ## EncounterFighter visés
+var targets: Array = []  ## The EncounterIndividuals it is aimed at
 var object_id: StringName = &""  ## Kind.USE_OBJECT uniquement
 
 

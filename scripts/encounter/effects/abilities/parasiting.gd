@@ -8,4 +8,4 @@ func execute(ctx: EncounterContext) -> void:
 	var t = ctx.primary()
 	if t:
 		ctx.deal_damage(t, ctx.base_damage())
-		ctx.restrict_to(t, ["1/4 des capacités"])
+		ctx.restrict_to(t, ["LOG_RESTRICT_QUARTER_OF_ABILITIES"])

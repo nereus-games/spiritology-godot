@@ -6,5 +6,3 @@
 script = ExtResource("1_xygpc")
 id = &"traps"
 order = 1
-title = "Pièges (poison · téléport · disarray)"
-description = "Marche sur les plaques. Violet = poison (le DEN baisse chaque tour). Bleu = téléport (tu changes de case). Orange = disarray (tes pas suivants partent parfois de travers)."

@@ -1,9 +1,9 @@
 ## Crumbly ground: the Dig action.
 ##
 ## From the design doc ("Mechanisms / Crumbly Grounds" and "Walls + Decors"). Standing ON the
-## cell, the player can Dig by spending a spade. Digging hands out a random object, and/or an
+## tile, the player can Dig by spending a spade. Digging hands out a random object, and/or an
 ## encyclopaedia info about a spirimonster from the associated pool, and/or springs a trap.
-## Diggable once per visit, with an icon marking the cell afterwards. Crumbly ground cannot be
+## Diggable once per visit, with an icon marking the tile afterwards. Crumbly ground cannot be
 ## Examined — Dig covers that.
 ##
 ## No `class_name`: `extends` by path. References the GameSession autoload, like
@@ -37,20 +37,20 @@ const INFO_SPECIES: Array[StringName] = [
 var _dug := false
 
 
-## The Dig action, offered only while the cell has not been dug and the player holds a spade.
+## The Dig action, offered only while the tile has not been dug and the player holds a spade.
 func on_tile_actions(who: Node) -> Array:
 	if _dug or not GameSession.has_object(SPADE):
 		return []
 	return [ExplorationAction.new(&"dig", "UI_ACTION_DIG", Callable(self, "dig").bind(who))]
 
 
-## Whether the cell has already been dug this visit; the map shows an icon for it.
+## Whether the tile has already been dug this visit; the map shows an icon for it.
 func has_been_dug() -> bool:
 	return _dug
 
 
 ## Already dug this visit, so no Dig action left. This is also what the map reads to mark the
-## cell, as the design doc asks: "an icon is shown on the dungeon map after it has been dug a
+## tile, as the design doc asks: "an icon is shown on the dungeon map after it has been dug a
 ## first time".
 func is_spent() -> bool:
 	return _dug

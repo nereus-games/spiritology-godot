@@ -8,7 +8,7 @@ func execute(ctx: EncounterContext) -> void:
 	var t = ctx.primary()
 	if t == null:
 		return
-	ctx.restrict_to(t, ["sauf ses 2 dernières capacités"])
+	ctx.restrict_to(t, ["LOG_RESTRICT_EXCEPT_LAST_TWO_ABILITIES"])
 	if t.species and ctx.user.species and t.species.spiricosm != ctx.user.species.spiricosm:
 		ctx.recover_eth(ctx.user, ctx.dmg(&"small"))
 		ctx.recover_eth(t, ctx.dmg(&"small"))

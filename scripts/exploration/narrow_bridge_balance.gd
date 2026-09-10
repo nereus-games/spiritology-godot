@@ -12,8 +12,8 @@
 ##     diverging oscillation.
 ##
 ## The test is CONTINUOUS across the whole crossing: both `imbalance` and `lateral_velocity`
-## carry from cell to cell (see [method restart_cell]) — that is the character's momentum. Only
-## `progress` goes back to 0 on each cell.
+## carry from tile to tile (see [method restart_tile]) — that is the character's momentum. Only
+## `progress` goes back to 0 on each tile.
 ##
 ## This script is PURE LOGIC, with no input and no rendering, driven frame by frame through
 ## [method tick]; the real-time driver (lateral input, forward animation, camera) hooks onto it
@@ -47,9 +47,9 @@ const GUST_MAX_PERIOD := 1.4
 ## Current imbalance, unbounded in principle but bounded in practice by falling. Negative leans
 ## one way, positive the other.
 var imbalance := 0.0
-## Current lateral velocity, integrated into `imbalance`. CARRIED from cell to cell.
+## Current lateral velocity, integrated into `imbalance`. CARRIED from tile to tile.
 var lateral_velocity := 0.0
-## Progress along the current cell, 0 to 1. The character advances on its own.
+## Progress along the current tile, 0 to 1. The character advances on its own.
 var progress := 0.0
 
 # --- Parameters, tuned by sweep; see the target values in the comments ---
@@ -64,10 +64,10 @@ var base_perturbation := 0.9
 var perturbation_per_psy := 0.008
 ## How effective lateral correction (A/D) is: it acts on velocity to counter the fall.
 var input_strength := 1.2
-## Progress per second along the cell, derived from the length in [method configure].
+## Progress per second along the tile, derived from the length in [method configure].
 var forward_speed := 0.5
-## How long one bridge cell takes, in seconds. The character advances on its own, carefully.
-var seconds_per_cell := 2.0
+## How long one bridge tile takes, in seconds. The character advances on its own, carefully.
+var seconds_per_tile := 2.0
 ## Proportional friction on lateral velocity, per second.
 var friction := 0.8
 ## Inertia added by disarray, as a fraction of [constant COMMAND_INERTIA]. Above 0 the command
@@ -95,18 +95,18 @@ func _init(seed_value := -1) -> void:
 	_gust_timer = _rng.randf_range(GUST_MIN_PERIOD, GUST_MAX_PERIOD)
 
 
-## Configures the test from the PSY score, the length of a cell (always 1: the test is
-## continuous, and each cell is one segment) and whether disarray is active.
+## Configures the test from the PSY score, the length of a tile (always 1: the test is
+## continuous, and each tile is one segment) and whether disarray is active.
 func configure(psy_score: int, length: int = 1, disarrayed: bool = false) -> void:
 	_amplitude = base_perturbation + maxi(psy_score, 0) * perturbation_per_psy
-	forward_speed = 1.0 / (maxf(float(length), 1.0) * seconds_per_cell)
+	forward_speed = 1.0 / (maxf(float(length), 1.0) * seconds_per_tile)
 	disarray_inertia = DISARRAY_INERTIA if disarrayed else 0.0
 
 
-## Cell crossed: on to the next one WITHOUT flattening the balance. Imbalance, lateral velocity,
-## the gust in progress and the command already committed all carry over — otherwise every cell
+## Tile crossed: on to the next one WITHOUT flattening the balance. Imbalance, lateral velocity,
+## the gust in progress and the command already committed all carry over — otherwise every tile
 ## boundary would wipe the momentum.
-func restart_cell() -> void:
+func restart_tile() -> void:
 	progress = 0.0
 
 

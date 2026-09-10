@@ -16,12 +16,12 @@ const DAMAGE_CHANCE := 0.5
 
 
 func execute(ctx: EncounterContext) -> void:
-	var everyone: Array = ctx.all_fighters if not ctx.all_fighters.is_empty() else ctx.targets
-	for fighter in everyone:
+	var everyone: Array = ctx.all_individuals if not ctx.all_individuals.is_empty() else ctx.targets
+	for individual in everyone:
 		# Weakness changed at random; it is necessarily a different one, handled in the
 		# encounter.
-		ctx.change_weakness(fighter)
+		ctx.change_weakness(individual)
 		if ctx.rng.randf() < DAMAGE_CHANCE:
-			ctx.deal_damage(fighter, ctx.ability.base_damage)
+			ctx.deal_damage(individual, ctx.ability.base_damage)
 	# A UI disturbance lasting until the end of the encounter, cleared by Meditate.
 	ctx.request_ui(&"shuffle_ui", {"until": "encounter_end", "cancel_on": "meditate"})

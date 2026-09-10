@@ -19,8 +19,8 @@ Undertale, for the idea that fighting need not be the way through.
 
 ## The point of the game is the encyclopaedia
 
-Not levels. One page per species, filled with **info points**, where 1 point is 1 % of a
-page. Four ways to earn them:
+Not levels. One page per species, filled with **info points** — **IFP**, which is how they
+are counted — where 1 IFP is 1 % of a page. Four ways to earn them:
 
 | | |
 |---|---|
@@ -42,7 +42,7 @@ ones; handling a fragment gradually stains it, making it harder to read.
 Fifteen fragments assembled unlock the species' first ability, thirty the second.
 
 Each species also has a second, **Forlorn** page for its variant, holding a third exclusive
-ability at fifteen fragments. Forlorn rivals yield more info points — but only once the
+ability at fifteen fragments. Forlorn rivals yield more IFP — but only once the
 ordinary page is already complete. The two pages merge visually when both are done.
 
 ## Encounters

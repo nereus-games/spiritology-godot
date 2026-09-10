@@ -1,8 +1,8 @@
-## A dungeon's logical grid: walkable cells, occupancy, turns, rivals.
+## A dungeon's logical grid: walkable tiles, occupancy, turns, rivals.
 ##
 ## The source of truth for navigation — not physics raycasts scattered around, the way the
 ## Unity prototype did it. The player and the rivals ASK this manager instead of probing the
-## scene. A cell is a [Vector3i] (x, level y, z); world position is cell * CELL_SIZE.
+## scene. A tile is a [Vector3i] (x, level y, z); world position is tile * TILE_SIZE.
 ##
 ## Exploration is turn-based: a player step calls [method advance_turn], which makes the
 ## rivals play. (Whether turning in place costs a turn would be wired in here — the design
@@ -10,25 +10,25 @@
 ##
 ## Found by the player and the rivals through the "dungeon" group.
 ##
-## SCALE: 1 Godot unit = 1 metre. A cell — and so a wall block — is 1 m³, and the characters
-## are small (eyes at [constant EYE_HEIGHT]), so a one-cell wall hides the view completely. A
-## cell (x, y, z) spans from its FLOOR, at y * CELL_SIZE, up to one CELL_SIZE above it.
-## [method cell_to_world] returns that floor: the point an actor stands on, and the origin
+## SCALE: 1 Godot unit = 1 metre. A tile — and so a wall block — is 1 m³, and the characters
+## are small (eyes at [constant EYE_HEIGHT]), so a one-tile wall hides the view completely. A
+## tile (x, y, z) spans from its FLOOR, at y * TILE_SIZE, up to one TILE_SIZE above it.
+## [method tile_to_world] returns that floor: the point an actor stands on, and the origin
 ## mechanisms place their visuals against.
 class_name DungeonManager
 extends Node3D
 
 const DungeonRenderer := preload("res://scripts/exploration/dungeon_renderer.gd")
 
-## Cell size in world units (metres). A wall block is 1 m x 1 m x 1 m.
-const CELL_SIZE := 1.0
+## Tile size in world units (metres). A wall block is 1 m x 1 m x 1 m.
+const TILE_SIZE := 1.0
 
 ## Eye height of a character, in metres. Below the height of a wall, so you never see over
 ## one. Applied by the player's camera rig (see `player.tscn`).
 const EYE_HEIGHT := 0.6
 
-## Thickness of a floor slab (which is also the ceiling of the cell below). Non-zero but
-## thin: under an upper storey there is still CELL_SIZE - FLOOR_THICKNESS of headroom, plenty
+## Thickness of a floor slab (which is also the ceiling of the tile below). Non-zero but
+## thin: under an upper storey there is still TILE_SIZE - FLOOR_THICKNESS of headroom, plenty
 ## for a character about [constant EYE_HEIGHT] tall. A storey's floor is therefore NOT a solid
 ## block — you can walk under it wherever that level has a floor of its own.
 ##
@@ -38,8 +38,8 @@ const EYE_HEIGHT := 0.6
 ## up the geometry and keeps level design lighter.
 const FLOOR_THICKNESS := 0.1
 
-## Thickness of anything sitting ON the edge between two cells rather than on a cell — a
-## [Gateway] or a guardrail. It occupies no cell, and stays thin enough for an actor to stand
+## Thickness of anything sitting ON the edge between two tiles rather than on a tile — a
+## [Gateway] or a guardrail. It occupies no tile, and stays thin enough for an actor to stand
 ## on either side.
 const EDGE_THICKNESS := 0.1
 
@@ -56,10 +56,10 @@ static func fall_damage(levels: int) -> int:
 
 
 signal turn_advanced(turn: int)
-## Emitted when a move lands on a cell held by an opposing individual.
+## Emitted when a move lands on a tile held by an opposing individual.
 signal encounter_requested(rival: Node, initiated_by_rival: bool)
 
-## A rival steps onto the narrow-bridge cell the player is on: both fall.
+## A rival steps onto the narrow-bridge tile the player is on: both fall.
 signal bridge_collision(rival: Node, tile: Vector3i)
 
 ## A one-off message for the player (the outcome of a dieverting; later on a sprung trap, an
@@ -77,32 +77,32 @@ signal message_posted(text: String)
 
 var turn_count := 0
 
-# Walkable cells (floor). cell:Vector3i -> true.
+# Walkable tiles (floor). tile:Vector3i -> true.
 var _floor: Dictionary = {}
-# Occupancy: cell:Vector3i -> Node (a rival). The player does NOT occupy a cell — stepping
+# Occupancy: tile:Vector3i -> Node (a rival). The player does NOT occupy a tile — stepping
 # onto an occupied one starts an encounter instead.
 var _occupants: Dictionary = {}
 
-# Mechanisms per cell: cell:Vector3i -> Array of mechanisms. Several can share one cell.
+# Mechanisms per tile: tile:Vector3i -> Array of mechanisms. Several can share one tile.
 # Registered by the mechanism nodes themselves at boot.
 var _mechanisms: Dictionary = {}
 
-# Cells rendered as wall blocks, remembered by [method render_grid]. The mini-map draws them:
+# Tiles rendered as wall blocks, remembered by [method render_grid]. The mini-map draws them:
 # a room reads by its outline, not only by the absence of floor.
 var _walls: Dictionary = {}
 
-# EDGE mechanisms (gateways): on no cell at all, but on the boundary between two neighbouring
-# cells. Canonical [method edge_key] -> Array of mechanisms.
+# EDGE mechanisms (gateways): on no tile at all, but on the boundary between two neighbouring
+# tiles. Canonical [method edge_key] -> Array of mechanisms.
 var _edge_mechanisms: Dictionary = {}
 
-# Cells explicitly left EMPTY — a deliberate hole from the level design. Never rendered as a
+# Tiles explicitly left EMPTY — a deliberate hole from the level design. Never rendered as a
 # wall, even with nothing holding them up. Entering one is a BOTTOMLESS fall, and fatal (see
-# [method is_bottomless]). A merely absent cell still becomes a wall: that is the normal case
+# [method is_bottomless]). A merely absent tile still becomes a wall: that is the normal case
 # around the outside of a room.
 var _hole: Dictionary = {}
 
-# Pit cells (a floor set LOWER, a ravine): rendered as a lowered dark slab, never as a wall,
-# and with no normal slab when the cell is walkable too — that is the bridge plank laid over
+# Pit tiles (a floor set LOWER, a ravine): rendered as a lowered dark slab, never as a wall,
+# and with no normal slab when the tile is walkable too — that is the bridge plank laid over
 # it. Gives the "log over a drop" look.
 var _pit: Dictionary = {}
 ## How far (metres) a pit slab sits below the normal floor level.
@@ -123,14 +123,14 @@ func _ready() -> void:
 # --------------------------------------------------------------------------
 
 
-func world_to_cell(pos: Vector3) -> Vector3i:
-	return Vector3i(roundi(pos.x / CELL_SIZE), roundi(pos.y / CELL_SIZE), roundi(pos.z / CELL_SIZE))
+func world_to_tile(pos: Vector3) -> Vector3i:
+	return Vector3i(roundi(pos.x / TILE_SIZE), roundi(pos.y / TILE_SIZE), roundi(pos.z / TILE_SIZE))
 
 
-## World point at the cell's FLOOR, centred: where an actor's feet go. The cell's volume runs
-## from there up to [constant CELL_SIZE] above.
-func cell_to_world(cell: Vector3i) -> Vector3:
-	return Vector3(cell.x, cell.y, cell.z) * CELL_SIZE
+## World point at the tile's FLOOR, centred: where an actor's feet go. The tile's volume runs
+## from there up to [constant TILE_SIZE] above.
+func tile_to_world(tile: Vector3i) -> Vector3:
+	return Vector3(tile.x, tile.y, tile.z) * TILE_SIZE
 
 
 # --------------------------------------------------------------------------
@@ -138,50 +138,50 @@ func cell_to_world(cell: Vector3i) -> Vector3:
 # --------------------------------------------------------------------------
 
 
-func is_floor(cell: Vector3i) -> bool:
-	return _floor.has(cell)
+func is_floor(tile: Vector3i) -> bool:
+	return _floor.has(tile)
 
 
-## Says NOTHING about gateways, which block an edge rather than a cell — for an actual step,
+## Says NOTHING about gateways, which block an edge rather than a tile — for an actual step,
 ## go through [method can_step].
-func is_walkable(cell: Vector3i) -> bool:
-	return _floor.has(cell) and not _occupants.has(cell) and not is_blocked_by_mechanism(cell)
+func is_walkable(tile: Vector3i) -> bool:
+	return _floor.has(tile) and not _occupants.has(tile) and not is_blocked_by_mechanism(tile)
 
 
-## Whether a step from `from_cell` to a neighbouring `to_cell` is possible: the destination is
+## Whether a step from `from_tile` to a neighbouring `to_tile` is possible: the destination is
 ## walkable AND the edge between them is not blocked by a closed gateway.
-func can_step(from_cell: Vector3i, to_cell: Vector3i) -> bool:
-	return is_walkable(to_cell) and not is_edge_blocked(from_cell, to_cell)
+func can_step(from_tile: Vector3i, to_tile: Vector3i) -> bool:
+	return is_walkable(to_tile) and not is_edge_blocked(from_tile, to_tile)
 
 
-## Whether a mechanism on the cell forbids passage. Independent of occupancy.
-func is_blocked_by_mechanism(cell: Vector3i) -> bool:
-	for m in mechanisms_at(cell):
+## Whether a mechanism on the tile forbids passage. Independent of occupancy.
+func is_blocked_by_mechanism(tile: Vector3i) -> bool:
+	for m in mechanisms_at(tile):
 		if m.blocks_walk():
 			return true
 	return false
 
 
-func occupant_at(cell: Vector3i) -> Node:
-	return _occupants.get(cell)
+func occupant_at(tile: Vector3i) -> Node:
+	return _occupants.get(tile)
 
 
-func reserve(cell: Vector3i, who: Node) -> bool:
-	if not _floor.has(cell) or _occupants.has(cell):
+func reserve(tile: Vector3i, who: Node) -> bool:
+	if not _floor.has(tile) or _occupants.has(tile):
 		return false
-	_occupants[cell] = who
+	_occupants[tile] = who
 	return true
 
 
-func release(cell: Vector3i) -> void:
-	_occupants.erase(cell)
+func release(tile: Vector3i) -> void:
+	_occupants.erase(tile)
 
 
-func move_occupant(from_cell: Vector3i, to_cell: Vector3i, who: Node) -> bool:
-	if not can_step(from_cell, to_cell):
+func move_occupant(from_tile: Vector3i, to_tile: Vector3i, who: Node) -> bool:
+	if not can_step(from_tile, to_tile):
 		return false
-	_occupants.erase(from_cell)
-	_occupants[to_cell] = who
+	_occupants.erase(from_tile)
+	_occupants[to_tile] = who
 	return true
 
 
@@ -194,8 +194,8 @@ func register_player(player: Node3D) -> void:
 	_player = player
 
 
-func player_cell() -> Vector3i:
-	return world_to_cell(_player.global_position) if _player else Vector3i.ZERO
+func player_tile() -> Vector3i:
+	return world_to_tile(_player.global_position) if _player else Vector3i.ZERO
 
 
 ## For mechanisms that only apply to the player — chest loot, dieverting.
@@ -217,7 +217,7 @@ func register_rival(rival: Node) -> void:
 	if rival in _rivals:
 		return
 	_rivals.append(rival)
-	reserve(world_to_cell(rival.global_position), rival)
+	reserve(world_to_tile(rival.global_position), rival)
 
 
 func unregister_rival(rival: Node) -> void:
@@ -237,11 +237,11 @@ func unregister_rival(rival: Node) -> void:
 func advance_turn() -> void:
 	turn_count += 1
 	turn_advanced.emit(turn_count)
-	var pcell := player_cell()
+	var ptile := player_tile()
 	for rival in _rivals.duplicate():
 		if is_instance_valid(rival) and rival.has_method("take_turn"):
-			rival.take_turn(pcell)
-	# Ticked mechanisms (automated gateways and the like), on cells and on edges alike.
+			rival.take_turn(ptile)
+	# Ticked mechanisms (automated gateways and the like), on tiles and on edges alike.
 	for dict in [_mechanisms, _edge_mechanisms]:
 		for arr in dict.values():
 			for m in arr:
@@ -270,7 +270,7 @@ func request_encounter(rival: Node, initiated_by_rival: bool) -> void:
 	encounter_requested.emit(rival, initiated_by_rival)
 
 
-## Two characters meet on the SAME narrow-bridge cell: both fall, per the design doc. The
+## Two characters meet on the SAME narrow-bridge tile: both fall, per the design doc. The
 ## player-versus-rival case is arbitrated by `exploration.gd`, which drives the player's
 ## crossing.
 func request_bridge_collision(rival: Node, tile: Vector3i) -> void:
@@ -287,45 +287,45 @@ func rivals() -> Array[Node]:
 ##
 ## The single broadcast point: any mechanism that moves the player between floors goes through
 ## here rather than notifying the rivals itself.
-func notify_level_change(who: Node, from_cell: Vector3i, to_cell: Vector3i) -> void:
+func notify_level_change(who: Node, from_tile: Vector3i, to_tile: Vector3i) -> void:
 	if not is_player(who):
 		return
 	for rival in _rivals.duplicate():
 		if is_instance_valid(rival) and rival.has_method("witness_player_level_change"):
-			rival.witness_player_level_change(from_cell, to_cell)
+			rival.witness_player_level_change(from_tile, to_tile)
 
 
-## Whether the cell is a narrow bridge, recognised by a mechanism exposing the balance test.
-func is_narrow_bridge(cell: Vector3i) -> bool:
-	for m in mechanisms_at(cell):
+## Whether the tile is a narrow bridge, recognised by a mechanism exposing the balance test.
+func is_narrow_bridge(tile: Vector3i) -> bool:
+	for m in mechanisms_at(tile):
 		if m.has_method("engage") and m.has_method("direction"):
 			return true
 	return false
 
 
-## The nearest free floor cell to `cell` (`cell` itself if it is free), for placing an actor
-## without breaking the one-occupant-per-cell invariant. Returns `cell` when nothing around is
+## The nearest free floor tile to `tile` (`tile` itself if it is free), for placing an actor
+## without breaking the one-occupant-per-tile invariant. Returns `tile` when nothing around is
 ## free, and leaves the caller to decide what that means.
-func free_cell_near(cell: Vector3i) -> Vector3i:
-	if is_floor(cell) and occupant_at(cell) == null:
-		return cell
+func free_tile_near(tile: Vector3i) -> Vector3i:
+	if is_floor(tile) and occupant_at(tile) == null:
+		return tile
 	for d in [Vector3i(1, 0, 0), Vector3i(-1, 0, 0), Vector3i(0, 0, 1), Vector3i(0, 0, -1)]:
-		var n: Vector3i = cell + d
+		var n: Vector3i = tile + d
 		if is_walkable(n) and occupant_at(n) == null:
 			return n
-	return cell
+	return tile
 
 
-## Free floor cells AROUND `cell`, on the same floor, within `radius` cells (Manhattan
-## distance), shuffled. `cell` itself is excluded. Lets actors be spawned "nearby" without
+## Free floor tiles AROUND `tile`, on the same floor, within `radius` tiles (Manhattan
+## distance), shuffled. `tile` itself is excluded. Lets actors be spawned "nearby" without
 ## caring about the shape of the room.
-func free_cells_near(cell: Vector3i, radius: int) -> Array[Vector3i]:
+func free_tiles_near(tile: Vector3i, radius: int) -> Array[Vector3i]:
 	var found: Array[Vector3i] = []
 	for dx in range(-radius, radius + 1):
 		for dz in range(-radius, radius + 1):
 			if absi(dx) + absi(dz) > radius or (dx == 0 and dz == 0):
 				continue
-			var c := cell + Vector3i(dx, 0, dz)
+			var c := tile + Vector3i(dx, 0, dz)
 			if is_walkable(c) and occupant_at(c) == null:
 				found.append(c)
 	found.shuffle()
@@ -337,56 +337,56 @@ func free_cells_near(cell: Vector3i, radius: int) -> Array[Vector3i]:
 # --------------------------------------------------------------------------
 
 
-## Registers a mechanism on a cell. Called by the mechanism node itself at boot.
-func register_mechanism(cell: Vector3i, mechanism: Node) -> void:
-	var arr: Array = _mechanisms.get(cell, [])
+## Registers a mechanism on a tile. Called by the mechanism node itself at boot.
+func register_mechanism(tile: Vector3i, mechanism: Node) -> void:
+	var arr: Array = _mechanisms.get(tile, [])
 	if mechanism not in arr:
 		arr.append(mechanism)
-	_mechanisms[cell] = arr
+	_mechanisms[tile] = arr
 
 
-func unregister_mechanism(cell: Vector3i, mechanism: Node) -> void:
-	var arr: Array = _mechanisms.get(cell, [])
+func unregister_mechanism(tile: Vector3i, mechanism: Node) -> void:
+	var arr: Array = _mechanisms.get(tile, [])
 	arr.erase(mechanism)
 	if arr.is_empty():
-		_mechanisms.erase(cell)
+		_mechanisms.erase(tile)
 	else:
-		_mechanisms[cell] = arr
+		_mechanisms[tile] = arr
 
 
-func mechanisms_at(cell: Vector3i) -> Array:
-	return _mechanisms.get(cell, [])
+func mechanisms_at(tile: Vector3i) -> Array:
+	return _mechanisms.get(tile, [])
 
 
 # --------------------------------------------------------------------------
-# Edge mechanisms (gateways) — between cells, not on one
+# Edge mechanisms (gateways) — between tiles, not on one
 # --------------------------------------------------------------------------
 
 
-## Canonical key for the edge between two neighbouring cells: order-independent, so the same
-## from either side. Vector4i(x, y, z, axis), where (x, y, z) is the lower of the two cells
+## Canonical key for the edge between two neighbouring tiles: order-independent, so the same
+## from either side. Vector4i(x, y, z, axis), where (x, y, z) is the lower of the two tiles
 ## along that axis and axis is 0 for an X boundary, 1 for a Z one.
-static func edge_key(from_cell: Vector3i, to_cell: Vector3i) -> Vector4i:
-	var lo := from_cell
-	var d := to_cell - from_cell
+static func edge_key(from_tile: Vector3i, to_tile: Vector3i) -> Vector4i:
+	var lo := from_tile
+	var d := to_tile - from_tile
 	if d.x + d.z < 0:
-		lo = to_cell
+		lo = to_tile
 		d = -d
 	var axis := 0 if d.x != 0 else 1
 	return Vector4i(lo.x, lo.y, lo.z, axis)
 
 
-## Registers a mechanism on the edge between two cells. Called by the node itself at boot.
-func register_edge_mechanism(from_cell: Vector3i, to_cell: Vector3i, mechanism: Node) -> void:
-	var key := edge_key(from_cell, to_cell)
+## Registers a mechanism on the edge between two tiles. Called by the node itself at boot.
+func register_edge_mechanism(from_tile: Vector3i, to_tile: Vector3i, mechanism: Node) -> void:
+	var key := edge_key(from_tile, to_tile)
 	var arr: Array = _edge_mechanisms.get(key, [])
 	if mechanism not in arr:
 		arr.append(mechanism)
 	_edge_mechanisms[key] = arr
 
 
-func unregister_edge_mechanism(from_cell: Vector3i, to_cell: Vector3i, mechanism: Node) -> void:
-	var key := edge_key(from_cell, to_cell)
+func unregister_edge_mechanism(from_tile: Vector3i, to_tile: Vector3i, mechanism: Node) -> void:
+	var key := edge_key(from_tile, to_tile)
 	var arr: Array = _edge_mechanisms.get(key, [])
 	arr.erase(mechanism)
 	if arr.is_empty():
@@ -395,58 +395,58 @@ func unregister_edge_mechanism(from_cell: Vector3i, to_cell: Vector3i, mechanism
 		_edge_mechanisms[key] = arr
 
 
-func edge_mechanisms_between(from_cell: Vector3i, to_cell: Vector3i) -> Array:
-	return _edge_mechanisms.get(edge_key(from_cell, to_cell), [])
+func edge_mechanisms_between(from_tile: Vector3i, to_tile: Vector3i) -> Array:
+	return _edge_mechanisms.get(edge_key(from_tile, to_tile), [])
 
 
-## Whether the step from a cell to its neighbour is barred (closed gateway, guardrail).
+## Whether the step from a tile to its neighbour is barred (closed gateway, guardrail).
 ## Symmetric.
-func is_edge_blocked(from_cell: Vector3i, to_cell: Vector3i) -> bool:
-	for m in edge_mechanisms_between(from_cell, to_cell):
+func is_edge_blocked(from_tile: Vector3i, to_tile: Vector3i) -> bool:
+	for m in edge_mechanisms_between(from_tile, to_tile):
 		if m.blocks_walk():
 			return true
 	return false
 
 
 ## Whether the edge is OPAQUE (a closed gateway). A guardrail bars the step but not the view.
-func is_edge_opaque(from_cell: Vector3i, to_cell: Vector3i) -> bool:
-	for m in edge_mechanisms_between(from_cell, to_cell):
+func is_edge_opaque(from_tile: Vector3i, to_tile: Vector3i) -> bool:
+	for m in edge_mechanisms_between(from_tile, to_tile):
 		if m.blocks_sight():
 			return true
 	return false
 
 
-## Tells a cell's mechanisms that an actor entered it — this is what springs traps. Called by
+## Tells a tile's mechanisms that an actor entered it — this is what springs traps. Called by
 ## the player and by the rivals once a step has logically gone through.
-func notify_entered(cell: Vector3i, who: Node) -> void:
-	for m in mechanisms_at(cell).duplicate():
+func notify_entered(tile: Vector3i, who: Node) -> void:
+	for m in mechanisms_at(tile).duplicate():
 		if is_instance_valid(m):
 			m.on_enter(who)
 
 
-## The contextual actions open to an actor standing on `from_cell` and looking at `facing`.
-## Aggregates the on-cell actions of the mechanisms on `from_cell` (Dig), the adjacent actions
-## of the mechanisms on the cell being looked at, `from_cell + facing` (Recycle, Examine), and
+## The contextual actions open to an actor standing on `from_tile` and looking at `facing`.
+## Aggregates the on-tile actions of the mechanisms on `from_tile` (Dig), the adjacent actions
+## of the mechanisms on the tile being looked at, `from_tile + facing` (Recycle, Examine), and
 ## those of the mechanisms sitting on the edge being looked at — a gateway can be opened or
 ## meditated at from either side. Consumed by the exploration action surface (the HUD).
-func actions_for(from_cell: Vector3i, facing: Vector3i, who: Node) -> Array:
+func actions_for(from_tile: Vector3i, facing: Vector3i, who: Node) -> Array:
 	var actions: Array = []
-	for m in mechanisms_at(from_cell):
+	for m in mechanisms_at(from_tile):
 		actions.append_array(m.on_tile_actions(who))
-	for m in edge_mechanisms_between(from_cell, from_cell + facing):
+	for m in edge_mechanisms_between(from_tile, from_tile + facing):
 		actions.append_array(m.on_adjacent_actions(who, facing))
 	# Whatever blocks sight blocks interaction: nothing BEHIND a closed gateway is actionable.
 	# The gateway's own actions stay on offer, of course — it is the thing being acted on. Over
 	# a guardrail, by contrast, you both see and act.
-	if is_edge_opaque(from_cell, from_cell + facing):
+	if is_edge_opaque(from_tile, from_tile + facing):
 		return actions
-	for m in mechanisms_at(from_cell + facing):
+	for m in mechanisms_at(from_tile + facing):
 		actions.append_array(m.on_adjacent_actions(who, facing))
 	return actions
 
 
-## A random walkable floor cell other than `exclude`. Returns `exclude` when there is none.
-func random_floor_cell(exclude: Vector3i) -> Vector3i:
+## A random walkable floor tile other than `exclude`. Returns `exclude` when there is none.
+func random_floor_tile(exclude: Vector3i) -> Vector3i:
 	var candidates: Array = []
 	for c in _floor:
 		if c != exclude and is_walkable(c):
@@ -456,23 +456,23 @@ func random_floor_cell(exclude: Vector3i) -> Vector3i:
 	return candidates[randi() % candidates.size()]
 
 
-## Teleports an actor to a random free floor cell — the teleport trap. Returns the cell it
+## Teleports an actor to a random free floor tile — the teleport trap. Returns the tile it
 ## landed on, unchanged when no destination was free.
 func teleport_actor(who: Node) -> Vector3i:
-	var from: Vector3i = who.cell
-	return teleport_actor_to(who, random_floor_cell(from))
+	var from: Vector3i = who.tile
+	return teleport_actor_to(who, random_floor_tile(from))
 
 
-## Teleports an actor to a SPECIFIC cell — a dungeon entrance or exit, a dieverting. Falls
-## back to a free neighbouring cell when the destination is occupied, and keeps occupancy
-## straight (rivals occupy their cell, the player does not). Returns the cell it landed on,
+## Teleports an actor to a SPECIFIC tile — a dungeon entrance or exit, a dieverting. Falls
+## back to a free neighbouring tile when the destination is occupied, and keeps occupancy
+## straight (rivals occupy their tile, the player does not). Returns the tile it landed on,
 ## unchanged when the destination is not walkable. Does NOT fire the destination's mechanisms:
 ## this is an instant relocation.
 func teleport_actor_to(who: Node, dest: Vector3i) -> Vector3i:
-	var from: Vector3i = who.cell
+	var from: Vector3i = who.tile
 	if not is_floor(dest):
 		return from
-	dest = free_cell_near(dest)
+	dest = free_tile_near(dest)
 	if dest == from:
 		return from
 	var occ := occupant_at(dest)
@@ -491,7 +491,7 @@ func teleport_actor_to(who: Node, dest: Vector3i) -> Vector3i:
 # --------------------------------------------------------------------------
 #
 # Per the design doc ("Dungeons"), you leave a dungeon by reaching an EXIT and interacting
-# with it, and "the dungeon entry counts as an exit point". These cells are declared by level
+# with it, and "the dungeon entry counts as an exit point". These tiles are declared by level
 # design — in dev, by the test scenario. Today they serve the mechanisms that send the player
 # back to them, such as dieverting.
 # ## TODO: leaving the dungeon proper — the interaction, returning to the world map, exiting
@@ -502,30 +502,30 @@ var _has_entrance := false
 var _exits: Array[Vector3i] = []
 
 
-## Declares the entrance cell. It ALSO counts as an exit, per the design doc, so there is no
+## Declares the entrance tile. It ALSO counts as an exit, per the design doc, so there is no
 ## need to add it twice.
-func set_entrance(cell: Vector3i) -> void:
-	_entrance = cell
+func set_entrance(tile: Vector3i) -> void:
+	_entrance = tile
 	_has_entrance = true
-	add_exit(cell)
+	add_exit(tile)
 
 
 func has_entrance() -> bool:
 	return _has_entrance
 
 
-## The dungeon's entrance cell — Vector3i.ZERO while none has been declared, so check
+## The dungeon's entrance tile — Vector3i.ZERO while none has been declared, so check
 ## [method has_entrance] before using it.
-func entrance_cell() -> Vector3i:
+func entrance_tile() -> Vector3i:
 	return _entrance
 
 
-func add_exit(cell: Vector3i) -> void:
-	if cell not in _exits:
-		_exits.append(cell)
+func add_exit(tile: Vector3i) -> void:
+	if tile not in _exits:
+		_exits.append(tile)
 
 
-func exit_cells() -> Array[Vector3i]:
+func exit_tiles() -> Array[Vector3i]:
 	return _exits.duplicate()
 
 
@@ -546,58 +546,58 @@ func random_exit() -> Vector3i:
 # --------------------------------------------------------------------------
 
 
-func set_floor_cells(cells: Array) -> void:
+func set_floor_tiles(tiles: Array) -> void:
 	_floor.clear()
-	for c in cells:
+	for c in tiles:
 		_floor[c] = true
 
 
-func add_floor(cell: Vector3i) -> void:
-	_floor[cell] = true
+func add_floor(tile: Vector3i) -> void:
+	_floor[tile] = true
 
 
-## Marks a cell as a pit: walkable, but [method render_grid] lays NEITHER a normal slab NOR a
-## wall there — the cell is held up only by whatever level design puts on it, a bridge plank.
+## Marks a tile as a pit: walkable, but [method render_grid] lays NEITHER a normal slab NOR a
+## wall there — the tile is held up only by whatever level design puts on it, a bridge plank.
 ## With no real floor underneath, a dark slab is laid below so the gap does not read as a void;
 ## otherwise the floor below serves as the bottom.
-func mark_pit(cell: Vector3i) -> void:
-	_pit[cell] = true
+func mark_pit(tile: Vector3i) -> void:
+	_pit[tile] = true
 
 
-## Marks a cell as an outright hole: no wall to plug it, and no bottom either.
-func mark_hole(cell: Vector3i) -> void:
-	_hole[cell] = true
+## Marks a tile as an outright hole: no wall to plug it, and no bottom either.
+func mark_hole(tile: Vector3i) -> void:
+	_hole[tile] = true
 
 
-func is_hole(cell: Vector3i) -> bool:
-	return _hole.has(cell)
+func is_hole(tile: Vector3i) -> bool:
+	return _hole.has(tile)
 
 
-## Whether entering this cell means a BOTTOMLESS fall. Such a fall should not exist — it would
+## Whether entering this tile means a BOTTOMLESS fall. Such a fall should not exist — it would
 ## be a level-design mistake — because the outside of a room is rendered as wall precisely
 ## since nothing holds it up. If level design leaves one anyway, it is treated as what it is,
 ## a floor too far down to survive: a fatal fall, rather than a silent block.
-func is_bottomless(cell: Vector3i) -> bool:
-	return _hole.has(cell) and not _floor.has(cell) and fall_landing(cell) == cell
+func is_bottomless(tile: Vector3i) -> bool:
+	return _hole.has(tile) and not _floor.has(tile) and fall_landing(tile) == tile
 
 
-## Where a fall from `cell` lands: the first FLOOR cell below it. Returns `cell` unchanged
+## Where a fall from `tile` lands: the first FLOOR tile below it. Returns `tile` unchanged
 ## when there is none, which means no fall at all — a wall.
-func fall_landing(cell: Vector3i) -> Vector3i:
-	for level in range(cell.y - 1, cell.y - 12, -1):
-		var below := Vector3i(cell.x, level, cell.z)
+func fall_landing(tile: Vector3i) -> Vector3i:
+	for level in range(tile.y - 1, tile.y - 12, -1):
+		var below := Vector3i(tile.x, level, tile.z)
 		if _floor.has(below):
 			return below
-	return cell
+	return tile
 
 
-## The logical grid's floor cells (cell -> true). Read-only: this is the live dictionary.
-func floor_cells() -> Dictionary:
+## The logical grid's floor tiles (tile -> true). Read-only: this is the live dictionary.
+func floor_tiles() -> Dictionary:
 	return _floor
 
 
-## Cells marked as pits (cell -> true). Read-only: this is the live dictionary.
-func pit_cells() -> Dictionary:
+## Tiles marked as pits (tile -> true). Read-only: this is the live dictionary.
+func pit_tiles() -> Dictionary:
 	return _pit
 
 
@@ -605,17 +605,17 @@ func pit_cells() -> Dictionary:
 ## [DungeonRenderer]: this manager holds the MODEL, not the meshes.
 func render_grid() -> void:
 	# Remembered for the mini-map, which redraws them every frame.
-	_walls = derive_wall_cells()
+	_walls = derive_wall_tiles()
 	DungeonRenderer.render_grid(self, _walls)
 
 
-## Cells rendered as wall blocks. Empty until [method render_grid] has run.
-func wall_cells() -> Dictionary:
+## Tiles rendered as wall blocks. Empty until [method render_grid] has run.
+func wall_tiles() -> Dictionary:
 	return _walls
 
 
-func is_wall(cell: Vector3i) -> bool:
-	return _walls.has(cell)
+func is_wall(tile: Vector3i) -> bool:
+	return _walls.has(tile)
 
 
 ## TODO (2026-09-02) — AUTHORING DEBT. Walls and holes are today DERIVED from the floor grid
@@ -625,16 +625,16 @@ func is_wall(cell: Vector3i) -> bool:
 ##  - "a wall can serve as ground on the floor above it" (no slab above a wall);
 ##  - "if an endless fall happens anyway, it devitalises" (the outright hole).
 ## Once a dungeon authoring format exists, walls and holes will have to be DECLARED the way
-## floors are, and [method derive_wall_cells] will be scaffolding for code-built test
+## floors are, and [method derive_wall_tiles] will be scaffolding for code-built test
 ## scenarios only.
 ##
-## Cells rendered as wall blocks: non-floor cells next to floor, carrying no mechanism and no
+## Tiles rendered as wall blocks: non-floor tiles next to floor, carrying no mechanism and no
 ## pit, with no floor below them — the lip of a drop stays open rather than being walled off.
 ##
 ## Public because it is a query on the MODEL ("where does the grid imply a wall?") rather than
 ## a rendering matter: the geometry checks assert against it.
-func derive_wall_cells() -> Dictionary:
-	var wall_cells := {}
+func derive_wall_tiles() -> Dictionary:
+	var wall_tiles := {}
 	for c in _floor:
 		for d in [Vector3i(1, 0, 0), Vector3i(-1, 0, 0), Vector3i(0, 0, 1), Vector3i(0, 0, -1)]:
 			var n: Vector3i = c + d
@@ -646,8 +646,8 @@ func derive_wall_cells() -> Dictionary:
 				and not _pit.has(n)
 				and fall_landing(n) == n
 			):
-				wall_cells[n] = true
-	return wall_cells
+				wall_tiles[n] = true
+	return wall_tiles
 
 
 ## Builds a demo room: a rectangular floor at level 0 with a few interior walls, and renders
@@ -656,11 +656,11 @@ func build_demo_room(width: int, depth: int, interior_walls: Array = []) -> void
 	var blocked := {}
 	for w in interior_walls:
 		blocked[w] = true
-	var cells: Array = []
+	var tiles: Array = []
 	for x in range(width):
 		for z in range(depth):
 			var c := Vector3i(x, 0, z)
 			if not blocked.has(c):
-				cells.append(c)
-	set_floor_cells(cells)
+				tiles.append(c)
+	set_floor_tiles(tiles)
 	DungeonRenderer.build_demo_visuals(self, width, depth, blocked)

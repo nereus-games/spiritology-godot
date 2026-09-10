@@ -7,4 +7,4 @@ extends AbilityScript
 
 func execute(ctx: EncounterContext) -> void:
 	# Keeping the position simply means requesting no reordering.
-	ctx.recover_eth(ctx.user, ctx.dmg(&"small"))  # approx. du gain conditionnel
+	ctx.recover_eth(ctx.user, ctx.dmg(&"small"))  # an approximation of the conditional gain

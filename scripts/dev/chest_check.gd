@@ -12,9 +12,9 @@ const EXPLORATION := preload("res://scenes/exploration/exploration.tscn")
 const RIVAL_SCENE := preload("res://scenes/exploration/rival/rival.tscn")
 const DungeonMechanism := preload("res://scripts/exploration/mechanisms/dungeon_mechanism.gd")
 
-## Cells of the two chests in the "chests" scenario.
-const LOOT_CELL := Vector3i(1, 0, 1)
-const TRAP_CELL := Vector3i(1, 0, 3)
+## Tiles of the two chests in the "chests" scenario.
+const LOOT_TILE := Vector3i(1, 0, 1)
+const TRAP_TILE := Vector3i(1, 0, 3)
 
 ## A teammate species WITHOUT the reveal_traps talent (érzélak carries trick_to_reveal).
 const NO_TALENT_TEAMMATE := &"erzelak"
@@ -74,8 +74,8 @@ func _setup(teammate: StringName) -> Dictionary:
 		"scene": scene,
 		"dm": dm,
 		"player": player,
-		"loot": _chest_at(dm, LOOT_CELL),
-		"trap": _chest_at(dm, TRAP_CELL),
+		"loot": _chest_at(dm, LOOT_TILE),
+		"trap": _chest_at(dm, TRAP_TILE),
 	}
 
 
@@ -84,9 +84,9 @@ func _teardown(ctx: Dictionary) -> void:
 	await get_tree().process_frame
 
 
-## The chest on a cell, or null.
-func _chest_at(dm, cell: Vector3i) -> Node:
-	for m in dm.mechanisms_at(cell):
+## The chest on a tile, or null.
+func _chest_at(dm, tile: Vector3i) -> Node:
+	for m in dm.mechanisms_at(tile):
 		if "is_trap" in m:
 			return m
 	return null
@@ -107,9 +107,9 @@ func _is_greyed(mechanism: Node) -> bool:
 	return marker.material_override.albedo_color.is_equal_approx(DungeonMechanism.SPENT_COLOR)
 
 
-func _action_ids(dm, cell: Vector3i, who: Node) -> Array:
+func _action_ids(dm, tile: Vector3i, who: Node) -> Array:
 	var ids := []
-	for a in dm.actions_for(cell, Vector3i(0, 0, 1), who):
+	for a in dm.actions_for(tile, Vector3i(0, 0, 1), who):
 		ids.append(a.id)
 	return ids
 
@@ -123,7 +123,7 @@ func _check_loot_chest() -> void:
 	print("[loot chest]")
 	var ctx := await _setup(REVEAL_TRAPS_TEAMMATE)
 	var chest = ctx.loot
-	_check(chest != null and not chest.is_trap, "a loot chest on %s" % LOOT_CELL)
+	_check(chest != null and not chest.is_trap, "a loot chest on %s" % LOOT_TILE)
 	_check(
 		not chest.is_opened() and not chest.revealed, "to start with: neither opened nor revealed"
 	)
@@ -132,7 +132,7 @@ func _check_loot_chest() -> void:
 		chest.revealed and not chest.is_opened(),
 		"reveal() reveals without opening (the Trick to Reveal talent)"
 	)
-	ctx.player.teleport_to(LOOT_CELL)
+	ctx.player.teleport_to(LOOT_TILE)
 	chest.on_enter(ctx.player)
 	var got := _inventory_total()
 	_check(chest.is_opened(), "stepping on it opens it")
@@ -158,13 +158,13 @@ func _check_rival_on_loot_chest() -> void:
 	var chest = ctx.loot
 	var rival = RIVAL_SCENE.instantiate()
 	rival.species_id = &"kalilk"
-	rival.position = ctx.dm.cell_to_world(LOOT_CELL)
+	rival.position = ctx.dm.tile_to_world(LOOT_TILE)
 	ctx.dm.add_child(rival)
 	await get_tree().process_frame
 	chest.on_enter(rival)
 	_check(not chest.is_opened(), "the chest stays closed")
 	_check(_inventory_total() == 0, "nothing added to the player's inventory")
-	ctx.player.teleport_to(LOOT_CELL)
+	ctx.player.teleport_to(LOOT_TILE)
 	chest.on_enter(ctx.player)
 	_check(
 		chest.is_opened() and _inventory_total() > 0, "the loot was indeed waiting for the player"
@@ -181,13 +181,13 @@ func _check_trap_chest() -> void:
 	print("[trapped chest, duo without Reveal Traps]")
 	var ctx := await _setup(NO_TALENT_TEAMMATE)
 	var chest = ctx.trap
-	_check(chest != null and chest.is_trap, "a trapped chest on %s" % TRAP_CELL)
-	ctx.player.teleport_to(TRAP_CELL)
+	_check(chest != null and chest.is_trap, "a trapped chest on %s" % TRAP_TILE)
+	ctx.player.teleport_to(TRAP_TILE)
 	ctx.player.set_invisible(5)  # fog mantel running: the trap has to break it
 	chest.on_enter(ctx.player)
 	_check(not chest.is_pending(), "no choice offered without the talent")
 	_check(chest.is_opened(), "the chest is consumed")
-	_check(ctx.player.cell != TRAP_CELL, "the player is teleported (%s)" % [ctx.player.cell])
+	_check(ctx.player.tile != TRAP_TILE, "the player is teleported (%s)" % [ctx.player.tile])
 	_check(_inventory_total() == 0, "no loot: a pure trap")
 	_check(_is_greyed(chest), "a sprung trapped chest is greyed out")
 	_check(not ctx.player.is_hidden_from_rivals(), "the trap breaks invisibility (fog mantel)")
@@ -205,25 +205,25 @@ func _check_reveal_traps_declined() -> void:
 	var ctx := await _setup(REVEAL_TRAPS_TEAMMATE)
 	var chest = ctx.trap
 	_check(GameSession.party_has_talent(&"reveal_traps"), "the duo does carry reveal_traps")
-	ctx.player.teleport_to(TRAP_CELL)
+	ctx.player.teleport_to(TRAP_TILE)
 	chest.on_enter(ctx.player)
 	_check(chest.is_pending() and not chest.is_opened(), "the chest waits for the player's choice")
-	_check(ctx.player.cell == TRAP_CELL, "nobody is teleported while nothing has been chosen")
-	var ids := _action_ids(ctx.dm, TRAP_CELL, ctx.player)
+	_check(ctx.player.tile == TRAP_TILE, "nobody is teleported while nothing has been chosen")
+	var ids := _action_ids(ctx.dm, TRAP_TILE, ctx.player)
 	_check(
 		&"chest_teleport" in ids and &"chest_decline" in ids,
 		"both actions are offered (%s)" % [ids]
 	)
 	chest.decline_teleport(ctx.player)
 	_check(chest.is_opened() and not chest.is_pending(), "the chest is consumed once chosen")
-	_check(ctx.player.cell == TRAP_CELL, "declined: the player stays put")
+	_check(ctx.player.tile == TRAP_TILE, "declined: the player stays put")
 	_check(
 		_inventory_total() == chest.trap_loot_declined,
 		"declined: %d object(s) anyway" % chest.trap_loot_declined
 	)
 	_check(
-		ctx.dm.actions_for(TRAP_CELL, Vector3i(0, 0, 1), ctx.player).is_empty(),
-		"no action left on the cell"
+		ctx.dm.actions_for(TRAP_TILE, Vector3i(0, 0, 1), ctx.player).is_empty(),
+		"no action left on the tile"
 	)
 	await _teardown(ctx)
 
@@ -232,11 +232,11 @@ func _check_reveal_traps_accepted() -> void:
 	print("[trapped chest + Reveal Traps: accepted]")
 	var ctx := await _setup(REVEAL_TRAPS_TEAMMATE)
 	var chest = ctx.trap
-	ctx.player.teleport_to(TRAP_CELL)
+	ctx.player.teleport_to(TRAP_TILE)
 	chest.on_enter(ctx.player)
 	chest.accept_teleport(ctx.player)
 	_check(
-		ctx.player.cell != TRAP_CELL, "accepted: the player is teleported (%s)" % [ctx.player.cell]
+		ctx.player.tile != TRAP_TILE, "accepted: the player is teleported (%s)" % [ctx.player.tile]
 	)
 	_check(
 		_inventory_total() == chest.trap_loot_accepted,

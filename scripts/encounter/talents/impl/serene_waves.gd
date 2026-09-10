@@ -30,10 +30,7 @@ func on_talk_resolved(manager, speaker, target, _effective: bool) -> void:
 	target.recover_den(TEAMMATE_DEN)
 	target.override_weakness(GameEnums.Energy.NONE)  # stripped for the current turn
 	manager.note_talent(
-		(
-			"%s revitalise %s (+%d DEN, faiblesse retirée)."
-			% [_label(), target.display_name(), TEAMMATE_DEN]
-		)
+		_tr("LOG_TALENT_SERENE_WAVES") % [_label(), target.display_name(), TEAMMATE_DEN]
 	)
 
 

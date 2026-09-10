@@ -1,20 +1,20 @@
 #!/usr/bin/env bash
 #
-# Lance toutes les vérifications headless de scenes/dev/*_check.tscn et agrège
-# leurs résultats. Sort en 1 dès qu'une seule échoue.
+# Runs every headless check in scenes/dev/*_check.tscn and gathers the results. Exits 1
+# as soon as a single one fails.
 #
-#   ./tools/run_checks.sh                # toutes
-#   ./tools/run_checks.sh encounter data # celles dont le nom contient l'un de ces mots
-#   GODOT=/chemin/vers/Godot ./tools/run_checks.sh
+#   ./tools/run_checks.sh                # all of them
+#   ./tools/run_checks.sh encounter data # the ones whose name contains one of these words
+#   GODOT=/path/to/Godot ./tools/run_checks.sh
 #
-# Deux pièges que ce lanceur existe pour couvrir :
+# Two traps this launcher exists to cover:
 #
-#  - Un check dont le SCRIPT ne compile pas ne signale rien : Godot charge la scène sans
-#    son script, personne n'appelle quit(), et le processus tourne indéfiniment. D'où le
-#    timeout par check — sans lui, une CI reste bloquée jusqu'à sa propre limite.
-#  - Godot rend 0 en signalant des erreurs de script ou des instances fuitées sur sa
-#    sortie. Le code de retour seul laisserait donc passer ces régressions : on relit
-#    aussi la sortie.
+#  - A check whose SCRIPT does not compile reports nothing: Godot loads the scene without
+#    its script, nobody calls quit(), and the process runs forever. Hence the per-check
+#    timeout — without it a CI run hangs until its own limit.
+#  - Godot returns 0 while reporting script errors or leaked instances on its output. The
+#    return code alone would therefore let those regressions through: we read the output
+#    as well.
 #
 set -uo pipefail
 
@@ -23,25 +23,25 @@ source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
 TIMEOUT="${TIMEOUT:-300}"
 
-# Motifs qui trahissent un échec malgré un code de retour nul.
-# `^ERROR:` couvre les push_error du jeu lui-même : Godot les imprime et continue, donc un
-# check peut afficher « ALL OK » et rendre 0 en ayant signalé une vraie faute. Vérifié
-# qu'aucun check n'en émet en fonctionnement normal. Les WARNING, eux, restent tolérés :
-# certains sont des diagnostics voulus (un scénario de test qui éprouve une chute).
+# Patterns that give away a failure despite a zero return code.
+# `^ERROR:` covers the game's own push_error calls: Godot prints them and carries on, so a
+# check can print "ALL OK" and return 0 having reported a real fault. Verified that no
+# check emits one in normal operation. WARNINGs, on the other hand, stay tolerated: some
+# are deliberate diagnostics (a test scenario that exercises a fall).
 SILENT_FAILURES='SCRIPT ERROR|^ERROR:|Failed to load script|leaked at exit|still in use at exit'
 
 require_godot
 
-# Exécute une commande en la tuant au-delà de $TIMEOUT secondes (macOS n'a pas timeout(1)).
-# Rend 124 en cas d'expiration, comme le ferait timeout(1).
+# Runs a command, killing it past $TIMEOUT seconds (macOS has no timeout(1)).
+# Returns 124 on expiry, as timeout(1) would.
 run_with_timeout() {
 	local out_file="$1"; shift
 	"$@" >"$out_file" 2>&1 &
 	local pid=$!
 	( sleep "$TIMEOUT"; kill -9 "$pid" 2>/dev/null ) 2>/dev/null &
 	local watcher=$!
-	# `wait` sous silence : quand le veilleur tue le processus, le shell annoncerait
-	# « Killed: 9 » en plein milieu de la ligne de résultat.
+	# `wait` is silenced: when the watcher kills the process, the shell would announce
+	# "Killed: 9" right in the middle of the result line.
 	{ wait "$pid"; } 2>/dev/null; local code=$?
 	{ kill "$watcher"; wait "$watcher"; } 2>/dev/null
 	[[ $code -ge 128 ]] && return 124
@@ -64,7 +64,7 @@ for scene in "$PROJECT_DIR"/scenes/dev/*_check.tscn; do
 done
 
 if [[ ${#scenes[@]} -eq 0 ]]; then
-	echo "Aucun check à lancer." >&2
+	echo "No check to run." >&2
 	exit 2
 fi
 
@@ -73,7 +73,7 @@ trap 'rm -rf "$log_dir"' EXIT
 
 failed=()
 printf '%s\n' "Godot   : $GODOT"
-printf '%s\n' "Projet  : $PROJECT_DIR"
+printf '%s\n' "Project : $PROJECT_DIR"
 printf '%s\n\n' "Checks  : ${#scenes[@]}"
 
 for scene in "${scenes[@]}"; do
@@ -87,17 +87,17 @@ for scene in "${scenes[@]}"; do
 
 	reason=""
 	if [[ $code -eq 124 ]]; then
-		reason="expiré après ${TIMEOUT}s (script non compilé ? boucle infinie ?)"
+		reason="timed out after ${TIMEOUT}s (script not compiling? infinite loop?)"
 	elif [[ $code -ne 0 ]]; then
-		reason="code de retour $code"
+		reason="return code $code"
 	elif grep -qE "$SILENT_FAILURES" "$out"; then
-		reason="erreur signalée sur la sortie malgré un code 0"
+		reason="an error reported on the output despite a 0 return code"
 	fi
 
 	if [[ -z "$reason" ]]; then
 		printf 'OK    %3ds\n' "$elapsed"
 	else
-		printf 'ÉCHEC %3ds  — %s\n' "$elapsed" "$reason"
+		printf 'FAIL  %3ds  — %s\n' "$elapsed" "$reason"
 		failed+=("$name")
 		sed -e 's/^/      | /' "$out" | tail -20
 	fi
@@ -105,8 +105,8 @@ done
 
 echo
 if [[ ${#failed[@]} -eq 0 ]]; then
-	echo "Tous les checks passent (${#scenes[@]})."
+	echo "All checks pass (${#scenes[@]})."
 	exit 0
 fi
-echo "Checks en échec (${#failed[@]}/${#scenes[@]}) : ${failed[*]}"
+echo "Checks failing (${#failed[@]}/${#scenes[@]}): ${failed[*]}"
 exit 1

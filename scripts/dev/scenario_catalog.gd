@@ -7,7 +7,7 @@
 ## that neither side points at nothing.
 ##
 ## `selected_id` is set by the selection screen and read by `exploration.gd`, which calls
-## [method build] and places the player on the cell it returns. The HUD's MENU button goes back
+## [method build] and places the player on the tile it returns. The HUD's MENU button goes back
 ## to the selection screen, for now.
 ##
 ## No `class_name` (the CLI class-cache trap): referenced by `preload`. References the autoloads
@@ -91,11 +91,11 @@ static func list() -> Array:
 static func title_for(id: StringName) -> String:
 	for s in list():
 		if s.id == id:
-			return s.title
+			return String(TranslationServer.translate(s.name_key()))
 	return String(id)
 
 
-## Builds the scenario into `dm` and returns the player's starting cell.
+## Builds the scenario into `dm` and returns the player's starting tile.
 static func build(id: StringName, dm) -> Vector3i:
 	_reset_session()
 	match id:
@@ -160,22 +160,22 @@ static func _floor_rect_y(dm, x0: int, z0: int, w: int, d: int, y: int) -> void:
 			dm.add_floor(Vector3i(x, y, z))
 
 
-## Instantiates a mechanism, applies `props`, puts it on `cell` and adds it to the dungeon.
-static func _place(dm, script, cell: Vector3i, props: Dictionary = {}) -> Node:
+## Instantiates a mechanism, applies `props`, puts it on `tile` and adds it to the dungeon.
+static func _place(dm, script, tile: Vector3i, props: Dictionary = {}) -> Node:
 	var m = script.new()
 	for k in props:
 		m.set(k, props[k])
-	m.position = dm.cell_to_world(cell)
+	m.position = dm.tile_to_world(tile)
 	dm.add_child(m)
 	return m
 
 
-static func _spawn_rival(dm, species: StringName, cell: Vector3i) -> Node:
+static func _spawn_rival(dm, species: StringName, tile: Vector3i) -> Node:
 	var r = RIVAL_SCENE.instantiate()
 	r.species_id = species
 	if rival_den_override > 0:
 		r.max_den = rival_den_override  # set BEFORE entering the tree, since _ready reads it
-	r.position = dm.cell_to_world(cell)
+	r.position = dm.tile_to_world(tile)
 	dm.add_child(r)
 	return r
 
@@ -186,7 +186,7 @@ static func _spawn_rival(dm, species: StringName, cell: Vector3i) -> Node:
 
 
 static func _movement(dm) -> Vector3i:
-	# An empty room with a few pillars to navigate around; removing cells renders them as walls.
+	# An empty room with a few pillars to navigate around; removing tiles renders them as walls.
 	_floor_rect(dm, 0, 0, 7, 9)
 	for pillar in [
 		Vector3i(2, 0, 3),
@@ -208,8 +208,8 @@ static func _traps(dm) -> Vector3i:
 
 
 static func _gates(dm) -> Vector3i:
-	_floor_line(dm, 1, 0, 11)  # a one-cell corridor, so the gateways genuinely block
-	# The gateways sit on the EDGE between the anchor cell and the next one (+z), so both cells
+	_floor_line(dm, 1, 0, 11)  # a one-tile corridor, so the gateways genuinely block
+	# The gateways sit on the EDGE between the anchor tile and the next one (+z), so both tiles
 	# stay walkable and you can wait right in front.
 	var gate_edge := Vector3i(0, 0, 1)
 	_place(dm, Gateway, Vector3i(1, 0, 3), {"kind": Gateway.Kind.AUTOMATED, "edge_dir": gate_edge})
@@ -257,7 +257,7 @@ static func _chests(dm) -> Vector3i:
 	_place(dm, Dieverting, Vector3i(1, 0, 7))
 	GameSession.add_object(&"spade", 1)  # enough to destroy ONE die
 	# An exit at the end of the corridor, to tell "sent back to the entrance" apart from "sent to
-	# an exit". The entrance itself is declared by `exploration.gd` on the starting cell.
+	# an exit". The entrance itself is declared by `exploration.gd` on the starting tile.
 	dm.add_exit(Vector3i(1, 0, 8))
 	AbilityCatalog.dev_granted = [&"fog_mantel"]  # so the crystal has something to refresh
 	GameSession.mark_exploration_ability_used(&"fog_mantel")
@@ -294,7 +294,7 @@ static func _bridge(dm) -> Vector3i:
 
 
 ## Geometry shared by both bridge scenarios. `disarray_trap` decides whether the trap on the
-## far cell is placed: useful to test the return trip under disarray, noise when testing rivals.
+## far tile is placed: useful to test the return trip under disarray, noise when testing rivals.
 static func _build_bridge_map(dm, disarray_trap: bool = true) -> Vector3i:
 	# A ravine TWO storeys deep, spanned by a narrow log. Falling off the bridge is not a "back to
 	# the start": you land at the BOTTOM, taking normal fall damage proportional to the depth, and
@@ -303,10 +303,10 @@ static func _build_bridge_map(dm, disarray_trap: bool = true) -> Vector3i:
 	#   y = 2  platforms + bridge     y = 1  return ledge     y = 0  floor of the ravine
 	_floor_rect_y(dm, 0, 0, 3, 2, 2)  # starting platform, x 0..2, z 0..1
 	dm.add_floor(Vector3i(3, 2, 0))  # top landing of the second flight
-	dm.add_floor(Vector3i(1, 2, 7))  # arrival: ONE cell, walled on 3 sides by render_grid
+	dm.add_floor(Vector3i(1, 2, 7))  # arrival: ONE tile, walled on 3 sides by render_grid
 	# (the bridge is the only way out, so the return trip
 	# starts on it without wasting disarray moves)
-	# The bridge: every cell carries the mechanism, engaged along whichever way you face. Walkable
+	# The bridge: every tile carries the mechanism, engaged along whichever way you face. Walkable
 	# but marked a pit — only the plank holds it up, and the ravine opens below.
 	for z in range(2, 7):
 		var c := Vector3i(1, 2, z)
@@ -321,17 +321,17 @@ static func _build_bridge_map(dm, disarray_trap: bool = true) -> Vector3i:
 	dm.add_floor(Vector3i(3, 1, 2))
 	dm.add_floor(Vector3i(3, 1, 3))
 	# The climb back: floor to ledge, then ledge to the STARTING platform — falling does not win
-	# you the crossing. Each flight is one upward cell plus its downward cell above it.
+	# you the crossing. Each flight is one upward tile plus its downward tile above it.
 	_place(dm, Stairs, Vector3i(3, 0, 4), {"level_delta": 1, "face_dir": Vector3i(0, 0, -1)})
 	_place(dm, Stairs, Vector3i(3, 1, 4), {"level_delta": -1, "face_dir": Vector3i(0, 0, 1)})
 	_place(dm, Stairs, Vector3i(3, 1, 1), {"level_delta": 1, "face_dir": Vector3i(0, 0, -1)})
 	_place(dm, Stairs, Vector3i(3, 2, 1), {"level_delta": -1, "face_dir": Vector3i(0, 0, 1)})
-	# A disarray trap on the ARRIVAL cell: it springs by itself as you step off the bridge, so the
+	# A disarray trap on the ARRIVAL tile: it springs by itself as you step off the bridge, so the
 	# outward trip is tested in the normal state and the return under disarray (+25% command
 	# inertia). The duration is raised to 6-8 moves for THIS test, against the design doc's 3-5:
 	# turning around already costs 2 moves and stepping onto the plank a third, so at 3-5 the
 	# return crossing would be a coin flip on whether any disarray was left. At 6-8 there are 3-5
-	# left for the bridge, which counts them down cell by cell — you watch the HUD counter drop as
+	# left for the bridge, which counts them down tile by tile — you watch the HUD counter drop as
 	# you cross.
 	if disarray_trap:
 		_place(
@@ -344,16 +344,16 @@ static func _build_bridge_map(dm, disarray_trap: bool = true) -> Vector3i:
 
 
 ## A bridge plank: a narrow brown box along the direction of travel, its top face level with the
-## cell's floor — which the pit marking left empty.
-static func _spawn_plank(dm, cell: Vector3i) -> void:
+## tile's floor — which the pit marking left empty.
+static func _spawn_plank(dm, tile: Vector3i) -> void:
 	var mi := MeshInstance3D.new()
 	var box := BoxMesh.new()
-	box.size = Vector3(0.35, 0.1, dm.CELL_SIZE)
+	box.size = Vector3(0.35, 0.1, dm.TILE_SIZE)
 	mi.mesh = box
 	var mat := StandardMaterial3D.new()
 	mat.albedo_color = Color(0.52, 0.38, 0.24)
 	mi.material_override = mat
-	mi.position = dm.cell_to_world(cell) + Vector3(0.0, -0.05, 0.0)
+	mi.position = dm.tile_to_world(tile) + Vector3(0.0, -0.05, 0.0)
 	dm.add_child(mi)
 
 
@@ -376,12 +376,12 @@ static func _stairs(dm) -> Vector3i:
 	_floor_rect_y(dm, 3, 4, 4, 9, 3)
 	_floor_rect_y(dm, 4, 4, 3, 9, 4)
 
-	# A PILLAR: one cell of storey 0 is removed under tier 1, so it becomes a wall block and ITS
-	# top face serves as the floor of the cell above (the design doc's "Walls + Decors": a wall can
+	# A PILLAR: one tile of storey 0 is removed under tier 1, so it becomes a wall block and ITS
+	# top face serves as the floor of the tile above (the design doc's "Walls + Decors": a wall can
 	# serve as ground on the floor above it, which avoids stacking wall plus slab).
 	dm._floor.erase(Vector3i(1, 0, 8))
 
-	# GUARDRAILS: the top tier's east edge is protected only along its first two cells. Two steps
+	# GUARDRAILS: the top tier's east edge is protected only along its first two tiles. Two steps
 	# further the same edge is open, and costs a 4-unit fall — the two are a step apart, so they
 	# can be compared directly.
 	for z in [4, 5]:
@@ -394,7 +394,7 @@ static func _stairs(dm) -> Vector3i:
 	for flight in [Vector3i(1, 0, 4), Vector3i(2, 1, 6), Vector3i(3, 2, 8), Vector3i(4, 3, 10)]:
 		var up: Vector3i = flight
 		var down: Vector3i = up + Vector3i(0, 1, 0)
-		dm._floor.erase(up)  # a flight's cell is not walkable: you are carried past it
+		dm._floor.erase(up)  # a flight's tile is not walkable: you are carried past it
 		dm._floor.erase(down)
 		_place(dm, Stairs, up, {"level_delta": 1, "face_dir": Vector3i(0, 0, 1)})
 		_place(dm, Stairs, down, {"level_delta": -1, "face_dir": Vector3i(0, 0, -1)})

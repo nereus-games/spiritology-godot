@@ -97,7 +97,7 @@ func peek_move() -> bool:
 ## deflected. With no disarray left it always returns `false`.
 ##
 ## What counts as ONE move (per the design doc, with no free-look exception since 2026-09-02): a
-## step, a keyboard turn, a turn COMMITTED through free look, and each cell crossed on a narrow
+## step, a keyboard turn, a turn COMMITTED through free look, and each tile crossed on a narrow
 ## bridge — where the deflection itself does not apply, for want of another direction to go. A
 ## mouse gesture that commits no turn is deflected without counting anything down (see
 ## [method peek_move]).

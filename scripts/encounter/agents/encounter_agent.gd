@@ -1,4 +1,4 @@
-## Decides what a fighter does on its turn.
+## Decides what an individual does on its turn.
 ##
 ## The seam between the encounter LOOP ([EncounterManager]) and the DECISION. The manager
 ## always does `await agent.decide(...)`: a synchronous implementation ([AutoAgent])
@@ -11,7 +11,7 @@ class_name EncounterAgent
 extends RefCounted
 
 
-## The fighter's action this turn, or null if it can do nothing at all.
+## The individual's action this turn, or null if it can do nothing at all.
 ## May be a coroutine — the manager awaits the result either way.
-func decide(_fighter: EncounterFighter, _manager: EncounterManager) -> EncounterAction:
+func decide(_individual: EncounterIndividual, _manager: EncounterManager) -> EncounterAction:
 	return null

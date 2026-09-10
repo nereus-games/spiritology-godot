@@ -5,5 +5,3 @@
 [resource]
 script = ExtResource("1_8px16")
 id = &"movement"
-title = "Déplacement & regard"
-description = "Salle vide avec piliers. Observe : fluidité du regard (souris), des rotations (Q/E) et du pas-à-pas (WASD). Échap libère le curseur."

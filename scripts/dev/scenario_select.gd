@@ -26,7 +26,7 @@ func _ready() -> void:
 	margin.add_child(box)
 
 	var title := Label.new()
-	title.text = "Scénarios de test — exploration"
+	title.text = tr("UI_DEV_SCENARIOS_TITLE")
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(title)
 
@@ -58,13 +58,13 @@ func _ready() -> void:
 		grid.add_child(entry)
 
 		var button := Button.new()
-		button.text = scenario.title
+		button.text = String(TranslationServer.translate(scenario.name_key()))
 		button.custom_minimum_size = Vector2(460, 38)
 		button.pressed.connect(_on_scenario_chosen.bind(scenario.id))
 		entry.add_child(button)
 
 		var desc := Label.new()
-		desc.text = scenario.description
+		desc.text = String(TranslationServer.translate(scenario.desc_key()))
 		desc.custom_minimum_size = Vector2(460, 0)
 		desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		desc.add_theme_font_size_override("font_size", 12)
@@ -81,7 +81,7 @@ func _build_duo_row() -> Control:
 	row.alignment = BoxContainer.ALIGNMENT_CENTER
 	row.add_child(
 		_species_picker(
-			"Personnage principal",
+			tr("UI_DEV_MAIN_CHARACTER"),
 			ScenarioCatalog.MAIN_SPECIES,
 			ScenarioCatalog.main_species,
 			func(id: StringName) -> void: ScenarioCatalog.main_species = id
@@ -89,7 +89,7 @@ func _build_duo_row() -> Control:
 	)
 	row.add_child(
 		_species_picker(
-			"Coéquipier",
+			tr("UI_DEV_TEAMMATE"),
 			ScenarioCatalog.TEAMMATE_SPECIES,
 			ScenarioCatalog.teammate_species,
 			func(id: StringName) -> void: ScenarioCatalog.teammate_species = id
@@ -102,13 +102,13 @@ func _build_duo_row() -> Control:
 func _species_picker(
 	label_text: String, species: Array, current: StringName, on_pick: Callable
 ) -> Control:
-	var cell := HBoxContainer.new()
-	cell.add_theme_constant_override("separation", 6)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 6)
 
 	var label := Label.new()
 	label.text = label_text
 	label.add_theme_font_size_override("font_size", 13)
-	cell.add_child(label)
+	row.add_child(label)
 
 	var picker := OptionButton.new()
 	picker.custom_minimum_size = Vector2(180, 0)
@@ -119,8 +119,8 @@ func _species_picker(
 		if id == current:
 			picker.select(i)
 	picker.item_selected.connect(func(index: int) -> void: on_pick.call(species[index]))
-	cell.add_child(picker)
-	return cell
+	row.add_child(picker)
+	return row
 
 
 ## The species' translated name, falling back to the slug when the key is missing from the .po.
@@ -166,7 +166,7 @@ func _build_rival_den_row() -> Control:
 	]:
 		var b := Button.new()
 		b.text = "%s · %d" % [preset.tag, preset.value]
-		b.tooltip_text = "Ordre de grandeur de la doc"
+		b.tooltip_text = tr("UI_DEV_RIVAL_DEN_TOOLTIP")
 		b.add_theme_font_size_override("font_size", 12)
 		b.pressed.connect(func() -> void: slider.value = preset.value)
 		row.add_child(b)
@@ -186,12 +186,12 @@ func _den_label(v: int) -> String:
 	var tag := ""
 	match v:
 		GameSession.RIVAL_DEN_EARLY:
-			tag = "  — E (early)"
+			tag = tr("UI_DEV_RIVAL_DEN_EARLY")
 		GameSession.RIVAL_DEN_MID:
-			tag = "  — M (mid)"
+			tag = tr("UI_DEV_RIVAL_DEN_MID")
 		GameSession.RIVAL_DEN_LATE:
-			tag = "  — L (late)"
-	return "DEN des rivaux : %d%s" % [v, tag]
+			tag = tr("UI_DEV_RIVAL_DEN_LATE")
+	return tr("UI_DEV_RIVAL_DEN") % [v, tag]
 
 
 func _on_scenario_chosen(id: StringName) -> void:

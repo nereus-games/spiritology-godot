@@ -4,7 +4,7 @@
 ##
 ## A wholly EXPLORATION talent: it has NO effect in an encounter, so it overrides no hook here.
 ## Both its clauses live on the dungeon side and are read through
-## [method GameSession.party_has_talent] — outside an encounter there is no [EncounterFighter] to
+## [method GameSession.party_has_talent] — outside an encounter there is no [EncounterIndividual] to
 ## carry this script:
 ##  - the CHEST clause is implemented in `mechanisms/chest.gd`: teleport or stay, with loot either
 ##    way;

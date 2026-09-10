@@ -8,4 +8,4 @@ func execute(ctx: EncounterContext) -> void:
 	var t = ctx.primary()
 	if t:
 		ctx.drain_eth(t, ctx.dmg(&"small"))
-		ctx.restrict_to(t, ["sauf Examine", "sauf Object"])
+		ctx.restrict_to(t, ["LOG_RESTRICT_EXCEPT_EXAMINE", "LOG_RESTRICT_EXCEPT_OBJECT"])

@@ -5,25 +5,25 @@ on:
   pull_request:
 
 env:
-  # Doit rester aligné sur `config/features` dans project.godot. Le nom de l'archive suit
-  # la convention des releases Godot : Godot_v<version>-stable_linux.x86_64.zip
+  # Must stay in step with `config/features` in project.godot. The archive name follows
+  # the Godot release convention: Godot_v<version>-stable_linux.x86_64.zip
   GODOT_VERSION: "4.6.3"
 
 jobs:
   checks:
-    name: Parsing et vérifications headless
+    name: Parsing and headless checks
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v7
 
-      - name: Cache du binaire Godot
+      - name: Cache the Godot binary
         uses: actions/cache@v6
         with:
           path: ~/godot
           key: godot-${{ env.GODOT_VERSION }}-linux
 
-      - name: Installer Godot
+      - name: Install Godot
         run: |
           set -euo pipefail
           if [[ ! -x "$HOME/godot/godot" ]]; then
@@ -36,25 +36,25 @@ jobs:
           fi
           echo "GODOT=$HOME/godot/godot" >> "$GITHUB_ENV"
 
-      - name: Version de Godot
+      - name: Godot version
         run: "$GODOT --headless --version"
 
-      # Les deux scripts reconstruisent d'eux-mêmes le cache de classes globales, absent
-      # d'un dépôt fraîchement cloné (.godot/ n'est pas versionné) — cf. tools/lib.sh.
+      # Both scripts rebuild the global class cache themselves; it is absent from a freshly
+      # cloned repository (.godot/ is not versioned) — see tools/lib.sh.
 
-      - name: Parser tous les scripts
+      - name: Parse every script
         run: ./tools/parse_check.sh
 
-      - name: Vérifications headless
+      - name: Headless checks
         run: ./tools/run_checks.sh
 
   reuse:
-    name: Conformité REUSE (double licence)
+    name: REUSE compliance (dual licence)
     runs-on: ubuntu-latest
 
-    # Prouve qu'AUCUN fichier n'est sans licence déclarée, y compris ceux ajoutés plus
-    # tard. C'est le seul moyen que la frontière code/contenu reste vraie dans six mois.
-    # Job séparé : il n'a pas besoin de Godot et tourne en parallèle du reste.
+    # Proves that NO file is left without a declared licence, including the ones added
+    # later. It is the only way the code/content boundary is still true in six months.
+    # A separate job: it needs no Godot and runs alongside the rest.
     steps:
       - uses: actions/checkout@v7
 
@@ -62,20 +62,20 @@ jobs:
         with:
           python-version: "3.12"
 
-      # L'extra charset-normalizer évite de dépendre de la présence de libmagic.
-      - name: Installer REUSE
+      # The charset-normalizer extra avoids depending on libmagic being present.
+      - name: Install REUSE
         run: pip install --quiet "reuse[charset-normalizer]"
 
       - name: reuse lint
         run: reuse lint
 
   style:
-    name: Format et lint GDScript
+    name: GDScript format and lint
     runs-on: ubuntu-latest
 
-    # Job séparé : gdtoolkit n'a pas besoin de Godot. `gdformat --check` échoue si un
-    # fichier n'est pas au format canonique, `gdlint` applique gdlintrc (dont chaque
-    # assouplissement est justifié dans le fichier lui-même).
+    # A separate job: gdtoolkit needs no Godot. `gdformat --check` fails when a file is
+    # not in canonical form, `gdlint` applies gdlintrc (where every relaxation is justified
+    # in the file itself).
     steps:
       - uses: actions/checkout@v7
 
@@ -83,7 +83,7 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Installer gdtoolkit
+      - name: Install gdtoolkit
         run: pip install --quiet "gdtoolkit==4.*"
 
       - name: gdformat --check

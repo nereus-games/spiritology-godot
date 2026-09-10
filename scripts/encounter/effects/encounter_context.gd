@@ -1,7 +1,7 @@
 ## What an ability's effect is given to work with.
 ##
 ## The single seam between the effects — 111 small scripts — and the state of the
-## encounter: the fighters, the turn order, the UI. Effects never touch that state
+## encounter: the individuals, the turn order, the UI. Effects never touch that state
 ## directly; they ask this, and this applies the rules.
 ##
 ## Which is where the rules live: the per-condition damage modifiers, the weakness a
@@ -22,9 +22,9 @@ static func _modifier_per_condition() -> float:
 signal ui_requested(kind: StringName, data: Dictionary)
 
 var ability: AbilityData
-var user  ## EncounterFighter qui utilise la capacité
-var targets: Array = []  ## EncounterFighter ciblés
-var all_fighters: Array = []  ## tous les individus (portée globale, ex. Tumult)
+var user  ## The EncounterIndividual using the ability
+var targets: Array = []  ## The EncounterIndividuals it is aimed at
+var all_individuals: Array = []  ## Everyone, for the encounter-wide effects (Tumult)
 var timeline: EncounterTimeline
 var rng: RandomNumberGenerator
 
@@ -35,7 +35,7 @@ var completed_species: Dictionary = {}
 ## Forced energy, for abilities that take on the user's own weakness. NONE means off.
 var energy_override := GameEnums.Energy.NONE
 
-## What this effect did, in readable lines. Reaches the player through the combat log.
+## What this effect did, in readable lines. Reaches the player through the encounter log.
 var log_lines: PackedStringArray = PackedStringArray()
 
 
@@ -50,14 +50,14 @@ func deal_damage(target, base_amount: int) -> void:
 	if base_amount <= 0:
 		return
 	var victim = target
-	if victim is EncounterFighter and victim.redirect_to != null:
+	if victim is EncounterIndividual and victim.redirect_to != null:
 		victim = victim.redirect_to
 		victim.redirect_to = null
-	if victim is EncounterFighter and victim.is_immune_to(_effective_energy()):
-		note("%s est immunisé." % _name(victim))
+	if victim is EncounterIndividual and victim.is_immune_to(_effective_energy()):
+		note(_tr("LOG_IMMUNE") % _name(victim))
 		return
 	var amount := _apply_modifiers(victim, base_amount)
-	if victim is EncounterFighter:
+	if victim is EncounterIndividual:
 		amount = ceili(
 			(
 				amount
@@ -67,17 +67,17 @@ func deal_damage(target, base_amount: int) -> void:
 		)
 		victim.next_damage_factor = 1.0
 		victim.apply_damage(amount)
-		if user is EncounterFighter and amount > 0:
+		if user is EncounterIndividual and amount > 0:
 			victim.last_damager = user
 			if victim.reflect_to_attacker and user != victim:
-				user.apply_damage(amount)  # Reflux : renvoie autant à l'attaquant
-	note("%d dégâts à %s." % [amount, _name(victim)])
+				user.apply_damage(amount)  # Reflux: as much goes back to the attacker
+	note(_tr("LOG_DAMAGE") % [amount, _name(victim)])
 
 
 ## Conditions add up, then the user's own outgoing bonus if it meditated last turn, and
 ## the result is rounded up.
 func _apply_modifiers(target, base_amount: int) -> int:
-	if not (target is EncounterFighter) or not (user is EncounterFighter):
+	if not (target is EncounterIndividual) or not (user is EncounterIndividual):
 		return base_amount
 	var conditions := 0
 	var energy := _effective_energy()
@@ -109,28 +109,28 @@ func _effective_energy() -> GameEnums.Energy:
 
 
 func drain_eth(target, amount: int) -> void:
-	if target is EncounterFighter:
+	if target is EncounterIndividual:
 		target.drain_eth(amount)
-		if user is EncounterFighter:
+		if user is EncounterIndividual:
 			target.last_damager = user
-	note("%s perd %d ETH." % [_name(target), amount])
+	note(_tr("LOG_ETH_DRAINED") % [_name(target), amount])
 
 
 func recover_den(target, amount: int) -> void:
-	if target is EncounterFighter:
+	if target is EncounterIndividual:
 		target.recover_den(amount)
-	note("%s récupère %d DEN." % [_name(target), amount])
+	note(_tr("LOG_DEN_RECOVERED") % [_name(target), amount])
 
 
 func recover_eth(target, amount: int) -> void:
-	if target is EncounterFighter:
+	if target is EncounterIndividual:
 		target.recover_eth(amount)
-	note("%s récupère %d ETH." % [_name(target), amount])
+	note(_tr("LOG_ETH_RECOVERED") % [_name(target), amount])
 
 
 ## Swaps the target's exposed weakness for another, at random — never the same one.
 func change_weakness(target) -> void:
-	if target is EncounterFighter:
+	if target is EncounterIndividual:
 		target.override_weakness(
 			_random_energy_other_than(
 				target.active_weakness(
@@ -138,69 +138,64 @@ func change_weakness(target) -> void:
 				)
 			)
 		)
-	note("la faiblesse de %s change." % _name(target))
+	note(_tr("LOG_WEAKNESS_CHANGED") % _name(target))
 
 
 ## Multiplies the target's next incoming damage; 0 is immunity.
 func modify_damage(target, factor: float) -> void:
-	if target is EncounterFighter:
+	if target is EncounterIndividual:
 		target.next_damage_factor = factor
-	note("prochains dégâts de %s ×%.2f." % [_name(target), factor])
+	note(_tr("LOG_NEXT_DAMAGE_FACTOR") % [_name(target), factor])
 
 
 func redirect_next_damage(from_target, to_target) -> void:
-	if from_target is EncounterFighter and to_target is EncounterFighter:
+	if from_target is EncounterIndividual and to_target is EncounterIndividual:
 		from_target.redirect_to = to_target
-	note(
-		(
-			"les prochains dégâts de %s sont redirigés vers %s."
-			% [_name(from_target), _name(to_target)]
-		)
-	)
+	note(_tr("LOG_DAMAGE_REDIRECTED") % [_name(from_target), _name(to_target)])
 
 
 # Stubs, waiting on systems that do not exist: actions, dialogue, information gain.
 # They log what would have happened so the mechanic is at least visible. See
 # docs/roadmap.md.
 func limit_actions(target, amount: int) -> void:
-	note("%s perd %d action(s) [à venir]." % [_name(target), amount])
+	note(_tr("LOG_ACTIONS_LOST") % [_name(target), amount])
 
 
 func recover_actions(target, amount: int) -> void:
-	note("%s gagne %d action(s) [à venir]." % [_name(target), amount])
+	note(_tr("LOG_ACTIONS_GAINED") % [_name(target), amount])
 
 
 func force_talk(target) -> void:
-	note("%s est forcé de parler [à venir]." % _name(target))
+	note(_tr("LOG_FORCED_TO_TALK") % _name(target))
 
 
 func grant_examine_bonus(target, amount: int) -> void:
-	note("bonus d'examen +%d sur %s [à venir]." % [amount, _name(target)])
+	note(_tr("LOG_EXAMINE_BONUS") % [amount, _name(target)])
 
 
 func change_turn_order(_payload: Dictionary = {}) -> void:
 	if timeline and rng:
 		timeline.request_shuffle(rng)
-	note("l'ordre du tour est bouleversé.")
+	note(_tr("LOG_TURN_ORDER_SHUFFLED"))
 
 
 ## Sends the target to the back of next turn's order.
 func move_to_last(target) -> void:
 	if timeline:
 		timeline.request_move_last(target)
-	note("%s passera en dernier au prochain tour." % _name(target))
+	note(_tr("LOG_MOVED_LAST") % _name(target))
 
 
 ## Brings the target to the front of next turn's order.
 func move_to_first(target) -> void:
 	if timeline:
 		timeline.request_move_first(target)
-	note("%s passera en premier au prochain tour." % _name(target))
+	note(_tr("LOG_MOVED_FIRST") % _name(target))
 
 
 ## Plumbing towards the UI, and deliberately silent: the effect calling it has already
 ## logged whatever the player should read. Logging the internal tag and its dictionary
-## only cluttered the combat log.
+## only cluttered the encounter log.
 func request_ui(kind: StringName, data: Dictionary = {}) -> void:
 	ui_requested.emit(kind, data)
 
@@ -210,7 +205,7 @@ func request_ui(kind: StringName, data: Dictionary = {}) -> void:
 
 ## The user's own side, still standing, itself included.
 func team() -> Array:
-	return all_fighters.filter(
+	return all_individuals.filter(
 		func(f): return f.is_player == _user_is_player() and not f.is_dissolved()
 	)
 
@@ -222,14 +217,14 @@ func allies() -> Array:
 
 ## Opponents still standing.
 func opponents() -> Array:
-	return all_fighters.filter(
+	return all_individuals.filter(
 		func(f): return f.is_player != _user_is_player() and not f.is_dissolved()
 	)
 
 
 ## Everyone else still standing, on either side.
 func others() -> Array:
-	return all_fighters.filter(func(f): return f != user and not f.is_dissolved())
+	return all_individuals.filter(func(f): return f != user and not f.is_dissolved())
 
 
 func random_of(arr: Array):
@@ -280,11 +275,11 @@ func last_opponent_in_order():
 
 
 func _living_order() -> Array:
-	return timeline.living() if timeline else all_fighters
+	return timeline.living() if timeline else all_individuals
 
 
 func _user_is_player() -> bool:
-	return user is EncounterFighter and user.is_player
+	return user is EncounterIndividual and user.is_player
 
 
 # --- Damage tiers ---
@@ -304,9 +299,9 @@ func base_damage() -> int:
 
 
 func set_weakness(target, energy: GameEnums.Energy) -> void:
-	if target is EncounterFighter:
+	if target is EncounterIndividual:
 		target.override_weakness(energy)
-	note("faiblesse de %s : %s." % [_name(target), _energy_name(energy)])
+	note(_tr("LOG_WEAKNESS_SET") % [_name(target), _energy_name(energy)])
 
 
 func remove_weakness(target) -> void:
@@ -314,58 +309,56 @@ func remove_weakness(target) -> void:
 
 
 func reset_weakness(target) -> void:
-	if target is EncounterFighter:
+	if target is EncounterIndividual:
 		target.reset_weakness()
-	note("faiblesse de %s rétablie." % _name(target))
+	note(_tr("LOG_WEAKNESS_RESET") % _name(target))
 
 
-## Trades two fighters' exposed weaknesses (Dark Gambit, Dark Caroussel).
+## Trades two individuals' exposed weaknesses (Dark Gambit, Dark Caroussel).
 func swap_weakness(a, b) -> void:
-	if a is EncounterFighter and b is EncounterFighter:
+	if a is EncounterIndividual and b is EncounterIndividual:
 		var wa := weakness_of(a)
 		var wb := weakness_of(b)
 		a.override_weakness(wb)
 		b.override_weakness(wa)
-	note("%s et %s échangent leur faiblesse." % [_name(a), _name(b)])
+	note(_tr("LOG_WEAKNESS_SWAPPED") % [_name(a), _name(b)])
 
 
 func lock_weakness(target) -> void:
-	if target is EncounterFighter:
+	if target is EncounterIndividual:
 		target.weakness_locked = true
 
 
 func hide_weakness(target) -> void:
-	if target is EncounterFighter:
+	if target is EncounterIndividual:
 		target.weakness_hidden = true
-	note("la faiblesse de %s est masquée." % _name(target))
+	note(_tr("LOG_WEAKNESS_HIDDEN") % _name(target))
 
 
 # --- Immunities and locks ---
 
 
 func grant_immunity(target, energies: Array) -> void:
-	if target is EncounterFighter:
+	if target is EncounterIndividual:
 		target.immune_energies.append_array(energies)
-	note(
-		(
-			"%s devient immunisé (%s)."
-			% [_name(target), ", ".join(energies.map(func(e): return _energy_name(e)))]
-		)
-	)
+	var names: Array = []
+	for e in energies:
+		names.append(_energy_name(e))
+	note(_tr("LOG_IMMUNITY") % [_name(target), ", ".join(names)])
 
 
 ## Immune to everything EXCEPT this energy.
 func grant_immunity_except(target, energy: GameEnums.Energy) -> void:
-	if target is EncounterFighter:
+	if target is EncounterIndividual:
 		target.immune_all_except = energy
-	note("%s devient immunisé sauf à %s." % [_name(target), _energy_name(energy)])
+	note(_tr("LOG_IMMUNITY_EXCEPT") % [_name(target), _energy_name(energy)])
 
 
 ## Multiplies what one energy does to the target this turn.
 func set_energy_damage_factor(target, energy: GameEnums.Energy, factor: float) -> void:
-	if target is EncounterFighter:
+	if target is EncounterIndividual:
 		target.energy_damage_factor[energy] = target.energy_damage_factor.get(energy, 1.0) * factor
-	note("dégâts %s reçus par %s ×%.2f." % [_energy_name(energy), _name(target), factor])
+	note(_tr("LOG_ENERGY_DAMAGE_FACTOR") % [_energy_name(energy), _name(target), factor])
 
 
 ## The last of the user's own side in the turn order.
@@ -378,45 +371,61 @@ func last_of_team_in_order():
 
 
 func lock_den(target) -> void:
-	if target is EncounterFighter:
+	if target is EncounterIndividual:
 		target.den_locked = true
 
 
 func lock_eth(target) -> void:
-	if target is EncounterFighter:
+	if target is EncounterIndividual:
 		target.eth_locked = true
 
 
 func grant_reflect(target) -> void:
-	if target is EncounterFighter:
+	if target is EncounterIndividual:
 		target.reflect_to_attacker = true
-	note("%s renverra les dégâts subis." % _name(target))
+	note(_tr("LOG_REFLECT") % _name(target))
 
 
 func grant_full_immunity(target) -> void:
-	if target is EncounterFighter:
+	if target is EncounterIndividual:
 		target.fully_immune = true
-	note("%s devient totalement immunisé." % _name(target))
+	note(_tr("LOG_IMMUNITY_FULL") % _name(target))
 
 
 ## Narrows what the target may do. The action system does not exist; this logs.
+##
+## `allowed` carries TRANSLATION KEYS, never text: the UI_ENCOUNTER_ACTION_* the menu
+## already uses, and the LOG_RESTRICT_* fragments for whatever the design doc phrases in
+## prose. [method abilities_of_key] builds the energy-dependent ones.
 func restrict_to(target, allowed: Array) -> void:
-	note("%s ne peut plus faire que : %s [à venir]." % [_name(target), ", ".join(allowed)])
+	var labels: Array = []
+	for key in allowed:
+		labels.append(String(TranslationServer.translate(key)))
+	note(_tr("LOG_RESTRICTED") % [_name(target), ", ".join(labels)])
 
 
-## Makes a fighter flee. Fleeing does not exist; this logs.
+## The [method restrict_to] fragment for "abilities of this energy". Separate from
+## [method _energy_name] because the two registers differ: a fragment is a label ("Heat
+## abilities"), an energy name flows inside a sentence ("weakness of ravbak: heat").
+func abilities_of_key(energy: GameEnums.Energy) -> String:
+	return _ABILITIES_OF_KEYS.get(energy, "LOG_RESTRICT_ABILITIES_HEAT")
+
+
+## Makes an individual flee. Fleeing does not exist; this logs.
 func flee(target) -> void:
-	note("%s prend la fuite [à venir]." % _name(target))
-	request_ui(&"flee", {"fighter": target.species_id() if target is EncounterFighter else target})
+	note(_tr("LOG_FLEES") % _name(target))
+	request_ui(
+		&"flee", {"individual": target.species_id() if target is EncounterIndividual else target}
+	)
 
 
 # --- Counting and asking ---
 
 
-## How many standing fighters come from a given Spiricosm.
+## How many standing individuals come from a given Spiricosm.
 func count_natives(spiricosm: GameEnums.Spiricosm) -> int:
 	return (
-		all_fighters
+		all_individuals
 		. filter(
 			func(f): return not f.is_dissolved() and f.species and f.species.spiricosm == spiricosm
 		)
@@ -428,7 +437,7 @@ func count_natives(spiricosm: GameEnums.Spiricosm) -> int:
 func largest_same_weakness_group() -> int:
 	var counts := {}
 	var best := 0
-	for f in all_fighters:
+	for f in all_individuals:
 		if f.is_dissolved():
 			continue
 		var w = f.active_weakness(
@@ -441,10 +450,10 @@ func largest_same_weakness_group() -> int:
 	return best
 
 
-func weakness_of(fighter) -> GameEnums.Energy:
-	if fighter is EncounterFighter:
-		return fighter.active_weakness(
-			timeline.position_of(fighter) if timeline else GameEnums.TurnPosition.MIDDLE
+func weakness_of(individual) -> GameEnums.Energy:
+	if individual is EncounterIndividual:
+		return individual.active_weakness(
+			timeline.position_of(individual) if timeline else GameEnums.TurnPosition.MIDDLE
 		)
 	return GameEnums.Energy.NONE
 
@@ -476,23 +485,40 @@ func _random_energy_other_than(current: GameEnums.Energy) -> GameEnums.Energy:
 
 
 func _name(target) -> String:
-	if target is EncounterFighter:
+	if target is EncounterIndividual:
 		return target.display_name()
 	return str(target)
 
 
-## A readable energy name; the enum would otherwise print as a bare integer.
-const _ENERGY_NAMES := {
-	GameEnums.Energy.HEAT: "chaleur",
-	GameEnums.Energy.FLUID: "fluide",
-	GameEnums.Energy.CRYSTAL: "cristal",
-	GameEnums.Energy.ARCANE: "arcane",
-	GameEnums.Energy.TOXIC: "toxique",
-	GameEnums.Energy.RANDOM: "aléatoire",
-	GameEnums.Energy.VARIABLE: "variable",
-	GameEnums.Energy.NONE: "aucune",
+## The energy names the log spells out; the enum would otherwise print as a bare integer.
+const _ENERGY_KEYS := {
+	GameEnums.Energy.HEAT: "TERM_ENERGY_HEAT",
+	GameEnums.Energy.FLUID: "TERM_ENERGY_FLUID",
+	GameEnums.Energy.CRYSTAL: "TERM_ENERGY_CRYSTAL",
+	GameEnums.Energy.ARCANE: "TERM_ENERGY_ARCANE",
+	GameEnums.Energy.TOXIC: "TERM_ENERGY_TOXIC",
+	GameEnums.Energy.RANDOM: "TERM_ENERGY_RANDOM",
+	GameEnums.Energy.VARIABLE: "TERM_ENERGY_VARIABLE",
+	GameEnums.Energy.NONE: "TERM_ENERGY_NONE",
+}
+
+## The [method restrict_to] fragment naming this energy's abilities, per energy. Only the
+## five real energies have one: Random and Variable resolve before an ability restricts
+## anything, and NONE restricts nothing.
+const _ABILITIES_OF_KEYS := {
+	GameEnums.Energy.HEAT: "LOG_RESTRICT_ABILITIES_HEAT",
+	GameEnums.Energy.FLUID: "LOG_RESTRICT_ABILITIES_FLUID",
+	GameEnums.Energy.CRYSTAL: "LOG_RESTRICT_ABILITIES_CRYSTAL",
+	GameEnums.Energy.ARCANE: "LOG_RESTRICT_ABILITIES_ARCANE",
+	GameEnums.Energy.TOXIC: "LOG_RESTRICT_ABILITIES_TOXIC",
 }
 
 
 func _energy_name(e: GameEnums.Energy) -> String:
-	return _ENERGY_NAMES.get(e, "?")
+	return String(TranslationServer.translate(_ENERGY_KEYS.get(e, "TERM_ENERGY_NONE")))
+
+
+## Every line this class logs goes through here, so that none of them is ever written out
+## in one language. See the LOG_* block in `translations/en.po`.
+func _tr(key: String) -> String:
+	return String(TranslationServer.translate(key))

@@ -6,14 +6,15 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-# Conventions de clés :
+# Key conventions:
 #   SPECIES_<ID>_NAME
 #   ABILITY_<ID>_NAME / ABILITY_<ID>_DESC
 #   TALENT_<ID>_NAME / TALENT_<ID>_DESC
 #   DUNGEON_<ID>_NAME
-#   UI_ACTION_<X>, etc.
-# Fichier écrit à la main. Les clés adossées à une donnée de data/ sont vérifiées
-# dans les deux sens par scripts/dev/data_integrity_check.gd.
+#   SCENARIO_<ID>_TITLE / SCENARIO_<ID>_DESC
+#   UI_ACTION_<X>, UI_DEV_<X>, LOG_<X>, TERM_<X>
+# Written by hand. The keys backed by something in data/ are checked BOTH ways by
+# scripts/dev/data_integrity_check.gd.
 
 msgid "UI_TITLE_NEW_GAME"
 msgstr "New Game"
@@ -113,7 +114,7 @@ msgstr "Forlorn"
 msgid "TERM_FORLORN_PL"
 msgstr "Forlorn"
 
-# Dieverting (mécanisme de donjon) : annonce du jet. %d = la face sortie, %s = son effet.
+# Dieverting (a dungeon mechanism): the roll announced. %d = the face rolled, %s = its effect.
 msgid "UI_DIEVERTING_ROLL"
 msgstr "The dieverting rolls a %d — %s"
 
@@ -138,16 +139,428 @@ msgstr "some objects crumble to dust"
 msgid "UI_DIEVERTING_ADD_OBJECTS"
 msgstr "objects are added to the inventory"
 
-# Coffre (mécanisme de donjon). %s = la liste des objets trouvés.
+# Chest (a dungeon mechanism). %s = the list of objects found.
 msgid "UI_CHEST_LOOT"
 msgstr "Found in the chest: %s"
 
-# Choix offert par le talent Reveal Traps quand un coffre piégé tente de téléporter.
+# The choice the Reveal Traps talent offers when a trapped chest tries to teleport.
 msgid "UI_ACTION_CHEST_TELEPORT"
 msgstr "Let the chest teleport you"
 
 msgid "UI_ACTION_CHEST_DECLINE"
 msgstr "Stay put"
+
+# --- Exploration: the effect log and the status banner --------------------------------
+# What an exploration ability or an object did, recorded by ExplorationContext, and the
+# lasting afflictions the HUD shows top-left. "tiles" is the exploration unit throughout.
+msgid "LOG_EXPL_INVISIBLE"
+msgstr "invisible for %d tiles"
+
+msgid "LOG_EXPL_UNPURSUED"
+msgstr "unpursued for %d tiles"
+
+msgid "LOG_EXPL_POISON_CURED"
+msgstr "poison cured"
+
+msgid "LOG_EXPL_DUO_HEALED"
+msgstr "duo healed for %d DEN"
+
+msgid "LOG_EXPL_CRACKED_WALL_CROSSED"
+msgstr "cracked wall crossed"
+
+msgid "LOG_EXPL_NO_CRACKED_WALL"
+msgstr "no cracked wall ahead"
+
+msgid "LOG_EXPL_SCOUT"
+msgstr "keeping watch — revealing rival groups TODO"
+
+# %d = turns left, %d = the DEN lost each turn.
+msgid "UI_STATUS_POISON"
+msgstr "☠ Poison: %d turn(s) (-%d DEN)"
+
+# %d = the moves still affected.
+msgid "UI_STATUS_DISARRAY"
+msgstr "✦ Disarray: %d move(s)"
+
+# --- The dev scenario picker ----------------------------------------------------------
+# A DEV screen, not part of the game: it lists the exploration test scenarios and lets one
+# pick the duo's species and the rivals' DEN before entering. Translated all the same, so
+# that the "no displayed text in the source" rule has no exception to argue about.
+msgid "UI_DEV_SCENARIOS_TITLE"
+msgstr "Test scenarios — exploration"
+
+msgid "UI_DEV_MAIN_CHARACTER"
+msgstr "Main character"
+
+msgid "UI_DEV_TEAMMATE"
+msgstr "Teammate"
+
+# %d = the DEN, %s = UI_DEV_RIVAL_DEN_EARLY/_MID/_LATE, or empty between those figures.
+msgid "UI_DEV_RIVAL_DEN"
+msgstr "Rivals' DEN: %d%s"
+
+msgid "UI_DEV_RIVAL_DEN_EARLY"
+msgstr "  — E (early)"
+
+msgid "UI_DEV_RIVAL_DEN_MID"
+msgstr "  — M (mid)"
+
+msgid "UI_DEV_RIVAL_DEN_LATE"
+msgstr "  — L (late)"
+
+msgid "UI_DEV_RIVAL_DEN_TOOLTIP"
+msgstr "The design doc's ballpark figure"
+
+# --- The exploration test scenarios ---------------------------------------------------
+# One title and one instruction sheet per `data/scenarios/*.tres`. The .tres carries only
+# the id and the rank in the list; this is where the text lives.
+msgid "SCENARIO_MOVEMENT_TITLE"
+msgstr "Movement & look"
+
+msgid "SCENARIO_MOVEMENT_DESC"
+msgstr "An empty room with pillars. Watch how the look (mouse), the turns (Q/E) and the step-by-step movement (WASD) feel. Esc releases the cursor."
+
+msgid "SCENARIO_TRAPS_TITLE"
+msgstr "Traps (poison · teleport · disarray)"
+
+msgid "SCENARIO_TRAPS_DESC"
+msgstr "Step on the plates. Purple = poison (DEN drops every turn). Blue = teleport (you change tile). Orange = disarray (your next steps sometimes set off sideways)."
+
+msgid "SCENARIO_GATES_TITLE"
+msgstr "Gates (automatic · locked · meditation)"
+
+msgid "SCENARIO_GATES_DESC"
+msgstr "Gates sit BETWEEN two tiles (they are thin): you can stand on either side. Grey = opens and closes on its own as the turns pass. Golden = face it and take the “open” action (costs 2 spades). Green = face it and Meditate ×3, CONSECUTIVELY (move or turn away and the count drops back to 0). Behind the green one is a green litter: its actions only appear once the gate is open — one does not act on what one cannot see."
+
+msgid "SCENARIO_GROUNDS_TITLE"
+msgstr "Special grounds (Dig · Recycle · Examine)"
+
+msgid "SCENARIO_GROUNDS_DESC"
+msgstr "On the earthy patch: the “dig” action (spends 1 spade → an object or some information). Facing the green litter (an obstacle): the “examine” and “recycle” actions."
+
+msgid "SCENARIO_CHESTS_TITLE"
+msgstr "Chests · Crystal · Dieverting"
+
+msgid "SCENARIO_CHESTS_DESC"
+msgstr "A golden chest = loot (or a surprise teleport: nothing tells a trapped chest apart). With razél in the duo (Reveal Traps talent), a trapped chest offers “let it teleport you” or “stay put” — loot either way, more if you accept; without razél it teleports you flat, and gives nothing. A cyan crystal (an obstacle) = the “refresh” action when facing it. Orange dice = a random effect on contact: on the first you still have a spade, so the action menu offers “destroy” or “take it”; on the second (spade spent) the die rolls by itself. Six outcomes — back to the entrance or to the exit at the bottom, objects lost (left in a chest where the die was), ETH or DEN lost, rivals springing up, objects destroyed or gained."
+
+msgid "SCENARIO_WALLS_TITLE"
+msgstr "Cracked wall · Examinable decor"
+
+msgid "SCENARIO_WALLS_DESC"
+msgstr "Facing the dark wall: the “cranny crossing” action to pass through it. Facing the magenta decor: the “examine” action (encyclopaedia gain)."
+
+msgid "SCENARIO_BRIDGE_TITLE"
+msgstr "Narrow bridge (balance)"
+
+msgid "SCENARIO_BRIDGE_DESC"
+msgstr "Step onto the plank: a balance bar appears at the top. Correct CONTINUOUSLY with A/D to stay centred (do nothing, or correct too little, and a gust knocks you off). Every tile crossed costs a turn. If you fall you land at the bottom of the ravine (2 storeys, fall damage) and climb back to the start by the stairs on the right. The far end is a single walled tile, trapped with disarray: the way back is therefore made with a sloppier sideways command, and the disarray counter drops by one per bridge tile."
+
+msgid "SCENARIO_BRIDGE_RIVAL_TITLE"
+msgstr "Narrow bridge + rival"
+
+msgid "SCENARIO_BRIDGE_RIVAL_DESC"
+msgstr "The same ravine, with a rival on the OTHER side: it has to take the bridge to reach you, so you are bound to meet on a plank. It has its own balance test (a 1 to 2 % chance of falling per tile, drawn when it is created) and can therefore fall on its own on the way. If you do meet, you both fall onto the same tile and the encounter starts down below. And if it saw you fall, it may jump after you."
+
+msgid "SCENARIO_STAIRS_TITLE"
+msgstr "Stairs, elevators & falls (5 storeys)"
+
+msgid "SCENARIO_STAIRS_DESC"
+msgstr "A pyramid of five tiers. One blue staircase per landing (0→1→2→3→4), staggered towards the back: that is the way that always works. The orange platforms are SHORTCUTS doubling those stairs — one VERTICAL elevator (1↔2) and one on a COMPLEX path (3↔4) that comes out over the void and chains segments on all three axes. An elevator stays where it was left: if it stayed at the top, take the stairs. For falls: to the west each tier overhangs the next (1 unit = no damage); to the east (the last column) nothing stops you before the bottom (1/2/3/4 units = 0/10/15/20 DEN). At the bottom you can walk UNDER the tiers — and a PILLAR there holds up a corner of tier 1: its top face is directly the floor above, with no slab added. At the summit, the first two tiles of the east edge are protected by a GUARDRAIL (a low one: you see the void over it, but you do not cross it); two steps further the same edge is open, and drops you 4 storeys."
+
+msgid "SCENARIO_ABILITIES_TITLE"
+msgstr "Exploration abilities & objects"
+
+msgid "SCENARIO_ABILITIES_DESC"
+msgstr "In the action menu (Tab/Space): use “fog mantel” (the rival stops following you) or “tea drop” (cures the trap's poison)."
+
+# --- The encounter log ---------------------------------------------------------------
+# One line per thing an action or an ability effect does, as the LOG panel shows it. The
+# manager prefixes each with the individual's name, so these lines start mid-sentence and
+# never repeat the subject.
+#
+# "[to come]" marks a mechanic the engine cannot express yet: the line says what WOULD have
+# happened, so the ability is visible while the system it needs is missing. See
+# docs/roadmap.md.
+#
+# %s is a spirimonster's name unless the comment says otherwise, and ORDER IS LOAD-BEARING:
+# GDScript's % takes its arguments positionally.
+
+# The line that opens the log. TERM_ENCOUNTER is bold on its own, so the punctuation that
+# follows it lives here — French puts a space before a colon, English does not.
+# %s = the player characters, %s = the rivals, both comma-separated.
+msgid "TERM_ENCOUNTER"
+msgstr "Encounter"
+
+msgid "LOG_ENCOUNTER_OPENING"
+msgstr ": %s against %s"
+
+# How a log line is ASSEMBLED, which is punctuation and therefore translatable: French puts
+# a space before a colon and English does not. %s = the individual's name, %s = the ability
+# id when there is one, %s = the line itself.
+msgid "LOG_LINE"
+msgstr "%s · %s"
+
+msgid "LOG_LINE_ABILITY"
+msgstr "%s · %s: %s"
+
+# A talent's line rather than a turn's: the mark is what tells the two apart. %s = the line.
+msgid "LOG_LINE_TALENT"
+msgstr "⁘ %s"
+
+# The encyclopaedia gain appended under a turn. %d = the IFP earned, %s = the species.
+msgid "LOG_LINE_IFP"
+msgstr "+%d IFP — %s"
+
+# Energy names spelled out. The turn order shows icons; the log has only words.
+msgid "TERM_ENERGY_HEAT"
+msgstr "heat"
+
+msgid "TERM_ENERGY_FLUID"
+msgstr "fluid"
+
+msgid "TERM_ENERGY_CRYSTAL"
+msgstr "crystal"
+
+msgid "TERM_ENERGY_ARCANE"
+msgstr "arcane"
+
+msgid "TERM_ENERGY_TOXIC"
+msgstr "toxic"
+
+msgid "TERM_ENERGY_RANDOM"
+msgstr "random"
+
+msgid "TERM_ENERGY_VARIABLE"
+msgstr "variable"
+
+msgid "TERM_ENERGY_NONE"
+msgstr "none"
+
+# Damage, and the two resources.
+msgid "LOG_IMMUNE"
+msgstr "%s is immune."
+
+# %d = damage dealt, %s = who takes it.
+msgid "LOG_DAMAGE"
+msgstr "%d damage to %s."
+
+msgid "LOG_ETH_DRAINED"
+msgstr "%s loses %d ETH."
+
+msgid "LOG_DEN_RECOVERED"
+msgstr "%s recovers %d DEN."
+
+msgid "LOG_ETH_RECOVERED"
+msgstr "%s recovers %d ETH."
+
+msgid "LOG_NEXT_DAMAGE_FACTOR"
+msgstr "next damage on %s ×%.2f."
+
+msgid "LOG_DAMAGE_REDIRECTED"
+msgstr "the next damage on %s goes to %s instead."
+
+# %s = an energy (TERM_ENERGY_*), %s = who takes it, %.2f = the multiplier.
+msgid "LOG_ENERGY_DAMAGE_FACTOR"
+msgstr "%s damage taken by %s ×%.2f."
+
+msgid "LOG_REFLECT"
+msgstr "%s will send back the damage it takes."
+
+# Weaknesses.
+msgid "LOG_WEAKNESS_CHANGED"
+msgstr "%s's weakness changes."
+
+# %s = whose weakness, %s = the energy it becomes.
+msgid "LOG_WEAKNESS_SET"
+msgstr "weakness of %s: %s."
+
+msgid "LOG_WEAKNESS_RESET"
+msgstr "weakness of %s restored."
+
+msgid "LOG_WEAKNESS_SWAPPED"
+msgstr "%s and %s trade weaknesses."
+
+msgid "LOG_WEAKNESS_HIDDEN"
+msgstr "%s's weakness is concealed."
+
+# Immunities. %s = who, %s = the energies, comma-separated.
+msgid "LOG_IMMUNITY"
+msgstr "%s becomes immune (%s)."
+
+msgid "LOG_IMMUNITY_EXCEPT"
+msgstr "%s becomes immune to everything but %s."
+
+msgid "LOG_IMMUNITY_FULL"
+msgstr "%s becomes wholly immune."
+
+# Turn order. SHUFFLED has no placeholder: it is the whole order that moves.
+msgid "LOG_TURN_ORDER_SHUFFLED"
+msgstr "the turn order is thrown into disarray."
+
+msgid "LOG_MOVED_LAST"
+msgstr "%s will go last next turn."
+
+msgid "LOG_MOVED_FIRST"
+msgstr "%s will go first next turn."
+
+# Stubs: no action system, no dialogue, no measured information gain.
+msgid "LOG_ACTIONS_LOST"
+msgstr "%s loses %d action(s) [to come]."
+
+msgid "LOG_ACTIONS_GAINED"
+msgstr "%s gains %d action(s) [to come]."
+
+msgid "LOG_FORCED_TO_TALK"
+msgstr "%s is forced to Talk [to come]."
+
+# %d = the bonus, %s = who is examined.
+msgid "LOG_EXAMINE_BONUS"
+msgstr "Examine bonus +%d on %s [to come]."
+
+# %s = who, %s = the fragments below, comma-separated.
+msgid "LOG_RESTRICTED"
+msgstr "%s may now only: %s [to come]."
+
+msgid "LOG_FLEES"
+msgstr "%s takes flight [to come]."
+
+# The fragments LOG_RESTRICTED lists. Each names what the target may still do, in the
+# vocabulary of the design doc. Action names come from the UI_ENCOUNTER_ACTION_* keys.
+msgid "LOG_RESTRICT_ABILITIES_HEAT"
+msgstr "Heat abilities"
+
+msgid "LOG_RESTRICT_ABILITIES_FLUID"
+msgstr "Fluid abilities"
+
+msgid "LOG_RESTRICT_ABILITIES_CRYSTAL"
+msgstr "Crystal abilities"
+
+msgid "LOG_RESTRICT_ABILITIES_ARCANE"
+msgstr "Arcane abilities"
+
+msgid "LOG_RESTRICT_ABILITIES_TOXIC"
+msgstr "Toxic abilities"
+
+msgid "LOG_RESTRICT_QUARTER_OF_ABILITIES"
+msgstr "a quarter of its abilities"
+
+msgid "LOG_RESTRICT_EXCEPT_TALK"
+msgstr "anything but Talk"
+
+msgid "LOG_RESTRICT_EXCEPT_EXAMINE"
+msgstr "anything but Examine"
+
+msgid "LOG_RESTRICT_EXCEPT_OBJECT"
+msgstr "anything but Objects"
+
+msgid "LOG_RESTRICT_EXCEPT_MEDITATE"
+msgstr "anything but Meditate"
+
+msgid "LOG_RESTRICT_EXCEPT_ABILITIES_HEAT"
+msgstr "anything but Heat abilities"
+
+msgid "LOG_RESTRICT_EXCEPT_LAST_TWO_ABILITIES"
+msgstr "anything but its last 2 abilities"
+
+# What the manager itself logs, action by action.
+msgid "LOG_NO_ACTION"
+msgstr "%s has no action it can take."
+
+msgid "LOG_PASS"
+msgstr "passes its turn."
+
+# %s = the action's internal label. Reached only if an action kind is left unhandled.
+msgid "LOG_ACTION_UNRESOLVED"
+msgstr "action “%s” not resolved yet."
+
+msgid "LOG_ABILITY_NOT_FOUND"
+msgstr "ability not found."
+
+# %s = the object slug asked for.
+msgid "LOG_OBJECT_NOT_FOUND"
+msgstr "object not found: %s."
+
+# Use / Give Object. Used on oneself or a teammate, GIVEN to a rival — two verbs, and
+# languages do not split them the same way, so each gets its own key.
+# %s = the object, %s = the target, %d = DEN before, %d = DEN after.
+msgid "LOG_OBJECT_HEAL_USED"
+msgstr "uses %s on %s: DEN %d -> %d."
+
+msgid "LOG_OBJECT_HEAL_GIVEN"
+msgstr "gives %s to %s: DEN %d -> %d."
+
+# %s = the object. Fleeing belongs to exploration, which does not handle it yet.
+msgid "LOG_OBJECT_FLEE_USED"
+msgstr "uses %s: flight (exploration TODO)."
+
+msgid "LOG_OBJECT_FLEE_GIVEN"
+msgstr "gives %s: flight (exploration TODO)."
+
+# The objects whose effect belongs to exploration, or to nothing at all.
+msgid "LOG_OBJECT_USED"
+msgstr "uses %s on %s."
+
+msgid "LOG_OBJECT_GIVEN"
+msgstr "gives %s to %s."
+
+msgid "LOG_STEAL_NO_TARGET"
+msgstr "has nobody to steal from."
+
+msgid "LOG_STEAL"
+msgstr "tries to steal from %s [stolen object / Coal Vetch to come]."
+
+msgid "LOG_FLEE_ATTEMPT"
+msgstr "tries to leave the encounter [exploration teleport to come]."
+
+# Meditate. %d = ETH before, %d = ETH after, %d = the damage bonus in per cent.
+msgid "LOG_MEDITATE"
+msgstr "meditates: ETH %d -> %d, damage +%d %% next turn."
+
+msgid "LOG_TALK_NO_TARGET"
+msgstr "talks to thin air."
+
+# %s = who is talked to, %s = LOG_DIALOGUE_EFFECTIVE or LOG_DIALOGUE_INEFFECTIVE.
+msgid "LOG_TALK"
+msgstr "talks to %s: %s dialogue."
+
+msgid "LOG_DIALOGUE_EFFECTIVE"
+msgstr "effective"
+
+msgid "LOG_DIALOGUE_INEFFECTIVE"
+msgstr "ineffective"
+
+msgid "LOG_EXAMINE_NO_TARGET"
+msgstr "has nobody to examine."
+
+# %s = who is examined, %s = LOG_EXAMINE_INFO_FACTOR or nothing at all.
+msgid "LOG_EXAMINE"
+msgstr "examines %s%s."
+
+# Appended to LOG_EXAMINE when a talent changes the yield. %.2f = the factor.
+msgid "LOG_EXAMINE_INFO_FACTOR"
+msgstr " (info ×%.2f)"
+
+# Talent lines. The log marks them with its own prefix; %s is always the talent's name.
+msgid "LOG_TALENT_REUSE"
+msgstr "%s: %s is available again (Reuse)."
+
+msgid "LOG_TALENT_RESTORE"
+msgstr "%s: the duo recovers DEN/ETH at the end of the encounter."
+
+# %s = the talent, %s = the rival, %s = the bearer whose weakness is copied over.
+msgid "LOG_TALENT_SLICK_MERCHANT"
+msgstr "%s: %s's weakness takes on %s's."
+
+msgid "LOG_TALENT_EXAMINE_WEAKNESS"
+msgstr "%s: information gleaned on %s (weakness struck) [to come]."
+
+# %s = the talent, %s = the teammate healed, %d = the DEN given back.
+msgid "LOG_TALENT_SERENE_WAVES"
+msgstr "%s revitalises %s (+%d DEN, weakness removed)."
+
+msgid "LOG_TALENT_TRICK_TO_REVEAL"
+msgstr "%s: a map reveal could follow this dialogue [to come]."
 
 msgid "ABILITY_ABSORPTION_GUARD_NAME"
 msgstr "Absorption Guard"
@@ -429,7 +842,7 @@ msgid "ABILITY_SELF_DISCLOSURE_NAME"
 msgstr "Self-Disclosure"
 
 msgid "ABILITY_SELF_FORGIVENESS_DESC"
-msgstr "se libérer des jugements moralisateurs envers soi-même"
+msgstr "freeing oneself from moralising judgements about oneself"
 
 msgid "ABILITY_SELF_FORGIVENESS_NAME"
 msgstr "Self-Forgiveness"

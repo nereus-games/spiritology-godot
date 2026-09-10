@@ -1,4 +1,4 @@
-## Self-Forgiveness — érdouss · Arcane · usage unique · [change weakness, recover ETH]
+## Self-Forgiveness — érdouss · Arcane · single use · [change weakness, recover ETH]
 ## MECHANIC: the user regains X ETH, loses its weakness, and cannot lose ETH until the next
 ## turn; if it uses an ability next turn, it pays no ETH cost for it.
 extends AbilityScript

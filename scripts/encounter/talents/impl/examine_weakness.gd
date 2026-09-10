@@ -21,9 +21,7 @@ func on_weakness_touched(manager, attacker, defender, _ability) -> void:
 	if other == null:
 		return
 	# TODO: grant an encyclopaedia info fragment about `other` once that system exists.
-	manager.note_talent(
-		"%s : info glanée sur %s (faiblesse touchée) [à venir]." % [_label(), other.display_name()]
-	)
+	manager.note_talent(_tr("LOG_TALENT_EXAMINE_WEAKNESS") % [_label(), other.display_name()])
 
 
 func _label() -> String:

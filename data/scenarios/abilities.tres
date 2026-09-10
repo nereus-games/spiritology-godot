@@ -6,5 +6,3 @@
 script = ExtResource("1_wadyd")
 id = &"abilities"
 order = 9
-title = "Capacités & objets d'exploration"
-description = "Dans le menu d'actions (Tab/Espace) : utilise « fog mantel » (le rival cesse de te suivre) ou « tea drop » (soigne le poison du piège)."

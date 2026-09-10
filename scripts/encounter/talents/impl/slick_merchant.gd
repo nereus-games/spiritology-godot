@@ -35,10 +35,7 @@ func on_talk_resolved(manager, speaker, target, _effective: bool) -> void:
 	var my_weakness = owner.active_weakness(pos)
 	target.override_weakness(my_weakness)
 	manager.note_talent(
-		(
-			"%s : la faiblesse de %s prend celle de %s."
-			% [_label(), target.display_name(), owner.display_name()]
-		)
+		_tr("LOG_TALENT_SLICK_MERCHANT") % [_label(), target.display_name(), owner.display_name()]
 	)
 
 

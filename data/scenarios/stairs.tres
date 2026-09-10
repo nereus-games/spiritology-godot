@@ -6,5 +6,3 @@
 script = ExtResource("1_qty24")
 id = &"stairs"
 order = 8
-title = "Escaliers, ascenseurs & chutes (5 étages)"
-description = "Pyramide de cinq gradins. Un escalier bleu par palier (0→1→2→3→4), en quinconce vers le fond : c'est le chemin toujours praticable. Les plateformes orange sont des RACCOURCIS doublant ces escaliers — un ascenseur VERTICAL (1↔2) et un à trajet COMPLEXE (3↔4) qui sort au-dessus du vide et enchaîne des segments sur les trois axes. Un ascenseur reste où on l'a laissé : s'il est resté en haut, reprends l'escalier. Pour les chutes : à l'ouest chaque gradin surplombe le suivant (1 unité = aucun dégât) ; à l'est (dernière colonne) rien n'arrête avant le bas (1/2/3/4 unités = 0/10/15/20 DEN). En bas, tu peux marcher SOUS les gradins — et un PILIER y soutient un coin du gradin 1 : sa face haute est directement le sol du dessus, sans dalle ajoutée. Au sommet, les deux premières cases du bord est sont protégées par une RAMBARDE (basse : on voit le vide par-dessus, mais on ne le franchit pas) ; deux pas plus loin le même bord est ouvert, et fait tomber de 4 étages."

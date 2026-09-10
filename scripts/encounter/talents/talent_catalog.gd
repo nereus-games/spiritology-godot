@@ -11,9 +11,9 @@ const TalentScript := preload("res://scripts/encounter/talents/talent_script.gd"
 const IMPL_DIR := "res://scripts/encounter/talents/impl/"
 
 
-## Builds a talent's script with its fields set. A null `talent` — a fighter carrying
+## Builds a talent's script with its fields set. A null `talent` — an individual carrying
 ## none — yields a harmless no-op.
-static func script_for(talent: TalentData, owner: EncounterFighter, stacks: int) -> RefCounted:
+static func script_for(talent: TalentData, owner: EncounterIndividual, stacks: int) -> RefCounted:
 	var inst: RefCounted = TalentScript.new()
 	if talent != null:
 		var path := IMPL_DIR + String(talent.id) + ".gd"

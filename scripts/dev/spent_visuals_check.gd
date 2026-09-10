@@ -1,7 +1,7 @@
 ## Headless check on the cross-cutting "spent mechanism" rule: anything you can no longer
 ## interact with must stop presenting itself as ACTIVE — a greyed 3D marker (or a removed one,
 ## when the mechanism leaves nothing behind), `is_spent()` true (which is what the mini-map reads
-## to dim the cell), and a return to the active state when it rearms between visits.
+## to dim the tile), and a return to the active state when it rearms between visits.
 ##
 ## Run with: Godot --headless --path . res://scenes/dev/spent_visuals_check.tscn
 ## As a start scene rather than --script; see geometry_check.gd.
@@ -60,9 +60,9 @@ func _teardown(ctx: Dictionary) -> void:
 	await get_tree().process_frame
 
 
-## The first mechanism on a cell exposing `prop`; each type has state of its own.
-func _mech_at(dm, cell: Vector3i, prop: String) -> Node:
-	for m in dm.mechanisms_at(cell):
+## The first mechanism on a tile exposing `prop`; each type has state of its own.
+func _mech_at(dm, tile: Vector3i, prop: String) -> Node:
+	for m in dm.mechanisms_at(tile):
 		if prop in m:
 			return m
 	return null
@@ -81,7 +81,7 @@ func _is_active_looking(m: Node) -> bool:
 
 # --------------------------------------------------------------------------
 # Special grounds: dug crumbly ground (greyed, rearmed between visits) and recycled litter
-# (marker REMOVED, since the cell has become ordinary floor)
+# (marker REMOVED, since the tile has become ordinary floor)
 # --------------------------------------------------------------------------
 
 
@@ -99,7 +99,7 @@ func _check_grounds() -> void:
 	ground.dig(ctx.player)
 	_check(
 		ground.is_spent(),
-		'dug: is_spent(), so the map dims the cell — the doc\'s "an icon is shown"'
+		'dug: is_spent(), so the map dims the tile — the doc\'s "an icon is shown"'
 	)
 	_check(_is_greyed(ground), "dug: marker greyed out")
 	ground.reset_between_visits()
@@ -111,7 +111,7 @@ func _check_grounds() -> void:
 	_check(_is_active_looking(litter) and not litter.is_spent(), "before: the litter looks active")
 	litter.recycle(ctx.player)
 	_check(litter.is_spent(), "recycled: is_spent()")
-	_check(litter._marker == null, "recycled: marker REMOVED, the cell is ordinary floor")
+	_check(litter._marker == null, "recycled: marker REMOVED, the tile is ordinary floor")
 	_check(not litter.blocks_walk(), "recycled: you walk over it, matching the visual")
 	await _teardown(ctx)
 

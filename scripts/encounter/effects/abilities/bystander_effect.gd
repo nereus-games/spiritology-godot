@@ -1,7 +1,7 @@
 ## Bystander Effect — ravbak · Heat · medium · [change weakness, examine bonus, limit actions]
-## MECHANIC: la faiblesse du user devient Cristal et une de ses actions au hasard est
-## indisponible au prochain tour ; les autres individus obtiennent beaucoup plus d'info avec
-## Parler et Examiner jusqu'au prochain tour du user.
+## MECHANIC: the user's weakness becomes Crystal and one of its actions, drawn at random, is
+## unavailable next turn; the other individuals get far more information out of Talk and
+## Examine until the user's next turn.
 extends AbilityScript
 
 

@@ -40,7 +40,7 @@ work.
 
 ## Encyclopaedia and information gain — ~5 markers
 
-Info points are awarded and tallied, but the *amount* of information an Examine yields is
+IFP are awarded and tallied, but the *amount* of information an Examine yields is
 not modelled, so talents that modify it (Reconnaissance Glide's +10 %) multiply a number
 that has no consequence yet. Exploration is also still missing as a source of points:
 examining decor and ground should grant them and does not.
@@ -60,7 +60,7 @@ Examines — has no implementation at all.
 ## Fleeing — 2 markers
 
 Both routes into it are wired (a talent adds it to the menu, an ability triggers it
-directly) and both stop at the same wall: leaving an encounter means teleporting 3–5 cells
+directly) and both stop at the same wall: leaving an encounter means teleporting 3–5 tiles
 away in exploration, with a 50 % chance the rival disappears. That has not been built.
 
 ## Figures the design doc does not give — 3 markers

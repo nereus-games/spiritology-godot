@@ -7,11 +7,11 @@
 ## No `class_name` (the CLI class-cache trap): referenced by `preload`.
 extends Control
 
-## How big one cell is on the mini-map, in pixels.
-const CELL_PX := 11.0
+## How big one tile is on the mini-map, in pixels.
+const TILE_PX := 11.0
 
 const FLOOR_COLOR := Color(0.30, 0.30, 0.36)
-## Cells on a storey BELOW the player's: dimmed, so the edge of the storey you are on — a
+## Tiles on a storey BELOW the player's: dimmed, so the edge of the storey you are on — a
 ## platform's lip, a stairwell — reads at a glance.
 const FLOOR_BELOW_COLOR := Color(0.15, 0.15, 0.19)
 ## Walls on the current storey: darker than the floor but clearly above the background, so a
@@ -55,42 +55,42 @@ func _draw() -> void:
 	var minz: int = floors[0].z
 	var maxx: int = minx
 	var maxz: int = minz
-	for c in floors + _dungeon.wall_cells().keys():
+	for c in floors + _dungeon.wall_tiles().keys():
 		minx = mini(minx, c.x)
 		minz = mini(minz, c.z)
 		maxx = maxi(maxx, c.x)
 		maxz = maxi(maxz, c.z)
-	var grid := Vector2((maxx - minx + 1) * CELL_PX, (maxz - minz + 1) * CELL_PX)
+	var grid := Vector2((maxx - minx + 1) * TILE_PX, (maxz - minz + 1) * TILE_PX)
 	var origin := (size - grid) * 0.5
 
 	# The player's current storey: what is below is dimmed, what is above is not mapped at all —
 	# you do not see through a ceiling.
-	var level: int = _player.cell.y if is_instance_valid(_player) else 0
+	var level: int = _player.tile.y if is_instance_valid(_player) else 0
 	# Floor slabs: the lower storeys first, the current one over them.
 	for c in floors:
 		if c.y < level:
 			draw_rect(
-				Rect2(_cell_px(c, origin, maxx, maxz), Vector2(CELL_PX - 1.0, CELL_PX - 1.0)),
+				Rect2(_tile_px(c, origin, maxx, maxz), Vector2(TILE_PX - 1.0, TILE_PX - 1.0)),
 				FLOOR_BELOW_COLOR
 			)
 	for c in floors:
 		if c.y == level:
 			draw_rect(
-				Rect2(_cell_px(c, origin, maxx, maxz), Vector2(CELL_PX - 1.0, CELL_PX - 1.0)),
+				Rect2(_tile_px(c, origin, maxx, maxz), Vector2(TILE_PX - 1.0, TILE_PX - 1.0)),
 				FLOOR_COLOR
 			)
 	# Walls on the current storey, over the floors: a wall may carry the storey above's floor, and
 	# on this storey what you should see is a wall.
-	for w in _dungeon.wall_cells():
+	for w in _dungeon.wall_tiles():
 		if w.y == level:
 			draw_rect(
-				Rect2(_cell_px(w, origin, maxx, maxz), Vector2(CELL_PX - 1.0, CELL_PX - 1.0)),
+				Rect2(_tile_px(w, origin, maxx, maxz), Vector2(TILE_PX - 1.0, TILE_PX - 1.0)),
 				WALL_COLOR
 			)
-	# Mechanisms on the current storey: on a cell (a solid block) or on the edge between two cells
-	# (a thin bar, for the gateways, which occupy no cell).
+	# Mechanisms on the current storey: on a tile (a solid block) or on the edge between two tiles
+	# (a thin bar, for the gateways, which occupy no tile).
 	for m in get_tree().get_nodes_in_group("dungeon_mechanism"):
-		if not is_instance_valid(m) or m.cell.y != level or not m.shows_on_map():
+		if not is_instance_valid(m) or m.tile.y != level or not m.shows_on_map():
 			continue  # an unknown trap does not give itself away on the map
 		# A mechanism may impose its own hue — a guardrail uses the grey of decor, since you never
 		# act on it. Otherwise the orange of interactive mechanisms, dulled once spent.
@@ -99,39 +99,39 @@ func _draw() -> void:
 			color = m.map_color()
 		var edge = m.get("edge_dir")
 		if edge != null:
-			_draw_edge_mech(m.cell, edge, origin, maxx, maxz, color)
+			_draw_edge_mech(m.tile, edge, origin, maxx, maxz, color)
 		else:
 			draw_rect(
-				Rect2(_cell_px(m.cell, origin, maxx, maxz), Vector2(CELL_PX - 1.0, CELL_PX - 1.0)),
+				Rect2(_tile_px(m.tile, origin, maxx, maxz), Vector2(TILE_PX - 1.0, TILE_PX - 1.0)),
 				color
 			)
 	# The player, as an arrow pointing the way they face.
 	if is_instance_valid(_player):
-		var p := _cell_px(_player.cell, origin, maxx, maxz) + Vector2(CELL_PX, CELL_PX) * 0.5
+		var p := _tile_px(_player.tile, origin, maxx, maxz) + Vector2(TILE_PX, TILE_PX) * 0.5
 		_draw_player_arrow(p)
 
 
-## Cell to pixel. The map is turned 180 degrees — both axes inverted — so the starting position is
+## Tile to pixel. The map is turned 180 degrees — both axes inverted — so the starting position is
 ## at the BOTTOM and the front of the dungeon (+z) points UP, with left and right matching how you
 ## move.
-func _cell_px(c: Vector3i, origin: Vector2, maxx: int, maxz: int) -> Vector2:
-	return origin + Vector2((maxx - c.x) * CELL_PX, (maxz - c.z) * CELL_PX)
+func _tile_px(c: Vector3i, origin: Vector2, maxx: int, maxz: int) -> Vector2:
+	return origin + Vector2((maxx - c.x) * TILE_PX, (maxz - c.z) * TILE_PX)
 
 
-## An edge mechanism (a gateway): a thin bar on the boundary between `cell` and
-## `cell + edge_dir`, laid on the side matching the map's inverted axes.
+## An edge mechanism (a gateway): a thin bar on the boundary between `tile` and
+## `tile + edge_dir`, laid on the side matching the map's inverted axes.
 func _draw_edge_mech(
-	cell: Vector3i, edge_dir: Vector3i, origin: Vector2, maxx: int, maxz: int, color: Color
+	tile: Vector3i, edge_dir: Vector3i, origin: Vector2, maxx: int, maxz: int, color: Color
 ) -> void:
 	const THICK := 2.0
-	var p := _cell_px(cell, origin, maxx, maxz)
+	var p := _tile_px(tile, origin, maxx, maxz)
 	# The map inverts both axes, so the +x/+z neighbour is at -px on it.
 	if edge_dir.x != 0:
-		var x := p.x + (0.0 if edge_dir.x > 0 else CELL_PX - THICK)
-		draw_rect(Rect2(Vector2(x, p.y), Vector2(THICK, CELL_PX - 1.0)), color)
+		var x := p.x + (0.0 if edge_dir.x > 0 else TILE_PX - THICK)
+		draw_rect(Rect2(Vector2(x, p.y), Vector2(THICK, TILE_PX - 1.0)), color)
 	else:
-		var y := p.y + (0.0 if edge_dir.z > 0 else CELL_PX - THICK)
-		draw_rect(Rect2(Vector2(p.x, y), Vector2(CELL_PX - 1.0, THICK)), color)
+		var y := p.y + (0.0 if edge_dir.z > 0 else TILE_PX - THICK)
+		draw_rect(Rect2(Vector2(p.x, y), Vector2(TILE_PX - 1.0, THICK)), color)
 
 
 ## A small triangle pointing along the player's MOVEMENT direction — cardinal, a multiple of 90
@@ -139,12 +139,12 @@ func _draw_edge_mech(
 func _draw_player_arrow(center: Vector2) -> void:
 	var dir := Vector2(0.0, -1.0)  # default: upwards
 	if _player.has_method("facing_delta"):
-		var fd: Vector3i = _player.facing_delta()  # a cardinal cell delta
+		var fd: Vector3i = _player.facing_delta()  # a cardinal tile delta
 		var d := Vector2(-fd.x, -fd.z)  # the same axis inversion as the map
 		if d.length() > 0.01:
 			dir = d.normalized()
 	var perp := Vector2(-dir.y, dir.x)
-	var r := CELL_PX * 0.6
+	var r := TILE_PX * 0.6
 	var pts := PackedVector2Array(
 		[
 			center + dir * r,

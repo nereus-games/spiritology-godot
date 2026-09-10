@@ -1,7 +1,7 @@
 ## The encounter's bottom panel: the prompt, the action bar, the sub-choice list and the
 ## description line.
 ##
-## Purely a WIDGET. It knows nothing of fighters, abilities or the [EncounterManager] — you
+## Purely a WIDGET. It knows nothing of individuals, abilities or the [EncounterManager] — you
 ## ask it to show a button and call back when pressed. WHICH buttons, and which targets,
 ## stays in the encounter UI where it is coupled to the state of the encounter, and that is
 ## where it belongs.

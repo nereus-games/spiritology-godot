@@ -10,4 +10,4 @@ func execute(ctx: EncounterContext) -> void:
 	ctx.move_to_first(ctx.user)
 	if t:
 		ctx.move_to_last(t)
-		ctx.restrict_to(t, ["Meditate"])
+		ctx.restrict_to(t, ["UI_ENCOUNTER_ACTION_MEDITATE"])

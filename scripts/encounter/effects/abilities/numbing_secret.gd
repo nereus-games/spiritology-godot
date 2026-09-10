@@ -8,4 +8,4 @@ func execute(ctx: EncounterContext) -> void:
 	var t = ctx.primary()
 	if t:
 		ctx.deal_damage(t, ctx.base_damage())
-		ctx.restrict_to(t, ["sauf Talk", "sauf capacités Heat"])
+		ctx.restrict_to(t, ["LOG_RESTRICT_EXCEPT_TALK", "LOG_RESTRICT_EXCEPT_ABILITIES_HEAT"])

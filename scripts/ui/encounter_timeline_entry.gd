@@ -1,7 +1,7 @@
 ## One cell of the turn order.
 ##
 ## Follows the design doc's mockup: a framed portrait with a [DEN] – [weakness] – [ETH]
-## strip under it. The cell whose turn it is grows, and carries the fighter's name above.
+## strip under it. The cell whose turn it is grows, and carries the individual's name above.
 ##
 ## The concealment rule: "rival's density and weakness aren't shown in timeline if they
 ## aren't in the encyclopaedia (yet)". An unknown rival therefore shows the `unknown`
@@ -110,45 +110,49 @@ func _make_pill(color: Color) -> Label:
 
 
 ## Fills the cell in. `known` means the species is in the encyclopaedia; `active` means it
-## is this fighter's turn.
+## is this individual's turn.
 ##
 ## `rank` is only set in the debug view, where it labels EVERY cell "2. ravbak". In game
 ## only the active cell carries a name, as in the mockup — but testing needs the whole
 ## order readable at a glance.
 func setup(
-	fighter: EncounterFighter, known: bool, active: bool, weakness: GameEnums.Energy, rank: int = 0
+	individual: EncounterIndividual,
+	known: bool,
+	active: bool,
+	weakness: GameEnums.Energy,
+	rank: int = 0
 ) -> void:
 	var side := SIZE_ACTIVE if active else SIZE_IDLE
 	_portrait.custom_minimum_size = Vector2(side, side)
-	_portrait.texture = _portrait_texture(fighter)
-	_portrait.modulate = Color(1, 1, 1) if not fighter.is_dissolved() else Color(0.35, 0.35, 0.4)
+	_portrait.texture = _portrait_texture(individual)
+	_portrait.modulate = Color(1, 1, 1) if not individual.is_dissolved() else Color(0.35, 0.35, 0.4)
 
 	var frame_box := StyleBoxFlat.new()
 	# Side is legible at a glance from the background alone, independently of which cell is
 	# active — that one is marked by being larger with a white border.
-	frame_box.bg_color = COLOR_BG_PLAYER if fighter.is_player else COLOR_BG_RIVAL
+	frame_box.bg_color = COLOR_BG_PLAYER if individual.is_player else COLOR_BG_RIVAL
 	frame_box.border_color = COLOR_FRAME_ACTIVE if active else COLOR_FRAME_IDLE
 	frame_box.set_border_width_all(3 if active else 2)
 	frame_box.set_corner_radius_all(4)
 	_frame.add_theme_stylebox_override("panel", frame_box)
 
 	if rank > 0:
-		_name_label.text = "%d. %s" % [rank, fighter.display_name()]
+		_name_label.text = "%d. %s" % [rank, individual.display_name()]
 		_name_label.visible = true
 	else:
-		_name_label.text = fighter.display_name() if active else ""
+		_name_label.text = individual.display_name() if active else ""
 		_name_label.visible = active
 
 	# A player's numbers are always readable; a rival's depend on the encyclopaedia. The
 	# badges stay, empty, so that the cell does not shift when they appear.
-	var show_numbers := fighter.is_player or known
-	_den_label.text = str(fighter.den) if show_numbers else ""
-	_eth_label.text = str(fighter.eth) if show_numbers else ""
+	var show_numbers := individual.is_player or known
+	_den_label.text = str(individual.den) if show_numbers else ""
+	_eth_label.text = str(individual.eth) if show_numbers else ""
 
 	# `unknown` when the weakness is hidden (Anodyne Excess) OR the rival is not in the
 	# encyclopaedia yet; otherwise the energy's icon, or `none` when this position exposes
 	# no weakness at all this turn.
-	var show_weakness := (fighter.is_player or known) and not fighter.weakness_hidden
+	var show_weakness := (individual.is_player or known) and not individual.weakness_hidden
 	if not show_weakness:
 		_weakness_icon.texture = load(ICON_UNKNOWN)
 	elif WEAKNESS_ICONS.has(weakness):
@@ -159,8 +163,8 @@ func setup(
 
 ## A square portrait cropped from the TOP of the artwork, where the head is, rather than
 ## the whole piece squashed into a square.
-func _portrait_texture(fighter: EncounterFighter) -> Texture2D:
-	var path := "res://assets/sprites/spirimonsters/%s.png" % fighter.species_id()
+func _portrait_texture(individual: EncounterIndividual) -> Texture2D:
+	var path := "res://assets/sprites/spirimonsters/%s.png" % individual.species_id()
 	if not ResourceLoader.exists(path):
 		return null
 	var src: Texture2D = load(path)

@@ -11,11 +11,11 @@ const ScenarioCatalog := preload("res://scripts/dev/scenario_catalog.gd")
 
 var _pending_rival: Node
 
-# --- Real-time narrow-bridge driver (per cell, in both directions) ---
-var _active_bridge  ## the bridge cell in progress, or null
-var _bridge_dir: Vector3i  ## direction of travel, as a cell delta
-var _bridge_from: Vector3i  ## the cell the current advance started from
-var _bridge_balance  ## the crossing's balance model, carried from cell to cell
+# --- Real-time narrow-bridge driver (per tile, in both directions) ---
+var _active_bridge  ## the bridge tile in progress, or null
+var _bridge_dir: Vector3i  ## direction of travel, as a tile delta
+var _bridge_from: Vector3i  ## the tile the current advance started from
+var _bridge_balance  ## the crossing's balance model, carried from tile to tile
 var _in_bridge := false  ## a crossing is under way
 ## Maximum camera roll (degrees) at full imbalance — this is what losing your footing looks
 ## like.
@@ -36,7 +36,7 @@ func _ready() -> void:
 	# player. Done LAST so that the state the scenario sets — objects, abilities marked as used —
 	# is not wiped by the dungeon-entry logic above.
 	var start: Vector3i = ScenarioCatalog.build(ScenarioCatalog.selected_id, _dungeon)
-	# DEV: the player starts where they would enter the dungeon, which makes that cell the
+	# DEV: the player starts where they would enter the dungeon, which makes that tile the
 	# entrance — and, per the design doc, an exit too. Mechanisms that send them back there, like
 	# dieverting, then have a real destination instead of a random fallback.
 	_dungeon.set_entrance(start)
@@ -61,7 +61,7 @@ func _on_encounter_requested(rival: Node, initiated_by_rival: bool) -> void:
 	var rival_id: StringName = rival.species_id if "species_id" in rival else &"ravbak"
 	# The rival's map state: its maximum DEN is a LEVEL DESIGN knob, and damage taken during
 	# exploration — a fall — carries into the encounter. An empty dictionary means nothing was
-	# tracked on the map, and the fighter starts from its defaults.
+	# tracked on the map, and the individual starts from its defaults.
 	var rival_state := {}
 	if "den" in rival and "max_den" in rival:
 		rival_state = {"den": rival.den, "max_den": rival.max_den}
@@ -96,7 +96,7 @@ func _on_party_wiped() -> void:
 
 
 func _on_turn_advanced(_turn: int) -> void:
-	pass  # turn hook: PSY, info points, and so on
+	pass  # turn hook: PSY, IFP, and so on
 
 
 # --------------------------------------------------------------------------
@@ -112,37 +112,37 @@ func _drive_bridge(delta: float) -> void:
 	var player := get_node_or_null("Player")
 	if player == null:
 		return
-	# Detects an engaged bridge cell, meaning we have stepped onto a plank.
+	# Detects an engaged bridge tile, meaning we have stepped onto a plank.
 	if _active_bridge == null:
 		for m in _dungeon.get_children():
 			if m.has_method("is_engaged") and m.is_engaged():
-				_begin_bridge_cell(m, player)
+				_begin_bridge_tile(m, player)
 				break
 		return
 	# Lateral input, INVERTED so that it CORRECTS: leaning the right way restores balance.
 	var input := -Input.get_axis("move_left", "move_right")
 	var state: StringName = _active_bridge.advance(delta, input)
 	var bal = _active_bridge.balance()
-	# Advance along the cell (from -> from+dir); imbalance shows up as camera ROLL.
+	# Advance along the tile (from -> from+dir); imbalance shows up as camera ROLL.
 	var t := clampf(bal.progress, 0.0, 1.0)
-	var from_w := _dungeon.cell_to_world(_bridge_from)
-	var to_w := _dungeon.cell_to_world(_bridge_from + _bridge_dir)
+	var from_w := _dungeon.tile_to_world(_bridge_from)
+	var to_w := _dungeon.tile_to_world(_bridge_from + _bridge_dir)
 	player.global_position = from_w.lerp(to_w, t)
 	_set_camera_roll(player, bal.imbalance)
 	_hud_show_balance(bal.imbalance)
 	if state == &"complete":
-		_advance_bridge_cell(player)
+		_advance_bridge_tile(player)
 	elif state == &"fell":
 		_fall_off_bridge(player)
 
 
-## Starts an advance onto a bridge cell, along the direction being faced. When a crossing is
-## already under way, the cell PICKS UP the current balance test — imbalance and lateral
+## Starts an advance onto a bridge tile, along the direction being faced. When a crossing is
+## already under way, the tile PICKS UP the current balance test — imbalance and lateral
 ## velocity both carried over — instead of starting a fresh one.
-func _begin_bridge_cell(bridge, player) -> void:
+func _begin_bridge_tile(bridge, player) -> void:
 	_active_bridge = bridge
 	_bridge_dir = bridge.direction()
-	_bridge_from = bridge.cell
+	_bridge_from = bridge.tile
 	if _in_bridge and _bridge_balance != null:
 		bridge.adopt_balance(_bridge_balance)
 	else:
@@ -152,17 +152,17 @@ func _begin_bridge_cell(bridge, player) -> void:
 	_hud_show_balance(_bridge_balance.imbalance)
 
 
-## Cell crossed: move to the next one, carrying on if there is more bridge, otherwise finishing.
+## Tile crossed: move to the next one, carrying on if there is more bridge, otherwise finishing.
 ##
 ## The design doc: "turns here are not defined by player interaction, but by bridge length" —
-## so every bridge cell crossed costs one turn, exactly like an ordinary step.
-func _advance_bridge_cell(player) -> void:
+## so every bridge tile crossed costs one turn, exactly like an ordinary step.
+func _advance_bridge_tile(player) -> void:
 	var dest: Vector3i = _bridge_from + _bridge_dir
-	_bridge_balance = _active_bridge.balance()  # carried to the next cell
+	_bridge_balance = _active_bridge.balance()  # carried to the next tile
 	_active_bridge = null
-	# A bridge cell crossed IS a move, so it counts down disarray like any step. The deflection
+	# A bridge tile crossed IS a move, so it counts down disarray like any step. The deflection
 	# itself makes no sense here — you get no choice of direction on a plank — and on a bridge
-	# disarray shows up as command inertia instead. This holds for EVERY branch below: the cell
+	# disarray shows up as command inertia instead. This holds for EVERY branch below: the tile
 	# is crossed whether or not someone is standing on it.
 	var aff = player.get("affliction")
 	if aff != null:
@@ -187,7 +187,7 @@ func _advance_bridge_cell(player) -> void:
 				_dungeon.request_encounter(occupant, false)
 		return
 	player.teleport_to(dest)
-	_dungeon.notify_entered(dest, player)  # engages the next cell if it is still bridge
+	_dungeon.notify_entered(dest, player)  # engages the next tile if it is still bridge
 	var still := false
 	for m in _dungeon.mechanisms_at(dest):
 		if m.has_method("is_engaged") and m.is_engaged():
@@ -200,34 +200,34 @@ func _advance_bridge_cell(player) -> void:
 ## Falling off the bridge: the character drops to the FLOOR below, as deep as level design made
 ## it, and takes NORMAL fall damage, exactly like stepping into empty space.
 func _fall_off_bridge(player) -> void:
-	# You fall from whichever cell you are closest to: the one ahead if you are past halfway AND
+	# You fall from whichever tile you are closest to: the one ahead if you are past halfway AND
 	# there is genuinely empty space below it — otherwise you are already over solid floor.
-	var from_cell := _bridge_from
+	var from_tile := _bridge_from
 	var ahead: Vector3i = _bridge_from + _bridge_dir
 	if (
 		_active_bridge != null
 		and _active_bridge.balance().progress >= 0.5
 		and _dungeon.fall_landing(ahead) != ahead
 	):
-		from_cell = ahead
+		from_tile = ahead
 	_finish_bridge(player)
-	var landing := _dungeon.fall_landing(from_cell)
-	if landing == from_cell:
+	var landing := _dungeon.fall_landing(from_tile)
+	if landing == from_tile:
 		# Nothing below: the bridge spans no gap at all, which is incomplete level design. Catch
 		# yourself on the plank rather than vanishing.
 		## TODO(dungeon checker): the design doc requires a narrow bridge to ALWAYS span a floor,
 		## with a way back up before the bridge (unless the fall devitalises). Nothing checks that
 		## on a real dungeon — only the dev scenario is verified, by `geometry_check`. Revisit
 		## when a dungeon validator exists; until then, this runtime guardrail.
-		push_warning("[Exploration] Fall off the bridge at %s: no floor below." % from_cell)
-		player.teleport_to(from_cell)
+		push_warning("[Exploration] Fall off the bridge at %s: no floor below." % from_tile)
+		player.teleport_to(from_tile)
 		return
-	player.teleport_to(from_cell)
+	player.teleport_to(from_tile)
 	# Watching rivals are told by `fall_to`, through `DungeonManager.notify_level_change`.
-	await player.fall_to(landing, from_cell.y - landing.y)
+	await player.fall_to(landing, from_tile.y - landing.y)
 
 
-## A rival steps onto the plank the player is on: both fall, land on the SAME cell, and the
+## A rival steps onto the plank the player is on: both fall, land on the SAME tile, and the
 ## encounter starts there, per the design doc. The rival may be devitalised by the fall, in
 ## which case there is no encounter at all.
 func _on_bridge_collision(rival, tile: Vector3i) -> void:
@@ -240,7 +240,7 @@ func _on_bridge_collision(rival, tile: Vector3i) -> void:
 	var levels := tile.y - landing.y
 	_finish_bridge(player)  # the crossing is cut short
 	player.teleport_to(tile)
-	# The player occupies no cell, so the rival can land exactly on theirs.
+	# The player occupies no tile, so the rival can land exactly on theirs.
 	var rival_alive: bool = rival.drop_to(landing, levels)
 	await player.fall_to(landing, levels)
 	if rival_alive and is_instance_valid(rival):

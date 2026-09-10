@@ -8,7 +8,7 @@ extends AbilityScript
 func execute(ctx: EncounterContext) -> void:
 	var r = ctx.user.last_damager
 	if r and not r.is_dissolved() and r.is_player != ctx.user.is_player:
-		ctx.drain_eth(r, r.eth)  # tout son ETH
+		ctx.drain_eth(r, r.eth)  # all of its ETH
 		if ctx.weakness_of(r) == GameEnums.Energy.HEAT:
 			ctx.deal_damage(r, ctx.base_damage())
 	var choices := [GameEnums.Energy.FLUID, GameEnums.Energy.HEAT, ctx.weakness_of(ctx.user)]

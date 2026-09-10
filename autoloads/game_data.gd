@@ -1,9 +1,9 @@
-## Registre central des données du jeu (autoload `GameData`).
+## The game's data registry (autoload `GameData`).
 ##
-## Charge AU BOOT toute la base de données LÉGÈRE : les .tres de species/abilities/talents
-## (noms, stats, clés de trad, faiblesses, références). Coût invisible, zéro micro-freeze
-## en jeu. Les assets lourds (sprites, audio) ne sont JAMAIS chargés ici — ils le sont
-## par donjon. Accès en lecture seule via les getters.
+## Loads the entire LIGHT database at boot — every species, ability, talent, object and
+## dungeon. The cost is invisible once, and it buys freedom from micro-freezes in play.
+## Heavy assets (sprites, audio) are NEVER loaded here; they are loaded per dungeon.
+## Read-only afterwards, through the getters.
 extends Node
 
 const SPECIES_DIR := "res://data/species/"
@@ -13,21 +13,21 @@ const OBJECTS_DIR := "res://data/objects/"
 
 var _species: Dictionary = {}  ## StringName id -> SpeciesData
 var _abilities: Dictionary = {}  ## StringName id -> AbilityData
-var _talents: Dictionary = {}  ## StringName id -> TalentData (sous-ensemble Type=Talent)
+var _talents: Dictionary = {}  ## StringName id -> TalentData
 var _dungeons: Dictionary = {}  ## StringName id -> DungeonConfig
 var _objects: Dictionary = {}  ## StringName id -> ObjectData
 
 
 func _ready() -> void:
 	_load_dir(SPECIES_DIR)
-	# Le dossier abilities/ contient AbilityData ET TalentData (générés depuis Notion).
-	# On les route vers le bon registre selon le type de la ressource.
+	# abilities/ holds AbilityData AND TalentData — in the design doc they are one database,
+	# told apart by a Type column. Routed to the right registry by resource type.
 	_load_dir(ABILITIES_DIR)
 	_load_dir(DUNGEONS_DIR)
 	_load_dir(OBJECTS_DIR)
 	print(
 		(
-			"[GameData] %d espèces, %d capacités, %d talents, %d donjons, %d objets chargés."
+			"[GameData] loaded %d species, %d abilities, %d talents, %d dungeons, %d objects."
 			% [
 				_species.size(),
 				_abilities.size(),
@@ -39,26 +39,25 @@ func _ready() -> void:
 	)
 
 
-## Charge tous les .tres d'un dossier et range chaque ressource dans le registre
-## correspondant à son type, indexée par son `id`.
+## Loads every .tres in a directory into the registry matching its type, keyed by `id`.
 func _load_dir(path: String) -> void:
 	var dir := DirAccess.open(path)
 	if dir == null:
-		push_warning("[GameData] dossier introuvable : %s (vide pour l'instant ?)" % path)
+		push_warning("[GameData] directory not found: %s (empty for now?)" % path)
 		return
 	for file_name in dir.get_files():
-		# En export, les .tres deviennent .tres.remap ; on normalise.
+		# Exported builds turn .tres into .tres.remap.
 		if not (file_name.ends_with(".tres") or file_name.ends_with(".tres.remap")):
 			continue
 		var res_path := path + file_name.trim_suffix(".remap")
 		var res: Resource = load(res_path)
 		if res == null or not ("id" in res):
-			push_warning("[GameData] ressource invalide ignorée : %s" % res_path)
+			push_warning("[GameData] skipping invalid resource: %s" % res_path)
 			continue
 		_registry_for(res)[res.id] = res
 
 
-## Renvoie le dictionnaire-registre adapté au type d'une ressource.
+## The registry a resource belongs in, by type.
 func _registry_for(res: Resource) -> Dictionary:
 	if res is SpeciesData:
 		return _species
@@ -70,7 +69,7 @@ func _registry_for(res: Resource) -> Dictionary:
 		return _dungeons
 	if res is ObjectData:
 		return _objects
-	push_warning("[GameData] type de ressource non géré : %s" % res)
+	push_warning("[GameData] unhandled resource type: %s" % res)
 	return {}
 
 

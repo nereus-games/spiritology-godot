@@ -1,36 +1,36 @@
-## État de la partie en cours (autoload `GameSession`).
+## The state of a playthrough (autoload `GameSession`).
 ##
-## Tout ce qui change pendant une partie et doit être sauvegardé : duo de personnages,
-## avancement de l'encyclopédie, états des donjons, score PSY. Distinct de [GameData]
-## (données statiques chargées au boot). Sérialisé par [SaveSystem] en JSON.
+## Everything that changes as the game is played and therefore has to be saved: the duo,
+## encyclopaedia progress, dungeon states, PSY score, inventory. The counterpart of
+## [GameData], which is static and reloaded at boot. Serialised by [SaveSystem].
 extends Node
 
-## Paliers de score PSY qui modulent les IFP gagnés (≤10, 10<PSY≤30, >30).
+## PSY thresholds that decide how many info points an action earns.
 const PSY_LOW := 10
 const PSY_HIGH := 30
 
-## Seuil du compteur FDE : à 3 rencontres « parfaites » d'affilée, +1 PSY.
+## Perfect encounters in a row before the FDE counter converts into +1 PSY.
 const FDE_THRESHOLD := 3
 
-## Plafond d'IFP gagnables par espèce via « Examine decor / ground » en exploration.
-## Distinct du total de page (0..100) : cette source ne peut octroyer qu'au plus 15 IFP.
+## Ceiling on info points a single species can yield through "Examine decor / ground".
+## Distinct from a page's own 0..100: this one SOURCE can never give more than this.
 const EXAMINE_DECOR_CAP := 15
 
-## Table des IFP gagnés selon (action, palier PSY). Source : doc Notion (Encyclopaedia,
-## « Obtaining Info Points »). Chaque entrée est `[tier 0, tier 1, tier 2]`, indexée par
-## [method psy_tier] (tier 0 = PSY ≤ 10 ; tier 1 = 10 < PSY ≤ 30 ; tier 2 = 30 < PSY).
-## Les variantes Forlorn sont des lignes séparées ; la substitution Forlorn→normal
-## (page principale incomplète) est gérée dans [method ifp_amount], pas ici.
+## Info points per (action, PSY tier). Source: design doc, Encyclopaedia / "Obtaining
+## Info Points". Each entry is `[tier 0, tier 1, tier 2]`, indexed by [method psy_tier].
+##
+## Forlorn variants are separate rows; falling back from Forlorn to ordinary when the main
+## page is incomplete happens in [method ifp_amount], not here.
 const IFP_TABLE := {
-	# Examine décor / sol : identique normal/Forlorn (pas de variante Forlorn).
+	# Examining decor has no Forlorn variant.
 	GameEnums.IfpAction.EXAMINE_DECOR:
 	{
 		false: [3, 3, 2],
 	},
 	GameEnums.IfpAction.EXAMINE_RIVAL:
 	{
-		false: [6, 8, 9],  # rival normal
-		true: [12, 13, 14],  # rival Forlorn (page principale complétée)
+		false: [6, 8, 9],
+		true: [12, 13, 14],  # Forlorn, and only once the main page is complete
 	},
 	GameEnums.IfpAction.TALK_RIVAL:
 	{
@@ -44,100 +44,97 @@ const IFP_TABLE := {
 	},
 }
 
-## DEN (Density) maximum d'un personnage joueur, fixe pour toute la partie.
+## A player character's maximum DEN (Density), fixed for the whole game.
 const MAX_DEN := 100
 
-## ORDRES DE GRANDEUR du DEN d'un rival ordinaire selon l'avancement du jeu (doc « Game Units
-## / Density » : ~50 early, 100 mid, 125 late).
+## Rough magnitudes for an ordinary rival's DEN as the game progresses (design doc, Game
+## Units / Density).
 ##
-## Ce ne sont PAS des paliers appliqués automatiquement : le DEN de départ d'un rival est
-## attribué par le LEVEL DESIGN, donjon par donjon, en visant ces ordres de grandeur. D'où des
-## constantes de référence plutôt qu'un état de partie.
+## NOT tiers applied automatically. A rival's starting DEN is assigned by LEVEL DESIGN,
+## dungeon by dungeon, aiming at these magnitudes — hence reference constants rather than
+## game state.
 const RIVAL_DEN_EARLY := 50
 const RIVAL_DEN_MID := 100
 const RIVAL_DEN_LATE := 125
 
-## ETH (Ether) maximum d'un personnage joueur.
-## ## TODO: max ETH par espèce quand Notion le chiffrera (placeholder cohérent avec
-## BalanceData.base_eth).
+## A player character's maximum ETH (Ether).
+## ## TODO: per-species maximum once the doc gives figures. Kept in step with
+## [member BalanceData.base_eth].
 const MAX_ETH := 50
 
-## Emplacements du duo jouable. Indexe [member party_den] / [member party_eth].
+## The two slots of the playable duo. Indexes [member party_den] / [member party_eth].
 enum PartySlot { MAIN, TEAMMATE }
 
 signal psy_changed(new_value: int)
 signal fde_changed(new_value: int)
 signal encyclopaedia_progress(species_id: StringName, ifp: int)
-## DEN persistant d'un emplacement modifié (dégâts/soin, restauration de dévitalisation).
+## A slot's persistent DEN changed — damage, healing, or recovery from devitalisation.
 signal den_changed(slot: PartySlot, new_value: int)
-## ETH persistant d'un emplacement modifié (coût/récupération, restauration en donjon).
+## A slot's persistent ETH changed.
 signal eth_changed(slot: PartySlot, new_value: int)
-## Les DEUX personnages du duo sont dévitalisés simultanément (DEN restauré à 1 chacun).
-## L'exploration doit réagir en sortant le duo du donjon courant.
+## BOTH characters are devitalised at once, and each has been restored to 1 DEN.
+## Exploration is expected to answer this by taking the duo out of the dungeon.
 signal party_wiped
-## Quantité d'un objet d'inventaire modifiée. `new_count` est 0 si l'objet est épuisé.
+## An inventory quantity changed. `new_count` is 0 when the last one is spent.
 signal inventory_changed(object_id: StringName, new_count: int)
 
-## Duo jouable (slugs d'espèces), déterminé par le mini-quiz de personnalité.
-## Peut contenir deux fois la même espèce (talent cumulé).
+## The playable duo, decided by the personality quiz. The same species can fill both
+## slots, in which case its talent stacks.
 var main_character: StringName
 var teammate: StringName
 
-## Nom donné par le joueur au personnage principal.
+## What the player named the main character.
 var player_name: String = ""
 
-## DEN (vie) persistant par emplacement : [enum PartySlot] -> int dans [0, MAX_DEN].
-## Persiste sur toute la partie (les dégâts subis en rencontre ne sont PAS oubliés).
+## Persistent DEN per slot. It lasts the whole game: damage taken in an encounter is NOT
+## forgotten when the encounter ends.
 var party_den: Dictionary = {
 	PartySlot.MAIN: MAX_DEN,
 	PartySlot.TEAMMATE: MAX_DEN,
 }
 
-## ETH (énergie des capacités) persistant par emplacement : [enum PartySlot] -> int dans
-## [0, MAX_ETH]. Entièrement restauré à chaque entrée de donjon ([method restore_party_eth]).
+## Persistent ETH per slot. Fully restored on entering a dungeon
+## ([method restore_party_eth]).
 var party_eth: Dictionary = {
 	PartySlot.MAIN: MAX_ETH,
 	PartySlot.TEAMMATE: MAX_ETH,
 }
 
-## Score psychologique courant. Influence le nombre d'IFP obtenus.
+## The psychological score. Decides which row of [constant IFP_TABLE] applies.
 var psy_score: int = 0:
 	set(value):
 		psy_score = value
 		psy_changed.emit(psy_score)
 
-## Compteur FDE (Full Devitalisation Encounters) — « murderous spree » caché au joueur.
-## S'incrémente à chaque rencontre où TOUS les rivaux sont dévitalisés ; se remet à 0
-## dès qu'une rencontre se termine autrement. À [constant FDE_THRESHOLD], convertit en +1 PSY.
+## Full Devitalisation Encounters — a "murderous spree" counter, hidden from the player.
+## Counts encounters where EVERY rival was devitalised, and resets the moment one ends any
+## other way. At [constant FDE_THRESHOLD] it converts into +1 PSY.
 var fde_count: int = 0:
 	set(value):
 		fde_count = value
 		fde_changed.emit(fde_count)
 
-## Avancement encyclopédie : species_id -> IFP accumulés (1 IFP = 1 % d'une page).
+## Encyclopaedia progress: species_id -> info points, where 1 point is 1 % of a page.
 var encyclopaedia_ifp: Dictionary = {}
 
-## Suivi persistant de l'IFP déjà gagné par espèce via « Examine decor / ground » en
-## exploration : species_id -> int cumulé, plafonné à [constant EXAMINE_DECOR_CAP].
-## Sert à appliquer le plafond de 15 IFP/espèce de cette source (restriction 1).
+## How much each species has already yielded through "Examine decor / ground", so that
+## [constant EXAMINE_DECOR_CAP] can be enforced across a whole playthrough.
 var exploration_examine_ifp: Dictionary = {}
 
-## États persistants par donjon : dungeon_id -> Dictionary (cases visitées, etc.).
+## Per-dungeon persistent state: dungeon_id -> Dictionary of visited cells and the like.
 var dungeon_states: Dictionary = {}
 
-## Capacités d'exploration déjà utilisées cette visite de donjon (id -> true). Une capacité
-## d'exploration s'utilise UNE fois par visite ; l'action Recycle (litière) en rafraîchit une
-## au hasard, le cristal de rafraîchissement les rafraîchit toutes. Réinitialisé à l'entrée
-## d'un donjon ([method reset_exploration_abilities]).
+## Exploration abilities already spent this dungeon visit. Each is usable ONCE per visit;
+## the litter's Recycle action refreshes one at random, a refresh crystal refreshes all.
+## Cleared on entering a dungeon.
 var used_exploration_abilities: Dictionary = {}
 
-## Inventaire : slug d'objet (StringName) -> quantité (int > 0). « Stackable » : un même
-## objet est compté, pas dupliqué. Une entrée à 0 est supprimée (cf. [method remove_object]).
-## Réfère un [ObjectData] via [GameData]. Aucun objet n'est nécessaire pour finir le jeu.
+## Inventory: object slug -> quantity. Objects stack, so they are counted rather than
+## duplicated, and an entry reaching 0 is erased. No object is needed to finish the game.
 var inventory: Dictionary = {}
 
 
-## Palier PSY courant (0, 1 ou 2) pour le calcul d'IFP.
+## Which row of [constant IFP_TABLE] the current PSY score selects.
 func psy_tier() -> int:
 	if psy_score <= PSY_LOW:
 		return 0
@@ -146,67 +143,63 @@ func psy_tier() -> int:
 	return 2
 
 
-## Espèce déjà inscrite à l'encyclopédie (au moins 1 IFP glané) ?
+## Has this species been entered in the encyclopaedia at all?
 ##
-## Sert de garde d'affichage à l'UI de rencontre : « rival's density and weakness aren't
-## shown in timeline if they aren't in the encyclopaedia (yet) ».
+## Gates what the encounter UI may show: "rival's density and weakness aren't shown in
+## timeline if they aren't in the encyclopaedia (yet)".
 func knows_species(species_id: StringName) -> bool:
 	return int(encyclopaedia_ifp.get(species_id, 0)) > 0
 
 
-## Ajoute des IFP à une espèce et notifie la progression.
+## Adds info points to a species' page, which caps at 100.
 func add_ifp(species_id: StringName, amount: int) -> void:
 	var current: int = encyclopaedia_ifp.get(species_id, 0)
 	encyclopaedia_ifp[species_id] = min(current + amount, 100)
 	encyclopaedia_progress.emit(species_id, encyclopaedia_ifp[species_id])
 
 
-# --- Calcul des IFP gagnés (table « Obtaining Info Points ») ---
+# --- Earning info points ---
 
 
-## Montant brut d'IFP de la table pour une `action` et son caractère Forlorn, au palier PSY
-## courant ([method psy_tier]). Fonction pure : ne modifie aucun état.
+## The raw table amount for an action at the current PSY tier. Pure: changes no state.
 ##
-## Restriction 3 (substitution Forlorn) : un rival Forlorn n'octroie ses IFP majorés que si
-## la page principale de son espèce est déjà complétée. `main_page_complete` porte cette
-## information (calculée par l'appelant depuis [member encyclopaedia_ifp]) ; si Forlorn mais
-## page incomplète, on retombe sur la ligne « normale » de la même action.
+## A Forlorn rival only yields its higher amounts once the species' ordinary page is
+## complete; otherwise the ordinary row applies. `main_page_complete` carries that, worked
+## out by the caller.
 func ifp_amount(
 	action: GameEnums.IfpAction, is_forlorn: bool, main_page_complete: bool = false
 ) -> int:
-	# Forlorn majoré seulement si la page principale est complète ; sinon ligne normale.
 	var use_forlorn := is_forlorn and main_page_complete
 	var variants: Dictionary = IFP_TABLE[action]
-	# EXAMINE_DECOR n'a pas de variante Forlorn : repli sur la ligne normale.
+	# EXAMINE_DECOR has no Forlorn row to fall back from.
 	var by_tier: Array = variants.get(use_forlorn, variants[false])
 	return by_tier[psy_tier()]
 
 
-## Octroie les IFP d'une `action` à une espèce et retourne le montant réellement ajouté.
-## Point d'entrée de haut niveau qui applique les trois restrictions documentées :
-##   - restriction 2 : un Talk non effectif (`dialogue_effective == false`) n'octroie rien ;
-##   - restriction 3 : la substitution Forlorn→normal (page principale incomplète), via
-##     [method ifp_amount] (`main_page_complete` calculé ici depuis [member encyclopaedia_ifp]) ;
-##   - restriction 1 : pour [constant GameEnums.IfpAction.EXAMINE_DECOR], le cumul par espèce
-##     est plafonné à [constant EXAMINE_DECOR_CAP] (montant tronqué, puis 0 une fois atteint).
-## L'ajout final passe par [method add_ifp] (qui borne déjà la page à 100).
-## ## TODO: page Forlorn à pourcentage distinct quand le modèle d'encyclopédie le supportera
-## (aujourd'hui les IFP Forlorn s'ajoutent à la page d'espèce existante).
-## ## TODO: brancher l'exploration (Examine decor/ground), seule source d'IFP encore sans
-## site d'appel. La rencontre, elle, appelle : Examine / Talk / dissolution passent par le
-## signal [signal EncounterManager.ifp_earned], relayé ici par l'UI de rencontre.
+## Awards the info points for an action, and returns what was actually added.
+##
+## The single entry point, because it is where the doc's three restrictions live:
+##   - an ineffective Talk earns nothing;
+##   - Forlorn falls back to the ordinary row while the main page is incomplete;
+##   - examining decor is capped per species at [constant EXAMINE_DECOR_CAP], truncated on
+##     the way to the cap and 0 once reached.
+## ## TODO: give Forlorn pages their own percentage. Today their points are added to the
+## species' existing page.
+## ## TODO: exploration never calls this. Examining decor and ground is the one source of
+## info points with no call site — encounters go through
+## [signal EncounterManager.ifp_earned], relayed here by the encounter UI.
 func award_ifp(
 	species_id: StringName,
 	action: GameEnums.IfpAction,
 	is_forlorn: bool = false,
 	dialogue_effective: bool = true
 ) -> int:
-	# Restriction 2 : Talk inefficace → aucun IFP.
+	# An ineffective Talk earns nothing.
 	if action == GameEnums.IfpAction.TALK_RIVAL and not dialogue_effective:
 		return 0
 	var main_page_complete: bool = int(encyclopaedia_ifp.get(species_id, 0)) >= 100
 	var amount := ifp_amount(action, is_forlorn, main_page_complete)
-	# Restriction 1 : plafond cumulé de 15 IFP/espèce pour Examine decor / ground.
+	# Per-species ceiling on what examining decor can ever yield.
 	if action == GameEnums.IfpAction.EXAMINE_DECOR:
 		var already: int = exploration_examine_ifp.get(species_id, 0)
 		var room := EXAMINE_DECOR_CAP - already
@@ -220,19 +213,20 @@ func award_ifp(
 	return amount
 
 
-# --- Talents du duo ---
+# --- The duo's talents ---
 
 
-## Le duo porte-t-il ce talent ? Un talent appartient à une ESPÈCE (relation 1:1, cf.
-## [member SpeciesData.talent]) : le duo le possède si l'un de ses deux membres est de cette
-## espèce. Nécessaire HORS rencontre, où il n'existe aucun [EncounterFighter] pour porter le
-## [TalentScript] — c'est le cas des talents d'exploration (coffres, pièges, carte).
+## Does the duo carry this talent? A talent belongs to a SPECIES, so the duo has it if
+## either member is of that species.
+##
+## Needed OUTSIDE encounters, where no [EncounterFighter] exists to carry a [TalentScript] —
+## which is exactly the case for the exploration talents: chests, traps, the map.
 func party_has_talent(talent_id: StringName) -> bool:
 	return party_talent_stacks(talent_id) > 0
 
 
-## Nombre d'exemplaires du talent dans le duo (0, 1 ou 2 : un duo de même espèce le cumule,
-## cf. [member TalentData.stackable]).
+## How many copies of the talent the duo carries — 0, 1, or 2 when both members share the
+## species.
 func party_talent_stacks(talent_id: StringName) -> int:
 	var stacks := 0
 	for member in [main_character, teammate]:
@@ -244,20 +238,18 @@ func party_talent_stacks(talent_id: StringName) -> int:
 	return stacks
 
 
-# --- État persistant DEN / ETH du duo ---
+# --- The duo's persistent DEN / ETH ---
 
 
-## DEN courant d'un emplacement, borné [0, MAX_DEN].
 func get_den(slot: PartySlot) -> int:
 	return party_den.get(slot, MAX_DEN)
 
 
-## ETH courant d'un emplacement, borné [0, MAX_ETH].
 func get_eth(slot: PartySlot) -> int:
 	return party_eth.get(slot, MAX_ETH)
 
 
-## Fixe le DEN d'un emplacement (borné [0, MAX_DEN]) et notifie si changement.
+## Sets a slot's DEN, clamped, and signals only on an actual change.
 func set_den(slot: PartySlot, value: int) -> void:
 	var clamped := clampi(value, 0, MAX_DEN)
 	if party_den.get(slot) == clamped:
@@ -266,7 +258,7 @@ func set_den(slot: PartySlot, value: int) -> void:
 	den_changed.emit(slot, clamped)
 
 
-## Fixe l'ETH d'un emplacement (borné [0, MAX_ETH]) et notifie si changement.
+## Sets a slot's ETH, clamped, and signals only on an actual change.
 func set_eth(slot: PartySlot, value: int) -> void:
 	var clamped := clampi(value, 0, MAX_ETH)
 	if party_eth.get(slot) == clamped:
@@ -275,50 +267,43 @@ func set_eth(slot: PartySlot, value: int) -> void:
 	eth_changed.emit(slot, clamped)
 
 
-## Applique des dégâts DEN à un emplacement (montant >= 0). Retourne le DEN restant.
 func apply_den_damage(slot: PartySlot, amount: int) -> int:
 	set_den(slot, get_den(slot) - maxi(amount, 0))
 	return get_den(slot)
 
 
-## Soigne le DEN d'un emplacement (montant >= 0). Retourne le DEN restant.
 func heal_den(slot: PartySlot, amount: int) -> int:
 	set_den(slot, get_den(slot) + maxi(amount, 0))
 	return get_den(slot)
 
 
-## Dépense de l'ETH sur un emplacement (coût d'une capacité, >= 0). Retourne l'ETH restant.
 func spend_eth(slot: PartySlot, amount: int) -> int:
 	set_eth(slot, get_eth(slot) - maxi(amount, 0))
 	return get_eth(slot)
 
 
-## Récupère de l'ETH sur un emplacement (montant >= 0). Retourne l'ETH restant.
 func recover_eth(slot: PartySlot, amount: int) -> int:
 	set_eth(slot, get_eth(slot) + maxi(amount, 0))
 	return get_eth(slot)
 
 
-## Restaure entièrement l'ETH des deux emplacements du duo.
-## À appeler à l'entrée d'un donjon (« Fully restored when entering a dungeon »).
+## "Fully restored when entering a dungeon".
 func restore_party_eth() -> void:
 	set_eth(PartySlot.MAIN, MAX_ETH)
 	set_eth(PartySlot.TEAMMATE, MAX_ETH)
 
 
-## Vrai si l'emplacement est dévitalisé (DEN tombé à 0).
+## Devitalised: DEN has reached 0.
 func is_devitalised(slot: PartySlot) -> bool:
 	return get_den(slot) <= 0
 
 
-## Vrai si les DEUX emplacements du duo sont dévitalisés simultanément.
 func is_party_wiped() -> bool:
 	return is_devitalised(PartySlot.MAIN) and is_devitalised(PartySlot.TEAMMATE)
 
 
-## Applique la règle de duo entièrement dévitalisé : DEN restauré à 1 pour chacun, puis
-## émet [signal party_wiped] pour que l'exploration sorte le duo du donjon courant.
-## Ne fait rien si le duo n'est pas entièrement dévitalisé. Retourne true si déclenché.
+## Applies the wipe rule: each member back to 1 DEN, then [signal party_wiped] so that
+## exploration takes the duo out of the dungeon. Does nothing unless both are down.
 func resolve_party_wipe() -> bool:
 	if not is_party_wiped():
 		return false
@@ -328,9 +313,8 @@ func resolve_party_wipe() -> bool:
 	return true
 
 
-## Enregistre la fin d'une rencontre pour mettre à jour le compteur FDE.
-## `all_rivals_devitalised` = true uniquement si tous les rivaux ont été dissous (victoire).
-## À [constant FDE_THRESHOLD] rencontres parfaites d'affilée : +1 PSY puis remise à 0.
+## Updates the FDE counter at the end of an encounter. `all_rivals_devitalised` is true
+## only on a victory where every rival was dissolved.
 func register_encounter_end(all_rivals_devitalised: bool) -> void:
 	if not all_rivals_devitalised:
 		fde_count = 0
@@ -341,21 +325,18 @@ func register_encounter_end(all_rivals_devitalised: bool) -> void:
 		fde_count = 0
 
 
-# --- Inventaire (objets consommables empilables) ---
+# --- Inventory ---
 
 
-## Quantité possédée d'un objet (0 si absent).
 func object_count(object_id: StringName) -> int:
 	return inventory.get(object_id, 0)
 
 
-## Vrai si au moins un exemplaire de l'objet est possédé.
 func has_object(object_id: StringName) -> bool:
 	return object_count(object_id) > 0
 
 
-## Ajoute `count` exemplaires d'un objet (empilable). `count` <= 0 est ignoré.
-## Notifie via [signal inventory_changed]. Retourne la nouvelle quantité.
+## Adds to the stack. A `count` of 0 or less is ignored. Returns the new quantity.
 func add_object(object_id: StringName, count: int = 1) -> int:
 	if count <= 0:
 		return object_count(object_id)
@@ -365,9 +346,8 @@ func add_object(object_id: StringName, count: int = 1) -> int:
 	return new_count
 
 
-## Retire `count` exemplaires d'un objet. Échoue (retourne false, sans rien changer) si
-## `count` <= 0 ou si la quantité possédée est insuffisante. Nettoie l'entrée tombée à 0.
-## Notifie via [signal inventory_changed] en cas de succès.
+## Removes from the stack, all or nothing: fails and changes nothing if fewer are held
+## than asked for. An entry reaching 0 is erased rather than kept.
 func remove_object(object_id: StringName, count: int = 1) -> bool:
 	if count <= 0:
 		return false
@@ -383,28 +363,24 @@ func remove_object(object_id: StringName, count: int = 1) -> bool:
 	return true
 
 
-## Consomme un exemplaire d'un objet (sémantique « consommable » : retiré après usage).
-## Retourne false si l'objet n'est pas possédé.
+## Spends one — every object is consumable. False if none is held.
 func consume_object(object_id: StringName) -> bool:
 	return remove_object(object_id, 1)
 
 
-# --- Capacités d'exploration (usage unique par visite, rafraîchissables) ---
+# --- Exploration abilities: once per visit, refreshable ---
 
 
-## Marque une capacité d'exploration comme utilisée pour cette visite de donjon.
 func mark_exploration_ability_used(id: StringName) -> void:
 	used_exploration_abilities[id] = true
 
 
-## Vrai si la capacité d'exploration a déjà été utilisée cette visite.
 func is_exploration_ability_used(id: StringName) -> bool:
 	return used_exploration_abilities.get(id, false)
 
 
-## Rafraîchit UNE capacité d'exploration utilisée, choisie au hasard (action Recycle de la
-## litière). Retourne l'id rafraîchi, ou &"" si aucune n'était utilisée. `rng` optionnel
-## pour les tests déterministes.
+## Refreshes ONE spent exploration ability at random — the litter's Recycle action.
+## Returns which, or &"" if none was spent. `rng` is for deterministic tests.
 func refresh_random_exploration_ability(rng: RandomNumberGenerator = null) -> StringName:
 	var used: Array = used_exploration_abilities.keys()
 	if used.is_empty():
@@ -415,18 +391,16 @@ func refresh_random_exploration_ability(rng: RandomNumberGenerator = null) -> St
 	return id
 
 
-## Rafraîchit TOUTES les capacités d'exploration utilisées (cristal de rafraîchissement).
+## Refreshes every spent exploration ability — a refresh crystal.
 func refresh_all_exploration_abilities() -> void:
 	used_exploration_abilities.clear()
 
 
-## Réinitialise le suivi des capacités d'exploration (à l'entrée d'un donjon).
 func reset_exploration_abilities() -> void:
 	used_exploration_abilities.clear()
 
 
-## Réinitialise la session pour une nouvelle partie.
-## DEN/ETH du duo repartent au maximum ([constant MAX_DEN] / [constant MAX_ETH]).
+## Wipes the session for a new game.
 func reset() -> void:
 	main_character = &""
 	teammate = &""

@@ -1,32 +1,34 @@
-## Schéma d'un Talent : passif propre à une espèce.
+## A Talent: a species' passive.
 ##
-## Un talent par espèce, non apprenable et non encyclopédiable. Se cumule si le duo
-## comporte deux individus de la même espèce. Séparé d'[AbilityData] car les talents
-## n'ont ni énergie, ni coût, ni dégâts directs et obéissent à une logique distincte.
-## Instances .tres dans `data/abilities/` (lignes Type=Talent côté Notion), éditées à
-## la main — cf. `docs/data-model.md`.
+## One per species, neither learnable nor unlockable, and it stacks when the duo carries
+## two individuals of the same species. Kept separate from [AbilityData] because talents
+## have no energy, no cost and no direct damage, and obey an event-driven logic of their
+## own ([TalentScript]).
+##
+## Instances live in `data/abilities/` alongside the abilities — in Notion they are one
+## database, told apart by a Type column.
 class_name TalentData
 extends Resource
 
-## Identifiant slug stable (ex. "restore", "reveal_traps"). Base des clés de trad.
+## Slug, and the base of this talent's translation keys.
 @export var id: StringName
 
-## Espèce qui porte ce talent (slug). Relation 1:1 avec un [SpeciesData].
+## The species carrying it. The relation is 1:1 both ways, and enforced by
+## data_integrity_check.
 @export var owner_species: StringName
 
-## Tags décrivant l'effet passif, pour le moteur d'effets.
+## Coarse effect categories, as on [AbilityData].
 @export var tags: PackedStringArray = PackedStringArray()
 
-## Le cumul de deux talents identiques (duo de même espèce) est-il pertinent /
-## explicitement défini pour ce talent.
+## Whether two copies of this talent in one duo are meant to add up.
 @export var stacks_in_duo: bool = true
 
 
-## Clé de traduction du nom. Convention : TALENT_<ID_MAJ>_NAME.
+## Translation key of the name: TALENT_<ID>_NAME.
 func name_key() -> String:
 	return "TALENT_%s_NAME" % GameEnums.key_token(id)
 
 
-## Clé de traduction de la description. Convention : TALENT_<ID_MAJ>_DESC.
+## Translation key of the description: TALENT_<ID>_DESC.
 func desc_key() -> String:
 	return "TALENT_%s_DESC" % GameEnums.key_token(id)

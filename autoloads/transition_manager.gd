@@ -1,8 +1,8 @@
-## Transitions entre scènes et fondus (autoload `TransitionManager`).
+## Scene changes and fades (autoload `TransitionManager`).
 ##
-## Gère les fondus et le changement de scène principale. Important pour l'archi :
-## les rencontres ne passent PAS par un changement de scène — elles sont chargées en
-## OVERLAY additif par-dessus l'exploration (voir [method open_encounter]).
+## Architecturally the point to know: an encounter is NOT a scene change. It loads as an
+## additive OVERLAY on top of exploration, which stays loaded and paused behind it — see
+## [method open_encounter].
 extends CanvasLayer
 
 const FADE_TIME := 0.35
@@ -11,7 +11,7 @@ var _fade: ColorRect
 
 
 func _ready() -> void:
-	# Squelette : le ColorRect plein écran est créé par code si la scène ne le fournit pas.
+	# Built in code when the scene does not provide one.
 	_fade = get_node_or_null("Fade")
 	if _fade == null:
 		_fade = ColorRect.new()
@@ -22,7 +22,7 @@ func _ready() -> void:
 	_fade.modulate.a = 0.0
 
 
-## Fondu au noir → change la scène principale → fondu d'ouverture.
+## Fade to black, swap the main scene, fade back in.
 func change_scene(scene_path: String) -> void:
 	await fade_out()
 	get_tree().change_scene_to_file(scene_path)
@@ -47,22 +47,22 @@ signal encounter_finished(result: StringName)
 
 var _encounter: CanvasLayer
 
-## CanvasLayer de l'exploration masqués le temps de la rencontre, à rallumer ensuite.
+## Exploration CanvasLayers hidden for the duration of an encounter, to restore after.
 var _hidden_hud: Array[CanvasLayer] = []
 
 
-## Ouvre une rencontre en OVERLAY additif sous `root`, sans décharger l'exploration :
-## la scène d'exploration est mise en pause (process_mode = DISABLED) et reste visible
-## (floutée) derrière l'UI 2D. `player_ids`/`rival_ids` = slugs d'espèces.
-## `rival_states` (optionnel, parallèle à `rival_ids`) : état de carte de chaque rival, sous
-## la forme `{"den": int, "max_den": int}`. Le maximum vient du LEVEL DESIGN (réglé donjon par
-## donjon) et le courant reporte les dégâts subis en exploration (chute). Entrée vide/absente =
-## le rival part sur ses valeurs par défaut.
+## Opens an encounter as an additive overlay, without unloading exploration: the
+## exploration scene is paused (process_mode = DISABLED) and stays visible behind the 2D UI.
+##
+## `rival_states` runs parallel to `rival_ids` and carries each rival's state on the map,
+## as `{"den": int, "max_den": int}`. The maximum is a LEVEL DESIGN setting, tuned per
+## dungeon; the current value carries over damage taken while exploring, such as a fall.
+## A missing or empty entry means the rival starts on its own defaults.
 func open_encounter(
 	player_ids: Array, rival_ids: Array, completed: Dictionary = {}, rival_states: Array = []
 ) -> void:
 	if _encounter != null:
-		return  # une rencontre est déjà ouverte
+		return  # one is already open
 	var exploration := get_tree().current_scene
 	if exploration:
 		exploration.process_mode = Node.PROCESS_MODE_DISABLED
@@ -84,13 +84,12 @@ func _on_encounter_finished(result: StringName, exploration: Node) -> void:
 	encounter_finished.emit(result)
 
 
-## Masque les CanvasLayer de la scène d'exploration le temps de la rencontre.
+## Hides the exploration scene's CanvasLayers for the duration of an encounter.
 ##
-## L'exploration reste chargée et visible derrière l'overlay, mais son HUD, lui, doit
-## disparaître : il vit sur son propre CanvasLayer, donc mettre l'exploration en pause ne
-## le masque pas, et il se superposerait à l'UI de rencontre (qui n'en montre aucun dans
-## le mockup). On ne mémorise que ceux réellement visibles, pour ne pas rallumer au
-## retour un HUD qui était déjà caché.
+## Exploration stays loaded and visible behind the overlay, but its HUD must not be: a
+## CanvasLayer is not affected by pausing the scene, so the HUD would sit on top of the
+## encounter UI, which shows none. Only the layers that were actually visible are
+## remembered, so that returning does not switch on a HUD that was already hidden.
 func _hide_scene_hud(scene: Node) -> void:
 	_hidden_hud.clear()
 	for node in scene.find_children("*", "CanvasLayer", true, false):

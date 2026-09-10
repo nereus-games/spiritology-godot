@@ -1,29 +1,28 @@
-## Configuration d'un donjon.
+## What a dungeon can contain.
 ##
-## Décrit ce qu'un donjon peut faire apparaître, afin de précharger les bons assets
-## (sprites/audio) à l'entrée — règle d'archi : données = tout au boot, assets lourds
-## = par donjon, via ResourceLoader.load_threaded_request pendant le fondu d'entrée.
-## Le donjon lui-même est une scène 3D Godot indépendante (champ [member scene_path]).
+## Exists so the right heavy assets can be preloaded on entry. The rule: light data is
+## loaded wholesale at boot, heavy assets (sprites, audio) per dungeon, through
+## ResourceLoader.load_threaded_request during the entry fade. The dungeon itself is a
+## separate Godot 3D scene ([member scene_path]).
 class_name DungeonConfig
 extends Resource
 
-## Identifiant slug du donjon (ex. "coal_vetch_mines"). Base des clés de trad.
+## Slug, and the base of this dungeon's translation keys.
 @export var id: StringName
 
-## Scène 3D du donjon à charger dans l'exploration.
+## The 3D scene exploration loads for this dungeon.
 @export_file("*.tscn") var scene_path: String = ""
 
-## Espèces susceptibles d'apparaître ici (slugs). Sert à précharger uniquement
-## les sprites de ces espèces à l'entrée du donjon.
+## Species that can appear here. Only their sprites are preloaded on entry.
 @export var possible_species: Array[StringName] = []
 
-## Rivaux scriptés / factions spéciales (ex. The Coal Vetch) présents dans le donjon.
+## Scripted rivals and special factions present here, such as The Coal Vetch.
 @export var special_rivals: Array[StringName] = []
 
-## Musique d'ambiance du donjon (chemin, chargé contextuellement).
+## Ambient music, loaded with the rest of the dungeon's assets.
 @export_file("*.ogg", "*.wav") var ambient_music: String = ""
 
 
-## Clé de traduction du nom affichable. Convention : DUNGEON_<ID_MAJ>_NAME.
+## Translation key of the displayed name: DUNGEON_<ID>_NAME.
 func name_key() -> String:
 	return "DUNGEON_%s_NAME" % GameEnums.key_token(id)

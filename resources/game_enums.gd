@@ -1,40 +1,41 @@
-## Énumérations partagées du jeu.
+## Shared enumerations.
 ##
-## Centralise les types fermés référencés par les Resources (espèces, capacités) et
-## par la logique de rencontre. Source : doc Notion (Game Design / Abilities + Talents).
-## Utilisé comme namespace statique : `GameEnums.Energy.HEAT`, etc.
+## The closed types referenced by the data resources (species, abilities) and by the
+## encounter logic. Used as a static namespace: `GameEnums.Energy.HEAT`.
+## Source: design doc, Game Design / Abilities + Talents.
 class_name GameEnums
 extends RefCounted
 
-## Spiricosme d'origine. Affecte les modificateurs de dégâts (+36 % si user et
-## cible partagent le même). Traductions : Gloom→Terne, Fiery→Ardent, Wonderful→Merveilleux.
+## Spiricosm of origin. Feeds the damage modifiers: sharing one with the target counts
+## as a condition. French names: Gloom/Terne, Fiery/Ardent, Wonderful/Merveilleux.
 enum Spiricosm {
-	GLOOM,  ## Terne
-	FIERY,  ## Ardent
-	WONDERFUL,  ## Merveilleux
+	GLOOM,
+	FIERY,
+	WONDERFUL,
 }
 
-## Les 5 énergies, plus deux modes spéciaux pour les capacités dont l'énergie
-## change chaque tour (identique pour tous les utilisateurs d'un même tour).
+## The five energies, plus two modes for abilities whose energy changes every turn —
+## the same energy for everyone using one during that turn.
 enum Energy {
-	HEAT,  ## chaleur
-	FLUID,  ## fluide
-	CRYSTAL,  ## cristal
-	ARCANE,  ## arcane
-	TOXIC,  ## toxique
-	RANDOM,  ## tirée au hasard chaque tour
-	VARIABLE,  ## variable selon un effet de la capacité
-	NONE,  ## capacité sans énergie (talents, exploration, certaines rencontres)
+	HEAT,
+	FLUID,
+	CRYSTAL,
+	ARCANE,
+	TOXIC,
+	RANDOM,  ## drawn afresh each round
+	VARIABLE,  ## decided by an effect of the ability itself
+	NONE,  ## no energy at all: talents, exploration, some encounter abilities
 }
 
-## Type de capacité (cf. [AbilityData]).
+## Ability kind (see [AbilityData]).
 enum AbilityType {
-	TALENT,  ## passif, une par espèce, non apprenable, non encyclopédiable
-	EXPLORATION,  ## usage unique par visite de donjon (sauf cristaux de rechargement)
-	ENCOUNTER,  ## utilisable par joueurs et rivaux ; peut modifier l'ordre du tour / l'UI
+	TALENT,  ## passive, one per species, neither learnable nor unlockable
+	EXPLORATION,  ## once per dungeon visit, unless a refresh crystal restores it
+	ENCOUNTER,  ## available to players and rivals; may reorder the turn or disturb the UI
 }
 
-## Coût en ETH d'une capacité de rencontre. Valeurs issues du tableau Notion.
+## ETH cost tier of an encounter ability. The doc names the tiers but gives no figures;
+## those live in `data/balance.tres` ([BalanceData]).
 enum Cost {
 	NONE,
 	MINI,
@@ -43,47 +44,49 @@ enum Cost {
 	A_LOT,
 }
 
-## Position dans l'ordre du tour : détermine quelle faiblesse d'une espèce est active.
-## L'ordre est fixé au début de la rencontre puis modifié uniquement par des capacités.
+## Position in the turn order, which decides WHICH of a species' three weaknesses is
+## currently exposed. The order is drawn at the start of an encounter and changes only
+## through abilities — which is what makes reordering the turn an attack.
 enum TurnPosition {
 	FIRST,
 	MIDDLE,
 	LAST,
 }
 
-## Action générant des IFP (info points) pour l'encyclopédie.
-## Source : doc Notion (Game Design / Encyclopaedia, « Obtaining Info Points »).
-## Le caractère Forlorn vs normal d'un rival est un booléen séparé (pas une entrée ici),
-## car la majoration Forlorn n'est appliquée que si la page principale est déjà complétée.
+## An action that earns encyclopaedia info points (IFP).
+## Source: design doc, Game Design / Encyclopaedia, "Obtaining Info Points".
+##
+## Whether a rival is Forlorn is a separate boolean rather than an entry here: the Forlorn
+## bonus only applies once the ordinary page is already complete.
 enum IfpAction {
-	EXAMINE_DECOR,  ## Examiner décor / sol pendant l'exploration (plafonné à 15 IFP/espèce).
-	EXAMINE_RIVAL,  ## Examiner un rival en rencontre.
-	TALK_RIVAL,  ## Parler à un rival (n'octroie que si le dialogue est effectif).
-	DISSOLVE_RIVAL,  ## Dissoudre (dévitaliser) un rival.
+	EXAMINE_DECOR,  ## examining decor or ground while exploring (capped at 15 per species)
+	EXAMINE_RIVAL,
+	TALK_RIVAL,  ## only earns anything if the dialogue is effective
+	DISSOLVE_RIVAL,
 }
 
-## Catégorie d'effet d'un objet d'inventaire (cf. [ObjectData]).
-## Source : doc Notion (Game Design / Objects + Inventory). Tous les objets sont
-## consommables et empilables ; cet enum décrit CE QUE FAIT l'objet, pas ses chiffres
-## (magnitude / durée sont des champs paramétriques sur [ObjectData]).
-## ## TODO: les flux de gameplay consommant ces effets (fuite, poison, déguisement,
-## sols friables, poursuite des rivaux) ne sont pas encore construits.
+## What an inventory object DOES — not how much of it, which is parametric on
+## [ObjectData]. Every object is consumable and stackable.
+## Source: design doc, Game Design / Objects + Inventory.
+## ## TODO: the gameplay these feed — fleeing, poison, disguise, crumbly ground, pursuit —
+## is largely unbuilt. See docs/roadmap.md.
 enum ObjectEffect {
-	NONE,  ## Aucun effet mécanique (objet narratif, ex. Notice / annonce).
-	HEAL_DEN,  ## Donne du DEN à une cible (ex. Rune stone / pierre runique).
-	FLEE_ENCOUNTER,  ## Permet de fuir une rencontre (ex. Smoke bomb / bombe fumée).
-	CURE_POISON,  ## Soigne le mécanisme de poison (ex. Tea drop / goutte de thé).
-	DISGUISE,  ## Donne l'apparence d'une espèce (ex. Costume / déguisement).
-	DIG,  ## Utilisable sur les sols friables (ex. Spade / pelle).
-	AVOID_PURSUIT,  ## Les rivaux ne poursuivent ni n'initient de rencontres (ex. Torment veil).
+	NONE,  ## no mechanical effect; exists to be given away (Notice)
+	HEAL_DEN,  ## Rune stone
+	FLEE_ENCOUNTER,  ## Smoke bomb
+	CURE_POISON,  ## Tea drop
+	DISGUISE,  ## Costume: take on a species' appearance
+	DIG,  ## Spade, on crumbly ground
+	AVOID_PURSUIT,  ## Torment veil: rivals neither pursue nor start encounters
 }
 
 
-## Translittère un slug en token de clé de traduction : MAJUSCULE + accents pliés en
-## ASCII (l'id « razél » → clé `SPECIES_RAZEL_NAME`, telle qu'écrite dans les .po).
-## Sans ce pliage, `tr()` échouerait sur les ids accentués.
-## Point unique partagé par tous les `name_key()`/`desc_key()` des Resources : c'est ici,
-## et nulle part ailleurs, que se décide la forme d'une clé.
+## Turns a slug into a translation-key token: uppercase, accents folded to ASCII.
+##
+## Slugs are ASCII today, but species are common nouns and the accented form survives as
+## the displayed name — so the folding stays, and an accented id would still resolve.
+## Every `name_key()` / `desc_key()` goes through here: the shape of a key is decided in
+## this one place and nowhere else.
 static func key_token(raw) -> String:
 	var s := str(raw).to_upper()
 	var map := {

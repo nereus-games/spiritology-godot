@@ -1,55 +1,52 @@
-## Schéma d'une capacité (Talent, Exploration ou Rencontre).
+## An ability — Talent, Exploration or Encounter.
 ##
-## Instances stockées en .tres texte dans `data/abilities/`, ÉDITÉES À LA MAIN : ces
-## fichiers sont la source de vérité, pas un artefact. Le design vit dans Notion et la
-## correspondance champ par champ est documentée dans `docs/data-model.md` ; c'est
-## `scripts/dev/data_integrity_check.gd` qui garantit leur cohérence.
-## Les textes affichables passent par des clés de traduction, jamais en dur.
+## Instances live in `data/abilities/` and are HAND-MAINTAINED: these files are the source
+## of truth, not an artefact of anything. The design lives in Notion, the field-by-field
+## correspondence is in `docs/data-model.md`, and `scripts/dev/data_integrity_check.gd` is
+## what keeps them consistent. Displayed text always goes through translation keys.
 class_name AbilityData
 extends Resource
 
-## Identifiant slug stable (ex. "ghosting", "tumult"). Sert de nom de fichier et de
-## base aux clés de traduction : ABILITY_<SLUG_MAJ>_NAME / _DESC.
+## Slug. Doubles as the filename and as the base of the translation keys.
 @export var id: StringName
 
-## Type de capacité. Conditionne les champs pertinents (un Talent n'a ni coût ni énergie).
+## Which fields matter: a Talent has neither cost nor energy.
 @export var type: GameEnums.AbilityType = GameEnums.AbilityType.ENCOUNTER
 
-## Espèce d'origine (slug, ex. "draka"). Vide si la capacité n'a pas d'origine
-## (certaines capacités d'exploration). Réfère un [SpeciesData] via [GameData].
+## Species this ability originates from. Empty for the exploration abilities that have
+## no origin.
 @export var origin_species: StringName
 
-## Énergie de la capacité (rencontre). NONE pour talents et exploration.
+## Energy, for encounter abilities. NONE for talents and exploration.
 @export var energy: GameEnums.Energy = GameEnums.Energy.NONE
 
-## Coût en ETH (rencontre).
+## Cost tier, for encounter abilities.
 @export var cost: GameEnums.Cost = GameEnums.Cost.NONE
 
-## Dégâts de base avant modificateurs. -1 = aucun dégât direct (effet pur).
-## Les modificateurs (+36 % par condition : faiblesse, même Spiricosme, encyclopédie
-## à 100 %, même espèce) sont cumulatifs et arrondis au supérieur, calculés à l'exécution.
+## Damage before modifiers. -1 means no direct damage at all — a pure-effect ability.
+## The modifiers (one step per condition met: weakness touched, shared Spiricosm, completed
+## encyclopaedia page, same species) add up and are rounded up at execution time.
 @export var base_damage: int = -1
 
-## Usage unique par rencontre / par visite de donjon selon le type.
+## Once per encounter, or per dungeon visit, depending on the type.
 @export var single_use: bool = false
 
-## Tags décrivant les effets (ex. "ETH loss", "change weakness", "damage").
-## Sert au moteur d'effets et au filtrage UI.
+## Coarse effect categories. They drive the generic fallback in [EffectCatalog] and the
+## UI filtering — they are a guard rail, never the real mechanic.
 @export var tags: PackedStringArray = PackedStringArray()
 
 
-## Coût en ETH de la capacité (0 si gratuite). Payé à l'usage par le [EncounterManager].
-## Le chiffrage des paliers vit dans `data/balance.tres` ([BalanceData]) : Notion ne décrit
-## le coût que qualitativement (MINI/NORMAL/MEDIUM/A_LOT).
+## ETH cost, paid by [EncounterManager] before the effect runs. The figures behind the
+## tiers live in `data/balance.tres`; the doc only names the tiers.
 func eth_cost() -> int:
 	return BalanceData.current().cost_eth(cost)
 
 
-## Clé de traduction du nom. Convention : ABILITY_<ID_MAJ>_NAME.
+## Translation key of the name: ABILITY_<ID>_NAME.
 func name_key() -> String:
 	return "ABILITY_%s_NAME" % GameEnums.key_token(id)
 
 
-## Clé de traduction de la description. Convention : ABILITY_<ID_MAJ>_DESC.
+## Translation key of the description: ABILITY_<ID>_DESC.
 func desc_key() -> String:
 	return "ABILITY_%s_DESC" % GameEnums.key_token(id)

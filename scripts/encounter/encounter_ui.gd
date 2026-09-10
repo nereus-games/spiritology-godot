@@ -6,7 +6,7 @@
 ## to tear the overlay down and unpause exploration.
 ##
 ## Layout follows the design doc's mockup (User Interface / Encounters): LOG and MENU top
-## left, the turn order across the top with one cell per fighter, the rivals' full artwork
+## left, the turn order across the top with one cell per individual, the rivals' full artwork
 ## in the centre, and at the bottom a horizontal action bar that gives way to a vertical
 ## list for sub-choices.
 ##
@@ -54,12 +54,12 @@ var _result := &""
 var _awaiting_close := false
 
 ## Whose turn it is, or null between choices. The turn order uses it to enlarge a cell.
-var _acting_fighter: EncounterFighter = null
+var _acting_individual: EncounterIndividual = null
 
-## One agent for the whole duo; [member UiAgent.pending_fighter] says whose turn it is.
+## One agent for the whole duo; [member UiAgent.pending_individual] says whose turn it is.
 var _agent := UiAgent.new()
 
-## Player fighters paired with their party slot, so DEN/ETH can be written back to
+## Player individuals paired with their party slot, so DEN/ETH can be written back to
 ## [GameSession] when the encounter ends.
 var _player_slots: Array = []
 
@@ -71,14 +71,14 @@ func _ready() -> void:
 ## Closes the menu and hands the screen back to the encounter: the panel empties, the
 ## screen forgets who was acting, and the target highlight goes out.
 func _close_menu() -> void:
-	_acting_fighter = null
+	_acting_individual = null
 	_menu.clear()
 	_clear_highlight()
 
 
 ## Sets up and starts the encounter.
 ##
-## The persistence seam: PLAYER fighters are seeded from their slot's stored DEN/ETH and
+## The persistence seam: PLAYER individuals are seeded from their slot's stored DEN/ETH and
 ## written back at the end ([method _sync_back_to_session]), so damage carries between
 ## encounters. Rivals keep their own stats.
 func begin(
@@ -90,17 +90,17 @@ func begin(
 ) -> void:
 	var pf: Array = []
 	for i in player_ids.size():
-		var f := EncounterManager.make_fighter(StringName(player_ids[i]), true)
+		var f := EncounterManager.make_individual(StringName(player_ids[i]), true)
 		if f:
 			pf.append(f)
 			# 0 is the main character, 1 the teammate. Anything beyond a duo falls back to
 			# MAIN, which should not happen.
 			var slot := GameSession.PartySlot.TEAMMATE if i == 1 else GameSession.PartySlot.MAIN
 			f.load_persistent_state(GameSession.get_den(slot), GameSession.get_eth(slot))
-			_player_slots.append({"fighter": f, "slot": slot})
+			_player_slots.append({"individual": f, "slot": slot})
 	var rf: Array = []
 	for i in rival_ids.size():
-		var f := EncounterManager.make_fighter(StringName(rival_ids[i]), false)
+		var f := EncounterManager.make_individual(StringName(rival_ids[i]), false)
 		if f == null:
 			continue
 		# Map state: the MAXIMUM is a level design setting (the doc's magnitudes are in
@@ -143,7 +143,8 @@ func begin(
 	_apply_debug_view()
 	_build_rival_art(rf)
 	_refresh_timeline()
-	_append("[b]Rencontre[/b] : %s contre %s\n" % [_names(pf), _names(rf)])
+	var opening := tr("LOG_ENCOUNTER_OPENING") % [_names(pf), _names(rf)]
+	_append("[b]%s[/b]%s\n" % [tr("TERM_ENCOUNTER"), opening])
 	_manager.start()
 
 
@@ -155,15 +156,15 @@ func _build_rival_art(rivals: Array) -> void:
 	for c in _rivals_row.get_children():
 		c.queue_free()
 	for r in rivals:
-		var fighter: EncounterFighter = r
+		var individual: EncounterIndividual = r
 		var art := TextureRect.new()
 		art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		art.custom_minimum_size = Vector2(260, 320)
-		var path := "res://assets/sprites/spirimonsters/%s.png" % fighter.species_id()
+		var path := "res://assets/sprites/spirimonsters/%s.png" % individual.species_id()
 		if ResourceLoader.exists(path):
 			art.texture = load(path)
-		art.set_meta("fighter", fighter)
+		art.set_meta("individual", individual)
 		_rivals_row.add_child(art)
 
 
@@ -174,29 +175,29 @@ func _refresh_timeline() -> void:
 		c.queue_free()
 	var order: Array = _manager.timeline.order if _manager.timeline else []
 	for i in order.size():
-		var fighter: EncounterFighter = order[i]
+		var individual: EncounterIndividual = order[i]
 		var entry := TimelineEntry.new()
 		_timeline_row.add_child(entry)
-		var position := _manager.timeline.position_of(fighter)
+		var position := _manager.timeline.position_of(individual)
 		entry.setup(
-			fighter,
-			_knows(fighter),
-			fighter == _acting_fighter,
-			fighter.active_weakness(position),
+			individual,
+			_knows(individual),
+			individual == _acting_individual,
+			individual.active_weakness(position),
 			(i + 1) if _debug_view else 0
 		)
 	# A dissolved rival fades, like its cell in the turn order.
 	for c in _rivals_row.get_children():
 		var art := c as TextureRect
-		if art and art.has_meta("fighter"):
-			var f: EncounterFighter = art.get_meta("fighter")
+		if art and art.has_meta("individual"):
+			var f: EncounterIndividual = art.get_meta("individual")
 			art.modulate.a = 0.25 if f.is_dissolved() else 1.0
 
 
 ## Whether the species is in the encyclopaedia at all, which is what the doc makes the
 ## display of a rival's density and weakness depend on. The debug view lifts the veil.
-func _knows(fighter: EncounterFighter) -> bool:
-	return _debug_view or fighter.is_player or GameSession.knows_species(fighter.species_id())
+func _knows(individual: EncounterIndividual) -> bool:
+	return _debug_view or individual.is_player or GameSession.knows_species(individual.species_id())
 
 
 ## Back to the scenario picker.
@@ -264,52 +265,55 @@ func _toggle_debug_view() -> void:
 # action is added ON TOP, and only when nothing else is available at all.
 #
 # Flee and Steal are NOT base actions: a talent ADDS them, replacing Talk or Use Ability.
-# [method EncounterManager.menu_kinds] applies the fighter's talents and returns what is
+# [method EncounterManager.menu_kinds] applies the individual's talents and returns what is
 # actually on offer; an action a talent removed is ABSENT, not greyed, because the talent
 # replaces it rather than forbidding it.
 
 
-func _on_choice_requested(fighter: EncounterFighter, manager: EncounterManager) -> void:
-	_acting_fighter = fighter
-	_refresh_timeline()  # la case du combattant actif change de gabarit
-	_show_actions(fighter, manager)
+func _on_choice_requested(individual: EncounterIndividual, manager: EncounterManager) -> void:
+	_acting_individual = individual
+	_refresh_timeline()  # the active individual's cell changes size
+	_show_actions(individual, manager)
 
 
 ## The mockup's horizontal action bar, in its order:
 ## MEDITATE · CHALLENGE · TALK · EXAMINE · OBJECTS.
-func _show_actions(fighter: EncounterFighter, manager: EncounterManager) -> void:
+func _show_actions(individual: EncounterIndividual, manager: EncounterManager) -> void:
 	_menu.set_prompt(
-		tr("UI_ENCOUNTER_CHOOSE_ACTION") % [fighter.display_name(), fighter.eth, fighter.max_eth]
+		(
+			tr("UI_ENCOUNTER_CHOOSE_ACTION")
+			% [individual.display_name(), individual.eth, individual.max_eth]
+		)
 	)
 	_menu.clear_options()
 	_menu.clear_bar()
 	_menu.set_description("")
-	var foes := manager.living_opponents(fighter)
+	var foes := manager.living_opponents(individual)
 	# Base actions AFTER the talents have had their say.
-	var kinds := manager.menu_kinds(fighter)
+	var kinds := manager.menu_kinds(individual)
 
 	# Meditate costs nothing, needs no target, and no talent removes it — the player's
 	# safety net.
 	_menu.add_bar_action(
 		tr("UI_ENCOUNTER_ACTION_MEDITATE"),
 		true,
-		func(): _submit(EncounterAction.of_kind(EncounterAction.Kind.MEDITATE, [fighter]))
+		func(): _submit(EncounterAction.of_kind(EncounterAction.Kind.MEDITATE, [individual]))
 	)
 	if kinds.has(EncounterAction.Kind.ABILITY):
 		_menu.add_bar_action(
 			tr("UI_ENCOUNTER_ACTION_ABILITY"),
-			not manager.usable_abilities(fighter).is_empty(),
-			func(): _show_abilities(fighter, manager)
+			not manager.usable_abilities(individual).is_empty(),
+			func(): _show_abilities(individual, manager)
 		)
 	if kinds.has(EncounterAction.Kind.TALK):
 		# Serene Waves widens Talk to the teammate.
-		var talkable := manager.talk_targets(fighter)
+		var talkable := manager.talk_targets(individual)
 		_menu.add_bar_action(
 			tr("UI_ENCOUNTER_ACTION_TALK"),
 			not talkable.is_empty(),
 			func():
 				_pick_target(
-					fighter,
+					individual,
 					manager,
 					EncounterAction.Kind.TALK,
 					tr("UI_ENCOUNTER_ACTION_TALK"),
@@ -322,7 +326,7 @@ func _show_actions(fighter: EncounterFighter, manager: EncounterManager) -> void
 			not foes.is_empty(),
 			func():
 				_pick_target(
-					fighter,
+					individual,
 					manager,
 					EncounterAction.Kind.EXAMINE,
 					tr("UI_ENCOUNTER_ACTION_EXAMINE"),
@@ -332,7 +336,7 @@ func _show_actions(fighter: EncounterFighter, manager: EncounterManager) -> void
 	_menu.add_bar_action(
 		tr("UI_ENCOUNTER_ACTION_OBJECT"),
 		not GameSession.inventory.is_empty(),
-		func(): _show_objects(fighter, manager)
+		func(): _show_objects(individual, manager)
 	)
 	# Actions a talent added; never available by default.
 	if kinds.has(EncounterAction.Kind.FLEE):
@@ -349,7 +353,7 @@ func _show_actions(fighter: EncounterFighter, manager: EncounterManager) -> void
 			not foes.is_empty(),
 			func():
 				_pick_target(
-					fighter,
+					individual,
 					manager,
 					EncounterAction.Kind.STEAL,
 					tr("UI_ENCOUNTER_ACTION_STEAL"),
@@ -370,13 +374,13 @@ func _show_actions(fighter: EncounterFighter, manager: EncounterManager) -> void
 		_menu.move_bar_action_first(pass_btn)
 		first = pass_btn
 	_menu.show_bar(true)
-	first.grab_focus()  # « TALK » encadré du mockup : il y a toujours un focus visible
+	first.grab_focus()  # the mockup frames "TALK": there is always a visible focus
 
 
 ## Picks the target of a non-combat action: immediate when there is only one, a choice
 ## otherwise. Used by Talk, Examine and Steal.
 func _pick_target(
-	fighter: EncounterFighter,
+	individual: EncounterIndividual,
 	manager: EncounterManager,
 	kind: EncounterAction.Kind,
 	title: String,
@@ -389,57 +393,60 @@ func _pick_target(
 		title,
 		targets,
 		func(t): return EncounterAction.of_kind(kind, [t]),
-		func(): _show_actions(fighter, manager)
+		func(): _show_actions(individual, manager)
 	)
 
 
-func _show_abilities(fighter: EncounterFighter, manager: EncounterManager) -> void:
+func _show_abilities(individual: EncounterIndividual, manager: EncounterManager) -> void:
 	_menu.set_prompt(
-		tr("UI_ENCOUNTER_CHOOSE_ABILITY") % [fighter.display_name(), fighter.eth, fighter.max_eth]
+		(
+			tr("UI_ENCOUNTER_CHOOSE_ABILITY")
+			% [individual.display_name(), individual.eth, individual.max_eth]
+		)
 	)
 	_menu.begin_submenu()
 	# Unaffordable abilities stay visible and greyed: the player should see what their ETH
 	# is costing them, not infer it from a list that quietly shrinks.
-	for a in manager.encounter_abilities(fighter):
+	for a in manager.encounter_abilities(individual):
 		var ability: AbilityData = a
 		var btn := _menu.add_option(
-			_ability_label(ability), func(): _on_ability_chosen(fighter, manager, ability)
+			_ability_label(ability), func(): _on_ability_chosen(individual, manager, ability)
 		)
 		_menu.set_energy_icon(btn, ability.energy)
-		btn.disabled = not fighter.can_afford(ability)
+		btn.disabled = not individual.can_afford(ability)
 		# The mockup's "ability description text area": the description follows the focus.
 		btn.focus_entered.connect(func(): _menu.set_description(tr(ability.desc_key())))
 		btn.mouse_entered.connect(func(): _menu.set_description(tr(ability.desc_key())))
-	_menu.add_option(tr("UI_ENCOUNTER_BACK"), func(): _show_actions(fighter, manager))
+	_menu.add_option(tr("UI_ENCOUNTER_BACK"), func(): _show_actions(individual, manager))
 	_menu.focus_first_option()
 
 
 ## The inventory, in an encounter. The target may be oneself or the teammate ("Use") or a
 ## rival ("Give"), so both sides are offered — unlike ability targeting.
-func _show_objects(fighter: EncounterFighter, manager: EncounterManager) -> void:
-	_menu.set_prompt(tr("UI_ENCOUNTER_CHOOSE_OBJECT") % fighter.display_name())
+func _show_objects(individual: EncounterIndividual, manager: EncounterManager) -> void:
+	_menu.set_prompt(tr("UI_ENCOUNTER_CHOOSE_OBJECT") % individual.display_name())
 	_menu.begin_submenu()
 	for id in GameSession.inventory:
 		var obj: ObjectData = GameData.object(id)
 		if obj == null:
-			continue  # slug d'inventaire sans ObjectData généré : on ne l'invente pas.
+			continue  # an inventory slug with no ObjectData behind it; we do not invent one
 		var count: int = GameSession.inventory[id]
 		var object_id: StringName = id
 		_menu.add_option(
 			"%s ×%d" % [tr(obj.name_key()), count],
-			func(): _on_object_chosen(fighter, manager, object_id)
+			func(): _on_object_chosen(individual, manager, object_id)
 		)
-	_menu.add_option(tr("UI_ENCOUNTER_BACK"), func(): _show_actions(fighter, manager))
+	_menu.add_option(tr("UI_ENCOUNTER_BACK"), func(): _show_actions(individual, manager))
 	_menu.focus_first_option()
 
 
 func _on_object_chosen(
-	fighter: EncounterFighter, manager: EncounterManager, object_id: StringName
+	individual: EncounterIndividual, manager: EncounterManager, object_id: StringName
 ) -> void:
 	var obj: ObjectData = GameData.object(object_id)
 	var targets := (
-		manager.living_opponents(fighter)
-		+ manager.allies_of(fighter).filter(func(f): return not f.is_dissolved())
+		manager.living_opponents(individual)
+		+ manager.allies_of(individual).filter(func(f): return not f.is_dissolved())
 	)
 	if targets.size() <= 1:
 		var action := EncounterAction.of_kind(EncounterAction.Kind.USE_OBJECT, targets)
@@ -453,7 +460,7 @@ func _on_object_chosen(
 			var a := EncounterAction.of_kind(EncounterAction.Kind.USE_OBJECT, [t])
 			a.object_id = object_id
 			return a,
-		func(): _show_objects(fighter, manager)
+		func(): _show_objects(individual, manager)
 	)
 
 
@@ -469,9 +476,9 @@ func _ability_label(ability: AbilityData) -> String:
 
 
 func _on_ability_chosen(
-	fighter: EncounterFighter, manager: EncounterManager, ability: AbilityData
+	individual: EncounterIndividual, manager: EncounterManager, ability: AbilityData
 ) -> void:
-	var targets := manager.candidate_targets(fighter, ability)
+	var targets := manager.candidate_targets(individual, ability)
 	if targets.size() <= 1:
 		# One target, or none left: nothing to choose.
 		_submit(EncounterAction.use_ability(ability, targets))
@@ -480,7 +487,7 @@ func _on_ability_chosen(
 		tr(ability.name_key()),
 		targets,
 		func(t): return EncounterAction.use_ability(ability, [t]),
-		func(): _show_abilities(fighter, manager)
+		func(): _show_abilities(individual, manager)
 	)
 
 
@@ -490,7 +497,7 @@ func _show_targets(title: String, targets: Array, make_action: Callable, on_back
 	_menu.set_prompt(tr("UI_ENCOUNTER_CHOOSE_TARGET") % title)
 	_menu.begin_submenu()
 	for t in targets:
-		var target: EncounterFighter = t
+		var target: EncounterIndividual = t
 		# In the debug view, prefix the turn-order NUMBER. With no sprites yet the portraits
 		# are blank, and this is the only way to tell two targets of the same species apart
 		# ("draka, draka"). Dropped outside debug: the artwork will do the job.
@@ -507,19 +514,19 @@ func _show_targets(title: String, targets: Array, make_action: Callable, on_back
 	_menu.focus_first_option()
 
 
-## A fighter's 1-based place in the turn order — the number the debug view shows.
-func _turn_number(fighter: EncounterFighter) -> int:
+## An individual's 1-based place in the turn order — the number the debug view shows.
+func _turn_number(individual: EncounterIndividual) -> int:
 	var order: Array = _manager.timeline.order if _manager.timeline else []
-	return order.find(fighter) + 1
+	return order.find(individual) + 1
 
 
 ## Brightens the aimed-at rival's artwork and dims the rest.
-func _highlight_target(target: EncounterFighter) -> void:
+func _highlight_target(target: EncounterIndividual) -> void:
 	for c in _rivals_row.get_children():
 		var art := c as TextureRect
-		if art == null or not art.has_meta("fighter"):
+		if art == null or not art.has_meta("individual"):
 			continue
-		var f: EncounterFighter = art.get_meta("fighter")
+		var f: EncounterIndividual = art.get_meta("individual")
 		if f.is_dissolved():
 			continue
 		art.modulate = Color(1, 1, 1) if f == target else Color(0.55, 0.55, 0.6)
@@ -528,7 +535,7 @@ func _highlight_target(target: EncounterFighter) -> void:
 func _clear_highlight() -> void:
 	for c in _rivals_row.get_children():
 		var art := c as TextureRect
-		if art and art.has_meta("fighter"):
+		if art and art.has_meta("individual"):
 			art.modulate = Color(1, 1, 1)
 
 
@@ -538,12 +545,12 @@ func _submit(action: EncounterAction) -> void:
 
 
 func _on_turn_taken(
-	fighter: EncounterFighter, action: EncounterAction, lines: PackedStringArray
+	individual: EncounterIndividual, action: EncounterAction, lines: PackedStringArray
 ) -> void:
 	# One readable header per turn, with the effects indented under it. An ability like
 	# Opening up Closing produces several — damage, damage, flee — and this way they read
 	# as ONE action instead of a stack of identically prefixed lines.
-	_append("[b]%s[/b] — %s" % [fighter.display_name(), _action_verb(action)])
+	_append("[b]%s[/b] — %s" % [individual.display_name(), _action_verb(action)])
 	for l in lines:
 		_append("    [color=#b9b9c4]%s[/color]" % l)
 	# DEN, ETH, dissolutions and reordering may all have moved.
@@ -573,7 +580,7 @@ func _action_verb(action: EncounterAction) -> String:
 			return tr("UI_ENCOUNTER_ACTION_PASS")
 
 
-## The manager announces info points; this is where they reach the encyclopaedia, with the
+## The manager announces IFP; this is where they reach the encyclopaedia, with the
 ## restrictions [method GameSession.award_ifp] already enforces.
 func _on_ifp_earned(
 	species_id: StringName, action: GameEnums.IfpAction, is_forlorn: bool, dialogue_effective: bool
@@ -582,7 +589,8 @@ func _on_ifp_earned(
 	if gained > 0:
 		var sp: SpeciesData = GameData.species(species_id)
 		var sp_name := tr(sp.name_key()) if sp else String(species_id)
-		_append("    [color=#c9b060][i]+%d IFP — %s[/i][/color]" % [gained, sp_name])
+		var gain := tr("LOG_LINE_IFP") % [gained, sp_name]
+		_append("    [color=#c9b060][i]%s[/i][/color]" % gain)
 
 
 ## "Objects are all consumable items (removed from inventory after use)".
@@ -597,7 +605,7 @@ func _on_ended(result: StringName) -> void:
 	# any other outcome resets it.
 	GameSession.register_encounter_end(_manager.rivals.all(func(f): return f.is_dissolved()))
 	_sync_back_to_session()
-	_append("\n[b]→ %s[/b]" % result)
+	_append("\n[b]→ %s[/b]" % tr("UI_ENCOUNTER_RESULT_%s" % result.to_upper()))
 	_refresh_timeline()
 	if _result_label:
 		_result_label.text = (
@@ -606,11 +614,11 @@ func _on_ended(result: StringName) -> void:
 	_awaiting_close = true
 
 
-## Writes the player fighters' final DEN/ETH back to [GameSession], which is what makes
+## Writes the player individuals' final DEN/ETH back to [GameSession], which is what makes
 ## damage persist between encounters. Rivals are left alone.
 func _sync_back_to_session() -> void:
 	for entry in _player_slots:
-		var f: EncounterFighter = entry["fighter"]
+		var f: EncounterIndividual = entry["individual"]
 		var slot: GameSession.PartySlot = entry["slot"]
 		GameSession.set_den(slot, f.den)
 		GameSession.set_eth(slot, f.eth)
@@ -640,5 +648,5 @@ func _append(line: String) -> void:
 		_log.append_text(line + "\n")
 
 
-func _names(fighters: Array) -> String:
-	return ", ".join(fighters.map(func(f): return f.display_name()))
+func _names(individuals: Array) -> String:
+	return ", ".join(individuals.map(func(f): return f.display_name()))

@@ -3,7 +3,7 @@
 ## Drawn at RANDOM when the encounter begins ("Turn order is defined at random when the
 ## encounter begins"), then changed by abilities such as Shuffle and Tumult.
 ##
-## It decides each fighter's POSITION — first, in-between, last — and therefore which of
+## It decides each individual's POSITION — first, in-between, last — and therefore which of
 ## its three weaknesses is exposed. That is what makes reordering an attack rather than a
 ## flourish.
 ##
@@ -12,14 +12,14 @@
 class_name EncounterTimeline
 extends RefCounted
 
-var order: Array = []  ## EncounterFighter, dans l'ordre du tour
-var _pending: Variant = null  ## dernier réordonnancement demandé ce tour (last-wins)
+var order: Array = []  ## The EncounterIndividuals, in turn order
+var _pending: Variant = null  ## The last reordering asked for this turn; last wins
 
 
 ## Sets the initial order. Pass the manager's seeded `rng` to draw it at random as the doc
 ## wants; without one, the order stays as given — which is what tests rely on.
-func setup(fighters: Array, rng: RandomNumberGenerator = null) -> void:
-	order = fighters.duplicate()
+func setup(individuals: Array, rng: RandomNumberGenerator = null) -> void:
+	order = individuals.duplicate()
 	if rng != null:
 		_shuffle(order, rng)
 	_pending = null
@@ -34,8 +34,8 @@ static func _shuffle(arr: Array, rng: RandomNumberGenerator) -> void:
 		arr[j] = tmp
 
 
-func position_of(fighter) -> GameEnums.TurnPosition:
-	var i := order.find(fighter)
+func position_of(individual) -> GameEnums.TurnPosition:
+	var i := order.find(individual)
 	if i <= 0:
 		return GameEnums.TurnPosition.FIRST
 	if i >= order.size() - 1:
@@ -48,19 +48,19 @@ func request_reorder(new_order: Array) -> void:
 	_pending = new_order.duplicate()
 
 
-## Requests that `fighter` go last next turn.
-func request_move_last(fighter) -> void:
+## Requests that `individual` go last next turn.
+func request_move_last(individual) -> void:
 	var o: Array = (_pending if _pending != null else order).duplicate()
-	o.erase(fighter)
-	o.append(fighter)
+	o.erase(individual)
+	o.append(individual)
 	_pending = o
 
 
-## Requests that `fighter` go first next turn.
-func request_move_first(fighter) -> void:
+## Requests that `individual` go first next turn.
+func request_move_first(individual) -> void:
 	var o: Array = (_pending if _pending != null else order).duplicate()
-	o.erase(fighter)
-	o.push_front(fighter)
+	o.erase(individual)
+	o.push_front(individual)
 	_pending = o
 
 
@@ -80,6 +80,6 @@ func apply_pending() -> bool:
 	return true
 
 
-## Fighters still standing.
+## Individuals still standing.
 func living() -> Array:
 	return order.filter(func(f): return not f.is_dissolved())

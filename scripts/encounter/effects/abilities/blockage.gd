@@ -1,4 +1,4 @@
-## Blockage — spodra · Fluid · mini · usage unique · [ETH loss, change weakness]
+## Blockage — spodra · Fluid · mini · single use · [ETH loss, change weakness]
 ## MECHANIC: the target has no weakness until its next turn; if it is a teammate or a rival, it
 ## also loses X ETH.
 extends AbilityScript

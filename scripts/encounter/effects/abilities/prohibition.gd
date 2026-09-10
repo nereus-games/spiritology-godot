@@ -10,4 +10,4 @@ func execute(ctx: EncounterContext) -> void:
 		return
 	if ctx.rng.randf() < 0.5:
 		ctx.deal_damage(t, ctx.base_damage())
-	ctx.restrict_to(t, ["Meditate"])
+	ctx.restrict_to(t, ["UI_ENCOUNTER_ACTION_MEDITATE"])

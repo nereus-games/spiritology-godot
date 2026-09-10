@@ -27,7 +27,7 @@ const PO_FR := "res://translations/fr.po"
 
 ## Key prefixes backed by data: each must have its .tres, and the other way round. UI_* keys are
 ## written by hand and out of scope.
-const DATA_PREFIXES := ["SPECIES_", "ABILITY_", "TALENT_", "OBJECT_", "DUNGEON_"]
+const DATA_PREFIXES := ["SPECIES_", "ABILITY_", "TALENT_", "OBJECT_", "DUNGEON_", "SCENARIO_"]
 
 ## Code constants holding species slugs whose NAME does not say so. The sweep only picks up
 ## constants with "SPECIES" in the name — hence the name of THIS one, which has to escape it so
@@ -371,7 +371,7 @@ func _check_translations() -> void:
 
 	# Every piece of data has its name translated, in both languages.
 	var missing: Array = []
-	for registry in [_species, _abilities, _talents, _objects, _dungeons]:
+	for registry in [_species, _abilities, _talents, _objects, _dungeons, _scenarios]:
 		for id in registry:
 			var key: String = registry[id].name_key()
 			for po in [["en", en], ["fr", fr]]:
@@ -382,7 +382,7 @@ func _check_translations() -> void:
 	# The converse: an orphaned data key outlives the data it belonged to and stays invisible.
 	# With no idempotent generator to rewrite the .po files, this is the only way to see it.
 	var expected := {}
-	for registry in [_species, _abilities, _talents, _objects, _dungeons]:
+	for registry in [_species, _abilities, _talents, _objects, _dungeons, _scenarios]:
 		for id in registry:
 			var res = registry[id]
 			expected[res.name_key()] = true

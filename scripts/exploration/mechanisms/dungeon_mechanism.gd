@@ -1,6 +1,6 @@
 ## Base of a dungeon mechanism sitting on the grid.
 ##
-## A mechanism attaches to ONE cell and registers with the [DungeonManager] the way a
+## A mechanism attaches to ONE tile and registers with the [DungeonManager] the way a
 ## [RivalBehavior] does, instead of being probed by scattered raycasts. Subclasses (Trap, and
 ## later Gateway, SpecialGround, Chest) override the hooks that concern them.
 ##
@@ -10,8 +10,8 @@
 ## depends on no global type.
 extends Node3D
 
-## The cell this mechanism sits on, derived from its world position at boot.
-var cell: Vector3i
+## The tile this mechanism sits on, derived from its world position at boot.
+var tile: Vector3i
 
 var _dungeon: DungeonManager
 
@@ -22,24 +22,24 @@ func _ready() -> void:
 	if _dungeon == null:
 		push_error("[DungeonMechanism] no DungeonManager in the 'dungeon' group.")
 		return
-	cell = _dungeon.world_to_cell(global_position)
+	tile = _dungeon.world_to_tile(global_position)
 	_register()
 	_on_registered()
 	_spawn_visual()
 
 
-## Registers with the dungeon. On the cell by default; overridden by mechanisms sitting on an
-## EDGE between two cells (gateways), which occupy no cell at all.
+## Registers with the dungeon. On the tile by default; overridden by mechanisms sitting on an
+## EDGE between two tiles (gateways), which occupy no tile at all.
 func _register() -> void:
-	_dungeon.register_mechanism(cell, self)
+	_dungeon.register_mechanism(tile, self)
 
 
 ## Symmetric to [method _register].
 func _unregister() -> void:
-	_dungeon.unregister_mechanism(cell, self)
+	_dungeon.unregister_mechanism(tile, self)
 
 
-## Subclass init hook, called once the cell is known and registration is done.
+## Subclass init hook, called once the tile is known and registration is done.
 func _on_registered() -> void:
 	pass
 
@@ -55,15 +55,15 @@ var _marker: MeshInstance3D
 var _marker_height := 0.0
 
 
-## Drops a coloured box on the mechanism's cell. `height` and `size` are in METRES (a cell is
-## [constant DungeonManager.CELL_SIZE] = 1 m). The node's origin is at the cell's floor (see
-## [method DungeonManager.cell_to_world]), so the marker simply rests on it.
+## Drops a coloured box on the mechanism's tile. `height` and `size` are in METRES (a tile is
+## [constant DungeonManager.TILE_SIZE] = 1 m). The node's origin is at the tile's floor (see
+## [method DungeonManager.tile_to_world]), so the marker simply rests on it.
 func _add_marker(color: Color, height := 0.6, size := 0.7) -> MeshInstance3D:
 	return _add_marker_box(color, Vector3(size, height, size))
 
 
 ## Free-dimension variant (gateways are thin along one axis) with an optional local offset,
-## for putting a visual on the cell's edge rather than at its centre.
+## for putting a visual on the tile's edge rather than at its centre.
 func _add_marker_box(color: Color, size: Vector3, offset := Vector3.ZERO) -> MeshInstance3D:
 	var mi := MeshInstance3D.new()
 	var box := BoxMesh.new()
@@ -106,7 +106,7 @@ func _grey_marker() -> void:
 
 
 ## Removes the marker, for a mechanism that leaves NOTHING behind — recycled litter, where the
-## cell becomes ordinary floor again and still drawing a heap there would be a lie.
+## tile becomes ordinary floor again and still drawing a heap there would be a lie.
 func _remove_marker() -> void:
 	if _marker == null:
 		return
@@ -121,7 +121,7 @@ func _respawn_marker() -> void:
 	_spawn_visual()
 
 
-## Flattens the marker, or stands it back up, keeping it resting on the cell's floor.
+## Flattens the marker, or stands it back up, keeping it resting on the tile's floor.
 func _flatten_marker(flat: bool) -> void:
 	if _marker == null:
 		return
@@ -151,7 +151,7 @@ func shows_on_map() -> bool:
 	return true
 
 
-## Whether this mechanism makes the cell impassable (a closed gateway, an obstacle). Consulted
+## Whether this mechanism makes the tile impassable (a closed gateway, an obstacle). Consulted
 ## by [method DungeonManager.is_walkable] and by the player's step.
 func blocks_walk() -> bool:
 	return false
@@ -164,7 +164,7 @@ func blocks_sight() -> bool:
 	return blocks_walk()
 
 
-## An actor, player or rival, has just entered the cell. Where traps, chests, teleporters and
+## An actor, player or rival, has just entered the tile. Where traps, chests, teleporters and
 ## elevators fire.
 func on_enter(_who: Node) -> void:
 	pass
@@ -176,13 +176,13 @@ func on_turn(_turn: int) -> void:
 	pass
 
 
-## Contextual actions when the actor is ON the cell, such as Dig on crumbly ground.
+## Contextual actions when the actor is ON the tile, such as Dig on crumbly ground.
 func on_tile_actions(_who: Node) -> Array:
 	return []
 
 
-## Contextual actions when the actor is ADJACENT and facing the cell — Recycle, Meditate,
-## Refresh Crystal. `facing` is the cell delta being looked at.
+## Contextual actions when the actor is ADJACENT and facing the tile — Recycle, Meditate,
+## Refresh Crystal. `facing` is the tile delta being looked at.
 func on_adjacent_actions(_who: Node, _facing: Vector3i) -> Array:
 	return []
 
@@ -198,18 +198,18 @@ func has_level_link() -> bool:
 	return false
 
 
-## The cell it is taken from: the cell in front for stairs (you stand adjacent and step in),
+## The tile it is taken from: the tile in front for stairs (you stand adjacent and step in),
 ## the platform itself for an elevator (standing on it is enough).
 func level_link_from() -> Vector3i:
-	return cell
+	return tile
 
 
 func level_link_to() -> Vector3i:
-	return cell
+	return tile
 
 
-## Whether you have to STEP INTO the mechanism's cell from [method level_link_from] (stairs),
-## or whether just arriving on that cell triggers the link (an elevator).
+## Whether you have to STEP INTO the mechanism's tile from [method level_link_from] (stairs),
+## or whether just arriving on that tile triggers the link (an elevator).
 func level_link_needs_step_in() -> bool:
 	return false
 

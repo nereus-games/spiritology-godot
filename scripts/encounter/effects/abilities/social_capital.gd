@@ -9,4 +9,4 @@ func execute(ctx: EncounterContext) -> void:
 	var t = ctx.random_of(allies) if not allies.is_empty() else ctx.user
 	var n := ctx.others().filter(func(f): return f != t).size()
 	ctx.recover_eth(t, ctx.dmg(&"small") * n)
-	ctx.change_weakness(t)  # choix optionnel d'une nouvelle faiblesse
+	ctx.change_weakness(t)  # an optional choice of a new weakness

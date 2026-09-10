@@ -6,5 +6,3 @@
 script = ExtResource("1_admhy")
 id = &"bridge"
 order = 6
-title = "Pont étroit (équilibre)"
-description = "Entre sur la planche : une barre d'équilibre apparaît en haut. Corrige EN CONTINU avec A/D pour rester centré (sans rien faire, ou en corrigeant trop peu, une bourrasque te fait tomber). Chaque case franchie coûte un tour. Si tu tombes, tu atterris au fond du ravin (2 étages, dégâts de chute) et tu remontes au départ par les escaliers de droite. L'arrivée est une case unique murée, piégée au disarray : le retour se fait donc avec une commande latérale plus molle, et le compteur de disarray descend d'un cran par case de pont."

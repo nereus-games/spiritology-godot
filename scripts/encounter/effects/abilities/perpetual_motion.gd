@@ -1,4 +1,4 @@
-## Perpetual Motion — forlorn matzal · [ETH loss → en fait recover ETH]
+## Perpetual Motion — forlorn matzal · [ETH loss → recover ETH, in fact]
 ## MECHANIC: the target recovers X ETH, more if it has no weakness.
 extends AbilityScript
 

@@ -7,7 +7,7 @@
 ## goes into the inventory.
 ##
 ## The destroy/submit choice is offered by the HUD's contextual action menu, like unlocking a
-## gateway: until the player picks one, the die stays PENDING on its cell and offers both
+## gateway: until the player picks one, the die stays PENDING on its tile and offers both
 ## actions again on every visit.
 ##
 ## It is a REAL d6 (opposite faces sum to 7): each of the design doc's 6 outcomes is a face,
@@ -49,7 +49,7 @@ const DESTROYERS: Array[StringName] = [&"spade", &"rune_stone"]
 @export var max_objects_delta := 3
 
 ## The SPAWN_RIVALS outcome: up to 3 GROUPS of rivals (one silhouette on the map is one group)
-## within `rival_spawn_radius` cells of the player.
+## within `rival_spawn_radius` tiles of the player.
 ## ## TODO: the design doc says "specifics TBD" — the count, the distance and above all the
 ## species will have to come from level design (DungeonConfig.possible_species) once dungeons
 ## are authored. The pool below is a test placeholder.
@@ -89,13 +89,13 @@ const PIP_LAYOUTS := {
 
 ## Tumble duration in seconds. 0 means no animation at all, for the headless checks.
 @export var roll_duration := 0.9
-## How long the die stays readable in mid-air before dropping back onto its cell.
+## How long the die stays readable in mid-air before dropping back onto its tile.
 @export var roll_hold := 0.7
 
 ## How far in front of the player, and how high, the die tumbles. The player stands on the SAME
-## cell as the die, so a 45 cm cube left on the floor would sit below the camera (eyes at
+## tile as the die, so a 45 cm cube left on the floor would sit below the camera (eyes at
 ## [constant DungeonManager.EYE_HEIGHT]) and be invisible. It therefore jumps into view, a
-## little past the neighbouring cell — any closer and it fills the screen.
+## little past the neighbouring tile — any closer and it fills the screen.
 ## ## TODO: in a dead end the airborne die clips into the wall opposite. Cosmetic; revisit with
 ## the real visuals.
 const AIR_DISTANCE := 1.45
@@ -113,7 +113,7 @@ const MESSAGE_KEYS := {
 }
 
 var _active := true
-## The die met the player, who can destroy it: the choice is pending on the cell.
+## The die met the player, who can destroy it: the choice is pending on the tile.
 var _pending := false
 
 # State of the tumble in progress, read by [method _roll_step] and driven by a tween.
@@ -203,7 +203,7 @@ func submit(who: Node, forced: int = -1) -> int:
 		return -1
 	var outcome := forced if forced >= 0 else randi() % Outcome.size()
 	# Disarmed BEFORE the roll: the die has played, even if the animation is still running. The
-	# outcome itself may drop a chest on the cell, spawn rivals or teleport the player, so it is
+	# outcome itself may drop a chest on the tile, spawn rivals or teleport the player, so it is
 	# only applied once the die has come down.
 	_active = false
 	_pending = false
@@ -241,12 +241,12 @@ func _apply(outcome: int, who: Node) -> void:
 
 
 ## Sends the player back to the dungeon's ENTRANCE. With no entrance declared — a dev scenario,
-## say — it falls back to a random cell, like a teleport trap.
+## say — it falls back to a random tile, like a teleport trap.
 func _teleport_to_entrance(who: Node) -> void:
 	if _dungeon == null:
 		return
 	if _dungeon.has_entrance():
-		_dungeon.teleport_actor_to(who, _dungeon.entrance_cell())
+		_dungeon.teleport_actor_to(who, _dungeon.entrance_tile())
 	else:
 		_dungeon.teleport_actor(who)
 
@@ -277,13 +277,13 @@ func _lose_objects(count: int) -> Array[StringName]:
 
 
 ## Drops the lost objects into a chest placed WHERE THE DIEVERTING WAS, per the design doc. The
-## die is inert by then, so both mechanisms share the cell.
+## die is inert by then, so both mechanisms share the tile.
 func _drop_chest(lost: Array[StringName]) -> void:
 	if lost.is_empty() or _dungeon == null:
 		return
 	var chest = ChestScript.new()
 	chest.fixed_loot = lost
-	chest.position = _dungeon.cell_to_world(cell)
+	chest.position = _dungeon.tile_to_world(tile)
 	_dungeon.add_child(chest)
 
 
@@ -298,13 +298,13 @@ func _add_objects(max_count: int) -> void:
 func _spawn_rival_groups(who: Node) -> void:
 	if _dungeon == null or rival_pool.is_empty():
 		return
-	var origin: Vector3i = who.cell if "cell" in who else cell
-	var spots: Array[Vector3i] = _dungeon.free_cells_near(origin, rival_spawn_radius)
+	var origin: Vector3i = who.tile if "tile" in who else tile
+	var spots: Array[Vector3i] = _dungeon.free_tiles_near(origin, rival_spawn_radius)
 	var n: int = mini(randi_range(1, rival_spawn_max), spots.size())
 	for i in range(n):
 		var rival = RIVAL_SCENE.instantiate()
 		rival.species_id = rival_pool[randi() % rival_pool.size()]
-		rival.position = _dungeon.cell_to_world(spots[i])
+		rival.position = _dungeon.tile_to_world(spots[i])
 		_dungeon.add_child(rival)
 
 
@@ -428,7 +428,7 @@ func _roll_step(t: float) -> void:
 
 
 ## The die stays readable in mid-air long enough to read the message, then drops back onto its
-## cell.
+## tile.
 func _settle_back() -> void:
 	if _marker == null or roll_duration <= 0.0:
 		return
@@ -443,7 +443,7 @@ func _settle_back() -> void:
 	await tween.finished
 
 
-## The marker's rest position: resting at the centre of its cell (see `_add_marker_box`).
+## The marker's rest position: resting at the centre of its tile (see `_add_marker_box`).
 func _rest_position() -> Vector3:
 	return Vector3(0.0, DIE_SIZE * 0.5, 0.0)
 
@@ -471,7 +471,7 @@ func _facing_of(who: Node) -> Vector3:
 ## A rolled die is no longer actionable, so it GREYS OUT like any spent mechanism
 ## ([constant SPENT_COLOR]) instead of keeping the bright hue of an active one. It does keep its
 ## shape — no [method _mark_spent], which would flatten the cube — so the rolled face stays
-## turned towards the player: the one lasting trace of what happened on this cell.
+## turned towards the player: the one lasting trace of what happened on this tile.
 func _mark_rolled() -> void:
 	if _marker == null:
 		return

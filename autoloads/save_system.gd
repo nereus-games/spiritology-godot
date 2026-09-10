@@ -18,7 +18,7 @@ func save_game() -> Error:
 		"psy_score": GameSession.psy_score,
 		"fde_count": GameSession.fde_count,
 		"encyclopaedia_ifp": _stringify_keys(GameSession.encyclopaedia_ifp),
-		# Info points earned per species by examining decor and ground, capped at 15.
+		# IFP earned per species by examining decor and ground, capped at 15.
 		"exploration_examine_ifp": _stringify_keys(GameSession.exploration_examine_ifp),
 		"dungeon_states": GameSession.dungeon_states,
 		# Inventory: slugs as String, since JSON keys can only be strings.

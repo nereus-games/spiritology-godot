@@ -8,6 +8,6 @@ func execute(ctx: EncounterContext) -> void:
 	for r in ctx.opponents():
 		ctx.deal_damage(r, ctx.base_damage())
 	if ctx.rng.randf() < 0.5:
-		for f in ctx.all_fighters:
+		for f in ctx.all_individuals:
 			if not f.is_dissolved():
 				ctx.deal_damage(f, ctx.base_damage())

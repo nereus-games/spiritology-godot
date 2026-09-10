@@ -17,9 +17,9 @@ func blocks_walk() -> bool:
 	return true
 
 
-## The refresh action, offered from an adjacent cell while facing it and while it has not been
+## The refresh action, offered from an adjacent tile while facing it and while it has not been
 ## used this visit. Facing is handled by [method DungeonManager.actions_for]: the crystal is on
-## the cell being looked at.
+## the tile being looked at.
 func on_adjacent_actions(_who: Node, _facing: Vector3i) -> Array:
 	if _used:
 		return []
@@ -56,4 +56,4 @@ func reset_between_visits() -> void:
 
 
 func _spawn_visual() -> void:
-	_add_marker(Color(0.3, 0.8, 0.85), 1.0, 0.5)  # a tall cyan crystal, filling the cell
+	_add_marker(Color(0.3, 0.8, 0.85), 1.0, 0.5)  # a tall cyan crystal, filling the tile

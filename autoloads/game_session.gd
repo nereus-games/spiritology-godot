@@ -5,18 +5,18 @@
 ## [GameData], which is static and reloaded at boot. Serialised by [SaveSystem].
 extends Node
 
-## PSY thresholds that decide how many info points an action earns.
+## PSY thresholds that decide how much IFP an action earns.
 const PSY_LOW := 10
 const PSY_HIGH := 30
 
 ## Perfect encounters in a row before the FDE counter converts into +1 PSY.
 const FDE_THRESHOLD := 3
 
-## Ceiling on info points a single species can yield through "Examine decor / ground".
+## Ceiling on the IFP a single species can yield through "Examine decor / ground".
 ## Distinct from a page's own 0..100: this one SOURCE can never give more than this.
 const EXAMINE_DECOR_CAP := 15
 
-## Info points per (action, PSY tier). Source: design doc, Encyclopaedia / "Obtaining
+## IFP per (action, PSY tier). Source: design doc, Encyclopaedia / "Obtaining
 ## Info Points". Each entry is `[tier 0, tier 1, tier 2]`, indexed by [method psy_tier].
 ##
 ## Forlorn variants are separate rows; falling back from Forlorn to ordinary when the main
@@ -114,14 +114,14 @@ var fde_count: int = 0:
 		fde_count = value
 		fde_changed.emit(fde_count)
 
-## Encyclopaedia progress: species_id -> info points, where 1 point is 1 % of a page.
+## Encyclopaedia progress: species_id -> IFP, where 1 IFP is 1 % of a page.
 var encyclopaedia_ifp: Dictionary = {}
 
 ## How much each species has already yielded through "Examine decor / ground", so that
 ## [constant EXAMINE_DECOR_CAP] can be enforced across a whole playthrough.
 var exploration_examine_ifp: Dictionary = {}
 
-## Per-dungeon persistent state: dungeon_id -> Dictionary of visited cells and the like.
+## Per-dungeon persistent state: dungeon_id -> Dictionary of visited tiles and the like.
 var dungeon_states: Dictionary = {}
 
 ## Exploration abilities already spent this dungeon visit. Each is usable ONCE per visit;
@@ -151,14 +151,14 @@ func knows_species(species_id: StringName) -> bool:
 	return int(encyclopaedia_ifp.get(species_id, 0)) > 0
 
 
-## Adds info points to a species' page, which caps at 100.
+## Adds IFP to a species' page, which caps at 100.
 func add_ifp(species_id: StringName, amount: int) -> void:
 	var current: int = encyclopaedia_ifp.get(species_id, 0)
 	encyclopaedia_ifp[species_id] = min(current + amount, 100)
 	encyclopaedia_progress.emit(species_id, encyclopaedia_ifp[species_id])
 
 
-# --- Earning info points ---
+# --- Earning IFP ---
 
 
 ## The raw table amount for an action at the current PSY tier. Pure: changes no state.
@@ -176,7 +176,7 @@ func ifp_amount(
 	return by_tier[psy_tier()]
 
 
-## Awards the info points for an action, and returns what was actually added.
+## Awards the IFP for an action, and returns what was actually added.
 ##
 ## The single entry point, because it is where the doc's three restrictions live:
 ##   - an ineffective Talk earns nothing;
@@ -186,7 +186,7 @@ func ifp_amount(
 ## ## TODO: give Forlorn pages their own percentage. Today their points are added to the
 ## species' existing page.
 ## ## TODO: exploration never calls this. Examining decor and ground is the one source of
-## info points with no call site — encounters go through
+## IFP with no call site — encounters go through
 ## [signal EncounterManager.ifp_earned], relayed here by the encounter UI.
 func award_ifp(
 	species_id: StringName,
@@ -219,7 +219,7 @@ func award_ifp(
 ## Does the duo carry this talent? A talent belongs to a SPECIES, so the duo has it if
 ## either member is of that species.
 ##
-## Needed OUTSIDE encounters, where no [EncounterFighter] exists to carry a [TalentScript] —
+## Needed OUTSIDE encounters, where no [EncounterIndividual] exists to carry a [TalentScript] —
 ## which is exactly the case for the exploration talents: chests, traps, the map.
 func party_has_talent(talent_id: StringName) -> bool:
 	return party_talent_stacks(talent_id) > 0

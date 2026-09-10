@@ -6,5 +6,3 @@
 script = ExtResource("1_s0puh")
 id = &"grounds"
 order = 3
-title = "Sols spéciaux (Dig · Recycle · Examine)"
-description = "Sur la plaque terreuse : action « dig » (consomme 1 pelle → objet/info). Face au tas vert (obstacle) : actions « examine » et « recycle »."

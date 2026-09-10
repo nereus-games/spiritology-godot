@@ -9,7 +9,7 @@ extends AbilityScript
 func execute(ctx: EncounterContext) -> void:
 	var t = ctx.primary()
 	if t:
-		ctx.deal_damage(t, ctx.base_damage())  # cas du refus
+		ctx.deal_damage(t, ctx.base_damage())  # what happens when it refuses
 	for m in ctx.team():
 		ctx.hide_weakness(m)
 		ctx.change_weakness(m)

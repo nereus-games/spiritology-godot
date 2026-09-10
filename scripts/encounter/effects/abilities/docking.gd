@@ -6,7 +6,7 @@ extends AbilityScript
 
 
 func execute(ctx: EncounterContext) -> void:
-	var order: Array = ctx.timeline.order if ctx.timeline else ctx.all_fighters
+	var order: Array = ctx.timeline.order if ctx.timeline else ctx.all_individuals
 	var i := order.find(ctx.user)
 	var t = null
 	for j in [i - 1, i + 1]:

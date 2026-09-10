@@ -5,7 +5,7 @@ extends AbilityScript
 
 
 func execute(ctx: EncounterContext) -> void:
-	for f in ctx.all_fighters:
+	for f in ctx.all_individuals:
 		if not f.is_dissolved():
 			ctx.deal_damage(f, ctx.base_damage())
 	for f in ctx.others():

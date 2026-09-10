@@ -10,4 +10,6 @@ func execute(ctx: EncounterContext) -> void:
 		ctx.swap_weakness(pool[0], pool[1])
 	var mate = ctx.random_of(ctx.allies())
 	if mate:
-		ctx.restrict_to(mate, ["Examine", "capacités Arcane"])
+		ctx.restrict_to(
+			mate, ["UI_ENCOUNTER_ACTION_EXAMINE", ctx.abilities_of_key(GameEnums.Energy.ARCANE)]
+		)

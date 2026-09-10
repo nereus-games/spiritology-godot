@@ -1,7 +1,7 @@
 ## A dungeon trap: disarray, teleport or poison.
 ##
 ## From the design doc ("Mechanisms / Traps"). A trap springs when an actor — player OR rival —
-## enters its cell, as long as it is armed. Once sprung it does not disappear: it stays VISIBLE
+## enters its tile, as long as it is armed. Once sprung it does not disappear: it stays VISIBLE
 ## but disarmed. It can be revealed without being sprung (the future `reveal_traps` talent).
 ## Effects STACK through [AfflictionState]. Two versions exist, depending on whether it rearms
 ## between dungeon visits ([member reactivates]).

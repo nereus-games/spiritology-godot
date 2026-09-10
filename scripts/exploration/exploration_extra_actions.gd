@@ -1,4 +1,4 @@
-## Supplies the exploration actions NOT tied to a cell: the duo's exploration abilities and its
+## Supplies the exploration actions NOT tied to a tile: the duo's exploration abilities and its
 ## usable objects. Appended to the HUD's action menu alongside the mechanism actions
 ## ([method DungeonManager.actions_for]).
 ##

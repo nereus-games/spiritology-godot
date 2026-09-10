@@ -26,8 +26,13 @@ func _init(p_dungeon = null, p_player = null, p_rng: RandomNumberGenerator = nul
 		rng.randomize()
 
 
-func _note(msg: String) -> void:
-	log.append(msg)
+## Records a line under its TRANSLATION KEY, resolved here: no effect ever writes out a
+## sentence. `args` fills the key's placeholders, and is `null` for the keys that have
+## none — an empty array would be formatted in, not skipped. See the LOG_EXPL_* block in
+## `translations/en.po`.
+func _note(key: String, args = null) -> void:
+	var line := String(TranslationServer.translate(key))
+	log.append(line if args == null else line % args)
 
 
 # --------------------------------------------------------------------------
@@ -40,7 +45,7 @@ func _note(msg: String) -> void:
 func hide_from_rivals(tiles: int) -> void:
 	if player != null and player.has_method("set_invisible"):
 		player.set_invisible(tiles)
-	_note("invisible pour %d cases" % tiles)
+	_note("LOG_EXPL_INVISIBLE", tiles)
 
 
 ## Stops the rivals chasing the player for `moves` moves (torment veil, a costume).
@@ -48,7 +53,7 @@ func hide_from_rivals(tiles: int) -> void:
 func avoid_pursuit(moves: int, disguise_species: StringName = &"") -> void:
 	if player != null and player.has_method("set_unpursued"):
 		player.set_unpursued(moves, disguise_species)
-	_note("non-poursuivi pour %d cases" % moves)
+	_note("LOG_EXPL_UNPURSUED", moves)
 
 
 ## Cures the player's poison outright (a tea drop, or an anti-poison ability).
@@ -57,29 +62,29 @@ func cure_poison() -> void:
 		var aff = player.get("affliction")
 		if aff != null:
 			aff.cure_poison()
-	_note("poison soigné")
+	_note("LOG_EXPL_POISON_CURED")
 
 
 ## Gives `amount` DEN back to both characters of the duo (a rune stone).
 func heal_duo(amount: int) -> void:
 	GameSession.heal_den(GameSession.PartySlot.MAIN, amount)
 	GameSession.heal_den(GameSession.PartySlot.TEAMMATE, amount)
-	_note("duo soigné de %d DEN" % amount)
+	_note("LOG_EXPL_DUO_HEALED", amount)
 
 
-## Crosses the cracked wall on the cell being faced, if there is one (cranny crossing). Returns
+## Crosses the cracked wall on the tile being faced, if there is one (cranny crossing). Returns
 ## true when the crossing happened.
 func cross_faced_cracked_wall() -> bool:
 	if dungeon == null or player == null:
 		return false
 	var facing: Vector3i = player.facing_delta()
-	var target: Vector3i = player.cell + facing
+	var target: Vector3i = player.tile + facing
 	for m in dungeon.mechanisms_at(target):
 		if m.has_method("cross"):
 			m.cross(player, facing)
-			_note("mur fissuré traversé")
+			_note("LOG_EXPL_CRACKED_WALL_CROSSED")
 			return true
-	_note("aucun mur fissuré en face")
+	_note("LOG_EXPL_NO_CRACKED_WALL")
 	return false
 
 
@@ -88,4 +93,4 @@ func cross_faced_cracked_wall() -> bool:
 ## rival-group spawn system, which does not exist. Placeholder: goes hidden for the watch.
 func scout_groups() -> void:
 	hide_from_rivals(3)
-	_note("guet — révélation de groupes de rivaux TODO")
+	_note("LOG_EXPL_SCOUT")

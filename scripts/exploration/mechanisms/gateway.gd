@@ -1,8 +1,8 @@
 ## A dungeon gateway: automated, locked, or meditation.
 ##
 ## Per the design doc ("Mechanisms / Gateways") these are SLIDING doors. A gateway therefore
-## occupies NO cell: it sits on the EDGE between two neighbouring cells — the anchor
-## [member cell] and its neighbour along [member edge_dir] — and bars that passage while it is
+## occupies NO tile: it sits on the EDGE between two neighbouring tiles — the anchor
+## [member tile] and its neighbour along [member edge_dir] — and bars that passage while it is
 ## closed ([method blocks_walk]). Being thin
 ## ([constant DungeonManager.EDGE_THICKNESS]) it leaves room to stand on either side, so it can
 ## be faced from both, and its actions (open, meditate) are available from both.
@@ -17,7 +17,7 @@
 ##    from the tier ([member cost_tier]).
 ##  - MEDITATION: opens after N CONSECUTIVE meditations in front of it, and stays open.
 ##    "Consecutive", in the design doc's sense, means with nothing else done in between: the
-##    streak drops as soon as a turn elapses while the player has left the cell they were
+##    streak drops as soon as a turn elapses while the player has left the tile they were
 ##    meditating from, or turned away from the gateway.
 ##
 ## No `class_name` (see dungeon_mechanism.gd): `extends` by path. The player actions — unlocking
@@ -41,8 +41,8 @@ const LOCKED_COSTS := {
 
 @export var kind: Kind = Kind.AUTOMATED
 
-## The neighbour being barred: the gateway sits on the edge between [member cell] and
-## `cell + edge_dir`. Always a unit horizontal direction (±X or ±Z).
+## The neighbour being barred: the gateway sits on the edge between [member tile] and
+## `tile + edge_dir`. Always a unit horizontal direction (±X or ±Z).
 @export var edge_dir := Vector3i(0, 0, 1)
 
 ## AUTOMATED: the cycled opening pattern, one boolean per turn. The design doc's default is
@@ -64,20 +64,20 @@ const LOCKED_COSTS := {
 var _open := false
 var _meditations := 0
 
-# The meditation streak in progress: the cell the player is meditating from and the direction
+# The meditation streak in progress: the tile the player is meditating from and the direction
 # they face. Checked every turn to confirm they are STILL there — otherwise the streak breaks.
 var _streak_tile := Vector3i.ZERO
 var _streak_facing := Vector3i.ZERO
 var _streak_open := false
 
 
-## On the edge, not on the cell: the anchor cell stays walkable.
+## On the edge, not on the tile: the anchor tile stays walkable.
 func _register() -> void:
-	_dungeon.register_edge_mechanism(cell, cell + edge_dir, self)
+	_dungeon.register_edge_mechanism(tile, tile + edge_dir, self)
 
 
 func _unregister() -> void:
-	_dungeon.unregister_edge_mechanism(cell, cell + edge_dir, self)
+	_dungeon.unregister_edge_mechanism(tile, tile + edge_dir, self)
 
 
 func _on_registered() -> void:
@@ -109,9 +109,9 @@ func on_adjacent_actions(who: Node, facing: Vector3i) -> Array:
 			)
 		]
 	if kind == Kind.MEDITATION:
-		# The cell and the direction are frozen into the action: THAT is where the meditation
+		# The tile and the direction are frozen into the action: THAT is where the meditation
 		# counts from, and the spot that has to be held to keep the streak going.
-		var from_tile: Vector3i = who.cell if who != null and "cell" in who else cell
+		var from_tile: Vector3i = who.tile if who != null and "tile" in who else tile
 		return [
 			ExplorationAction.new(
 				&"meditate",
@@ -125,7 +125,7 @@ func on_adjacent_actions(who: Node, facing: Vector3i) -> Array:
 func on_turn(turn: int) -> void:
 	# Only automated gateways cycle; LOCKED and MEDITATION ones stay open once opened.
 	if kind == Kind.AUTOMATED and not open_pattern.is_empty():
-		# A gateway lives between cells, so it can never close ON the player — they are always on
+		# A gateway lives between tiles, so it can never close ON the player — they are always on
 		# one side or the other — and the pattern applies as-is.
 		_open = open_pattern[(turn + phase_offset) % open_pattern.size()]
 		_update_marker()
@@ -136,9 +136,9 @@ func on_turn(turn: int) -> void:
 			_break_streak()
 
 
-## Whether the player is still on the cell they meditated from, turned towards this gateway.
+## Whether the player is still on the tile they meditated from, turned towards this gateway.
 func _player_holds_post() -> bool:
-	if _dungeon == null or _dungeon.player_cell() != _streak_tile:
+	if _dungeon == null or _dungeon.player_tile() != _streak_tile:
 		return false
 	var player := get_tree().get_first_node_in_group("player")
 	if player == null or not player.has_method("facing_delta"):
@@ -215,7 +215,7 @@ func reset_between_visits() -> void:
 		_break_streak()  # leaving the dungeon breaks the streak — it has to be consecutive
 
 
-## Height of the panel, in metres: above the duo's eyes, without overflowing the cell.
+## Height of the panel, in metres: above the duo's eyes, without overflowing the tile.
 const GATE_HEIGHT := 0.9
 ## Width of the panel: nearly the whole edge, leaving a gap for the jambs.
 const GATE_WIDTH := 0.9
@@ -233,14 +233,14 @@ func _spawn_visual() -> void:
 		Kind.MEDITATION:
 			color = Color(0.4, 0.7, 0.6)  # blue-green, for meditating
 	# A thin panel sitting ON the edge: thin along the axis being crossed, wide along the other.
-	# The node's origin is at the anchor cell's centre, so shift it half a cell to the edge.
+	# The node's origin is at the anchor tile's centre, so shift it half a tile to the edge.
 	var thin := DungeonManager.EDGE_THICKNESS
 	var across := Vector3(GATE_WIDTH, GATE_HEIGHT, GATE_WIDTH)
 	if edge_dir.x != 0:
 		across.x = thin
 	else:
 		across.z = thin
-	var offset := Vector3(edge_dir.x, 0.0, edge_dir.z) * DungeonManager.CELL_SIZE * 0.5
+	var offset := Vector3(edge_dir.x, 0.0, edge_dir.z) * DungeonManager.TILE_SIZE * 0.5
 	_add_marker_box(color, across, offset)
 	if kind == Kind.LOCKED or kind == Kind.MEDITATION:
 		_spawn_face_labels(offset, color)

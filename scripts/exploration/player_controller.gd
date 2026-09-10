@@ -1,8 +1,8 @@
 ## Player movement on the dungeon grid: 3D, first person.
 ##
-## Orthogonal cell-by-cell movement relative to facing, with smoothed transitions and 90-degree
+## Orthogonal tile-by-tile movement relative to facing, with smoothed transitions and 90-degree
 ## turns. Asks the [DungeonManager] (the "dungeon" group) about walkability and occupancy, and
-## starts an encounter on entering a rival's cell. A successful step advances the turn, through
+## starts an encounter on entering a rival's tile. A successful step advances the turn, through
 ## [method DungeonManager.advance_turn].
 class_name PlayerController
 extends Node3D
@@ -14,7 +14,7 @@ const AfflictionState := preload("res://scripts/exploration/mechanisms/afflictio
 ## free look glued to the mouse while 90-degree turns stay smooth. Ported from the prototype.
 @export var yaw_follow_speed := 720.0
 
-var cell: Vector3i
+var tile: Vector3i
 var _dungeon: DungeonManager
 var _busy := false
 ## The target VISUAL yaw in degrees — the rigid base plus free look. The body catches up to
@@ -33,10 +33,10 @@ var input_locked := false
 ## `affliction` property, by duck typing.
 var affliction := AfflictionState.new()
 
-## Invisibility (fog mantel): how many more cells the rivals cannot see the player for. Cleared
+## Invisibility (fog mantel): how many more tiles the rivals cannot see the player for. Cleared
 ## by an encounter OR by springing a trap.
 var invisible_moves := 0
-## Not-chased (torment veil, a costume): how many more cells the rivals will not give chase
+## Not-chased (torment veil, a costume): how many more tiles the rivals will not give chase
 ## for. Cleared by an encounter, but NOT by a trap.
 var unpursued_moves := 0
 ## The species the player looks like, when wearing a costume.
@@ -48,8 +48,8 @@ func _ready() -> void:
 	if _dungeon == null:
 		push_error("[PlayerController] no DungeonManager in the 'dungeon' group.")
 		return
-	cell = _dungeon.world_to_cell(global_position)
-	global_position = _dungeon.cell_to_world(cell)
+	tile = _dungeon.world_to_tile(global_position)
+	global_position = _dungeon.tile_to_world(tile)
 	_dungeon.register_player(self)
 	add_to_group("player")  # how the HUD finds us, for the contextual actions
 
@@ -63,9 +63,9 @@ func is_at_rest() -> bool:
 	return not _busy
 
 
-## The direction currently faced, as a cell delta (x, 0, z), for querying the contextual actions
-## of the cell being looked at. Based on the cardinal MOVEMENT facing rather than on free look:
-## you interact with the cell squarely in front of you.
+## The direction currently faced, as a tile delta (x, 0, z), for querying the contextual actions
+## of the tile being looked at. Based on the cardinal MOVEMENT facing rather than on free look:
+## you interact with the tile squarely in front of you.
 func facing_delta() -> Vector3i:
 	var world := Basis(Vector3.UP, deg_to_rad(_move_yaw_deg)) * Vector3.FORWARD
 	return Vector3i(roundi(world.x), 0, roundi(world.z))
@@ -122,19 +122,19 @@ func try_move(local_dir: Vector3) -> void:
 	var delta := Vector3i(roundi(world.x), 0, roundi(world.z))
 	if delta == Vector3i.ZERO:
 		return
-	var target := cell + delta
+	var target := tile + delta
 
 	# A closed gateway on the edge being crossed: nothing gets through — no stairs, no fall, no
 	# encounter.
-	if _dungeon.is_edge_blocked(cell, target):
+	if _dungeon.is_edge_blocked(tile, target):
 		return
 
-	# Stairs ahead, as in the prototype: you are carried two cells further plus a floor change.
+	# Stairs ahead, as in the prototype: you are carried two tiles further plus a floor change.
 	# They can ONLY be taken along their own axis (`face_dir`); side-on they block like a wall.
 	var stairs := _stairs_at(target)
 	if stairs != null:
 		if delta == stairs.face_dir:
-			var dest: Vector3i = stairs.stairs_destination(cell, delta)
+			var dest: Vector3i = stairs.stairs_destination(tile, delta)
 			if _dungeon.is_floor(dest):
 				await _climb_step(dest)
 		return  # wrong direction: blocked
@@ -158,30 +158,30 @@ func try_move(local_dir: Vector3) -> void:
 		_dungeon.request_encounter(occ, false)  # an encounter, with no move
 		return
 
-	cell = target
+	tile = target
 	_busy = true
 	var tween := create_tween()
-	tween.tween_property(self, "global_position", _dungeon.cell_to_world(target), move_duration)
+	tween.tween_property(self, "global_position", _dungeon.tile_to_world(target), move_duration)
 	await tween.finished
 	_busy = false
 	# A step eats into the stealth states: invisibility and not-chased.
 	_tick_hidden_on_move()
-	# The reached cell's mechanisms first, such as traps, then the turn advances.
-	_dungeon.notify_entered(cell, self)
+	# The reached tile's mechanisms first, such as traps, then the turn advances.
+	_dungeon.notify_entered(tile, self)
 	_dungeon.advance_turn()
 
 
-## A fall to `landing`, the floor cell below: an animated descent, damage scaling with the
-## number of levels, then the usual resolution — the cell's mechanisms, then the turn.
+## A fall to `landing`, the floor tile below: an animated descent, damage scaling with the
+## number of levels, then the usual resolution — the tile's mechanisms, then the turn.
 ##
 ## Public because the narrow-bridge driver ([code]exploration.gd[/code]) uses it to make a fall
 ## off a bridge exactly an ordinary fall: same depth, same damage, same turn.
 func fall_to(landing: Vector3i, levels: int) -> void:
-	_dungeon.notify_level_change(self, cell, landing)  # watching rivals can follow
-	cell = landing
+	_dungeon.notify_level_change(self, tile, landing)  # watching rivals can follow
+	tile = landing
 	_busy = true
 	var tween := create_tween()
-	tween.tween_property(self, "global_position", _dungeon.cell_to_world(landing), 0.35)
+	tween.tween_property(self, "global_position", _dungeon.tile_to_world(landing), 0.35)
 	await tween.finished
 	_busy = false
 	var dmg := DungeonManager.fall_damage(levels)
@@ -189,7 +189,7 @@ func fall_to(landing: Vector3i, levels: int) -> void:
 	GameSession.apply_den_damage(GameSession.PartySlot.TEAMMATE, dmg)
 	GameSession.resolve_party_wipe()
 	_tick_hidden_on_move()
-	_dungeon.notify_entered(cell, self)
+	_dungeon.notify_entered(tile, self)
 	_dungeon.advance_turn()
 
 
@@ -209,7 +209,7 @@ func fall_forever(into: Vector3i) -> void:
 	var tween := create_tween()
 	tween.set_ease(Tween.EASE_IN)
 	tween.tween_property(
-		self, "global_position", _dungeon.cell_to_world(into) - Vector3(0.0, 6.0, 0.0), 0.8
+		self, "global_position", _dungeon.tile_to_world(into) - Vector3(0.0, 6.0, 0.0), 0.8
 	)
 	await tween.finished
 	_busy = false
@@ -226,14 +226,14 @@ func _random_translation_except(dir: Vector3) -> Vector3:
 	return dirs[randi() % dirs.size()]
 
 
-## Instant relocation onto a cell (the teleport trap). Occupancy is handled by
-## [method DungeonManager.teleport_actor] — and the player occupies no cell anyway.
-func teleport_to(to_cell: Vector3i) -> void:
-	cell = to_cell
-	global_position = _dungeon.cell_to_world(to_cell)
+## Instant relocation onto a tile (the teleport trap). Occupancy is handled by
+## [method DungeonManager.teleport_actor] — and the player occupies no tile anyway.
+func teleport_to(to_tile: Vector3i) -> void:
+	tile = to_tile
+	global_position = _dungeon.tile_to_world(to_tile)
 
 
-## The staircase on cell `c`, recognised by exposing `stairs_destination`, or null.
+## The staircase on tile `c`, recognised by exposing `stairs_destination`, or null.
 func _stairs_at(c: Vector3i) -> Node:
 	for m in _dungeon.mechanisms_at(c):
 		if m.has_method("stairs_destination"):
@@ -241,20 +241,20 @@ func _stairs_at(c: Vector3i) -> Node:
 	return null
 
 
-## Takes a staircase: a SMOOTH climb or descent to `dest`, another floor two cells away, then
-## the usual resolution — the cell's mechanisms, then the turn.
+## Takes a staircase: a SMOOTH climb or descent to `dest`, another floor two tiles away, then
+## the usual resolution — the tile's mechanisms, then the turn.
 func _climb_step(dest: Vector3i) -> void:
-	if dest.y != cell.y:
-		_dungeon.notify_level_change(self, cell, dest)  # watching rivals can follow
-	cell = dest
+	if dest.y != tile.y:
+		_dungeon.notify_level_change(self, tile, dest)  # watching rivals can follow
+	tile = dest
 	_busy = true
 	var tween := create_tween()
 	tween.set_ease(Tween.EASE_IN_OUT)
-	tween.tween_property(self, "global_position", _dungeon.cell_to_world(dest), 0.4)
+	tween.tween_property(self, "global_position", _dungeon.tile_to_world(dest), 0.4)
 	await tween.finished
 	_busy = false
 	_tick_hidden_on_move()
-	_dungeon.notify_entered(cell, self)
+	_dungeon.notify_entered(tile, self)
 	_dungeon.advance_turn()
 
 

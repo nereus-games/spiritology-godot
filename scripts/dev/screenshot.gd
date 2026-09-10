@@ -4,7 +4,7 @@
 ## Run with: Godot --path . res://scenes/dev/screenshot.tscn -- <scenario> <path.png> [view]
 ## `view` is optional:
 ##   - `top`        : an overhead camera instead of the first-person view;
-##   - `x,y,z@yaw`  : first place the player on that cell, turned `yaw` degrees (0 faces -z),
+##   - `x,y,z@yaw`  : first place the player on that tile, turned `yaw` degrees (0 faces -z),
 ##                    then capture their first-person view.
 ## No --headless: a rendering context is needed, so a window opens briefly.
 extends Node
@@ -38,10 +38,10 @@ func _run() -> void:
 	var cam: Camera3D = pl.get_node("CameraRig/Camera3D")
 	print(
 		(
-			"[shot] player %s cell=%s yaw=%.0f deg | camera %s looking at %s | current=%s fov=%.0f"
+			"[shot] player %s tile=%s yaw=%.0f deg | camera %s looking at %s | current=%s fov=%.0f"
 			% [
 				pl.global_position,
-				pl.cell,
+				pl.tile,
 				rad_to_deg(pl.rotation.y),
 				cam.global_position,
 				-cam.global_transform.basis.z,

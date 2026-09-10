@@ -51,7 +51,7 @@ hides those layers explicitly and restores only the ones that were actually visi
 `EncounterManager` runs an encounter per ROUND: everyone acts once, per-turn state is wiped
 at the start, pending reordering is applied at the end.
 
-It does not **decide** anything. Each turn it asks the fighter's `EncounterAgent`:
+It does not **decide** anything. Each turn it asks the individual's `EncounterAgent`:
 
 - `AutoAgent` answers immediately, so an encounter resolves in one go without suspending.
 - `UiAgent` emits `choice_requested` and awaits, so the loop suspends until a person answers.
@@ -65,7 +65,7 @@ The same seam is why `EncounterManager` deliberately knows nothing of `GameSessi
 Reaching for an autoload would tie it to a running game; instead it announces what happened
 (`ifp_earned`, `object_consumed`) and the encounter UI relays it.
 
-**Turn order is drawn at random and is load-bearing.** A fighter's position — first,
+**Turn order is drawn at random and is load-bearing.** An individual's position — first,
 in-between, last — decides which of its species' three weaknesses is currently exposed. So
 reordering the turn is an attack, not a flourish, and an order fixed at "players then
 rivals" would have frozen every weakness in the game.
@@ -92,10 +92,10 @@ of which each talent overrides only what concerns it.
 
 ## Exploration: a logical grid, and mechanisms that register themselves
 
-`DungeonManager` holds the **logical grid** and it is the source of truth — floor cells,
+`DungeonManager` holds the **logical grid** and it is the source of truth — floor tiles,
 walls, holes, occupants, edges. Nothing is decided by raycasting.
 
-A mechanism is a `Node3D` sitting on one cell that registers itself with the manager, the
+A mechanism is a `Node3D` sitting on one tile that registers itself with the manager, the
 same way rivals do. The base is `mechanisms/dungeon_mechanism.gd`, and the hooks are
 `blocks_walk()`, `on_enter(who)`, `on_turn(turn)`, `on_tile_actions(who)`,
 `on_adjacent_actions(who, facing)`, `reset_between_visits()`. Thirteen mechanisms exist on
@@ -104,8 +104,8 @@ die, cracked walls, examinable decor, narrow bridges, stairs, lifts, guardrails.
 
 Two details that are easy to get wrong:
 
-- Doors and guardrails sit on the **edge between two cells**, not on a cell. They block
-  crossing without costing a cell or filling the space behind them.
+- Doors and guardrails sit on the **edge between two tiles**, not on a tile. They block
+  crossing without costing a tile or filling the space behind them.
 - A wall block can be the floor of the storey above it, so no slab is drawn on top of one.
   Walls and holes are currently DERIVED from the floor grid rather than declared, which is
   authoring debt recorded in `dungeon_manager.gd`.
@@ -127,7 +127,7 @@ Fleeing is what makes this visible, since the doc wants the rival to remain in t
 **A silhouette on the map is a GROUP, not an individual.** What you meet in exploration
 stands for several individuals who will appear together in the encounter, and who may have
 different characteristics. None of that is modelled: `RivalBehavior` carries one species and
-one DEN, exploration passes a single species slug, and fighters have no per-species stats.
+one DEN, exploration passes a single species slug, and individuals have no per-species stats.
 Today every individual in a dungeon starts identical, which is a stated simplification and
 not the intended rule.
 
@@ -149,5 +149,5 @@ even with exit 0, and a timeout, which is what a check whose script fails to com
 like from outside.
 
 The encounter checks lean on one property in particular: the same seed produces the same
-result, round count and combat log. That single assertion is what makes it safe to refactor
+result, round count and encounter log. That single assertion is what makes it safe to refactor
 the loop at all.

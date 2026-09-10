@@ -6,7 +6,7 @@ extends AbilityScript
 
 func execute(ctx: EncounterContext) -> void:
 	ctx.change_turn_order({"by": "shuffle"})
-	for f in ctx.all_fighters:
+	for f in ctx.all_individuals:
 		if not f.is_dissolved() and ctx.weakness_of(f) == GameEnums.Energy.HEAT:
 			ctx.recover_eth(f, f.max_eth)
 	# TODO: each individual's ETH should become that of whoever held its new position before.

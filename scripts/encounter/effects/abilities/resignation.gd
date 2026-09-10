@@ -1,4 +1,4 @@
-## Resignation — mastél · Crystal · mini (5) · usage unique · [change weakness, damage, immunity]
+## Resignation — mastél · Crystal · mini (5) · single use · [change weakness, damage, immunity]
 ## MECHANIC: the user and its allies take damage, lose their weakness, and are immune to Crystal
 ## damage until their next turn.
 extends AbilityScript

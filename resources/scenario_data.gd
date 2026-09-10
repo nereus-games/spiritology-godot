@@ -17,8 +17,19 @@ extends Resource
 ## the directory reads alphabetically.
 @export var order: int = 0
 
-## Button label.
-@export var title: String = ""
+## The button label and the instructions are NOT fields here: they live in the .po files
+## under the keys below, like every other displayed string in the project. What is left is
+## the pair the code needs — which scenario, and where it sits in the list.
 
-## What to watch for once inside — the test's instructions.
-@export_multiline var description: String = ""
+
+## Translation key of the button label: SCENARIO_<ID>_TITLE.
+##
+## Named `name_key` rather than `title_key` because that is the name every other resource
+## uses, and data_integrity_check reaches for it by that name on all of them alike.
+func name_key() -> String:
+	return "SCENARIO_%s_TITLE" % GameEnums.key_token(id)
+
+
+## Translation key of the instructions: SCENARIO_<ID>_DESC.
+func desc_key() -> String:
+	return "SCENARIO_%s_DESC" % GameEnums.key_token(id)

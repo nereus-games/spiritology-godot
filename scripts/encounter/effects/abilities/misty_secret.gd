@@ -5,6 +5,6 @@ extends AbilityScript
 
 
 func execute(ctx: EncounterContext) -> void:
-	for f in ctx.all_fighters:
+	for f in ctx.all_individuals:
 		if not f.is_dissolved():
 			ctx.set_weakness(f, GameEnums.Energy.FLUID)

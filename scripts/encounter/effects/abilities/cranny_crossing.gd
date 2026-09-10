@@ -1,5 +1,5 @@
 # @unimplemented
-## Cranny Crossing — Exploration · from — · — · cost — · damage — · usage unique
+## Cranny Crossing — Exploration · from — · — · cost — · damage — · single use
 ##
 ## MECHANIC (from the design doc):
 ##   📖

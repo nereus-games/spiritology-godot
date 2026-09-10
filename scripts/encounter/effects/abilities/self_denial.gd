@@ -9,4 +9,4 @@ func execute(ctx: EncounterContext) -> void:
 	var t = ctx.primary()
 	if t:
 		ctx.drain_eth(t, ctx.dmg(&"small"))
-		ctx.set_weakness(t, ctx.energy())  # les 3 faiblesses = énergie de la capacité
+		ctx.set_weakness(t, ctx.energy())  # all 3 weaknesses become the ability's energy

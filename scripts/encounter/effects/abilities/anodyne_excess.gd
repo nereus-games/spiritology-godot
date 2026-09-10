@@ -1,4 +1,4 @@
-## Anodyne Excess — vérnal · Variable · usage unique · [change weakness]
+## Anodyne Excess — vérnal · Variable · single use · [change weakness]
 ## MECHANIC: every turn, the other individuals have a high chance of taking this ability's
 ## energy as their weakness, and the rivals' ETH/DEN readouts go invisible (a UI effect). Both
 ## last until the end of the encounter, or until the user Meditates.

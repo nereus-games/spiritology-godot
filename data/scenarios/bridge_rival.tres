@@ -6,5 +6,3 @@
 script = ExtResource("1_t150x")
 id = &"bridge_rival"
 order = 7
-title = "Pont étroit + rival"
-description = "Même ravin, avec un rival de l'AUTRE côté : il doit prendre le pont pour t'atteindre, donc vous vous croisez forcément sur une planche. Il a son propre test d'équilibre (1 à 2 % de chute par case, tiré à sa création) et peut donc tomber tout seul en venant. Si vous vous croisez, vous tombez tous les deux sur la même case et la rencontre s'engage en bas. Et s'il t'a vu chuter, il peut sauter à ta suite."

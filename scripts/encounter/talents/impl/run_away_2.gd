@@ -7,7 +7,7 @@
 ##
 ## Two known wiring dependencies, shared by everything on the fleeing side:
 ##  1. the player menu and the agent have to CONSULT [method modify_menu], which is not wired yet;
-##  2. actually leaving the encounter needs the exploration teleport (3-5 cells, a 50% chance the
+##  2. actually leaving the encounter needs the exploration teleport (3-5 tiles, a 50% chance the
 ##     rival disappears), which is not built; resolving FLEE is a stub.
 extends "res://scripts/encounter/talents/talent_script.gd"
 

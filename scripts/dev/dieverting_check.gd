@@ -11,8 +11,8 @@ const EXPLORATION := preload("res://scenes/exploration/exploration.tscn")
 const Dieverting := preload("res://scripts/exploration/mechanisms/dieverting.gd")
 const DungeonMechanism := preload("res://scripts/exploration/mechanisms/dungeon_mechanism.gd")
 
-## Cell of the first die in the "chests" scenario.
-const DIE_CELL := Vector3i(1, 0, 5)
+## Tile of the first die in the "chests" scenario.
+const DIE_TILE := Vector3i(1, 0, 5)
 
 var _fails: Array[String] = []
 ## The latest messages the dungeon posted, which the HUD shows in its feedback banner.
@@ -51,7 +51,7 @@ func _run_all() -> void:
 # --------------------------------------------------------------------------
 
 
-## Builds the "chests" scenario, puts the player on the die's cell, and returns
+## Builds the "chests" scenario, puts the player on the die's tile, and returns
 ## {scene, dm, player, die}.
 func _setup() -> Dictionary:
 	ScenarioCatalog.selected_id = &"chests"
@@ -63,12 +63,12 @@ func _setup() -> Dictionary:
 	_messages.clear()
 	dm.message_posted.connect(func(text: String) -> void: _messages.append(text))
 	var die = null
-	for m in dm.mechanisms_at(DIE_CELL):
+	for m in dm.mechanisms_at(DIE_TILE):
 		if m.has_method("submit"):
 			die = m
 	if die != null:
 		die.roll_duration = 0.0  # tumble short-circuited, so the logic tests stay instant
-	player.teleport_to(DIE_CELL)
+	player.teleport_to(DIE_TILE)
 	return {"scene": scene, "dm": dm, "player": player, "die": die}
 
 
@@ -84,9 +84,9 @@ func _inventory_total() -> int:
 	return total
 
 
-## The chest on the die's cell, or null: a mechanism with fixed contents.
+## The chest on the die's tile, or null: a mechanism with fixed contents.
 func _chest_at_die(dm) -> Node:
-	for m in dm.mechanisms_at(DIE_CELL):
+	for m in dm.mechanisms_at(DIE_TILE):
 		if "fixed_loot" in m and not m.fixed_loot.is_empty():
 			return m
 	return null
@@ -101,7 +101,7 @@ func _check_choice() -> void:
 	print("[destroy/submit choice]")
 	var ctx := await _setup()
 	var die = ctx.die
-	_check(die != null, "a dieverting on %s" % DIE_CELL)
+	_check(die != null, "a dieverting on %s" % DIE_TILE)
 	GameSession.inventory.clear()
 	GameSession.add_object(&"spade", 1)
 	die.on_enter(ctx.player)
@@ -109,7 +109,7 @@ func _check_choice() -> void:
 		die.is_active() and die.is_pending(),
 		"with a spade: the die waits for the choice, and does not roll"
 	)
-	var actions: Array = ctx.dm.actions_for(DIE_CELL, Vector3i(0, 0, 1), ctx.player)
+	var actions: Array = ctx.dm.actions_for(DIE_TILE, Vector3i(0, 0, 1), ctx.player)
 	var ids := []
 	for a in actions:
 		ids.append(a.id)
@@ -122,8 +122,8 @@ func _check_choice() -> void:
 	_check(not die.is_active() and not die.is_pending(), "the destroyed die is inert")
 	_check(_messages.size() == 1, 'the destruction is announced: "%s"' % ["".join(_messages)])
 	_check(
-		ctx.dm.actions_for(DIE_CELL, Vector3i(0, 0, 1), ctx.player).is_empty(),
-		"no action left on the cell"
+		ctx.dm.actions_for(DIE_TILE, Vector3i(0, 0, 1), ctx.player).is_empty(),
+		"no action left on the tile"
 	)
 	await _teardown(ctx)
 
@@ -138,7 +138,7 @@ func _check_auto_submit() -> void:
 	await _teardown(ctx)
 
 
-## The tumble for real, at its nominal duration: the die leaves its resting cell, locks the
+## The tumble for real, at its nominal duration: the die leaves its resting tile, locks the
 ## controls for the throw, stops on the rolled face and presents it to the player.
 func _check_roll_animation() -> void:
 	print("[the die's tumble]")
@@ -161,7 +161,7 @@ func _check_roll_animation() -> void:
 	_check(marker.position != rest, "the die leaves the floor to tumble into view")
 	await get_tree().create_timer(1.2).timeout
 	_check(not player.input_locked, "the controls come back once it lands")
-	_check(marker.position.is_equal_approx(rest), "the die has come down onto its cell")
+	_check(marker.position.is_equal_approx(rest), "the die has come down onto its tile")
 	# The rolled face is the one looking at the player. The player faces +z, so the face points
 	# towards -z once the die has landed.
 	var toward_player: Vector3 = -Vector3(player.facing_delta().x, 0.0, player.facing_delta().z)
@@ -199,8 +199,8 @@ func _check_outcome(outcome: int) -> void:
 			print("[1. back to the entrance + objects lost]")
 			await die.submit(player, outcome)
 			_check(
-				player.cell == dm.entrance_cell(),
-				"the player is at the entrance %s (%s)" % [dm.entrance_cell(), player.cell]
+				player.tile == dm.entrance_tile(),
+				"the player is at the entrance %s (%s)" % [dm.entrance_tile(), player.tile]
 			)
 			_check(
 				_inventory_total() == before_objects - die.objects_lost,
@@ -219,8 +219,8 @@ func _check_outcome(outcome: int) -> void:
 			print("[2. back to the entrance + ETH lost]")
 			await die.submit(player, outcome)
 			_check(
-				player.cell == dm.entrance_cell(),
-				"the player is at the entrance (%s)" % player.cell
+				player.tile == dm.entrance_tile(),
+				"the player is at the entrance (%s)" % player.tile
 			)
 			_check(
 				(
@@ -247,17 +247,17 @@ func _check_outcome(outcome: int) -> void:
 			)
 			var far := true
 			for rival in dm.rivals():
-				var d: Vector3i = rival.cell - player.cell
-				if absi(d.x) + absi(d.z) > die.rival_spawn_radius or rival.cell == player.cell:
+				var d: Vector3i = rival.tile - player.tile
+				if absi(d.x) + absi(d.z) > die.rival_spawn_radius or rival.tile == player.tile:
 					far = false
-			_check(far, "all of them appear nearby (%d cells or less)" % die.rival_spawn_radius)
-			_check(player.cell == DIE_CELL, "the player is not moved")
+			_check(far, "all of them appear nearby (%d tiles or less)" % die.rival_spawn_radius)
+			_check(player.tile == DIE_TILE, "the player is not moved")
 		Dieverting.Outcome.TELEPORT_EXIT_LOSE_OBJECTS_DEN:
 			print("[4. sent to an exit + objects lost + DEN lost]")
 			await die.submit(player, outcome)
 			_check(
-				player.cell in dm.exit_cells(),
-				"the player is on an exit %s (%s)" % [dm.exit_cells(), player.cell]
+				player.tile in dm.exit_tiles(),
+				"the player is on an exit %s (%s)" % [dm.exit_tiles(), player.tile]
 			)
 			_check(
 				_inventory_total() == before_objects - die.objects_lost,
@@ -286,7 +286,7 @@ func _check_outcome(outcome: int) -> void:
 				"%d object(s) destroyed (up to %d)" % [lost, die.max_objects_delta]
 			)
 			_check(_chest_at_die(dm) == null, "destroyed, so NO chest, unlike outcomes 1 and 4")
-			_check(player.cell == DIE_CELL, "the player is not moved")
+			_check(player.tile == DIE_TILE, "the player is not moved")
 		Dieverting.Outcome.ADD_OBJECTS:
 			print("[6. objects gained]")
 			await die.submit(player, outcome)
@@ -295,7 +295,7 @@ func _check_outcome(outcome: int) -> void:
 				gained >= 1 and gained <= die.max_objects_delta,
 				"%d object(s) gained (up to %d)" % [gained, die.max_objects_delta]
 			)
-			_check(player.cell == DIE_CELL, "the player is not moved")
+			_check(player.tile == DIE_TILE, "the player is not moved")
 
 	_check(not die.is_active(), "the die is consumed once it has rolled")
 	_check(

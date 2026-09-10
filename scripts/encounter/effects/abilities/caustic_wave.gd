@@ -3,7 +3,7 @@
 ## Toxic.
 extends AbilityScript
 
-const WEAKNESS_CHANCE := 0.5  ## X % (à équilibrer)
+const WEAKNESS_CHANCE := 0.5  ## the design doc's "X %", still to be balanced
 
 
 func execute(ctx: EncounterContext) -> void:

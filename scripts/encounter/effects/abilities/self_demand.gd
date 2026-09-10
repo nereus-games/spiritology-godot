@@ -6,4 +6,4 @@ extends AbilityScript
 
 func execute(ctx: EncounterContext) -> void:
 	ctx.recover_den(ctx.user, ctx.dmg(&"normal"))
-	ctx.restrict_to(ctx.user, ["énergie = %s" % ctx.energy()])
+	ctx.restrict_to(ctx.user, [ctx.abilities_of_key(ctx.energy())])

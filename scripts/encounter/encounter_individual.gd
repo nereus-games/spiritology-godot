@@ -1,12 +1,12 @@
-## One fighter in an encounter, player or rival: its state and the rules that govern it.
+## One individual in an encounter, player or rival: its state and the rules that govern it.
 ##
 ## A RefCounted logic object — combat state is kept apart from anything visual, which is
 ## what lets the whole encounter run headless.
 ##
-## Which weakness is EXPOSED follows the fighter's position in the turn order, and an
+## Which weakness is EXPOSED follows the individual's position in the turn order, and an
 ## ability can override it for the current turn. Base DEN and ETH come from
 ## `data/balance.tres`; the doc gives no per-species stats yet.
-class_name EncounterFighter
+class_name EncounterIndividual
 extends RefCounted
 
 var species: SpeciesData
@@ -16,40 +16,40 @@ var max_eth: int
 var den: int
 var eth: int
 
-## Abilities this fighter can draw on. Players add what they have unlocked; rivals mostly
+## Abilities this individual can draw on. Players add what they have unlocked; rivals mostly
 ## have their native ones.
 var ability_ids: Array[StringName] = []
 
 ## Multiplier on the NEXT damage taken — mitigation, amplification, or 0 for immunity.
 ## Spent on the next hit.
 var next_damage_factor := 1.0
-## When set, the next damage taken goes to this fighter instead (Victimism).
-var redirect_to: EncounterFighter = null
+## When set, the next damage taken goes to this individual instead (Victimism).
+var redirect_to: EncounterIndividual = null
 
 # --- Per-turn state, wiped at the start of each round by clear_turn_state ---
-var immune_energies: Array = []  ## énergies auxquelles immunisé ce tour
+var immune_energies: Array = []  ## The energies it is immune to this turn
 ## Immune to EVERYTHING except this energy. NONE means the rule is off.
 var immune_all_except := GameEnums.Energy.NONE
-var fully_immune := false  ## immunisé à TOUS les dégâts ce tour
-var den_locked := false  ## ne peut perdre de DEN
-var eth_locked := false  ## ne peut perdre d'ETH
+var fully_immune := false  ## Immune to ALL damage this turn
+var den_locked := false  ## Cannot lose DEN
+var eth_locked := false  ## Cannot lose ETH
 ## Per-energy damage multipliers for this turn (Warning, Glaciation).
 var energy_damage_factor: Dictionary = {}
 ## Sends the attacker as much damage as was taken (Reflux).
 var reflect_to_attacker := false
-var weakness_locked := false  ## faiblesse non modifiable (Isotropy)
-var weakness_hidden := false  ## faiblesse cachée aux rivaux (UI)
-## Whoever last cost this fighter DEN or ETH (Cold Wave, Growth Mindset).
-var last_damager: EncounterFighter = null
-## Bonus on damage this fighter DEALS this turn (Meditate). Added alongside the
+var weakness_locked := false  ## Weakness cannot be changed (Isotropy)
+var weakness_hidden := false  ## Weakness concealed from the rivals (UI only)
+## Whoever last cost this individual DEN or ETH (Cold Wave, Growth Mindset).
+var last_damager: EncounterIndividual = null
+## Bonus on damage this individual DEALS this turn (Meditate). Added alongside the
 ## per-condition modifiers in [method EncounterContext._apply_modifiers].
 var outgoing_damage_bonus := 0.0
 ## Scheduled for NEXT turn; promoted by [method clear_turn_state].
 var _pending_outgoing_bonus := 0.0
 
-var _used_single: Dictionary = {}  ## id -> true (usage unique consommé)
+var _used_single: Dictionary = {}  ## ability id -> true, once its single use is spent
 var _weakness_override := false
-var _weakness_energy := GameEnums.Energy.NONE  ## faiblesse forcée pour le tour courant
+var _weakness_energy := GameEnums.Energy.NONE  ## The weakness forced for this turn
 
 
 func _init(p_species: SpeciesData, p_is_player: bool) -> void:
@@ -125,7 +125,7 @@ func is_immune_to(energy: GameEnums.Energy) -> bool:
 ## Schedules a damage bonus for the NEXT turn (Meditate: "damage +Y % until next turn").
 ##
 ## Two-step on purpose. [method clear_turn_state] wipes per-turn state at the start of each
-## round, so a bonus applied directly would be erased before the meditating fighter got to
+## round, so a bonus applied directly would be erased before the meditating individual got to
 ## act — Meditate would never do anything at all.
 func grant_next_turn_damage_bonus(bonus: float) -> void:
 	_pending_outgoing_bonus = bonus
@@ -178,7 +178,7 @@ func recover_eth(amount: int) -> void:
 
 ## Seeds current DEN/ETH from persistent state.
 ##
-## The integration point with [GameSession]: called for PLAYER fighters so that damage
+## The integration point with [GameSession]: called for PLAYER individuals so that damage
 ## taken in earlier encounters is not forgotten between them.
 func load_persistent_state(p_den: int, p_eth: int) -> void:
 	den = clampi(p_den, 0, max_den)
@@ -210,11 +210,11 @@ func clear_used(ability: AbilityData) -> void:
 	_used_single.erase(ability.id)
 
 
-## Breaks the references to OTHER fighters ([member last_damager], [member redirect_to]).
+## Breaks the references to OTHER individuals ([member last_damager], [member redirect_to]).
 ## Call it once the encounter is over.
 ##
-## Necessary, not merely tidy: two fighters that have hit each other point at each other,
-## which is a RefCounted CYCLE, and Godot does not collect cycles. The fighters of a
+## Necessary, not merely tidy: two individuals that have hit each other point at each other,
+## which is a RefCounted CYCLE, and Godot does not collect cycles. The individuals of a
 ## finished encounter would stay in memory — along with their [SpeciesData] — until the
 ## game closed. Both fields are transient combat state that is never displayed, so
 ## clearing them afterwards costs nothing.

@@ -16,7 +16,7 @@ func execute(ctx: EncounterContext) -> void:
 	if t:
 		var hidden := (
 			ctx
-			. all_fighters
+			. all_individuals
 			. filter(func(f): return not f.is_dissolved() and f.weakness_hidden)
 			. size()
 		)

@@ -6,9 +6,15 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-# Traductions clés (mémoire projet) : spirimonster→spirimonstre, spiricosm→spiricosme,
-# Gloom→Terne, Fiery→Ardent, Wonderful→Merveilleux.
-# Les noms d'espèces (kalilk, érzélak…) sont des noms communs et NE se traduisent PAS.
+# Comments are ENGLISH here as everywhere else in the repository; only the msgstr are
+# French. What is in French below is the translation, never the note about it.
+#
+# Settled renderings: spirimonster -> spirimonstre, spiricosm -> spiricosme, Gloom -> Terne,
+# Fiery -> Ardent, Wonderful -> Merveilleux. A spirimonster SPECIES is a "variété" in
+# French, never an "espèce" — a point of lore, not of vocabulary.
+# "round" and "turn" are BOTH "tour": French draws no distinction there, and "ronde" is
+# wrong for either.
+# Species names (kalilk, érzélak…) are common nouns and are NOT translated.
 
 msgid "UI_TITLE_NEW_GAME"
 msgstr "Nouvelle partie"
@@ -19,8 +25,8 @@ msgstr "Continuer"
 msgid "UI_TITLE_QUIT"
 msgstr "Quitter"
 
-# Menu d'action en rencontre. %s = nom du spirimonstre / nom de la capacité.
-# CHOOSE_ACTION et CHOOSE_ABILITY prennent aussi l'ETH courant et max (%d/%d).
+# Encounter action menu. %s = spirimonster name / ability name.
+# CHOOSE_ACTION and CHOOSE_ABILITY also take current and max ETH (%d/%d).
 msgid "UI_ENCOUNTER_CHOOSE_ACTION"
 msgstr "Que fait %s ? (ETH %d/%d)"
 
@@ -36,16 +42,16 @@ msgstr "Cible de %s ?"
 msgid "UI_ENCOUNTER_BACK"
 msgstr "Retour"
 
-# Actions de rencontre (doc : Talk, Examine, Use Ability, Use / Give Object, Meditate).
+# Encounter actions (doc: Talk, Examine, Use Ability, Use / Give Object, Meditate).
 msgid "UI_ENCOUNTER_ACTION_TALK"
 msgstr "Parler"
 
 msgid "UI_ENCOUNTER_ACTION_EXAMINE"
 msgstr "Examiner"
 
-# Libellés courts : ils tiennent dans la barre d'actions horizontale du mockup
-# (MEDITATE · CHALLENGE · TALK · EXAMINE · OBJECTS). Les intitulés longs vivent dans
-# les invites CHOOSE_* ci-dessus.
+# Short labels: they fit the horizontal action bar from the mockup
+# (MEDITATE · CHALLENGE · TALK · EXAMINE · OBJECTS). The long wording lives in the
+# CHOOSE_* prompts above.
 msgid "UI_ENCOUNTER_ACTION_ABILITY"
 msgstr "Défier"
 
@@ -55,37 +61,38 @@ msgstr "Objets"
 msgid "UI_ENCOUNTER_ACTION_MEDITATE"
 msgstr "Méditer"
 
-# Action « … » : passer son tour quand plus rien n'est disponible. Pas de texte à traduire.
+# "…" action: pass the turn when nothing else is available. Nothing to translate.
 msgid "UI_ENCOUNTER_ACTION_PASS"
 msgstr "…"
 
-# Fuite : action ajoutée au menu par un talent / exécutée par une capacité (jamais de base).
+# Flee: action added to the menu by a talent / executed by an ability (never a base action).
 msgid "UI_ENCOUNTER_ACTION_FLEE"
 msgstr "Fuir"
 
-# Vol : action ajoutée au menu par le talent Steal (granop), en remplacement de Talk.
+# Steal: action added to the menu by the Steal talent (granop), replacing Talk.
 msgid "UI_ENCOUNTER_ACTION_STEAL"
 msgstr "Voler"
 
-# Étiquettes d'énergie affichées sur les capacités dont l'énergie n'a pas d'icône.
+# Energy tags shown on abilities whose energy has no icon (random / variable each turn).
 msgid "UI_ENERGY_RANDOM"
 msgstr "(aléatoire)"
 
 msgid "UI_ENERGY_VARIABLE"
 msgstr "(variable)"
 
-# Coin haut-gauche de l'écran de rencontre.
+# Top-left corner of the encounter screen.
 msgid "UI_ENCOUNTER_LOG"
 msgstr "JOURNAL"
 
 msgid "UI_ENCOUNTER_MENU"
 msgstr "MENU"
 
-# Numéro de ronde, épinglé en tête du journal (hors défilement). %d = numéro.
+# Round number, pinned at the top of the log (stays put while scrolling). %d = number.
+# FR says "tour" for a round as for a turn; "ronde" is not the word.
 msgid "UI_ENCOUNTER_TURN"
 msgstr "Tour %d"
 
-# Issues de rencontre, telles qu'émises par EncounterManager.ended.
+# Encounter outcomes, as emitted by EncounterManager.ended.
 msgid "UI_ENCOUNTER_RESULT_VICTORY"
 msgstr "Rencontre remportée"
 
@@ -98,8 +105,9 @@ msgstr "La rencontre s'essouffle"
 msgid "UI_ENCOUNTER_CONTINUE"
 msgstr "Appuyez pour continuer"
 
-# Variante « Forlorn » d'une espèce. « Esseulé » s'accorde au besoin :
-# TERM_FORLORN = masc. sing. ; déclinaisons fém./plur. ci-dessous.
+# The "Forlorn" variant of a species — a "variété" in French, see the header. "Esseulé"
+# agrees as needed: TERM_FORLORN is masculine singular, the feminine and plural forms
+# follow below.
 msgid "TERM_FORLORN"
 msgstr "Esseulé"
 
@@ -109,7 +117,7 @@ msgstr "Esseulée"
 msgid "TERM_FORLORN_PL"
 msgstr "Esseulés"
 
-# Dieverting (mécanisme de donjon) : annonce du jet. %d = la face sortie, %s = son effet.
+# Dieverting (a dungeon mechanism): the roll announced. %d = the face rolled, %s = its effect.
 msgid "UI_DIEVERTING_ROLL"
 msgstr "Le cubimprévu fait %d — %s"
 
@@ -134,17 +142,430 @@ msgstr "des objets partent en poussière"
 msgid "UI_DIEVERTING_ADD_OBJECTS"
 msgstr "des objets s'ajoutent à l'inventaire"
 
-# Coffre (mécanisme de donjon). %s = la liste des objets trouvés.
+# Chest (a dungeon mechanism). %s = the list of objects found.
 msgid "UI_CHEST_LOOT"
 msgstr "Dans le coffre : %s"
 
-# Choix offert par le talent Reveal Traps quand un coffre piégé tente de téléporter.
+# The choice the Reveal Traps talent offers when a trapped chest tries to teleport.
 msgid "UI_ACTION_CHEST_TELEPORT"
 msgstr "Se laisser téléporter"
 
 msgid "UI_ACTION_CHEST_DECLINE"
 msgstr "Rester sur place"
 
+# --- Exploration: the effect log and the status banner --------------------------------
+# What an exploration ability or an object did, recorded by ExplorationContext, and the
+# lasting afflictions the HUD shows top-left. The exploration unit is the "tile", which
+# French calls a "case".
+msgid "LOG_EXPL_INVISIBLE"
+msgstr "invisible pendant %d cases"
+
+msgid "LOG_EXPL_UNPURSUED"
+msgstr "non-poursuivi pendant %d cases"
+
+msgid "LOG_EXPL_POISON_CURED"
+msgstr "poison soigné"
+
+msgid "LOG_EXPL_DUO_HEALED"
+msgstr "duo soigné de %d DEN"
+
+msgid "LOG_EXPL_CRACKED_WALL_CROSSED"
+msgstr "mur fissuré traversé"
+
+msgid "LOG_EXPL_NO_CRACKED_WALL"
+msgstr "aucun mur fissuré en face"
+
+msgid "LOG_EXPL_SCOUT"
+msgstr "guet — révélation de groupes de rivaux TODO"
+
+# %d = turns left, %d = the DEN lost each turn.
+msgid "UI_STATUS_POISON"
+msgstr "☠ Poison : %d tour(s) (-%d DEN)"
+
+# %d = the moves still affected.
+msgid "UI_STATUS_DISARRAY"
+msgstr "✦ Désorienté : %d mouvement(s)"
+
+# --- The dev scenario picker ----------------------------------------------------------
+# A DEV screen, not part of the game: it lists the exploration test scenarios and lets one
+# pick the duo's species and the rivals' DEN before entering. Translated all the same, so
+# that the "no displayed text in the source" rule has no exception to argue about.
+msgid "UI_DEV_SCENARIOS_TITLE"
+msgstr "Scénarios de test — exploration"
+
+msgid "UI_DEV_MAIN_CHARACTER"
+msgstr "Personnage principal"
+
+msgid "UI_DEV_TEAMMATE"
+msgstr "Coéquipier"
+
+# %d = the DEN, %s = UI_DEV_RIVAL_DEN_EARLY/_MID/_LATE, or empty between those figures.
+msgid "UI_DEV_RIVAL_DEN"
+msgstr "DEN des rivaux : %d%s"
+
+msgid "UI_DEV_RIVAL_DEN_EARLY"
+msgstr "  — E (début)"
+
+msgid "UI_DEV_RIVAL_DEN_MID"
+msgstr "  — M (milieu)"
+
+msgid "UI_DEV_RIVAL_DEN_LATE"
+msgstr "  — L (fin)"
+
+msgid "UI_DEV_RIVAL_DEN_TOOLTIP"
+msgstr "Ordre de grandeur de la doc de design"
+
+# --- The exploration test scenarios ---------------------------------------------------
+# One title and one instruction sheet per `data/scenarios/*.tres`. The .tres carries only
+# the id and the rank in the list; this is where the text lives.
+msgid "SCENARIO_MOVEMENT_TITLE"
+msgstr "Déplacement & regard"
+
+msgid "SCENARIO_MOVEMENT_DESC"
+msgstr "Salle vide avec piliers. Observe : fluidité du regard (souris), des rotations (Q/E) et du pas-à-pas (WASD). Échap libère le curseur."
+
+msgid "SCENARIO_TRAPS_TITLE"
+msgstr "Pièges (poison · téléport · disarray)"
+
+msgid "SCENARIO_TRAPS_DESC"
+msgstr "Marche sur les plaques. Violet = poison (le DEN baisse chaque tour). Bleu = téléport (tu changes de case). Orange = disarray (tes pas suivants partent parfois de travers)."
+
+msgid "SCENARIO_GATES_TITLE"
+msgstr "Portes (auto · verrouillée · méditation)"
+
+msgid "SCENARIO_GATES_DESC"
+msgstr "Les portes sont ENTRE deux cases (fines) : on peut se tenir de chaque côté. Grise = s'ouvre/ferme seule au fil des tours. Dorée = fais face + action « ouvrir » (paie 2 pelles). Verte = fais face + action « méditer » ×3, CONSÉCUTIVES (bouge ou détourne-toi et le compteur retombe à 0). Derrière la verte, un tas vert : ses actions n'apparaissent qu'une fois la porte ouverte — on n'agit pas sur ce qu'on ne voit pas."
+
+msgid "SCENARIO_GROUNDS_TITLE"
+msgstr "Sols spéciaux (Dig · Recycle · Examine)"
+
+msgid "SCENARIO_GROUNDS_DESC"
+msgstr "Sur la plaque terreuse : action « dig » (consomme 1 pelle → objet/info). Face au tas vert (obstacle) : actions « examine » et « recycle »."
+
+msgid "SCENARIO_CHESTS_TITLE"
+msgstr "Coffres · Cristal · Dieverting"
+
+msgid "SCENARIO_CHESTS_DESC"
+msgstr "Coffre doré = butin (ou téléport surprise : rien ne distingue un coffre piégé). Avec razél dans le duo (talent Reveal Traps), un coffre piégé propose « se laisser téléporter » ou « rester sur place » — du butin dans les deux cas, davantage en acceptant ; sans razél, il téléporte sec et sans rien donner. Cristal cyan (obstacle) = action « refresh » en face. Dés orange = effet aléatoire au contact : sur le premier tu as une pelle, donc le menu d'actions te propose « détruire » ou « subir » ; sur le second (pelle dépensée) le dé roule tout seul. Six issues possibles — renvoi à l'entrée ou à la sortie du fond, perte d'objets (déposés dans un coffre là où était le dé), perte d'ETH ou de DEN, apparition de rivaux, objets détruits ou gagnés."
+
+msgid "SCENARIO_WALLS_TITLE"
+msgstr "Mur fissuré · Décor examinable"
+
+msgid "SCENARIO_WALLS_DESC"
+msgstr "Face au mur sombre : action « cranny crossing » pour le traverser. Face au décor magenta : action « examine » (gain d'encyclopédie)."
+
+msgid "SCENARIO_BRIDGE_TITLE"
+msgstr "Pont étroit (équilibre)"
+
+msgid "SCENARIO_BRIDGE_DESC"
+msgstr "Entre sur la planche : une barre d'équilibre apparaît en haut. Corrige EN CONTINU avec A/D pour rester centré (sans rien faire, ou en corrigeant trop peu, une bourrasque te fait tomber). Chaque case franchie coûte un tour. Si tu tombes, tu atterris au fond du ravin (2 étages, dégâts de chute) et tu remontes au départ par les escaliers de droite. L'arrivée est une case unique murée, piégée au disarray : le retour se fait donc avec une commande latérale plus molle, et le compteur de disarray descend d'un cran par case de pont."
+
+msgid "SCENARIO_BRIDGE_RIVAL_TITLE"
+msgstr "Pont étroit + rival"
+
+msgid "SCENARIO_BRIDGE_RIVAL_DESC"
+msgstr "Même ravin, avec un rival de l'AUTRE côté : il doit prendre le pont pour t'atteindre, donc vous vous croisez forcément sur une planche. Il a son propre test d'équilibre (1 à 2 % de chute par case, tiré à sa création) et peut donc tomber tout seul en venant. Si vous vous croisez, vous tombez tous les deux sur la même case et la rencontre s'engage en bas. Et s'il t'a vu chuter, il peut sauter à ta suite."
+
+msgid "SCENARIO_STAIRS_TITLE"
+msgstr "Escaliers, ascenseurs & chutes (5 étages)"
+
+msgid "SCENARIO_STAIRS_DESC"
+msgstr "Pyramide de cinq gradins. Un escalier bleu par palier (0→1→2→3→4), en quinconce vers le fond : c'est le chemin toujours praticable. Les plateformes orange sont des RACCOURCIS doublant ces escaliers — un ascenseur VERTICAL (1↔2) et un à trajet COMPLEXE (3↔4) qui sort au-dessus du vide et enchaîne des segments sur les trois axes. Un ascenseur reste où on l'a laissé : s'il est resté en haut, reprends l'escalier. Pour les chutes : à l'ouest chaque gradin surplombe le suivant (1 unité = aucun dégât) ; à l'est (dernière colonne) rien n'arrête avant le bas (1/2/3/4 unités = 0/10/15/20 DEN). En bas, tu peux marcher SOUS les gradins — et un PILIER y soutient un coin du gradin 1 : sa face haute est directement le sol du dessus, sans dalle ajoutée. Au sommet, les deux premières cases du bord est sont protégées par une RAMBARDE (basse : on voit le vide par-dessus, mais on ne le franchit pas) ; deux pas plus loin le même bord est ouvert, et fait tomber de 4 étages."
+
+msgid "SCENARIO_ABILITIES_TITLE"
+msgstr "Capacités & objets d'exploration"
+
+msgid "SCENARIO_ABILITIES_DESC"
+msgstr "Dans le menu d'actions (Tab/Espace) : utilise « fog mantel » (le rival cesse de te suivre) ou « tea drop » (soigne le poison du piège)."
+
+# --- The encounter log ---------------------------------------------------------------
+# One line per thing an action or an ability effect does, as the LOG panel shows it. The
+# manager prefixes each with the individual's name, so these lines start mid-sentence and
+# never repeat the subject.
+#
+# "[to come]" marks a mechanic the engine cannot express yet: the line says what WOULD have
+# happened, so the ability is visible while the system it needs is missing. See
+# docs/roadmap.md.
+#
+# %s is a spirimonster's name unless the comment says otherwise, and ORDER IS LOAD-BEARING:
+# GDScript's % takes its arguments positionally.
+
+# The line that opens the log. TERM_ENCOUNTER is bold on its own, so the punctuation that
+# follows it lives here — French puts a space before a colon, English does not.
+# %s = the player characters, %s = the rivals, both comma-separated.
+msgid "TERM_ENCOUNTER"
+msgstr "Rencontre"
+
+msgid "LOG_ENCOUNTER_OPENING"
+msgstr " : %s contre %s"
+
+# How a log line is ASSEMBLED, which is punctuation and therefore translatable: French puts
+# a space before a colon and English does not. %s = the individual's name, %s = the ability
+# id when there is one, %s = the line itself.
+msgid "LOG_LINE"
+msgstr "%s · %s"
+
+msgid "LOG_LINE_ABILITY"
+msgstr "%s · %s : %s"
+
+# A talent's line rather than a turn's: the mark is what tells the two apart. %s = the line.
+msgid "LOG_LINE_TALENT"
+msgstr "⁘ %s"
+
+# The encyclopaedia gain appended under a turn. %d = the IFP earned, %s = the species.
+msgid "LOG_LINE_IFP"
+msgstr "+%d IFP — %s"
+
+# Energy names spelled out. The turn order shows icons; the log has only words. These
+# flow inside a sentence, hence lower case; the label form lives in LOG_RESTRICT_*.
+msgid "TERM_ENERGY_HEAT"
+msgstr "chaleur"
+
+msgid "TERM_ENERGY_FLUID"
+msgstr "fluide"
+
+msgid "TERM_ENERGY_CRYSTAL"
+msgstr "cristal"
+
+msgid "TERM_ENERGY_ARCANE"
+msgstr "arcane"
+
+msgid "TERM_ENERGY_TOXIC"
+msgstr "toxique"
+
+msgid "TERM_ENERGY_RANDOM"
+msgstr "aléatoire"
+
+msgid "TERM_ENERGY_VARIABLE"
+msgstr "variable"
+
+msgid "TERM_ENERGY_NONE"
+msgstr "aucune"
+
+# Damage, and the two resources.
+msgid "LOG_IMMUNE"
+msgstr "%s est immunisé."
+
+# %d = damage dealt, %s = who takes it.
+msgid "LOG_DAMAGE"
+msgstr "%d dégâts à %s."
+
+msgid "LOG_ETH_DRAINED"
+msgstr "%s perd %d ETH."
+
+msgid "LOG_DEN_RECOVERED"
+msgstr "%s récupère %d DEN."
+
+msgid "LOG_ETH_RECOVERED"
+msgstr "%s récupère %d ETH."
+
+msgid "LOG_NEXT_DAMAGE_FACTOR"
+msgstr "prochains dégâts sur %s ×%.2f."
+
+msgid "LOG_DAMAGE_REDIRECTED"
+msgstr "les prochains dégâts sur %s sont redirigés vers %s."
+
+# %s = an energy (TERM_ENERGY_*), %s = who takes it, %.2f = the multiplier.
+msgid "LOG_ENERGY_DAMAGE_FACTOR"
+msgstr "dégâts %s reçus par %s ×%.2f."
+
+msgid "LOG_REFLECT"
+msgstr "%s renverra les dégâts subis."
+
+# Weaknesses.
+msgid "LOG_WEAKNESS_CHANGED"
+msgstr "la faiblesse de %s change."
+
+# %s = whose weakness, %s = the energy it becomes.
+msgid "LOG_WEAKNESS_SET"
+msgstr "faiblesse de %s : %s."
+
+msgid "LOG_WEAKNESS_RESET"
+msgstr "faiblesse de %s rétablie."
+
+msgid "LOG_WEAKNESS_SWAPPED"
+msgstr "%s et %s échangent leur faiblesse."
+
+msgid "LOG_WEAKNESS_HIDDEN"
+msgstr "la faiblesse de %s est masquée."
+
+# Immunities. %s = who, %s = the energies, comma-separated.
+msgid "LOG_IMMUNITY"
+msgstr "%s devient immunisé (%s)."
+
+msgid "LOG_IMMUNITY_EXCEPT"
+msgstr "%s devient immunisé sauf à %s."
+
+msgid "LOG_IMMUNITY_FULL"
+msgstr "%s devient totalement immunisé."
+
+# Turn order. SHUFFLED has no placeholder: it is the whole order that moves.
+msgid "LOG_TURN_ORDER_SHUFFLED"
+msgstr "l'ordre du tour est bouleversé."
+
+msgid "LOG_MOVED_LAST"
+msgstr "%s passera en dernier au prochain tour."
+
+msgid "LOG_MOVED_FIRST"
+msgstr "%s passera en premier au prochain tour."
+
+# Stubs: no action system, no dialogue, no measured information gain.
+msgid "LOG_ACTIONS_LOST"
+msgstr "%s perd %d action(s) [à venir]."
+
+msgid "LOG_ACTIONS_GAINED"
+msgstr "%s gagne %d action(s) [à venir]."
+
+msgid "LOG_FORCED_TO_TALK"
+msgstr "%s est forcé de Parler [à venir]."
+
+# %d = the bonus, %s = who is examined.
+msgid "LOG_EXAMINE_BONUS"
+msgstr "bonus d'Examen +%d sur %s [à venir]."
+
+# %s = who, %s = the fragments below, comma-separated.
+msgid "LOG_RESTRICTED"
+msgstr "%s ne peut plus faire que : %s [à venir]."
+
+msgid "LOG_FLEES"
+msgstr "%s prend la fuite [à venir]."
+
+# The fragments LOG_RESTRICTED lists. Each names what the target may still do, in the
+# vocabulary of the design doc. Action names come from the UI_ENCOUNTER_ACTION_* keys.
+msgid "LOG_RESTRICT_ABILITIES_HEAT"
+msgstr "capacités Chaleur"
+
+msgid "LOG_RESTRICT_ABILITIES_FLUID"
+msgstr "capacités Fluide"
+
+msgid "LOG_RESTRICT_ABILITIES_CRYSTAL"
+msgstr "capacités Cristal"
+
+msgid "LOG_RESTRICT_ABILITIES_ARCANE"
+msgstr "capacités Arcane"
+
+msgid "LOG_RESTRICT_ABILITIES_TOXIC"
+msgstr "capacités Toxique"
+
+msgid "LOG_RESTRICT_QUARTER_OF_ABILITIES"
+msgstr "un quart de ses capacités"
+
+msgid "LOG_RESTRICT_EXCEPT_TALK"
+msgstr "tout sauf Parler"
+
+msgid "LOG_RESTRICT_EXCEPT_EXAMINE"
+msgstr "tout sauf Examiner"
+
+msgid "LOG_RESTRICT_EXCEPT_OBJECT"
+msgstr "tout sauf les Objets"
+
+msgid "LOG_RESTRICT_EXCEPT_MEDITATE"
+msgstr "tout sauf Méditer"
+
+msgid "LOG_RESTRICT_EXCEPT_ABILITIES_HEAT"
+msgstr "tout sauf les capacités Chaleur"
+
+msgid "LOG_RESTRICT_EXCEPT_LAST_TWO_ABILITIES"
+msgstr "tout sauf ses 2 dernières capacités"
+
+# What the manager itself logs, action by action.
+msgid "LOG_NO_ACTION"
+msgstr "%s n'a aucune action possible."
+
+msgid "LOG_PASS"
+msgstr "passe son tour."
+
+# %s = the action's internal label. Reached only if an action kind is left unhandled.
+msgid "LOG_ACTION_UNRESOLVED"
+msgstr "action « %s » pas encore résolue."
+
+msgid "LOG_ABILITY_NOT_FOUND"
+msgstr "capacité introuvable."
+
+# %s = the object slug asked for.
+msgid "LOG_OBJECT_NOT_FOUND"
+msgstr "objet introuvable : %s."
+
+# Use / Give Object. Used on oneself or a teammate, GIVEN to a rival — two verbs, and
+# languages do not split them the same way, so each gets its own key.
+# %s = the object, %s = the target, %d = DEN before, %d = DEN after.
+msgid "LOG_OBJECT_HEAL_USED"
+msgstr "utilise %s sur %s : DEN %d -> %d."
+
+msgid "LOG_OBJECT_HEAL_GIVEN"
+msgstr "donne %s à %s : DEN %d -> %d."
+
+# %s = the object. Fleeing belongs to exploration, which does not handle it yet.
+msgid "LOG_OBJECT_FLEE_USED"
+msgstr "utilise %s : fuite (TODO exploration)."
+
+msgid "LOG_OBJECT_FLEE_GIVEN"
+msgstr "donne %s : fuite (TODO exploration)."
+
+# The objects whose effect belongs to exploration, or to nothing at all.
+msgid "LOG_OBJECT_USED"
+msgstr "utilise %s sur %s."
+
+msgid "LOG_OBJECT_GIVEN"
+msgstr "donne %s à %s."
+
+msgid "LOG_STEAL_NO_TARGET"
+msgstr "n'a personne à voler."
+
+msgid "LOG_STEAL"
+msgstr "tente de voler %s [objet volé / Coal Vetch à venir]."
+
+msgid "LOG_FLEE_ATTEMPT"
+msgstr "tente de quitter la rencontre [téléportation exploration à venir]."
+
+# Meditate. %d = ETH before, %d = ETH after, %d = the damage bonus in per cent.
+msgid "LOG_MEDITATE"
+msgstr "médite : ETH %d -> %d, dégâts +%d %% au prochain tour."
+
+msgid "LOG_TALK_NO_TARGET"
+msgstr "parle dans le vide."
+
+# %s = who is talked to, %s = LOG_DIALOGUE_EFFECTIVE or LOG_DIALOGUE_INEFFECTIVE.
+msgid "LOG_TALK"
+msgstr "parle à %s : dialogue %s."
+
+msgid "LOG_DIALOGUE_EFFECTIVE"
+msgstr "effectif"
+
+msgid "LOG_DIALOGUE_INEFFECTIVE"
+msgstr "sans effet"
+
+msgid "LOG_EXAMINE_NO_TARGET"
+msgstr "n'a personne à examiner."
+
+# %s = who is examined, %s = LOG_EXAMINE_INFO_FACTOR or nothing at all.
+msgid "LOG_EXAMINE"
+msgstr "examine %s%s."
+
+# Appended to LOG_EXAMINE when a talent changes the yield. %.2f = the factor.
+msgid "LOG_EXAMINE_INFO_FACTOR"
+msgstr " (info ×%.2f)"
+
+# Talent lines. The log marks them with its own prefix; %s is always the talent's name.
+msgid "LOG_TALENT_REUSE"
+msgstr "%s : %s redevient disponible (Reuse)."
+
+msgid "LOG_TALENT_RESTORE"
+msgstr "%s : le duo récupère DEN/ETH en fin de rencontre."
+
+# %s = the talent, %s = the rival, %s = the bearer whose weakness is copied over.
+msgid "LOG_TALENT_SLICK_MERCHANT"
+msgstr "%s : la faiblesse de %s prend celle de %s."
+
+msgid "LOG_TALENT_EXAMINE_WEAKNESS"
+msgstr "%s : info glanée sur %s (faiblesse touchée) [à venir]."
+
+# %s = the talent, %s = the teammate healed, %d = the DEN given back.
+msgid "LOG_TALENT_SERENE_WAVES"
+msgstr "%s revitalise %s (+%d DEN, faiblesse retirée)."
+
+msgid "LOG_TALENT_TRICK_TO_REVEAL"
+msgstr "%s : une révélation de carte pourrait suivre ce dialogue [à venir]."
 msgid "ABILITY_ABSORPTION_GUARD_NAME"
 msgstr "Garde d’absorption"
 
@@ -500,42 +921,42 @@ msgstr "Chanson anxiogène"
 
 #, fuzzy
 msgid "OBJECT_NOTICE_DESC"
-msgstr "no effect"
+msgstr "aucun effet"
 
 msgid "OBJECT_NOTICE_NAME"
 msgstr "annonce"
 
 #, fuzzy
 msgid "OBJECT_RUNE_STONE_DESC"
-msgstr "gives Y DEN to a target"
+msgstr "rend Y DEN à une cible"
 
 msgid "OBJECT_RUNE_STONE_NAME"
 msgstr "pierre runique"
 
 #, fuzzy
 msgid "OBJECT_SMOKE_BOMB_DESC"
-msgstr "allows to Run away from an encounter"
+msgstr "permet de fuir une rencontre"
 
 msgid "OBJECT_SMOKE_BOMB_NAME"
 msgstr "bombe fumée"
 
 #, fuzzy
 msgid "OBJECT_SPADE_DESC"
-msgstr "usable on crumbly grounds"
+msgstr "utilisable sur les sols friables"
 
 msgid "OBJECT_SPADE_NAME"
 msgstr "pelle"
 
 #, fuzzy
 msgid "OBJECT_TEA_DROP_DESC"
-msgstr "cures from the poison mechanism"
+msgstr "soigne le poison du mécanisme"
 
 msgid "OBJECT_TEA_DROP_NAME"
 msgstr "goutte de thé"
 
 #, fuzzy
 msgid "OBJECT_TORMENT_VEIL_DESC"
-msgstr "rivals don’t pursue nor initiate encounters"
+msgstr "les rivaux ne poursuivent plus et n’engagent plus de rencontre"
 
 msgid "OBJECT_TORMENT_VEIL_NAME"
 msgstr "voile de tourmente"

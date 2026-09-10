@@ -19,7 +19,7 @@ const NarrowBridgeBalance := preload("res://scripts/exploration/narrow_bridge_ba
 
 ## The simulated time step (60 Hz) and the reference bridge length.
 const DT := 1.0 / 60.0
-const CELLS := 5
+const TILES := 5
 const RUNS := 1500
 
 var _fails: Array[String] = []
@@ -47,7 +47,7 @@ func _ready() -> void:
 
 
 func _run_all() -> void:
-	print("A %d-cell bridge, %d crossings per measurement.\n" % [CELLS, RUNS])
+	print("A %d-tile bridge, %d crossings per measurement.\n" % [TILES, RUNS])
 
 	print("[fall rate by player profile — PSY 0, no disarray]")
 	var base := {}
@@ -113,8 +113,8 @@ func _fall_rate(profile: String, psy: int, disarrayed: bool) -> float:
 	return 100.0 * float(fell) / float(RUNS)
 
 
-## One complete crossing: [constant CELLS] cells chained on the SAME model, so imbalance and
-## lateral velocity carry across the cell boundaries. Returns `true` when the simulated player
+## One complete crossing: [constant TILES] tiles chained on the SAME model, so imbalance and
+## lateral velocity carry across the tile boundaries. Returns `true` when the simulated player
 ## reaches the other side.
 func _cross(profile: String, psy: int, disarrayed: bool, seed_value: int) -> bool:
 	var p: Dictionary = PROFILES[profile]
@@ -122,8 +122,8 @@ func _cross(profile: String, psy: int, disarrayed: bool, seed_value: int) -> boo
 	bal.configure(psy, 1, disarrayed)
 	var input := 0.0
 	var since := 0.0
-	for _cell in range(CELLS):
-		bal.restart_cell()
+	for _tile in range(TILES):
+		bal.restart_tile()
 		while not bal.is_complete():
 			if not p["passive"]:
 				since += DT

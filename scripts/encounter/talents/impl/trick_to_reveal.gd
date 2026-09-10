@@ -19,9 +19,7 @@ func on_encounter_end(manager, result: StringName) -> void:
 		return
 	# TODO: if the last dialogue was effective, reveal an unrevealed chest or trap on the map —
 	# once the dungeon framework exists.
-	manager.note_talent(
-		"%s : une révélation de carte pourrait suivre ce dialogue [à venir]." % _label()
-	)
+	manager.note_talent(_tr("LOG_TALENT_TRICK_TO_REVEAL") % _label())
 
 
 func _label() -> String:

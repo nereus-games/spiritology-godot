@@ -7,7 +7,7 @@
 ## Two other pages of the design doc mention chests, and both are wired up here:
 ##  - the "Reveal Traps" talent (razél): "When a chest attempts to teleport players, they can
 ##    decide to teleport or not. The chest gives 1 or more object no matter what, but more if
-##    players choose to teleport." So a trapped chest offers a CHOICE, through the cell's action
+##    players choose to teleport." So a trapped chest offers a CHOICE, through the tile's action
 ##    menu like the dieverting, and hands out loot either way;
 ##  - the "Trick to Reveal" talent (érzélak): reveals on the map "a chest or trap that hadn't
 ##    been revealed yet", hence [member revealed] and [method reveal], mirroring [Trap].
@@ -48,7 +48,7 @@ const REVEAL_TRAPS := &"reveal_traps"
 
 var _opened := false
 ## A trapped chest met by a duo carrying "Reveal Traps": the choice — accept or decline the
-## teleport — is pending on the cell, like the dieverting's destroy-or-submit.
+## teleport — is pending on the tile, like the dieverting's destroy-or-submit.
 var _pending := false
 
 

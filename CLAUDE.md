@@ -38,16 +38,33 @@ editing species, abilities, balance or scenario text needs no programming — se
 [docs/data-model.md](docs/data-model.md).
 
 **No displayed text in the source.** Everything the player reads goes through a translation
-key, present in **both** `translations/en.po` and `translations/fr.po`. The one place that
-breaks this rule is the combat log, whose lines are hardcoded French; that is a known bug,
-not a precedent (docs/roadmap.md).
+key, present in **both** `translations/en.po` and `translations/fr.po`. There is no
+exception left, the dev scenario picker included. A line that reaches a player goes through
+`TranslationServer.translate` — `EncounterContext._tr`, `EncounterManager._tr`,
+`TalentScript._tr` and `ExplorationContext._note` all exist so that no effect ever writes a
+sentence out.
+
+**Everything written is in English** — comments, docstrings, commit messages, console
+output of the dev tools, the `.po` files' own comments, CI job names, `REUSE.toml`,
+`gdlintrc`. French appears in exactly one place: the `msgstr` values of
+`translations/fr.po`. The project is bilingual in what it *ships*, not in what it *says
+about itself*.
 
 **Species names are common nouns.** Lowercase, never translated, and they keep their
 accents in prose — *mastél*, *érzélak*. Their identifiers are ASCII: `mastel`.
 [method GameEnums.key_token] is the one place that bridges the two.
 
-**Say "encounter", not "battle".** Fighting is one way through an encounter among several,
-and the vocabulary is load-bearing.
+**The vocabulary is load-bearing.** It comes from the design doc, and the code follows it:
+
+- **"encounter", not "battle"** — fighting is one way through an encounter among several.
+- **"individual", not "fighter"** — hence `EncounterIndividual`. Say "player character",
+  "rival", "character" or "spirimonster" wherever the design doc would.
+- **"tile", not "cell"**, for a square of dungeon floor (FR *case*). A "cell" is a cell of
+  the turn-order strip in the encounter UI, and nothing else.
+- **"IFP"** wherever info points are counted as a unit; "info points" only where the term
+  itself is being introduced.
+- In French, **"round" and "turn" are both *tour***, never *ronde*; and a spirimonster
+  species is a ***variété***, never an *espèce*.
 
 **Licence follows the directory.** `assets/`, `data/`, `translations/` are content
 (LAL-1.3); everything else is code (GPL-3.0-or-later). If it is executed it is code; if it
@@ -87,8 +104,9 @@ hardcoding them.
 longer compiles. It has happened once. Write an explicit loop instead of
 `.filter(func(x): …).size()` spread over several lines.
 
-**`EncounterFighter` holds references to other fighters** (`last_damager`, `redirect_to`).
-Two that have hit each other form a RefCounted cycle, which Godot does not collect.
+**`EncounterIndividual` holds references to other individuals** (`last_damager`,
+`redirect_to`). Two that have hit each other form a RefCounted cycle, which Godot does not
+collect.
 `release_cross_references()` breaks them, and `_finish()` calls it — do not remove that.
 
 ## Adding things

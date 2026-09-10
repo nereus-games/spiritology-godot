@@ -67,7 +67,7 @@ func is_spent() -> bool:
 	return _examined
 
 
-## Examine, available from an adjacent cell, once per visit.
+## Examine, available from an adjacent tile, once per visit.
 func on_adjacent_actions(who: Node, _facing: Vector3i) -> Array:
 	if _examined:
 		return []
@@ -88,7 +88,7 @@ func examine(_who: Node) -> void:
 	if not pool.is_empty():
 		GameSession.award_ifp(pool[randi() % pool.size()], GameEnums.IfpAction.EXAMINE_DECOR)
 	# ## TODO: at a high PSY, a chance to spawn one or more rivals nearby, but not on the
-	## player's cell. The design doc leaves the "how much?" threshold unquantified; this needs a
+	## player's tile. The design doc leaves the "how much?" threshold unquantified; this needs a
 	## spawn system.
 
 

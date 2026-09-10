@@ -7,6 +7,6 @@ extends AbilityScript
 
 func execute(ctx: EncounterContext) -> void:
 	for o in ctx.others():
-		ctx.deal_damage(o, ctx.base_damage())  # TODO : seulement si o Médite ce tour
+		ctx.deal_damage(o, ctx.base_damage())  # TODO: only if o Meditates this turn
 		ctx.drain_eth(o, ctx.dmg(&"small"))
-		ctx.restrict_to(o, ["sauf Meditate"])
+		ctx.restrict_to(o, ["LOG_RESTRICT_EXCEPT_MEDITATE"])

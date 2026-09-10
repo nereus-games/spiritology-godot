@@ -10,4 +10,4 @@ func execute(ctx: EncounterContext) -> void:
 	var mates := ctx.allies()
 	if not mates.is_empty():
 		ctx.redirect_next_damage(ctx.user, ctx.random_of(mates))
-	# TODO : punir tout rival utilisant Talk ce tour (ctx.dmg("small")).
+	# TODO: punish every rival that uses Talk this turn (ctx.dmg("small")).

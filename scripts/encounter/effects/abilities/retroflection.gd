@@ -5,6 +5,6 @@ extends AbilityScript
 
 
 func execute(ctx: EncounterContext) -> void:
-	ctx.deal_damage(ctx.user, ctx.dmg(&"mini"))  # TODO : normal aux utilisations suivantes
+	ctx.deal_damage(ctx.user, ctx.dmg(&"mini"))  # TODO: normal on every later use
 	ctx.recover_eth(ctx.user, ctx.user.max_eth)
-	ctx.change_weakness(ctx.user)  # faiblesse au hasard (sélection auto parmi 3)
+	ctx.change_weakness(ctx.user)  # a random weakness, picked automatically among 3

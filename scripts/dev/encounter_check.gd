@@ -40,7 +40,7 @@ class ScriptedAgent:
 
 	var queued: Array = []
 
-	func decide(_fighter: EncounterFighter, _manager: EncounterManager) -> EncounterAction:
+	func decide(_individual: EncounterIndividual, _manager: EncounterManager) -> EncounterAction:
 		return queued.pop_front() if not queued.is_empty() else null
 
 
@@ -77,23 +77,23 @@ func _run_all() -> void:
 # --------------------------------------------------------------------------
 
 
-## Four fresh fighters: [p0, p1, r0, r1]. Rebuilt for EVERY ability, since one that dissolves a
+## Four fresh individuals: [p0, p1, r0, r1]. Rebuilt for EVERY ability, since one that dissolves a
 ## side would leave the next ones with no targets.
-func _fresh_fighters() -> Array:
+func _fresh_individuals() -> Array:
 	var out: Array = []
 	for id in PLAYER_SPECIES:
-		out.append(EncounterManager.make_fighter(id, true))
+		out.append(EncounterManager.make_individual(id, true))
 	for id in RIVAL_SPECIES:
-		out.append(EncounterManager.make_fighter(id, false))
+		out.append(EncounterManager.make_individual(id, false))
 	return out
 
 
 ## A manager ready to run. [EncounterManager] is a Node that is never added to the tree, so the
 ## caller MUST `free()` it, or Godot reports leaked instances at exit.
 func _make_manager(seed: int = SEED) -> EncounterManager:
-	var fighters := _fresh_fighters()
+	var individuals := _fresh_individuals()
 	var m := EncounterManager.new()
-	m.setup([fighters[0], fighters[1]], [fighters[2], fighters[3]], seed)
+	m.setup([individuals[0], individuals[1]], [individuals[2], individuals[3]], seed)
 	return m
 
 
@@ -142,31 +142,31 @@ func _check_abilities() -> void:
 ## Runs one ability on a fresh field. Returns "" when the state stays consistent, and a
 ## description of the problem otherwise.
 func _execute_ability(ability: AbilityData) -> String:
-	var fighters := _fresh_fighters()
+	var individuals := _fresh_individuals()
 	var timeline := EncounterTimeline.new()
-	timeline.setup(fighters)  # no rng: a stable order, so known positions and weaknesses
+	timeline.setup(individuals)  # no rng: a stable order, so known positions and weaknesses
 	var ctx := EncounterContext.new()
 	ctx.ability = ability
-	ctx.user = fighters[0]
-	ctx.targets = [fighters[2]]
-	ctx.all_fighters = fighters
+	ctx.user = individuals[0]
+	ctx.targets = [individuals[2]]
+	ctx.all_individuals = individuals
 	ctx.timeline = timeline
 	ctx.rng = _rng
 	# A concrete energy rather than NONE, which is what sends the Random and Variable abilities
 	# down the real path — modifiers, immunities — instead of the short circuit.
 	ctx.resolved_energy = GameEnums.Energy.HEAT
 	EffectCatalog.script_for(ability).execute(ctx)
-	var problem := _state_problem(fighters, timeline)
-	# These fighters never go through EncounterManager._finish(), so their reference cycles have
+	var problem := _state_problem(individuals, timeline)
+	# These individuals never go through EncounterManager._finish(), so their reference cycles have
 	# to be broken here, or the 108 test fields leak.
-	for f in fighters:
+	for f in individuals:
 		f.release_cross_references()
 	return problem
 
 
 ## Invariants NO ability may be allowed to break.
-func _state_problem(fighters: Array, timeline: EncounterTimeline) -> String:
-	for f in fighters:
+func _state_problem(individuals: Array, timeline: EncounterTimeline) -> String:
+	for f in individuals:
 		if f.den < 0 or f.den > f.max_den:
 			return "DEN %d outside [0, %d] on %s" % [f.den, f.max_den, f.species_id()]
 		if f.eth < 0 or f.eth > f.max_eth:
@@ -174,9 +174,11 @@ func _state_problem(fighters: Array, timeline: EncounterTimeline) -> String:
 	# Reorderings are queued and applied at the end of the turn, so applying them here is the only
 	# way to see the order an ability actually asked for.
 	timeline.apply_pending()
-	if timeline.order.size() != fighters.size():
-		return "turn order has %d entries instead of %d" % [timeline.order.size(), fighters.size()]
-	for f in fighters:
+	if timeline.order.size() != individuals.size():
+		return (
+			"turn order has %d entries instead of %d" % [timeline.order.size(), individuals.size()]
+		)
+	for f in individuals:
 		if not timeline.order.has(f):
 			return "%s missing from the turn order" % f.species_id()
 	return ""
@@ -196,8 +198,8 @@ func _check_actions() -> void:
 	var broken: Array[String] = []
 	for kind in EncounterAction.Kind.values():
 		var m := _make_manager()
-		var actor: EncounterFighter = m.players[0]
-		var target: EncounterFighter = m.rivals[0]
+		var actor: EncounterIndividual = m.players[0]
+		var target: EncounterIndividual = m.rivals[0]
 		# The manager ignores the autoloads: in game the UI resolves objects for it.
 		m.object_provider = func(id): return load("res://data/objects/%s.tres" % id)
 		var agent := ScriptedAgent.new()
@@ -229,7 +231,7 @@ func _check_actions() -> void:
 
 
 func _action_of_kind(
-	kind: int, actor: EncounterFighter, target: EncounterFighter, m: EncounterManager
+	kind: int, actor: EncounterIndividual, target: EncounterIndividual, m: EncounterManager
 ) -> EncounterAction:
 	match kind:
 		EncounterAction.Kind.ABILITY:
@@ -268,7 +270,7 @@ func _check_determinism() -> void:
 	_check(a["log"] == b["log"], "same seed, same log (%d lines)" % a["log"].size())
 	# A negative control: without it the assertions above would pass just as well on an encounter
 	# where the rng drove nothing at all. Initial turn orders are compared — 24 permutations for 4
-	# fighters — rather than two logs, which could coincide by chance on a short fight.
+	# individuals — rather than two logs, which could coincide by chance on a short fight.
 	var orders := {}
 	for i in 10:
 		var m := _make_manager(SEED + i)
@@ -283,7 +285,7 @@ func _check_determinism() -> void:
 func _run_once(seed: int) -> Dictionary:
 	var m := _make_manager(seed)
 	var res := await m.run()
-	var out := {"result": res, "log": m.battle_log, "rounds": m.round_number}
+	var out := {"result": res, "log": m.encounter_log, "rounds": m.round_number}
 	m.free()
 	return out
 
@@ -297,7 +299,7 @@ func _check_loop_invariants() -> void:
 	print("— loop —")
 	var m := _make_manager()
 	var order := m.timeline.order
-	_check(order.size() == 4, "turn order: %d fighters" % order.size())
+	_check(order.size() == 4, "turn order: %d individuals" % order.size())
 	_check(
 		m.timeline.position_of(order[0]) == GameEnums.TurnPosition.FIRST,
 		"head of the order is position FIRST"
@@ -312,7 +314,7 @@ func _check_loop_invariants() -> void:
 	)
 	# The active weakness comes from the POSITION, not from the individual: that is the rule that
 	# makes reordering abilities offensive.
-	var head: EncounterFighter = order[0]
+	var head: EncounterIndividual = order[0]
 	_check(
 		(
 			head.active_weakness(GameEnums.TurnPosition.FIRST) == head.species.weakness_first
@@ -332,8 +334,8 @@ func _check_loop_invariants() -> void:
 	)
 	_check(m2.result == res, "the result field reflects the outcome returned")
 	_check(
-		not m2.battle_log.is_empty(),
-		"the encounter produced a log (%d lines)" % m2.battle_log.size()
+		not m2.encounter_log.is_empty(),
+		"the encounter produced a log (%d lines)" % m2.encounter_log.size()
 	)
 	m2.free()
 
@@ -346,8 +348,8 @@ func _check_loop_invariants() -> void:
 func _check_talents() -> void:
 	print("— talents —")
 	var m := _make_manager()
-	var owner: EncounterFighter = m.players[0]
-	var other: EncounterFighter = m.rivals[0]
+	var owner: EncounterIndividual = m.players[0]
+	var other: EncounterIndividual = m.rivals[0]
 	var sample := m.resolve_ability(SAMPLE_ABILITY)
 	var resolved := 0
 	var problems: Array[String] = []

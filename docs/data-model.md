@@ -24,6 +24,7 @@ Run after **any** edit under `data/` or `translations/`:
 | `data/abilities/<slug>.tres` | `AbilityData` **and** `TalentData` | 111 + 10 |
 | `data/objects/<slug>.tres` | `ObjectData` | 6 |
 | `data/dungeons/<slug>.tres` | `DungeonConfig` | 0 (none authored yet) |
+| `data/scenarios/<slug>.tres` | `ScenarioData` | 10 (the dev test scenarios) |
 
 Abilities and talents deliberately share one directory: in Notion they are one database,
 distinguished by a `Type` column. `GameData` routes them into separate registries by
@@ -60,6 +61,7 @@ uppercases and folds accents to ASCII — `mastél` → `SPECIES_MASTEL_NAME`.
 | `TalentData` | `TALENT_<ID>_NAME`, `TALENT_<ID>_DESC` |
 | `ObjectData` | `OBJECT_<ID>_NAME`, `OBJECT_<ID>_DESC` |
 | `DungeonConfig` | `DUNGEON_<ID>_NAME` |
+| `ScenarioData` | `SCENARIO_<ID>_TITLE`, `SCENARIO_<ID>_DESC` |
 
 Every key must exist in **both** `translations/en.po` and `translations/fr.po`. Species
 names are common nouns and are not translated: both files carry the same accented value.
@@ -68,6 +70,12 @@ names are common nouns and are not translated: both files carry the same accente
 — today 6 abilities and 6 objects. The integrity check enforces `_NAME` and en/fr parity,
 and reports missing descriptions as a count rather than a failure, so that content still
 to be written never masks a real regression.
+
+`ScenarioData` is the one resource whose text is **entirely** in the `.po` files: a
+`data/scenarios/*.tres` carries an `id` and a rank in the list, nothing else. Both its keys
+are therefore mandatory, and the integrity check treats them like any other data key —
+`SCENARIO_` is in `DATA_PREFIXES`, so a key with no scenario behind it is an orphan and a
+scenario with no key is a failure.
 
 ---
 

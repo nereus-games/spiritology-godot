@@ -1,16 +1,16 @@
-## Tête de caméra du donjon : regard vertical (pitch) + micro-bruit d'inactivité + FOV.
+## The dungeon's camera head: vertical look (pitch), idle micro-noise, and FOV.
 ##
-## Le lacet (yaw) est porté par le [PlayerController] parent (modèle base rigide + regard libre
-## souris, piloté par [PlayerInputHandler]). Ce rig n'applique QUE le pitch, reçu via
-## [method set_pitch] ; le regard horizontal n'est plus géré ici (fini la visée absolue au
-## curseur et le recentrage du curseur, qui empêchait de cliquer l'UI).
+## Yaw belongs to the parent [PlayerController] — the rigid base plus mouse free look, driven by
+## [PlayerInputHandler]. This rig applies ONLY pitch, received through [method set_pitch].
+## Horizontal look is no longer handled here: absolute cursor aiming and cursor recentring are
+## gone, since they made the UI unclickable.
 ##
-## Gère aussi le FOV : le FOV vertical est rogné automatiquement sur les écrans larges pour que
-## le FOV HORIZONTAL ne dépasse jamais [member max_hfov_deg].
+## It also handles FOV: the vertical FOV is trimmed automatically on wide screens so the
+## HORIZONTAL FOV never exceeds [member max_hfov_deg].
 ##
-## Hiérarchie attendue : Player (yaw marche) > CameraRig (ce script) > Camera3D. Le rig est
-## posé à hauteur des yeux du duo ([constant DungeonManager.EYE_HEIGHT] = 0.6 m dans
-## `player.tscn`), donc SOUS le haut des murs (1 m) : on ne voit jamais par-dessus.
+## Expected hierarchy: Player (walking yaw) > CameraRig (this script) > Camera3D. The rig sits at
+## the duo's eye height ([constant DungeonManager.EYE_HEIGHT] = 0.6 m in `player.tscn`), and so
+## BELOW the top of the walls (1 m): you never see over them.
 class_name CameraRig
 extends Node3D
 
@@ -18,12 +18,12 @@ extends Node3D
 @export var pitch_max_deg := 60.0
 
 @export_group("Field of View")
-## FOV vertical visé (sur un écran étroit, c'est celui-ci qui s'applique tel quel).
+## The target vertical FOV. On a narrow screen it applies as-is.
 @export_range(30.0, 110.0, 1.0) var base_fov := 60.0
-## Plafond du FOV horizontal. Au-delà, le FOV vertical est rogné pour compenser.
+## Ceiling on the horizontal FOV. Past it, the vertical FOV is trimmed to compensate.
 @export_range(60.0, 140.0, 1.0) var max_hfov_deg := 90.0
-## Plancher du FOV vertical : sur un ultra-large, tenir le plafond horizontal coûterait tant
-## de vertical qu'on ne verrait plus ni le sol ni le haut des murs.
+## Floor on the vertical FOV: on an ultra-wide screen, holding the horizontal ceiling would cost
+## so much vertical that neither the ground nor the tops of the walls would be visible.
 @export_range(20.0, 90.0, 1.0) var min_fov := 45.0
 
 @export_group("Idle Noise")
@@ -53,14 +53,14 @@ func _ready() -> void:
 	_update_fov()
 
 
-## Regard vertical, en degrés (positif = vers le haut). Borné, appliqué immédiatement.
+## Vertical look, in degrees, positive upwards. Clamped, and applied at once.
 func set_pitch(deg: float) -> void:
 	_pitch_deg = clampf(deg, pitch_min_deg, pitch_max_deg)
 	rotation.x = deg_to_rad(_pitch_deg)
 
 
-## Roulis (inclinaison latérale) de la vue, en degrés — simule la perte d'équilibre sur un
-## pont étroit. 0 = horizon droit.
+## Roll, the sideways tilt of the view, in degrees — this is losing your footing on a narrow
+## bridge. 0 keeps the horizon level.
 func set_roll(deg: float) -> void:
 	rotation.z = deg_to_rad(deg)
 
@@ -69,7 +69,7 @@ func _process(delta: float) -> void:
 	_update_idle_noise(delta)
 
 
-## Rogne le FOV vertical pour que le FOV horizontal reste sous [member max_hfov_deg].
+## Trims the vertical FOV to keep the horizontal one under [member max_hfov_deg].
 func _update_fov() -> void:
 	if _camera == null:
 		return

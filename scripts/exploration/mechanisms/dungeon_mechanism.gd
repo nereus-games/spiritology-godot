@@ -1,16 +1,16 @@
-## Brique de base d'un mécanisme de donjon posé sur la grille.
+## Base of a dungeon mechanism sitting on the grid.
 ##
-## Un mécanisme s'attache à UNE case et s'enregistre auprès du [DungeonManager] (comme un
-## [RivalBehavior]), au lieu d'être sondé par des raycasts dispersés. Les sous-classes
-## (Trap, et plus tard Gateway, SpecialGround, Chest…) surchargent les hooks pertinents.
+## A mechanism attaches to ONE cell and registers with the [DungeonManager] the way a
+## [RivalBehavior] does, instead of being probed by scattered raycasts. Subclasses (Trap, and
+## later Gateway, SpecialGround, Chest) override the hooks that concern them.
 ##
-## Pas de `class_name` : le cache des classes globales n'est régénéré que par l'éditeur,
-## or le jeu se lance en CLI ; on référence donc ce script par `preload` / `extends` chemin
-## (voir la mémoire de projet sur le sujet). Le [DungeonManager] manipule les mécanismes en
-## duck-typing (appels de méthodes), sans dépendre d'un type global.
+## No `class_name`: only the editor regenerates the global class cache and this game is
+## launched from the command line, so this script is referenced by `preload` and by `extends`
+## with a path. The [DungeonManager] drives mechanisms by duck typing — method calls — and
+## depends on no global type.
 extends Node3D
 
-## Case occupée par ce mécanisme (dérivée de la position monde au boot).
+## The cell this mechanism sits on, derived from its world position at boot.
 var cell: Vector3i
 
 var _dungeon: DungeonManager
@@ -20,7 +20,7 @@ func _ready() -> void:
 	add_to_group("dungeon_mechanism")
 	_dungeon = get_tree().get_first_node_in_group("dungeon") as DungeonManager
 	if _dungeon == null:
-		push_error("[DungeonMechanism] aucun DungeonManager dans le groupe 'dungeon'.")
+		push_error("[DungeonMechanism] no DungeonManager in the 'dungeon' group.")
 		return
 	cell = _dungeon.world_to_cell(global_position)
 	_register()
@@ -28,43 +28,42 @@ func _ready() -> void:
 	_spawn_visual()
 
 
-## Enregistrement auprès du donjon. Défaut : sur la case. Surchargé par les mécanismes posés
-## sur une ARÊTE entre deux cases (portes), qui n'occupent aucune case.
+## Registers with the dungeon. On the cell by default; overridden by mechanisms sitting on an
+## EDGE between two cells (gateways), which occupy no cell at all.
 func _register() -> void:
 	_dungeon.register_mechanism(cell, self)
 
 
-## Désenregistrement, symétrique de [method _register].
+## Symmetric to [method _register].
 func _unregister() -> void:
 	_dungeon.unregister_mechanism(cell, self)
 
 
-## Hook d'init des sous-classes, appelé une fois la case connue et l'enregistrement fait.
+## Subclass init hook, called once the cell is known and registration is done.
 func _on_registered() -> void:
 	pass
 
 
-## Repère visuel du mécanisme (placeholder de test). Surchargé par les sous-classes pour
-## poser un marqueur coloré identifiable en fenêtre. Défaut : aucun.
+## Placeholder visual. Subclasses override it to drop a coloured marker they can pick out in
+## a window. None by default.
 func _spawn_visual() -> void:
 	pass
 
 
-## Marqueur visuel du mécanisme (créé par [method _add_marker]).
 var _marker: MeshInstance3D
-## Hauteur du marqueur, en mètres — sert à le reposer au sol quand on l'aplatit.
+## Marker height in metres, used to keep it resting on the floor when it is flattened.
 var _marker_height := 0.0
 
 
-## Pose un marqueur (boîte colorée) sur la case du mécanisme. `height`/`size` en MÈTRES
-## (une case fait [constant DungeonManager.CELL_SIZE] = 1 m). L'origine du nœud est au sol
-## de la case ([method DungeonManager.cell_to_world]) : le marqueur est simplement posé dessus.
+## Drops a coloured box on the mechanism's cell. `height` and `size` are in METRES (a cell is
+## [constant DungeonManager.CELL_SIZE] = 1 m). The node's origin is at the cell's floor (see
+## [method DungeonManager.cell_to_world]), so the marker simply rests on it.
 func _add_marker(color: Color, height := 0.6, size := 0.7) -> MeshInstance3D:
 	return _add_marker_box(color, Vector3(size, height, size))
 
 
-## Variante à dimensions libres (portes : fines dans un axe) avec décalage local optionnel —
-## utile pour poser un visuel sur l'arête de la case plutôt qu'en son centre.
+## Free-dimension variant (gateways are thin along one axis) with an optional local offset,
+## for putting a visual on the cell's edge rather than at its centre.
 func _add_marker_box(color: Color, size: Vector3, offset := Vector3.ZERO) -> MeshInstance3D:
 	var mi := MeshInstance3D.new()
 	var box := BoxMesh.new()
@@ -80,33 +79,34 @@ func _add_marker_box(color: Color, size: Vector3, offset := Vector3.ZERO) -> Mes
 	return mi
 
 
-## Facteur d'écrasement d'un marqueur aplati (épuisé, ou porte ouverte).
+## How far a flattened marker is squashed — spent, or an open gateway.
 const FLATTENED := 0.08
 
-## Gris sombre mat d'un mécanisme épuisé : net contraste avec sa couleur active, et aucune
-## émission (un mécanisme actif s'éclaire souvent lui-même).
+## The flat dark grey of a spent mechanism: a clear contrast with its active colour, and no
+## emission — an active mechanism often lights itself.
 const SPENT_COLOR := Color(0.24, 0.24, 0.27)
 
 
-## Grise et aplatit le marqueur pour signaler un mécanisme ÉPUISÉ (piège déclenché, coffre
-## ouvert…) : reste visible (règle doc) mais clairement inerte, presque au niveau du sol.
+## Greys out and flattens the marker to show a SPENT mechanism — a sprung trap, an opened
+## chest. It stays visible, as the design doc requires, but reads as clearly inert, nearly
+## flush with the floor.
 func _mark_spent() -> void:
 	_grey_marker()
 	_flatten_marker(true)
 
 
-## Grise le marqueur SANS l'aplatir — pour un mécanisme épuisé dont la FORME porte encore une
-## information (le dé, qui garde la face sortie tournée vers le joueur).
+## Greys the marker WITHOUT flattening it, for a spent mechanism whose SHAPE still carries
+## information — the die, which keeps its rolled face turned towards the player.
 func _grey_marker() -> void:
 	if _marker == null:
 		return
-	var mat := StandardMaterial3D.new()  # matériau neuf : coupe aussi l'émission de l'état actif
+	var mat := StandardMaterial3D.new()  # a fresh material also drops the active state's emission
 	mat.albedo_color = SPENT_COLOR
 	_marker.material_override = mat
 
 
-## Retire le marqueur — pour un mécanisme qui ne laisse RIEN derrière lui (litière recyclée :
-## la case redevient un sol ordinaire, y dessiner encore un tas serait mentir).
+## Removes the marker, for a mechanism that leaves NOTHING behind — recycled litter, where the
+## cell becomes ordinary floor again and still drawing a heap there would be a lie.
 func _remove_marker() -> void:
 	if _marker == null:
 		return
@@ -115,13 +115,13 @@ func _remove_marker() -> void:
 	_marker_height = 0.0
 
 
-## Reconstruit le marqueur dans son état ACTIF (réarmement entre deux visites).
+## Rebuilds the marker in its ACTIVE state, for rearming between visits.
 func _respawn_marker() -> void:
 	_remove_marker()
 	_spawn_visual()
 
 
-## Aplatit (ou redresse) le marqueur en le gardant posé sur le sol de la case.
+## Flattens the marker, or stands it back up, keeping it resting on the cell's floor.
 func _flatten_marker(flat: bool) -> void:
 	if _marker == null:
 		return
@@ -131,92 +131,91 @@ func _flatten_marker(flat: bool) -> void:
 
 
 # --------------------------------------------------------------------------
-# Hooks du framework (surchargés par les sous-classes ; défauts neutres)
+# Framework hooks (overridden by subclasses; neutral defaults)
 # --------------------------------------------------------------------------
 
 
-## Le mécanisme est-il ÉPUISÉ (plus rien à en tirer : piège déclenché, coffre vidé, dé roulé,
-## cristal utilisé…) ? Règle transverse : ce qui n'est plus actionnable ne doit plus se
-## présenter comme actif — ni en 3D (marqueur grisé, cf. [method _mark_spent]) ni sur la carte
-## ([ExplorationMinimap] assombrit ces mécanismes). Défaut : jamais épuisé (portes,
-## ascenseurs, ponts, murs — réutilisables sans fin).
+## Whether the mechanism is SPENT — nothing left to get out of it: a sprung trap, an emptied
+## chest, a rolled die, a used crystal. A cross-cutting rule: what is no longer actionable must
+## no longer present itself as active, neither in 3D (a greyed marker, see [method _mark_spent])
+## nor on the map ([ExplorationMinimap] dims these). Never spent by default — gateways,
+## elevators, bridges and walls are endlessly reusable.
 func is_spent() -> bool:
 	return false
 
 
-## Ce mécanisme figure-t-il sur la MINI-MAP ? Doc « User Interface » : la carte montre les
-## mécanismes de l'étage courant, mais PAS les pièges — les révéler d'avance viderait leur rôle.
-## Défaut : oui (une porte, un coffre, un escalier sont des repères de navigation).
+## Whether this mechanism shows on the MINI-MAP. Per the design doc's "User Interface", the
+## map shows the current floor's mechanisms but NOT the traps — revealing them in advance would
+## empty them of their point. Yes by default: gateways, chests and stairs are landmarks.
 func shows_on_map() -> bool:
 	return true
 
 
-## La case est-elle infranchissable de par ce mécanisme ? (gate fermée, obstacle…)
-## Consulté par [method DungeonManager.is_walkable] et le pas du joueur.
+## Whether this mechanism makes the cell impassable (a closed gateway, an obstacle). Consulted
+## by [method DungeonManager.is_walkable] and by the player's step.
 func blocks_walk() -> bool:
 	return false
 
 
-## Ce mécanisme coupe-t-il la VUE ? Par défaut, ce qui barre le passage barre aussi la vue (un
-## mur, une porte fermée) ; une rambarde, basse, fait exception. Sert à interdire les actions
-## sur ce qui se trouve DERRIÈRE un obstacle opaque : on n'agit pas sur ce qu'on ne voit pas.
+## Whether this mechanism blocks SIGHT. By default what blocks passage blocks sight too — a
+## wall, a closed gateway; a guardrail is low, and the exception. Used to forbid acting on
+## whatever is BEHIND an opaque obstacle: you do not act on what you cannot see.
 func blocks_sight() -> bool:
 	return blocks_walk()
 
 
-## Un acteur (joueur/rival) vient d'entrer sur la case. Point d'activation des pièges,
-## coffres, téléporteurs, ascenseurs…
+## An actor, player or rival, has just entered the cell. Where traps, chests, teleporters and
+## elevators fire.
 func on_enter(_who: Node) -> void:
 	pass
 
 
-## Cadence par tour, diffusée par [method DungeonManager.advance_turn] (gate automatisée…).
+## Per-turn tick, broadcast by [method DungeonManager.advance_turn] — automated gateways and
+## the like.
 func on_turn(_turn: int) -> void:
 	pass
 
 
-## Actions contextuelles quand l'acteur est SUR la case (ex. Dig sur sol friable).
-## Réservé à la future surface d'actions d'exploration (incrément Special Grounds).
+## Contextual actions when the actor is ON the cell, such as Dig on crumbly ground.
 func on_tile_actions(_who: Node) -> Array:
 	return []
 
 
-## Actions contextuelles quand l'acteur est ADJACENT et orienté vers la case (ex. Recycle,
-## Meditate, Refresh Crystal). `facing` = delta de case regardé.
+## Contextual actions when the actor is ADJACENT and facing the cell — Recycle, Meditate,
+## Refresh Crystal. `facing` is the cell delta being looked at.
 func on_adjacent_actions(_who: Node, _facing: Vector3i) -> Array:
 	return []
 
 
-# --- Changement d'étage (escaliers, ascenseurs, et ce qu'on inventera ensuite) ---
+# --- Floor changes (stairs, elevators, and whatever comes next) ---
 #
-# Interface commune consultée par la POURSUITE des rivaux : quand le joueur passe à un autre
-# étage, un rival cherche par où l'y rejoindre. Plutôt que de connaître chaque mécanisme, il
-# interroge ces trois hooks. Un mécanisme qui ne mène nulle part garde les défauts.
+# The common interface the rivals' CHASE consults: when the player moves to another floor, a
+# rival looks for a way up or down to it. Rather than knowing every mechanism, it asks these
+# three hooks. A mechanism that leads nowhere keeps the defaults.
 
 
-## Ce mécanisme fait-il passer d'un étage à l'autre ?
 func has_level_link() -> bool:
 	return false
 
 
-## Case depuis laquelle on l'emprunte : la case d'abord pour un escalier (on y est adjacent et
-## on entre dedans), la plateforme elle-même pour un ascenseur (y monter suffit).
+## The cell it is taken from: the cell in front for stairs (you stand adjacent and step in),
+## the platform itself for an elevator (standing on it is enough).
 func level_link_from() -> Vector3i:
 	return cell
 
 
-## Case d'arrivée du passage.
 func level_link_to() -> Vector3i:
 	return cell
 
 
-## Faut-il ENTRER dans la case du mécanisme depuis [method level_link_from] (escalier), ou bien
-## le simple fait d'arriver sur cette case déclenche-t-il le passage (ascenseur) ?
+## Whether you have to STEP INTO the mechanism's cell from [method level_link_from] (stairs),
+## or whether just arriving on that cell triggers the link (an elevator).
 func level_link_needs_step_in() -> bool:
 	return false
 
 
-## Réinitialisation à l'entrée d'un donjon (persistance entre visites). Défaut : rien.
+## Reset on entering a dungeon; this is what persistence between visits hangs off. No-op by
+## default.
 func reset_between_visits() -> void:
 	pass
 

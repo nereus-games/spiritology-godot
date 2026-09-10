@@ -1,20 +1,21 @@
-## Sol friable : action Dig.
+## Crumbly ground: the Dig action.
 ##
-## Doc Notion (Level Design / Mechanisms « Crumbly Grounds » + Walls + Decors). Le joueur,
-## DEBOUT sur la case, peut creuser (Dig) en dépensant une pelle. Le creusage livre : un
-## objet aléatoire, et/ou une info d'encyclopédie sur un spirimonstre du pool associé, et/ou
-## déclenche un piège. Creusable une seule fois par visite (une icône marque la case après).
-## Un sol friable ne peut pas être Examiné (le Dig s'en charge).
+## From the design doc ("Mechanisms / Crumbly Grounds" and "Walls + Decors"). Standing ON the
+## cell, the player can Dig by spending a spade. Digging hands out a random object, and/or an
+## encyclopaedia info about a spirimonster from the associated pool, and/or springs a trap.
+## Diggable once per visit, with an icon marking the cell afterwards. Crumbly ground cannot be
+## Examined — Dig covers that.
 ##
-## Pas de `class_name` : `extends` par chemin. Référence l'autoload GameSession (comme
-## player_controller) : OK en jeu (chargé après le boot), à charger au runtime dans les tests.
+## No `class_name`: `extends` by path. References the GameSession autoload, like
+## player_controller: fine in game, since it is loaded after boot, but tests have to load it at
+## runtime.
 extends "res://scripts/exploration/mechanisms/dungeon_mechanism.gd"
 
 const ExplorationAction := preload("res://scripts/exploration/exploration_action.gd")
 
 const SPADE := &"spade"
 
-## Spirimonstres dont un Dig peut livrer une info encyclo (doc Walls + Decors).
+## The spirimonsters a Dig can hand out an info about ("Walls + Decors").
 const INFO_SPECIES: Array[StringName] = [
 	&"mastel",
 	&"kurkab",
@@ -24,11 +25,11 @@ const INFO_SPECIES: Array[StringName] = [
 	&"yilir",
 ]
 
-## Objets qu'un creusage peut donner (placeholder ; loot précis à définir côté design).
+## What a dig can hand out. Placeholder; the exact loot is design's to settle.
 @export var loot_pool: Array[StringName] = [&"rune_stone", &"tea_drop", &"smoke_bomb"]
-## Probabilité de livrer une info d'encyclopédie en plus de l'objet.
+## How likely an encyclopaedia info comes on top of the object.
 @export var info_chance := 0.5
-## Probabilité de déclencher un piège (empoisonne le creuseur) — placeholder.
+## How likely a trap springs and poisons the digger. Placeholder.
 @export var trap_chance := 0.25
 @export var trap_poison_turns := 3
 @export var trap_poison_per_turn := 5
@@ -36,42 +37,41 @@ const INFO_SPECIES: Array[StringName] = [
 var _dug := false
 
 
-## Action Dig, seulement si le joueur est sur la case, qu'elle n'a pas déjà été creusée, et
-## qu'il possède une pelle.
+## The Dig action, offered only while the cell has not been dug and the player holds a spade.
 func on_tile_actions(who: Node) -> Array:
 	if _dug or not GameSession.has_object(SPADE):
 		return []
 	return [ExplorationAction.new(&"dig", "UI_ACTION_DIG", Callable(self, "dig").bind(who))]
 
 
-## Vrai si la case a déjà été creusée cette visite (icône sur la carte).
+## Whether the cell has already been dug this visit; the map shows an icon for it.
 func has_been_dug() -> bool:
 	return _dug
 
 
-## Déjà creusé cette visite : plus d'action Dig (règle transverse « épuisé »). C'est aussi ce
-## que lit la carte pour marquer la case, comme le demande la doc (« an icon is shown on the
-## dungeon map after it has been dug a first time »).
+## Already dug this visit, so no Dig action left. This is also what the map reads to mark the
+## cell, as the design doc asks: "an icon is shown on the dungeon map after it has been dug a
+## first time".
 func is_spent() -> bool:
 	return _dug
 
 
-## Creuse : dépense une pelle, puis livre objet / info / piège. Sans pelle, ne fait rien.
+## Digs: spends a spade, then hands out object, info and trap. With no spade, does nothing.
 func dig(who: Node) -> void:
 	if _dug or not GameSession.consume_object(SPADE):
 		return
 	_dug = true
-	# Sol retourné : grisé mais PAS aplati (la plaque est déjà quasi au ras du sol ;
-	# l'écraser encore la ferait disparaître).
+	# Turned-over ground: greyed but NOT flattened. The plate is already almost flush with the
+	# floor, and squashing it further would make it vanish.
 	_grey_marker()
-	# 1) Objet aléatoire.
+	# 1) A random object.
 	if not loot_pool.is_empty():
 		GameSession.add_object(loot_pool[randi() % loot_pool.size()], 1)
-	# 2) Info encyclo (optionnelle).
+	# 2) An encyclopaedia info, optionally.
 	if randf() < info_chance and not INFO_SPECIES.is_empty():
 		var sp: StringName = INFO_SPECIES[randi() % INFO_SPECIES.size()]
 		GameSession.award_ifp(sp, GameEnums.IfpAction.EXAMINE_DECOR)
-	# 3) Piège (optionnel) : empoisonne le creuseur.
+	# 3) A trap, optionally, poisoning the digger.
 	if randf() < trap_chance:
 		var aff = who.get("affliction")
 		if aff != null:
@@ -80,8 +80,8 @@ func dig(who: Node) -> void:
 
 func reset_between_visits() -> void:
 	_dug = false
-	_respawn_marker()  # creusable de nouveau : la terre retrouve sa couleur
+	_respawn_marker()  # diggable again: the earth gets its colour back
 
 
 func _spawn_visual() -> void:
-	_add_marker(Color(0.5, 0.35, 0.2), 0.1, 0.9)  # sol terreux, très plat
+	_add_marker(Color(0.5, 0.35, 0.2), 0.1, 0.9)  # earthy ground, very flat

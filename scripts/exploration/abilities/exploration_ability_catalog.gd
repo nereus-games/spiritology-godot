@@ -1,24 +1,25 @@
-## Catalogue des effets de capacités d'exploration (équivalent de [EffectCatalog]).
+## Catalogue of exploration ability effects, the counterpart of [EffectCatalog].
 ##
-## Utilitaire statique : `script_for(id)` charge `impl/<id>.gd` s'il existe (sinon l'effet de
-## base neutre), et `known_for_duo()` liste les capacités d'exploration du duo courant.
+## A static utility: `script_for(id)` loads `impl/<id>.gd` when it exists, and the neutral base
+## effect otherwise; `known_for_duo()` lists the current duo's exploration abilities.
 ##
-## Pas de `class_name` (piège du cache CLI) : référencé par `preload`. Référence les autoloads
-## GameData / GameSession / l'enum GameEnums (OK en jeu ; charger au runtime dans les tests).
+## No `class_name` (the CLI class-cache trap): referenced by `preload`. References the GameData
+## and GameSession autoloads and the GameEnums enum — fine in game, but tests have to load them
+## at runtime.
 extends RefCounted
 
 const _BASE := preload("res://scripts/exploration/abilities/exploration_ability.gd")
 
-## Capacité d'exploration gérée de façon CONTEXTUELLE par un mécanisme (le mur fissuré offre
-## déjà « traverser ») : à ne pas re-proposer comme action de capacité autonome.
+## Exploration abilities a mechanism already handles CONTEXTUALLY — the cracked wall offers
+## "cross" itself — and which must not be offered a second time as a standalone action.
 const _CONTEXTUAL: Array[StringName] = [&"cranny_crossing"]
 
-## Hook de TEST/DEV : capacités d'exploration accordées au duo indépendamment de l'espèce
-## (rempli par les scénarios de test). Fusionné dans [method known_for_duo].
+## A TEST/DEV hook: exploration abilities granted to the duo regardless of species, filled in by
+## the test scenarios. Merged into [method known_for_duo].
 static var dev_granted: Array[StringName] = []
 
 
-## Instance d'effet pour une capacité d'exploration (sous-classe dédiée ou base neutre).
+## An effect instance for an exploration ability: the dedicated subclass, or the neutral base.
 static func script_for(id: StringName):
 	var path := "res://scripts/exploration/abilities/impl/%s.gd" % id
 	if ResourceLoader.exists(path):
@@ -26,8 +27,9 @@ static func script_for(id: StringName):
 	return _BASE.new()
 
 
-## Capacités d'exploration connues du duo (union origin/also_used/encyclopaedia des deux
-## membres, filtrée au type EXPLORATION). Exclut les capacités contextuelles (mur fissuré).
+## The duo's known exploration abilities: the union of origin, also_used and encyclopaedia
+## across both members, filtered to type EXPLORATION. Contextual abilities, such as the cracked
+## wall's, are excluded.
 static func known_for_duo() -> Array:
 	var ids := {}
 	for aid in dev_granted:

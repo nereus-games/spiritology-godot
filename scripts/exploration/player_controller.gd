@@ -1,152 +1,153 @@
-## Déplacement du joueur sur la grille du donjon (3D, 1re personne).
+## Player movement on the dungeon grid: 3D, first person.
 ##
-## Déplacement orthogonal case-par-case relatif à l'orientation, transitions lissées,
-## rotation par pas de 90°. Interroge le [DungeonManager] (groupe "dungeon") pour la
-## praticabilité et l'occupation ; déclenche une rencontre en entrant sur la case d'un
-## rival. Un pas réussi fait avancer le tour ([method DungeonManager.advance_turn]).
+## Orthogonal cell-by-cell movement relative to facing, with smoothed transitions and 90-degree
+## turns. Asks the [DungeonManager] (the "dungeon" group) about walkability and occupancy, and
+## starts an encounter on entering a rival's cell. A successful step advances the turn, through
+## [method DungeonManager.advance_turn].
 class_name PlayerController
 extends Node3D
 
 const AfflictionState := preload("res://scripts/exploration/mechanisms/affliction_state.gd")
 
 @export var move_duration := 0.18
-## Vitesse de rattrapage du corps vers l'angle visé (deg/s). Élevé = le regard libre suit la
-## souris de près et les rotations 90° restent lisses (modèle porté du proto Unity).
+## How fast the body catches up to the target angle, in degrees per second. High values keep
+## free look glued to the mouse while 90-degree turns stay smooth. Ported from the prototype.
 @export var yaw_follow_speed := 720.0
 
 var cell: Vector3i
 var _dungeon: DungeonManager
 var _busy := false
-## Angle de lacet VISUEL visé, en degrés (base rigide + regard libre) — le corps le rejoint.
+## The target VISUAL yaw in degrees — the rigid base plus free look. The body catches up to
+## it.
 var _target_yaw_deg := 0.0
-## Angle de lacet de DÉPLACEMENT, en degrés (toujours un multiple de 90°). Découplé du visuel :
-## garantit des pas orthogonaux (jamais de diagonale, même en regardant à 45°). Une orientation
-## n'est « validée » pour le déplacement qu'une fois la rotation de 90° accomplie.
+## The MOVEMENT yaw in degrees, always a multiple of 90. Decoupled from the visual one, which
+## is what guarantees orthogonal steps: never a diagonal, even while looking at 45 degrees. A
+## facing only counts for movement once the 90-degree turn has completed.
 var _move_yaw_deg := 0.0
 
-## Verrou de déplacement : quand actif, le joueur ignore ses entrées de déplacement/rotation
-## (utilisé par le test d'équilibre du pont étroit, qui pilote la position directement).
+## Movement lock: while set, move and turn input is ignored. Used by the narrow-bridge balance
+## test, which drives the position directly.
 var input_locked := false
 
-## Effets persistants subis par le joueur (poison, disarray). Lu en duck-typing par les
-## pièges via la propriété `affliction`.
+## Lingering effects on the player (poison, disarray). Read by the traps through the
+## `affliction` property, by duck typing.
 var affliction := AfflictionState.new()
 
-## Invisibilité (fog mantel) : cases restantes pendant lesquelles les rivaux ne voient pas le
-## joueur. Annulée par une rencontre OU l'activation d'un piège.
+## Invisibility (fog mantel): how many more cells the rivals cannot see the player for. Cleared
+## by an encounter OR by springing a trap.
 var invisible_moves := 0
-## Non-poursuite (torment veil / costume) : cases restantes pendant lesquelles les rivaux ne
-## poursuivent pas. Annulée par une rencontre (mais PAS par un piège).
+## Not-chased (torment veil, a costume): how many more cells the rivals will not give chase
+## for. Cleared by an encounter, but NOT by a trap.
 var unpursued_moves := 0
-## Espèce dont le joueur a l'apparence (costume), le cas échéant.
+## The species the player looks like, when wearing a costume.
 var disguise_species := &""
 
 
 func _ready() -> void:
 	_dungeon = get_tree().get_first_node_in_group("dungeon") as DungeonManager
 	if _dungeon == null:
-		push_error("[PlayerController] aucun DungeonManager dans le groupe 'dungeon'.")
+		push_error("[PlayerController] no DungeonManager in the 'dungeon' group.")
 		return
 	cell = _dungeon.world_to_cell(global_position)
 	global_position = _dungeon.cell_to_world(cell)
 	_dungeon.register_player(self)
-	add_to_group("player")  # repéré par le HUD pour les actions contextuelles
+	add_to_group("player")  # how the HUD finds us, for the contextual actions
 
-	# L'orientation (yaw) est pilotée par PlayerInputHandler (base rigide + regard libre à la
-	# souris, modèle Unity) ; le corps rejoint l'angle visé en continu dans _process.
+	# Yaw is driven by PlayerInputHandler — a rigid base plus mouse free look, as in the
+	# prototype — and the body continuously catches up to the target angle in _process.
 	_target_yaw_deg = rad_to_deg(rotation.y)
 
 
-## Vrai si aucun déplacement/rotation en cours (autorise une nouvelle action).
+## Whether no move or turn is under way, and so a new action is allowed.
 func is_at_rest() -> bool:
 	return not _busy
 
 
-## Direction actuellement regardée, en delta de case (x, 0, z) — pour interroger les actions
-## contextuelles de la case regardée. Basée sur l'orientation de DÉPLACEMENT (cardinale), pas
-## sur le regard libre : on interagit avec la case qu'on a orthogonalement en face.
+## The direction currently faced, as a cell delta (x, 0, z), for querying the contextual actions
+## of the cell being looked at. Based on the cardinal MOVEMENT facing rather than on free look:
+## you interact with the cell squarely in front of you.
 func facing_delta() -> Vector3i:
 	var world := Basis(Vector3.UP, deg_to_rad(_move_yaw_deg)) * Vector3.FORWARD
 	return Vector3i(roundi(world.x), 0, roundi(world.z))
 
 
 func _process(delta: float) -> void:
-	# Le corps rejoint en continu l'angle visé (regard libre + rotations 90°), par le chemin
-	# le plus court.
+	# The body continuously catches up to the target angle — free look plus 90-degree turns — by
+	# the shortest way round.
 	var target := deg_to_rad(_target_yaw_deg)
 	var step := deg_to_rad(yaw_follow_speed) * delta
 	rotation.y += clampf(angle_difference(rotation.y, target), -step, step)
 
 
-## Fixe l'angle de lacet VISUEL visé (degrés), posé par [PlayerInputHandler].
+## Sets the target VISUAL yaw in degrees. Written by [PlayerInputHandler].
 func set_yaw_target(deg: float) -> void:
 	_target_yaw_deg = deg
 
 
-## Fixe l'angle de lacet de DÉPLACEMENT (degrés, multiple de 90°), posé par [PlayerInputHandler]
-## une fois une rotation de 90° accomplie.
+## Sets the MOVEMENT yaw in degrees, a multiple of 90. Written by [PlayerInputHandler] once a
+## 90-degree turn has completed.
 func set_move_yaw(deg: float) -> void:
 	_move_yaw_deg = deg
 
 
-## Angle de lacet visé courant (degrés) — lu par [PlayerInputHandler] pour s'initialiser.
+## The current target yaw in degrees. Read by [PlayerInputHandler] to initialise itself.
 func current_yaw_deg() -> float:
 	return _target_yaw_deg
 
 
-## Oriente immédiatement le joueur (corps + cible visuelle + déplacement) — au placement.
+## Turns the player at once — body, visual target and movement facing — when placing them.
 func set_start_yaw(rad: float) -> void:
 	rotation.y = rad
 	_target_yaw_deg = rad_to_deg(rad)
 	_move_yaw_deg = rad_to_deg(rad)
 
 
-## Une rotation vient d'être effectuée (au clavier, ou par dérive du regard libre au-delà de
-## [member PlayerInputHandler.commit_angle]) :
-## fait avancer le tour, comme un pas.
+## A turn has just completed, from the keyboard or from free look drifting past
+## [member PlayerInputHandler.commit_angle]. It advances the turn, like a step.
 func rotated_90() -> void:
 	if _dungeon != null:
 		_dungeon.advance_turn()
 
 
-## Tente un pas dans une direction LOCALE (Vector3.FORWARD/BACK/LEFT/RIGHT).
+## Attempts a step in a LOCAL direction (Vector3.FORWARD/BACK/LEFT/RIGHT).
 func try_move(local_dir: Vector3) -> void:
 	if _busy or _dungeon == null or input_locked:
 		return
-	# Disarray : une part des mouvements est déviée vers une AUTRE translation (doc).
+	# Disarray: a share of moves is deflected into a DIFFERENT translation, per the design doc.
 	if affliction.consume_move():
 		local_dir = _random_translation_except(local_dir)
-	# Direction basée sur l'orientation de DÉPLACEMENT cardinale (multiple de 90°) : garantit
-	# un pas orthogonal, jamais une diagonale, même si le regard est à 45°.
+	# Direction taken from the cardinal MOVEMENT facing, which guarantees an orthogonal step and
+	# never a diagonal, even while looking at 45 degrees.
 	var world := Basis(Vector3.UP, deg_to_rad(_move_yaw_deg)) * local_dir
 	var delta := Vector3i(roundi(world.x), 0, roundi(world.z))
 	if delta == Vector3i.ZERO:
 		return
 	var target := cell + delta
 
-	# Porte fermée sur l'arête franchie : rien ne passe (ni escalier, ni chute, ni rencontre).
+	# A closed gateway on the edge being crossed: nothing gets through — no stairs, no fall, no
+	# encounter.
 	if _dungeon.is_edge_blocked(cell, target):
 		return
 
-	# Escalier devant (modèle proto Unity) : on est porté 2 cases plus loin + changement
-	# d'étage. Ne se prend QUE dans l'axe de l'escalier (`face_dir`) — pas en perpendiculaire,
-	# où il bloque comme un mur.
+	# Stairs ahead, as in the prototype: you are carried two cells further plus a floor change.
+	# They can ONLY be taken along their own axis (`face_dir`); side-on they block like a wall.
 	var stairs := _stairs_at(target)
 	if stairs != null:
 		if delta == stairs.face_dir:
 			var dest: Vector3i = stairs.stairs_destination(cell, delta)
 			if _dungeon.is_floor(dest):
 				await _climb_step(dest)
-		return  # (mauvaise direction : bloqué)
+		return  # wrong direction: blocked
 
 	if _dungeon.is_blocked_by_mechanism(target):
-		return  # mécanisme infranchissable (gate fermée…)
+		return  # an impassable mechanism, such as a closed gateway
 	if not _dungeon.is_floor(target):
-		# Pas de sol ici : chute s'il y a un sol à un niveau inférieur (bord de vide), sinon mur.
+		# No floor here: a fall if there is floor further down (the lip of a drop), a wall if
+		# not.
 		var landing := _dungeon.fall_landing(target)
 		if landing == target:
-			# Rien en dessous : c'est un mur — sauf trou franc laissé par le level design, où
-			# la chute est sans fond, donc fatale.
+			# Nothing below means a wall — unless level design left an outright hole, in which
+			# case the fall is bottomless, and fatal.
 			if _dungeon.is_bottomless(target):
 				await fall_forever(target)
 			return
@@ -154,7 +155,7 @@ func try_move(local_dir: Vector3) -> void:
 		return
 	var occ := _dungeon.occupant_at(target)
 	if occ != null:
-		_dungeon.request_encounter(occ, false)  # rencontre : pas de déplacement
+		_dungeon.request_encounter(occ, false)  # an encounter, with no move
 		return
 
 	cell = target
@@ -163,20 +164,20 @@ func try_move(local_dir: Vector3) -> void:
 	tween.tween_property(self, "global_position", _dungeon.cell_to_world(target), move_duration)
 	await tween.finished
 	_busy = false
-	# Un pas consomme les états de discrétion (invisibilité / non-poursuite).
+	# A step eats into the stealth states: invisibility and not-chased.
 	_tick_hidden_on_move()
-	# Mécanismes de la case atteinte (pièges…), puis avance du tour.
+	# The reached cell's mechanisms first, such as traps, then the turn advances.
 	_dungeon.notify_entered(cell, self)
 	_dungeon.advance_turn()
 
 
-## Chute vers `landing` (case de sol en contrebas) : descente animée, dégâts ∝ nombre de
-## niveaux, puis résolution normale (mécanismes de la case + avance de tour).
+## A fall to `landing`, the floor cell below: an animated descent, damage scaling with the
+## number of levels, then the usual resolution — the cell's mechanisms, then the turn.
 ##
-## Public : le pilote du pont étroit ([code]exploration.gd[/code]) s'en sert pour qu'une chute
-## de pont soit exactement une chute normale (même profondeur, mêmes dégâts, même tour).
+## Public because the narrow-bridge driver ([code]exploration.gd[/code]) uses it to make a fall
+## off a bridge exactly an ordinary fall: same depth, same damage, same turn.
 func fall_to(landing: Vector3i, levels: int) -> void:
-	_dungeon.notify_level_change(self, cell, landing)  # les rivaux témoins peuvent suivre
+	_dungeon.notify_level_change(self, cell, landing)  # watching rivals can follow
 	cell = landing
 	_busy = true
 	var tween := create_tween()
@@ -192,20 +193,18 @@ func fall_to(landing: Vector3i, levels: int) -> void:
 	_dungeon.advance_turn()
 
 
-## Chute SANS FOND (trou franc du level design) : le duo tombe hors du donjon et est dévitalisé
-## — un sol qu'on n'atteint jamais est un sol trop bas pour qu'on y survive. On ne bloque pas
-## silencieusement le pas : le donjon est en faute, ça doit se voir en jouant.
+## A BOTTOMLESS fall, into an outright hole left by level design: the duo falls out of the
+## dungeon and is devitalised — a floor you never reach is a floor too far down to survive. The
+## step is not silently blocked: the dungeon is at fault, and that should be visible in play.
 ##
-## ## TODO(dungeon checker): un trou sans fond est toujours une erreur d'auteur. À détecter au
-## chargement du donjon plutôt qu'en le subissant, quand un validateur de donjon existera.
+## ## TODO(dungeon checker): a bottomless hole is always an authoring mistake. It should be
+## caught when the dungeon loads rather than by falling into it, once a dungeon validator
+## exists.
 func fall_forever(into: Vector3i) -> void:
 	input_locked = true
 	_busy = true
 	push_warning(
-		(
-			"[PlayerController] chute sans fond en %s : le level design a laissé un trou sans sol."
-			% into
-		)
+		"[PlayerController] bottomless fall at %s: level design left a hole with no floor." % into
 	)
 	var tween := create_tween()
 	tween.set_ease(Tween.EASE_IN)
@@ -216,25 +215,25 @@ func fall_forever(into: Vector3i) -> void:
 	_busy = false
 	GameSession.set_den(GameSession.PartySlot.MAIN, 0)
 	GameSession.set_den(GameSession.PartySlot.TEAMMATE, 0)
-	GameSession.resolve_party_wipe()  # dévitalisation : sortie du donjon
+	GameSession.resolve_party_wipe()  # devitalised, so out of the dungeon
 	input_locked = false
 
 
-## Une direction de translation locale au hasard, différente de `dir` (déviation disarray).
+## A random local translation direction other than `dir` — the disarray deflection.
 func _random_translation_except(dir: Vector3) -> Vector3:
 	var dirs := [Vector3.FORWARD, Vector3.BACK, Vector3.LEFT, Vector3.RIGHT]
 	dirs.erase(dir)
 	return dirs[randi() % dirs.size()]
 
 
-## Relocalisation instantanée sur une case (piège de téléportation). L'occupation est gérée
-## par [method DungeonManager.teleport_actor] ; le joueur, lui, n'occupe pas de case.
+## Instant relocation onto a cell (the teleport trap). Occupancy is handled by
+## [method DungeonManager.teleport_actor] — and the player occupies no cell anyway.
 func teleport_to(to_cell: Vector3i) -> void:
 	cell = to_cell
 	global_position = _dungeon.cell_to_world(to_cell)
 
 
-## Escalier présent sur la case `c` (mécanisme exposant `stairs_destination`), ou null.
+## The staircase on cell `c`, recognised by exposing `stairs_destination`, or null.
 func _stairs_at(c: Vector3i) -> Node:
 	for m in _dungeon.mechanisms_at(c):
 		if m.has_method("stairs_destination"):
@@ -242,11 +241,11 @@ func _stairs_at(c: Vector3i) -> Node:
 	return null
 
 
-## Franchit un escalier : montée/descente LISSE vers `dest` (autre étage, 2 cases plus loin),
-## puis résolution normale (mécanismes de la case + avance de tour).
+## Takes a staircase: a SMOOTH climb or descent to `dest`, another floor two cells away, then
+## the usual resolution — the cell's mechanisms, then the turn.
 func _climb_step(dest: Vector3i) -> void:
 	if dest.y != cell.y:
-		_dungeon.notify_level_change(self, cell, dest)  # les rivaux témoins peuvent suivre
+		_dungeon.notify_level_change(self, cell, dest)  # watching rivals can follow
 	cell = dest
 	_busy = true
 	var tween := create_tween()
@@ -260,40 +259,39 @@ func _climb_step(dest: Vector3i) -> void:
 
 
 # --------------------------------------------------------------------------
-# Discrétion (invisibilité / non-poursuite) — capacités & objets d'exploration
+# Stealth (invisibility, not-chased) — exploration abilities and objects
 # --------------------------------------------------------------------------
 
 
-## Rend invisible des rivaux pour `tiles` déplacements (fog mantel). Prend le maximum.
+## Hides the player from the rivals for `tiles` moves (fog mantel). Takes the larger value.
 func set_invisible(tiles: int) -> void:
 	invisible_moves = maxi(invisible_moves, tiles)
 
 
-## Empêche la poursuite pour `moves` déplacements (torment veil / costume).
+## Stops the rivals giving chase for `moves` moves (torment veil, a costume).
 func set_unpursued(moves: int, species: StringName = &"") -> void:
 	unpursued_moves = maxi(unpursued_moves, moves)
 	if species != &"":
 		disguise_species = species
 
 
-## Le joueur est-il indétectable par les rivaux (invisible ou non-poursuivi) ?
 func is_hidden_from_rivals() -> bool:
 	return invisible_moves > 0 or unpursued_moves > 0
 
 
-## Annule uniquement l'invisibilité (règle fog mantel : rompue par piège/rencontre).
+## Clears invisibility only — the fog mantel rule, where a trap or an encounter breaks it.
 func clear_invisibility() -> void:
 	invisible_moves = 0
 
 
-## Annule toute discrétion (à l'entrée d'une rencontre).
+## Clears all stealth, on entering an encounter.
 func clear_hidden() -> void:
 	invisible_moves = 0
 	unpursued_moves = 0
 	disguise_species = &""
 
 
-## Décompte les états de discrétion d'un déplacement.
+## Counts the stealth states down by one move.
 func _tick_hidden_on_move() -> void:
 	if invisible_moves > 0:
 		invisible_moves -= 1
@@ -303,9 +301,9 @@ func _tick_hidden_on_move() -> void:
 			disguise_species = &""
 
 
-## Fin de tour : applique les afflictions persistantes. Le poison retire du DEN aux DEUX
-## personnages du duo (le joueur sur la carte = le duo), et déclenche la sortie de donjon
-## si le duo est entièrement dévitalisé.
+## End of turn: applies the lingering afflictions. Poison takes DEN off BOTH characters, since
+## the player on the map is the whole duo, and triggers leaving the dungeon if the duo is
+## entirely devitalised.
 func on_turn_elapsed() -> void:
 	var dmg := affliction.tick_poison()
 	if dmg > 0:

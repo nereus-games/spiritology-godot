@@ -1,28 +1,28 @@
-## Rambarde (garde-corps) : protège le bord d'un étage.
+## A guardrail, protecting the edge of a storey.
 ##
-## Doc Notion (Level Design / Walls + Decors, section Guardrails) : géométriquement, c'est une
-## porte qui ne s'ouvre jamais — [constant DungeonManager.EDGE_THICKNESS] posés sur l'ARÊTE
-## entre deux cases, et non une case entière. Elle empêche donc de franchir ce bord (et de
-## tomber), pour le joueur comme pour les rivaux, sans coûter de case ni gêner la circulation
-## de part et d'autre.
+## Per the design doc ("Walls + Decors / Guardrails") this is geometrically a gateway that never
+## opens: [constant DungeonManager.EDGE_THICKNESS] laid on the EDGE between two cells rather
+## than a whole cell. It stops that edge being crossed — and so stops the fall — for the player
+## and for the rivals alike, without costing a cell or getting in the way on either side.
 ##
-## Basse ([constant HEIGHT] contre 1 m pour un mur) : on voit par-dessus, donc elle ne coupe pas
-## la ligne de vue — c'est ce qui la distingue d'un mur de bord.
+## Low ([constant HEIGHT], against 1 m for a wall), so you see over it and it does not cut the
+## line of sight. That is what tells it apart from a wall along the edge.
 ##
-## Pas de `class_name` (voir dungeon_mechanism.gd) : `extends` par chemin.
+## No `class_name` (see dungeon_mechanism.gd): `extends` by path.
 extends "res://scripts/exploration/mechanisms/dungeon_mechanism.gd"
 
-## Hauteur du garde-corps (mètres) : sous les yeux du duo ([constant DungeonManager.EYE_HEIGHT]).
+## The rail's height in metres: below the duo's eyes
+## ([constant DungeonManager.EYE_HEIGHT]).
 const HEIGHT := 0.3
-## Largeur du garde-corps : presque toute l'arête, en laissant un jour aux montants.
+## The rail's width: nearly the whole edge, leaving a gap for the posts.
 const WIDTH := 0.9
 
-## Bord protégé : la rambarde est sur l'arête entre [member cell] et `cell + edge_dir`.
-## Toujours une direction horizontale unitaire (±X ou ±Z).
+## The edge being protected: the guardrail sits between [member cell] and `cell + edge_dir`.
+## Always a unit horizontal direction (±X or ±Z).
 @export var edge_dir := Vector3i(0, 0, 1)
 
 
-## Sur l'arête, pas sur la case : les deux cases voisines restent utilisables.
+## On the edge, not on the cell: both neighbouring cells stay usable.
 func _register() -> void:
 	_dungeon.register_edge_mechanism(cell, cell + edge_dir, self)
 
@@ -31,18 +31,18 @@ func _unregister() -> void:
 	_dungeon.unregister_edge_mechanism(cell, cell + edge_dir, self)
 
 
-## Une rambarde barre son arête en permanence (elle ne s'ouvre jamais).
+## A guardrail bars its edge permanently: it never opens.
 func blocks_walk() -> bool:
 	return true
 
 
-## Basse : on voit (et on agit) par-dessus, contrairement à un mur ou à une porte fermée.
+## Low enough to see — and act — over, unlike a wall or a closed gateway.
 func blocks_sight() -> bool:
 	return false
 
 
-## Couleur sur la mini-map : gris clair de décor, et non l'orange des mécanismes avec lesquels
-## le joueur interagit (une rambarde ne s'actionne pas).
+## Mini-map colour: the light grey of decor, rather than the orange of mechanisms the player
+## interacts with — a guardrail is not something you act on.
 func map_color() -> Color:
 	return Color(0.55, 0.57, 0.62)
 

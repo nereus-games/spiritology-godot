@@ -1,13 +1,13 @@
-## Fournit les actions d'exploration NON liées à une case : capacités d'exploration du duo
-## et objets utilisables. Concaténées au menu d'actions du HUD à côté des actions de
-## mécanismes ([method DungeonManager.actions_for]).
+## Supplies the exploration actions NOT tied to a cell: the duo's exploration abilities and its
+## usable objects. Appended to the HUD's action menu alongside the mechanism actions
+## ([method DungeonManager.actions_for]).
 ##
-## Instancié (et conservé) par le HUD avec un [ExplorationContext] persistant : les [Callable]
-## des actions pointent vers cette instance, qui doit donc rester vivante tant que le menu
-## affiche ces actions.
+## Instantiated — and kept — by the HUD with a persistent [ExplorationContext]: the actions'
+## [Callable]s point at this instance, which therefore has to stay alive as long as the menu
+## shows them.
 ##
-## Pas de `class_name` (piège du cache CLI). Référence les autoloads (OK en jeu ; runtime-load
-## dans les tests).
+## No `class_name` (the CLI class-cache trap). References the autoloads: fine in game, but tests
+## have to load them at runtime.
 extends RefCounted
 
 const ExplorationAction := preload("res://scripts/exploration/exploration_action.gd")
@@ -21,20 +21,19 @@ func _init(ctx) -> void:
 	_ctx = ctx
 
 
-## Construit la liste d'actions (capacités d'exploration non utilisées + objets utilisables).
+## Builds the action list: unused exploration abilities plus usable objects.
 ##
-## ## TODO(doc « Game Design / Dungeon Exploration ») : l'action MEDITATE manque ici. La doc la
-## range parmi les actions TOUJOURS disponibles en exploration — « Meditate – the duo recovers
-## X ETH; can activate Meditation Gates » — alors qu'elle n'existe aujourd'hui que comme action
-## CONTEXTUELLE d'une porte de méditation ([code]gateway.on_adjacent_actions[/code]), et qu'elle
-## ne rend aucun ETH. Il faut : (1) l'ajouter à cette liste, (2) lui faire récupérer X ETH au duo
-## (montant NON CHIFFRÉ par la doc ; la rencontre utilise 12, cf.
-## [member BalanceData.meditate_eth]), (3) faire que la version portière ne soit plus
-## qu'un effet de bord de la même action quand on fait face à une porte — sinon deux « méditer »
-## cohabiteront dans le menu.
+## ## TODO: the MEDITATE action is missing here. The design doc lists it among the actions ALWAYS
+## available in exploration — "Meditate – the duo recovers X ETH; can activate Meditation Gates"
+## — whereas today it only exists as a meditation gateway's CONTEXTUAL action
+## ([code]gateway.on_adjacent_actions[/code]), and gives back no ETH at all. What it takes:
+## (1) add it to this list; (2) have it recover X ETH for the duo (the doc gives no number; the
+## encounter uses 12, see [member BalanceData.meditate_eth]); (3) make the gateway version a side
+## effect of that same action when facing a gateway — otherwise two "meditate" entries will sit
+## in the menu side by side.
 func build() -> Array:
 	var actions: Array = []
-	# Capacités d'exploration connues, pas encore utilisées cette visite.
+	# Known exploration abilities, not yet used this visit.
 	for id in Catalog.known_for_duo():
 		if GameSession.is_exploration_ability_used(id):
 			continue
@@ -43,7 +42,7 @@ func build() -> Array:
 				id, _ability_label_key(id), Callable(self, "_run_ability").bind(id)
 			)
 		)
-	# Objets d'inventaire utilisables en exploration.
+	# Inventory objects usable during exploration.
 	for object_id in GameSession.inventory.keys():
 		var data: ObjectData = GameData.object(object_id)
 		if data != null and Objects.usable_in_exploration(data.effect):

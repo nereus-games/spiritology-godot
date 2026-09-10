@@ -1,45 +1,44 @@
-## Piège de donjon : disarray, téléportation ou poison.
+## A dungeon trap: disarray, teleport or poison.
 ##
-## Doc Notion (Level Design / Mechanisms, section Traps). Un piège se déclenche quand un
-## acteur (joueur OU rival) entre sur sa case, tant qu'il est actif. Une fois déclenché, il
-## ne disparaît pas : il reste VISIBLE mais désactivé (confirmé par Néd J. en commentaire).
-## Il peut être révélé sans être activé (futur talent `reveal_traps`). Les effets sont
-## CUMULATIFS via [AfflictionState]. Deux versions existent selon qu'il se réarme entre
-## deux visites de donjon ou non ([member reactivates]).
+## From the design doc ("Mechanisms / Traps"). A trap springs when an actor — player OR rival —
+## enters its cell, as long as it is armed. Once sprung it does not disappear: it stays VISIBLE
+## but disarmed. It can be revealed without being sprung (the future `reveal_traps` talent).
+## Effects STACK through [AfflictionState]. Two versions exist, depending on whether it rearms
+## between dungeon visits ([member reactivates]).
 ##
-## Pas de `class_name` (voir dungeon_mechanism.gd) : `extends` par chemin.
+## No `class_name` (see dungeon_mechanism.gd): `extends` by path.
 extends "res://scripts/exploration/mechanisms/dungeon_mechanism.gd"
 
-## Type de piège. Chaque type existe en 2 versions (réarmable ou non), portées par
-## [member reactivates] plutôt que par des valeurs d'enum distinctes.
+## The kind of trap. Each kind has two versions, rearming or not, carried by
+## [member reactivates] rather than by separate enum values.
 enum Kind { DISARRAY, TELEPORT, POISON }
 
 @export var kind: Kind = Kind.POISON
 
-## Version « réarmable » : le piège redevient actif à chaque nouvelle visite du donjon.
+## The rearming version: the trap goes live again on every new visit to the dungeon.
 @export var reactivates := false
 
-## Type visible par le joueur ? Un piège révélé n'est pas pour autant désarmé (doc :
-## « When revealed (but not activated), a trap also reveals its type »).
+## Whether the player can see its kind. A revealed trap is not thereby disarmed — the design
+## doc: "When revealed (but not activated), a trap also reveals its type".
 @export var revealed := false
 
-# --- Magnitudes placeholder (à équilibrer ; la doc laisse X / Y à définir) ---
+# --- Placeholder magnitudes; the design doc leaves X / Y to be defined ---
 
-## Poison : DEN retiré par tour et nombre de tours (« loses X DEN for each of Y turns »).
+## Poison: DEN taken per turn, and how many turns ("loses X DEN for each of Y turns").
 ##
-## ## TODO(chiffrage doc) : X et Y sont toujours des lettres dans la doc. Les valeurs ci-dessous
-## sont des placeholders jamais équilibrés — à confronter aux DEN de rivaux
-## ([constant GameSession.RIVAL_DEN_EARLY] et suivants) et aux dégâts de chute
-## ([method DungeonManager.fall_damage], eux désormais chiffrés par la doc), pour que le poison
-## pèse le bon prix face aux autres sources de dégâts d'exploration.
+## ## TODO: X and Y are still letters in the design doc. The values below are placeholders that
+## have never been balanced — weigh them against rival DEN
+## ([constant GameSession.RIVAL_DEN_EARLY] and friends) and against fall damage
+## ([method DungeonManager.fall_damage], which the doc now gives real numbers for), so that
+## poison costs the right amount next to the other sources of exploration damage.
 @export var poison_per_turn := 5
 @export var poison_turns := 3
 
-## Disarray : bornes du nombre de mouvements affectés (doc : « 3-5 movements »).
+## Disarray: bounds on how many moves are affected. The design doc says "3-5 movements".
 @export var disarray_min := 3
 @export var disarray_max := 5
 
-## Actif = pas encore déclenché depuis la dernière (ré)initialisation.
+## Armed means not yet sprung since the last reset.
 var _active := true
 
 
@@ -47,27 +46,27 @@ func on_enter(who: Node) -> void:
 	if not _active:
 		return
 	_trigger(who)
-	_active = false  # désactivé après déclenchement, mais reste visible (grisé)
-	revealed = true  # le joueur constate le piège (et son type)
-	_mark_spent()  # feedback visuel : piège épuisé (usage unique par visite)
-	# Un piège qui se déclenche rompt l'invisibilité (règle fog mantel).
+	_active = false  # disarmed once sprung, but still visible, greyed out
+	revealed = true  # the player has seen the trap, and its kind
+	_mark_spent()  # visual feedback: spent, since it fires once per visit
+	# A trap that springs breaks invisibility (the fog mantel rule).
 	if who.has_method("clear_invisibility"):
 		who.clear_invisibility()
 
 
-## Un piège n'apparaît sur la carte qu'une fois CONNU : révélé par un talent/une capacité, ou
-## constaté en le déclenchant. Tant qu'il est caché, la carte n'en dit rien (doc « User
-## Interface » : la carte ne montre pas les pièges).
+## A trap only shows on the map once it is KNOWN — revealed by a talent or an ability, or found
+## out by springing it. While hidden the map says nothing about it, per the design doc's "User
+## Interface".
 func shows_on_map() -> bool:
 	return revealed
 
 
-## Révèle le type du piège SANS le déclencher (futur talent `reveal_traps`).
+## Reveals the trap's kind WITHOUT springing it (the future `reveal_traps` talent).
 func reveal() -> void:
 	revealed = true
 
 
-## Vrai tant que le piège n'a pas encore été déclenché depuis la dernière visite.
+## True while the trap has not been sprung since the last visit.
 func is_active() -> bool:
 	return _active
 
@@ -80,7 +79,7 @@ func reset_between_visits() -> void:
 	if reactivates:
 		_active = true
 		revealed = false
-		_respawn_marker()  # restaure l'aspect « armé »
+		_respawn_marker()  # back to the armed look
 
 
 func _trigger(who: Node) -> void:
@@ -98,21 +97,21 @@ func _trigger(who: Node) -> void:
 				_dungeon.teleport_actor(who)
 
 
-## AfflictionState porté par l'acteur, ou null s'il n'en a pas (duck-typing : joueur et
-## rival exposent tous deux une propriété `affliction`).
+## The actor's AfflictionState, or null when it has none. Duck typing: player and rival both
+## expose an `affliction` property.
 func _affliction_of(who: Node):
 	return who.get("affliction")
 
 
 func _spawn_visual() -> void:
-	var color := Color(0.6, 0.2, 0.8)  # POISON = violet
+	var color := Color(0.6, 0.2, 0.8)  # POISON: purple
 	match kind:
 		Kind.TELEPORT:
-			color = Color(0.2, 0.5, 0.9)  # bleu
+			color = Color(0.2, 0.5, 0.9)  # blue
 		Kind.DISARRAY:
 			color = Color(0.9, 0.5, 0.15)  # orange
-	_add_marker(color, 0.22, 0.85)  # plaque légèrement relevée
-	# Piège ACTIF : luminescent, pour bien le distinguer d'un piège épuisé (grisé/mat).
+	_add_marker(color, 0.22, 0.85)  # a slightly raised plate
+	# An ARMED trap glows, to tell it apart from a spent one, which is grey and matte.
 	var mat := _marker.material_override as StandardMaterial3D
 	if mat != null:
 		mat.emission_enabled = true

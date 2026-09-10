@@ -1,18 +1,17 @@
-## Usage des objets d'inventaire EN EXPLORATION.
+## Using inventory objects DURING EXPLORATION.
 ##
-## Mappe l'[enum GameEnums.ObjectEffect] d'un [ObjectData] vers les primitives de
-## [ExplorationContext], et consomme l'objet en cas de succès. Les effets réservés à la
-## rencontre (FLEE_ENCOUNTER) ne sont pas utilisables ici.
+## Maps an [ObjectData]'s [enum GameEnums.ObjectEffect] onto [ExplorationContext]'s primitives,
+## and consumes the object on success. Encounter-only effects, such as FLEE_ENCOUNTER, are not
+## usable here.
 ##
-## Pas de `class_name` (piège du cache CLI) : référencé par `preload`. Référence les autoloads
-## GameData / GameSession (OK en jeu ; charger au runtime dans les tests).
+## No `class_name` (the CLI class-cache trap): referenced by `preload`. References the GameData
+## and GameSession autoloads — fine in game, but tests have to load them at runtime.
 extends RefCounted
 
-## DEN rendu par défaut si l'objet HEAL_DEN n'a pas de magnitude chiffrée (placeholder).
+## DEN given back when a HEAL_DEN object carries no magnitude. Placeholder.
 const DEFAULT_HEAL := 20
 
 
-## Effets utilisables pendant l'exploration.
 static func usable_in_exploration(effect: int) -> bool:
 	return (
 		effect
@@ -25,8 +24,8 @@ static func usable_in_exploration(effect: int) -> bool:
 	)
 
 
-## Utilise un objet en exploration : applique son effet via `ctx` et le consomme si l'effet
-## a bien été appliqué. Retourne true en cas de succès.
+## Uses an object during exploration: applies its effect through `ctx` and consumes it only if
+## the effect actually landed. Returns true on success.
 static func use_object(object_id: StringName, ctx) -> bool:
 	var data: ObjectData = GameData.object(object_id)
 	if data == null or not GameSession.has_object(object_id):

@@ -1,12 +1,12 @@
-## Dessin d'un donjon : transforme la grille LOGIQUE en maillages visibles.
+## Drawing a dungeon: turns the LOGICAL grid into visible meshes.
 ##
-## Séparé de [DungeonManager], qui tient le modèle — où est le sol, ce qui bloque, qui occupe
-## quoi. Ce script n'en fait que des boîtes, et ne lit le donjon que par son API PUBLIQUE
-## ([method DungeonManager.floor_cells], [method DungeonManager.pit_cells],
-## [method DungeonManager.fall_landing]). C'est ce qui rend la frontière réelle : si le rendu
-## a besoin d'une information, le modèle doit la nommer, pas la laisser traîner en privé.
+## Kept apart from [DungeonManager], which holds the model — where the floor is, what blocks,
+## who occupies what. This script only makes boxes out of it, and reads the dungeon through its
+## PUBLIC API alone ([method DungeonManager.floor_cells], [method DungeonManager.pit_cells],
+## [method DungeonManager.fall_landing]). That is what makes the boundary real: if rendering
+## needs a fact, the model has to name it rather than leave it lying around in private.
 ##
-## Pas de `class_name` (piège du cache de classes en CLI) : obtenu par `preload`.
+## No `class_name` (the CLI class-cache trap): obtained by `preload`.
 extends RefCounted
 
 const FLOOR_COLOR := Color(0.24, 0.24, 0.30)
@@ -14,41 +14,40 @@ const PIT_COLOR := Color(0.12, 0.12, 0.16)
 const WALL_COLOR := Color(0.14, 0.14, 0.17)
 
 
-## Pose la géométrie visible dans `dm` : un bloc de mur d'une case sur chaque case de
-## `wall_cells`, et une DALLE MINCE (épaisseur [constant DungeonManager.FLOOR_THICKNESS], qui
-## fait aussi office de plafond pour la case du dessous) sur chaque case de sol qui n'a PAS de
-## mur en dessous — là où il y a un mur, c'est sa face haute qui sert de sol (doc « Walls +
-## Decors »).
+## Lays the visible geometry into `dm`: a one-cell wall block on each of `wall_cells`, and a
+## THIN SLAB ([constant DungeonManager.FLOOR_THICKNESS] thick, doubling as the ceiling of the
+## cell below) on each floor cell with NO wall underneath — where there is a wall, its top face
+## serves as the floor, per the design doc's "Walls + Decors".
 static func render_grid(dm, wall_cells: Dictionary) -> void:
 	var floor_mat := _material(FLOOR_COLOR)
 	for c in dm.floor_cells():
 		if dm.pit_cells().has(c):
-			continue  # dalle abaissée rendue plus bas (planche du pont posée par-dessus)
+			continue  # the lowered slab is rendered further down; the bridge plank goes over it
 		if wall_cells.has(c + Vector3i.DOWN):
-			continue  # un bloc de mur tient lieu de sol : pas de dalle par-dessus
+			continue  # a wall block serves as the floor, so no slab on top of it
 		dm.add_child(_make_slab(dm, dm.cell_to_world(c), floor_mat))
 
-	# Fosses : dalle de fond sombre en contrebas UNIQUEMENT s'il n'y a pas déjà un vrai sol
-	# plus bas (sinon on masquerait le ravin dans lequel on est censé pouvoir tomber).
+	# Pits get a dark bottom slab below them ONLY when there is no real floor further down —
+	# otherwise we would hide the very ravine you are meant to be able to fall into.
 	var pit_mat := _material(PIT_COLOR)
 	for c in dm.pit_cells():
 		if dm.fall_landing(c) != c:
-			continue  # un étage inférieur sert déjà de fond
+			continue  # a lower storey already serves as the bottom
 		var pos: Vector3 = dm.cell_to_world(c) + Vector3(0.0, -dm.PIT_DEPTH, 0.0)
 		dm.add_child(_make_slab(dm, pos, pit_mat))
 
 	var wall_mat := _material(WALL_COLOR)
 	for w in wall_cells:
-		# Un mur surmonté d'une case de sol porte le revêtement de sol sur sa face haute :
-		# c'est LUI le sol de l'étage au-dessus.
+		# A wall with a floor cell above it wears the floor material on its top face: it IS the
+		# floor of the storey above.
 		var top_mat: StandardMaterial3D = (
 			floor_mat if dm.floor_cells().has(w + Vector3i.UP) else null
 		)
 		dm.add_child(_make_wall_block(dm, dm.cell_to_world(w), wall_mat, top_mat))
 
 
-## Rendu minimal d'une salle de démonstration : un sol plat d'un seul tenant, et des boîtes
-## de murs sur le pourtour et les cases bloquées. Échafaudage, comme la salle elle-même.
+## Minimal rendering of a demo room: one flat floor in a single piece, plus wall boxes around
+## the outside and on the blocked cells. Scaffolding, like the room itself.
 static func build_demo_visuals(dm, width: int, depth: int, blocked: Dictionary) -> void:
 	var floor_mi := MeshInstance3D.new()
 	var plane := PlaneMesh.new()
@@ -79,8 +78,8 @@ static func _material(color: Color) -> StandardMaterial3D:
 	return mat
 
 
-## Dalle mince (sol/plafond) posée sur une case : sa face HAUTE est au niveau `floor_pos`,
-## son épaisseur descend en dessous.
+## A thin floor/ceiling slab on a cell: its TOP face is at `floor_pos`, and its thickness hangs
+## below that.
 static func _make_slab(dm, floor_pos: Vector3, mat: StandardMaterial3D) -> MeshInstance3D:
 	var mi := MeshInstance3D.new()
 	var box := BoxMesh.new()
@@ -91,11 +90,11 @@ static func _make_slab(dm, floor_pos: Vector3, mat: StandardMaterial3D) -> MeshI
 	return mi
 
 
-## Bloc de mur plein : un cube d'une case, qui remplit le volume de la case au-dessus de son
-## sol (donc jamais plus haut qu'un étage — l'étage du dessus reste libre).
+## A solid wall block: a one-cell cube filling the cell's volume above its floor, and so never
+## more than one storey tall — the storey above stays free.
 ##
-## `top_mat` non nul = une case de sol repose sur ce mur : on plaque le revêtement de sol sur
-## sa face haute (aucune dalle n'est posée par-dessus, c'est le mur qui EST le sol).
+## A non-null `top_mat` means a floor cell rests on this wall, so the floor material is laid on
+## its top face. No slab goes over it: the wall IS the floor.
 static func _make_wall_block(
 	dm, floor_pos: Vector3, mat: StandardMaterial3D, top_mat: StandardMaterial3D = null
 ) -> MeshInstance3D:
@@ -110,7 +109,7 @@ static func _make_wall_block(
 		plane.size = Vector2(dm.CELL_SIZE, dm.CELL_SIZE)
 		skin.mesh = plane
 		skin.material_override = top_mat
-		skin.position = Vector3(0.0, dm.CELL_SIZE * 0.5 + 0.002, 0.0)  # juste au-dessus
+		skin.position = Vector3(0.0, dm.CELL_SIZE * 0.5 + 0.002, 0.0)  # just above the top face
 		mi.add_child(skin)
 	mi.position = floor_pos + Vector3(0.0, dm.CELL_SIZE * 0.5, 0.0)
 	return mi

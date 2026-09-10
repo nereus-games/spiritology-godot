@@ -1,19 +1,18 @@
-## Descripteur d'une action contextuelle d'exploration proposée par un mécanisme.
+## Describes one contextual exploration action offered by a mechanism.
 ##
-## Produit par les hooks `on_tile_actions` / `on_adjacent_actions` des mécanismes (Dig,
-## Recycle, Examine, Meditate, ouvrir une porte verrouillée…) et agrégé par
-## [method DungeonManager.actions_for]. Consommé par la future surface d'actions
-## d'exploration (HUD) : elle affiche [member label_key] via `tr()` et invoque
-## [member callable] à la sélection.
+## Produced by the mechanisms' `on_tile_actions` and `on_adjacent_actions` hooks — Dig, Recycle,
+## Examine, Meditate, unlocking a gateway — and aggregated by
+## [method DungeonManager.actions_for]. The HUD's exploration action surface consumes it: it
+## shows [member label_key] through `tr()` and invokes [member callable] on selection.
 ##
-## Pas de `class_name` (piège du cache CLI) : référencé par `preload`.
+## No `class_name` (the CLI class-cache trap): referenced by `preload`.
 extends RefCounted
 
-## Identifiant stable de l'action (ex. &"dig", &"recycle").
+## Stable identifier for the action, such as &"dig" or &"recycle".
 var id: StringName
-## Clé de traduction du libellé affiché (convention UI_ACTION_<X>).
+## Translation key of the label shown. The convention is UI_ACTION_<X>.
 var label_key: String
-## À invoquer quand le joueur choisit l'action (déjà liée à sa cible/acteur).
+## Invoked when the player picks the action. Already bound to its target and actor.
 var callable: Callable
 
 

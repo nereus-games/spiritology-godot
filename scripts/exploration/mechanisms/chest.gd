@@ -1,54 +1,54 @@
-## Coffre.
+## A chest.
 ##
-## Doc Notion (Level Design / Mechanisms « Chest »). Mécanisme rare : en marchant dessus,
-## le joueur reçoit des objets. Certains coffres sont en réalité des pièges de téléportation
-## déguisés ([member is_trap]) — rien ne les distingue à l'œil. Ouvert une seule fois, y
-## compris entre deux visites.
+## From the design doc ("Mechanisms / Chest"). A rare mechanism: walking onto it hands the
+## player objects. Some chests are really disguised teleport traps ([member is_trap]), with
+## nothing to tell them apart by eye. Opened once only, across visits included.
 ##
-## Deux autres pages de la doc mentionnent les coffres, et les deux sont câblées ici :
-##  - talent « Reveal Traps » (razél) : « When a chest attempts to teleport players, they can
+## Two other pages of the design doc mention chests, and both are wired up here:
+##  - the "Reveal Traps" talent (razél): "When a chest attempts to teleport players, they can
 ##    decide to teleport or not. The chest gives 1 or more object no matter what, but more if
-##    players choose to teleport. » → un coffre piégé propose alors un CHOIX (menu d'actions
-##    de la case, comme le dieverting), et livre du butin dans les deux cas ;
-##  - talent « Trick to Reveal » (érzélak) : révèle sur la carte « a chest or trap that hadn't
-##    been revealed yet » → d'où [member revealed] / [method reveal], symétriques de [Trap].
+##    players choose to teleport." So a trapped chest offers a CHOICE, through the cell's action
+##    menu like the dieverting, and hands out loot either way;
+##  - the "Trick to Reveal" talent (érzélak): reveals on the map "a chest or trap that hadn't
+##    been revealed yet", hence [member revealed] and [method reveal], mirroring [Trap].
 ##
-## Pas de `class_name` : `extends` par chemin. Référence l'autoload GameSession.
+## No `class_name`: `extends` by path. References the GameSession autoload.
 extends "res://scripts/exploration/mechanisms/dungeon_mechanism.gd"
 
 const ExplorationAction := preload("res://scripts/exploration/exploration_action.gd")
 
-## Talent qui rend optionnelle la téléportation d'un coffre piégé (doc « Reveal Traps »).
+## The talent that makes a trapped chest's teleport optional ("Reveal Traps").
 const REVEAL_TRAPS := &"reveal_traps"
 
-## Coffre piégé : au lieu de donner des objets, téléporte celui qui l'ouvre.
+## A trapped chest: instead of handing out objects, it teleports whoever opens it.
 @export var is_trap := false
 
-## Objets qu'un coffre peut contenir (placeholder).
+## What a chest can hold. Placeholder.
 @export var loot_pool: Array[StringName] = [&"rune_stone", &"tea_drop", &"smoke_bomb", &"spade"]
 @export var loot_min := 1
 @export var loot_max := 3
 
-## Butin d'un coffre PIÉGÉ ouvert par un duo qui porte « Reveal Traps » : la doc impose
-## « 1 or more object no matter what, but more if players choose to teleport ». Magnitudes
-## placeholder, avec la seule contrainte de la doc (accepté > refusé ≥ 1).
+## Loot from a TRAPPED chest opened by a duo carrying "Reveal Traps". The design doc requires
+## "1 or more object no matter what, but more if players choose to teleport". Placeholder
+## magnitudes, respecting the doc's only constraint: accepted > declined >= 1.
 @export var trap_loot_declined := 1
 @export var trap_loot_accepted := 3
 
-## Contenu IMPOSÉ : si non vide, le coffre livre EXACTEMENT ces objets (doublons compris) au
-## lieu de tirer dans [member loot_pool]. Sert au dieverting, qui dépose les objets qu'il fait
-## perdre dans un coffre posé là où il se trouvait (doc « Dieverting »).
+## FIXED contents: when not empty, the chest hands out EXACTLY these objects, duplicates
+## included, instead of drawing from [member loot_pool]. Used by the dieverting, which drops the
+## objects it makes you lose into a chest placed where it stood.
 @export var fixed_loot: Array[StringName] = []
 
-## Coffre repéré par le joueur (marché dessus, ou révélé par « Trick to Reveal »). N'implique
-## PAS de savoir s'il est piégé : la doc en fait des pièges DÉGUISÉS.
-## ## TODO: la carte ne dessine pas encore les mécanismes ; ce drapeau est ce qu'elle lira
-## (même chantier que `Trap.revealed`).
+## The chest is known to the player, by having been stepped on or revealed by "Trick to
+## Reveal". Does NOT imply knowing whether it is trapped — the design doc makes these DISGUISED
+## traps.
+## ## TODO: the map does not draw mechanisms yet; this flag is what it will read (same job as
+## `Trap.revealed`).
 @export var revealed := false
 
 var _opened := false
-## Coffre piégé rencontré par un duo qui porte « Reveal Traps » : choix en attente sur la
-## case (téléportation acceptée ou refusée), comme le choix détruire/subir du dieverting.
+## A trapped chest met by a duo carrying "Reveal Traps": the choice — accept or decline the
+## teleport — is pending on the cell, like the dieverting's destroy-or-submit.
 var _pending := false
 
 
@@ -56,17 +56,16 @@ func is_opened() -> bool:
 	return _opened
 
 
-## Un coffre ouvert n'a plus rien à donner (règle transverse « épuisé »).
+## An opened chest has nothing left to give.
 func is_spent() -> bool:
 	return _opened
 
 
-## Un choix téléportation oui/non est-il en attente sur cette case ?
 func is_pending() -> bool:
 	return _pending
 
 
-## Révèle le coffre sur la carte sans l'ouvrir (talent « Trick to Reveal »).
+## Reveals the chest on the map without opening it (the "Trick to Reveal" talent).
 func reveal() -> void:
 	revealed = true
 
@@ -76,25 +75,25 @@ func on_enter(who: Node) -> void:
 		return
 	var is_player := _dungeon == null or _dungeon.is_player(who)
 	if is_player:
-		revealed = true  # on a mis le pied dessus : le coffre n'est plus une inconnue
+		revealed = true  # we stepped on it, so the chest is no longer an unknown
 	if is_trap:
-		# Piège déguisé : comme tout piège, il vaut aussi pour les rivaux (doc Traps, commentaire
-		# Néd J. « rivals too ») — mais le choix, lui, n'est offert qu'au joueur.
+		# A disguised trap, and like any trap it applies to rivals too (the design doc's Traps
+		# page, "rivals too"). The choice, though, is only ever offered to the player.
 		if is_player and GameSession.party_has_talent(REVEAL_TRAPS):
 			_pending = true
 			return
 		_spring(who)
 		return
-	# Coffre à butin : seul le joueur ramasse (les rivaux n'ont pas d'inventaire). Un rival
-	# qui passe dessus ne le consomme donc PAS — le butin attend le joueur.
+	# A loot chest: only the player picks anything up, since rivals have no inventory. A rival
+	# walking over it therefore does NOT consume it — the loot waits for the player.
 	if not is_player:
 		return
 	_close()
 	_deliver(_roll_loot())
 
 
-## Actions proposées tant que le choix « Reveal Traps » est en attente (doc : téléporter ou
-## non, du butin dans les deux cas — davantage si l'on accepte).
+## What is offered while the "Reveal Traps" choice is pending: teleport or not, with loot either
+## way, and more of it if you accept.
 func on_tile_actions(who: Node) -> Array:
 	if _opened or not _pending:
 		return []
@@ -112,7 +111,7 @@ func on_tile_actions(who: Node) -> Array:
 	]
 
 
-## Choix « Reveal Traps » : accepter la téléportation, contre un butin plus généreux.
+## The "Reveal Traps" choice: accept the teleport, for more generous loot.
 func accept_teleport(who: Node) -> void:
 	if _opened or not _pending:
 		return
@@ -121,8 +120,8 @@ func accept_teleport(who: Node) -> void:
 	_teleport(who)
 
 
-## Choix « Reveal Traps » : refuser la téléportation ; le coffre livre quand même du butin.
-## Le piège ne se déclenche pas, donc il ne rompt pas l'invisibilité (règle fog mantel).
+## The "Reveal Traps" choice: decline the teleport; the chest hands out loot anyway. The trap
+## never springs, so it does not break invisibility (the fog mantel rule).
 func decline_teleport(_who: Node) -> void:
 	if _opened or not _pending:
 		return
@@ -130,7 +129,7 @@ func decline_teleport(_who: Node) -> void:
 	_deliver(_pick_from_pool(trap_loot_declined))
 
 
-## Le piège se déclenche : téléportation sèche, sans butin (cas ordinaire, sans talent).
+## The trap springs: a bare teleport, no loot. The ordinary case, without the talent.
 func _spring(who: Node) -> void:
 	_close()
 	_teleport(who)
@@ -139,27 +138,27 @@ func _spring(who: Node) -> void:
 func _teleport(who: Node) -> void:
 	if _dungeon != null:
 		_dungeon.teleport_actor(who)
-	# Un piège qui se déclenche rompt l'invisibilité (règle fog mantel), coffre ou pas.
+	# A trap that springs breaks invisibility (the fog mantel rule), chest or not.
 	if is_instance_valid(who) and who.has_method("clear_invisibility"):
 		who.clear_invisibility()
 
 
-## Marque le coffre comme ouvert : plus d'actions, et un visuel inerte (comme un piège
-## épuisé) pour qu'on ne revienne pas dessus en espérant du butin.
+## Marks the chest as opened: no more actions, and an inert visual like a spent trap, so nobody
+## comes back to it hoping for loot.
 func _close() -> void:
 	_opened = true
 	_pending = false
 	_mark_spent()
 
 
-## Contenu du coffre : le contenu imposé s'il y en a un (dieverting), sinon un tirage.
+## The chest's contents: the fixed ones when set, by the dieverting, otherwise a draw.
 func _roll_loot() -> Array[StringName]:
 	if not fixed_loot.is_empty():
 		return fixed_loot.duplicate()
 	return _pick_from_pool(randi_range(loot_min, loot_max))
 
 
-## `count` objets tirés au hasard dans [member loot_pool] (doublons possibles).
+## `count` objects drawn at random from [member loot_pool]; duplicates are possible.
 func _pick_from_pool(count: int) -> Array[StringName]:
 	var picked: Array[StringName] = []
 	if loot_pool.is_empty():
@@ -169,7 +168,7 @@ func _pick_from_pool(count: int) -> Array[StringName]:
 	return picked
 
 
-## Verse le butin à l'inventaire et l'annonce au joueur (bandeau de messages du HUD).
+## Adds the loot to the inventory and announces it in the HUD's message banner.
 func _deliver(loot: Array[StringName]) -> void:
 	if loot.is_empty():
 		return
@@ -182,11 +181,11 @@ func _deliver(loot: Array[StringName]) -> void:
 		_dungeon.post_message(tr("UI_CHEST_LOOT") % ", ".join(names))
 
 
-## Les coffres ouverts le restent entre visites (pas de réarmement). Un choix laissé en
-## suspens, lui, ne survit pas à la sortie du donjon : le coffre est de nouveau intact.
+## Opened chests stay opened between visits — no rearming. A choice left hanging, on the other
+## hand, does not survive leaving the dungeon: the chest is intact again.
 func reset_between_visits() -> void:
 	_pending = false
 
 
 func _spawn_visual() -> void:
-	_add_marker(Color(0.75, 0.6, 0.25), 0.35, 0.55)  # coffre doré (piégé ou non : identique)
+	_add_marker(Color(0.75, 0.6, 0.25), 0.35, 0.55)  # gold chest, identical whether trapped or not

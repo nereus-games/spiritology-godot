@@ -1,9 +1,9 @@
-## Cranny Crossing — traverse un mur fissuré d'une case d'épaisseur.
+## Cranny Crossing — go through a cracked wall one cell thick.
 ##
-## Doc Notion : « Pass through a wall. Allows players to go through a cracked wall once and
-## appear on the other side in a single move. » S'applique au mur fissuré ([Trap]/CrackedWall)
-## présent sur la case regardée. Retourne false s'il n'y a pas de mur fissuré en face (rien
-## n'est consommé). La traversée elle-même marque la capacité comme utilisée (via le mur).
+## The design doc: "Pass through a wall. Allows players to go through a cracked wall once and
+## appear on the other side in a single move." Applies to the cracked wall on the cell being
+## faced. Returns false when there is none there, and nothing is spent. The crossing itself marks
+## the ability as used, through the wall.
 extends "res://scripts/exploration/abilities/exploration_ability.gd"
 
 

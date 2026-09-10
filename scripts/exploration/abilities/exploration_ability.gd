@@ -1,14 +1,14 @@
-## Effet d'une capacité d'exploration (base).
+## Base of an exploration ability's effect.
 ##
-## Équivalent exploration de [AbilityScript] : une sous-classe par capacité d'exploration
-## dans `impl/<id>.gd`, surchargeant [method use] pour appliquer la mécanique via les
-## primitives de [ExplorationContext]. Résolu par `exploration_ability_catalog.gd`.
+## The exploration counterpart of [AbilityScript]: one subclass per exploration ability under
+## `impl/<id>.gd`, overriding [method use] to apply the mechanic through [ExplorationContext]'s
+## primitives. Resolved by `exploration_ability_catalog.gd`.
 ##
-## Pas de `class_name` (piège du cache CLI) : `extends`/`preload` par chemin.
+## No `class_name` (the CLI class-cache trap): `extends` and `preload` by path.
 extends RefCounted
 
 
-## Applique l'effet de la capacité. Retourne true si la capacité a été effectivement utilisée
-## (et doit donc être marquée comme consommée pour la visite). Défaut : rien.
+## Applies the ability's effect. Returns true when the ability was actually used, and so has to
+## be marked spent for the visit. Does nothing by default.
 func use(_ctx) -> bool:
 	return false

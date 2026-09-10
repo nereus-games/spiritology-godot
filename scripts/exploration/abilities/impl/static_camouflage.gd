@@ -1,11 +1,11 @@
-## Static Camouflage — se figer en objet pour observer les groupes de rivaux errants.
+## Static Camouflage — hold still as an object to watch the wandering rival groups.
 ##
-## Doc Notion : transformation temporaire en objet immobile ; 2 à 4 groupes de rivaux sont
-## montrés un par un, le joueur choisit d'en affronter un ou d'attendre le suivant ; chances
-## accrues d'espèces inconnues/variations près d'une litière.
+## From the design doc: a temporary transformation into a motionless object; 2 to 4 rival groups
+## are shown one at a time, and the player picks one to face or waits for the next; unknown
+## species and variations are likelier near litter.
 ##
-## ## TODO: la révélation/choix de groupes dépend d'un système de spawn de groupes de rivaux
-## (absent). Version minimale : passe le joueur en état de guet caché (voir
+## ## TODO: revealing and choosing groups needs a rival-group spawn system, which does not exist.
+## Minimal version: puts the player into a hidden scouting state (see
 ## [method ExplorationContext.scout_groups]).
 extends "res://scripts/exploration/abilities/exploration_ability.gd"
 

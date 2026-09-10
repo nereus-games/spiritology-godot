@@ -1,8 +1,8 @@
-## Fog Mantel — invisible des rivaux pour 5 à 8 cases (aléatoire).
+## Fog Mantel — invisible to the rivals for a random 5 to 8 cells.
 ##
-## Doc Notion : « Become invisible from rivals for 5 to 8 tiles. Traps and encounters cancel
-## this invisibility. » Le nombre de cases est tiré au hasard à chaque usage ; une rencontre
-## ou l'activation d'un piège l'annule immédiatement (géré côté joueur / piège).
+## The design doc: "Become invisible from rivals for 5 to 8 tiles. Traps and encounters cancel
+## this invisibility." The number of cells is rolled on every use; an encounter or a sprung trap
+## clears it at once, which the player and the trap handle.
 extends "res://scripts/exploration/abilities/exploration_ability.gd"
 
 

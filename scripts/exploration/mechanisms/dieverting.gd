@@ -1,72 +1,72 @@
-## Dieverting (FR « cubimprévu »).
+## Dieverting (French name: "cubimprévu").
 ##
-## Doc Notion (Level Design / Mechanisms « Dieverting »). Dé impatient qui s'active dès
-## qu'il rencontre le joueur. Si le joueur possède un objet capable de le détruire (pelle ou
-## pierre runique), on lui offre le CHOIX de le détruire ou de subir ; sinon il subit
-## aussitôt. Le dé lancé donne l'une de 6 issues. Traité comme un mécanisme (et non un objet)
-## : ne se stocke pas dans l'inventaire.
+## From the design doc ("Mechanisms / Dieverting"). An impatient die that goes off the moment
+## it meets the player. If the player holds something able to destroy it — a spade or a rune
+## stone — they get the CHOICE of destroying it or submitting; otherwise they submit at once.
+## The roll gives one of 6 outcomes. Treated as a mechanism rather than an object, so it never
+## goes into the inventory.
 ##
-## Le choix détruire/subir est offert par le menu d'actions contextuelles du HUD (comme
-## ouvrir une porte verrouillée) : tant que le joueur n'a pas tranché, le dé reste EN ATTENTE
-## sur sa case et repropose ses deux actions à chaque passage.
+## The destroy/submit choice is offered by the HUD's contextual action menu, like unlocking a
+## gateway: until the player picks one, the die stays PENDING on its cell and offers both
+## actions again on every visit.
 ##
-## Le dé est un VRAI d6 (faces opposées = 7) : chacune des 6 issues de la doc est une face,
-## le cube culbute pour de bon et s'arrête sur celle qui est sortie, puis le résultat est
-## annoncé au joueur par le bandeau de messages du HUD ([method DungeonManager.post_message]).
+## It is a REAL d6 (opposite faces sum to 7): each of the design doc's 6 outcomes is a face,
+## the cube genuinely tumbles and stops on the one it rolled, and the result is announced
+## through the HUD's message banner ([method DungeonManager.post_message]).
 ##
-## Deux points que la doc ne tranche pas, arbitrés ici :
-##  - un dé qui a roulé (ou qui a été détruit) est consommé : il ne se réarme pas, ni dans la
-##    visite ni entre deux visites ;
-##  - les magnitudes X / Y / Z (objets perdus, ETH, DEN) sont des placeholders exportés.
+## Two points the design doc leaves open, settled here:
+##  - a die that has rolled, or been destroyed, is consumed: it never rearms, neither during
+##    the visit nor between two of them;
+##  - the X / Y / Z magnitudes (objects lost, ETH, DEN) are exported placeholders.
 ##
-## Pas de `class_name` : `extends` par chemin. Référence l'autoload GameSession.
+## No `class_name`: `extends` by path. References the GameSession autoload.
 extends "res://scripts/exploration/mechanisms/dungeon_mechanism.gd"
 
 const ExplorationAction := preload("res://scripts/exploration/exploration_action.gd")
 const ChestScript := preload("res://scripts/exploration/mechanisms/chest.gd")
 const RIVAL_SCENE := preload("res://scenes/exploration/rival/rival.tscn")
 
-## Les 6 issues du dé (doc).
+## The die's 6 outcomes, from the design doc.
 enum Outcome {
-	TELEPORT_ENTRANCE_LOSE_OBJECTS,  ## → entrée, perd des objets (placés dans un coffre)
-	TELEPORT_ENTRANCE_LOSE_ETH,  ## → entrée, chaque perso perd de l'ETH
-	SPAWN_RIVALS,  ## jusqu'à 3 groupes de rivaux apparaissent
-	TELEPORT_EXIT_LOSE_OBJECTS_DEN,  ## → sortie, perd des objets + chaque perso perd du DEN
-	DESTROY_OBJECTS,  ## détruit jusqu'à 3 objets au hasard
-	ADD_OBJECTS,  ## ajoute jusqu'à 3 objets au hasard
+	TELEPORT_ENTRANCE_LOSE_OBJECTS,  ## to the entrance, losing objects (dropped in a chest)
+	TELEPORT_ENTRANCE_LOSE_ETH,  ## to the entrance, each character losing ETH
+	SPAWN_RIVALS,  ## up to 3 groups of rivals appear
+	TELEPORT_EXIT_LOSE_OBJECTS_DEN,  ## to an exit, losing objects, each character losing DEN
+	DESTROY_OBJECTS,  ## destroys up to 3 random objects
+	ADD_OBJECTS,  ## adds up to 3 random objects
 }
 
-## Objets capables de détruire un dieverting.
+## Objects able to destroy a dieverting.
 const DESTROYERS: Array[StringName] = [&"spade", &"rune_stone"]
 
-## Objets pouvant être ajoutés (issue ADD_OBJECTS) — placeholder.
+## Objects the ADD_OBJECTS outcome can hand out. Placeholder.
 @export var add_pool: Array[StringName] = [&"rune_stone", &"tea_drop", &"smoke_bomb", &"spade"]
 
-# Magnitudes placeholder (doc : X / Y / Z à définir).
+# Placeholder magnitudes — the design doc leaves X / Y / Z to be defined.
 @export var objects_lost := 2
 @export var eth_lost_each := 10
 @export var den_lost_each := 15
 @export var max_objects_delta := 3
 
-## Issue SPAWN_RIVALS : jusqu'à 3 GROUPES de rivaux (une silhouette sur la carte = un groupe),
-## dans un rayon de `rival_spawn_radius` cases autour du joueur.
-## ## TODO: doc « specifics TBD » — le nombre, la distance et surtout les espèces devront venir
-## du level design (DungeonConfig.possible_species) quand les donjons seront authorés ; le pool
-## ci-dessous est un placeholder de test.
+## The SPAWN_RIVALS outcome: up to 3 GROUPS of rivals (one silhouette on the map is one group)
+## within `rival_spawn_radius` cells of the player.
+## ## TODO: the design doc says "specifics TBD" — the count, the distance and above all the
+## species will have to come from level design (DungeonConfig.possible_species) once dungeons
+## are authored. The pool below is a test placeholder.
 @export var rival_spawn_max := 3
 @export var rival_spawn_radius := 4
 @export var rival_pool: Array[StringName] = [&"ravbak", &"kalilk"]
 
-# --- Dé (visuel) ---
+# --- The die (visuals) ---
 
-## Arête du cube, en mètres.
+## Edge length of the cube, in metres.
 const DIE_SIZE := 0.45
-## Côté d'un point (pip), son épaisseur en saillie de la face, et l'écart entre deux points.
+## A pip's side, how far it stands proud of the face, and the gap between two pips.
 const PIP_SIZE := 0.075
 const PIP_DEPTH := 0.012
 const PIP_SPACING := DIE_SIZE * 0.26
 
-## Normale LOCALE de chaque face, faces opposées sommant à 7 (comme un vrai dé).
+## Each face's LOCAL normal, with opposite faces summing to 7, like a real die.
 const FACE_NORMALS := {
 	1: Vector3.UP,
 	6: Vector3.DOWN,
@@ -76,7 +76,7 @@ const FACE_NORMALS := {
 	4: Vector3.LEFT,
 }
 
-## Disposition des points d'une face, en unités de [constant PIP_SPACING].
+## Pip layout of a face, in units of [constant PIP_SPACING].
 const PIP_LAYOUTS := {
 	1: [Vector2(0, 0)],
 	2: [Vector2(-1, -1), Vector2(1, 1)],
@@ -87,21 +87,22 @@ const PIP_LAYOUTS := {
 	[Vector2(-1, -1), Vector2(-1, 0), Vector2(-1, 1), Vector2(1, -1), Vector2(1, 0), Vector2(1, 1)],
 }
 
-## Durée de la culbute (s). 0 = pas d'animation (vérifications headless).
+## Tumble duration in seconds. 0 means no animation at all, for the headless checks.
 @export var roll_duration := 0.9
-## Temps pendant lequel le dé reste lisible, en l'air, avant de retomber sur sa case.
+## How long the die stays readable in mid-air before dropping back onto its cell.
 @export var roll_hold := 0.7
 
-## Distance devant le joueur et hauteur auxquelles le dé culbute. Le joueur se tient sur la
-## MÊME case que le dé : posé au sol, un cube de 45 cm serait sous la caméra (yeux à
-## [constant DungeonManager.EYE_HEIGHT]) — donc invisible. Il saute donc dans le champ de
-## vision, un peu au-delà de la case voisine : plus près, il mange tout l'écran.
-## ## TODO: en cul-de-sac, le dé en l'air empiète sur le mur d'en face (cosmétique, à revoir
-## avec les vrais visuels).
+## How far in front of the player, and how high, the die tumbles. The player stands on the SAME
+## cell as the die, so a 45 cm cube left on the floor would sit below the camera (eyes at
+## [constant DungeonManager.EYE_HEIGHT]) and be invisible. It therefore jumps into view, a
+## little past the neighbouring cell — any closer and it fills the screen.
+## ## TODO: in a dead end the airborne die clips into the wall opposite. Cosmetic; revisit with
+## the real visuals.
 const AIR_DISTANCE := 1.45
-const AIR_HEIGHT := 0.45  # centre du cube ≈ hauteur des yeux : le dé est pile dans l'axe
+const AIR_HEIGHT := 0.45  # cube centre near eye height, so the die sits right on the axis
 
-## Clé de message par issue (affichée par le HUD via [signal DungeonManager.message_posted]).
+## Message key per outcome, shown by the HUD through
+## [signal DungeonManager.message_posted].
 const MESSAGE_KEYS := {
 	Outcome.TELEPORT_ENTRANCE_LOSE_OBJECTS: "UI_DIEVERTING_ENTRANCE_OBJECTS",
 	Outcome.TELEPORT_ENTRANCE_LOSE_ETH: "UI_DIEVERTING_ENTRANCE_ETH",
@@ -112,10 +113,10 @@ const MESSAGE_KEYS := {
 }
 
 var _active := true
-## Le dé a rencontré le joueur, qui a de quoi le détruire : choix en attente sur la case.
+## The die met the player, who can destroy it: the choice is pending on the cell.
 var _pending := false
 
-# État de la culbute en cours (lu par [method _roll_step], pilotée par un tween).
+# State of the tumble in progress, read by [method _roll_step] and driven by a tween.
 var _roll_axis := Vector3.UP
 var _roll_turns := 2.0
 var _roll_final := Quaternion.IDENTITY
@@ -125,17 +126,16 @@ func is_active() -> bool:
 	return _active
 
 
-## Un dé qui a roulé (ou qui a été détruit) est épuisé (règle transverse).
+## A die that has rolled, or been destroyed, is spent.
 func is_spent() -> bool:
 	return not _active
 
 
-## Un choix détruire/subir est-il en attente sur cette case ?
 func is_pending() -> bool:
 	return _pending
 
 
-## Le joueur peut-il détruire ce dieverting (possède pelle ou pierre runique) ?
+## Whether the player can destroy this dieverting, meaning they hold a spade or a rune stone.
 func is_destroyable_by(who: Node) -> bool:
 	if _dungeon != null and not _dungeon.is_player(who):
 		return false
@@ -145,8 +145,8 @@ func is_destroyable_by(who: Node) -> bool:
 	return false
 
 
-## Rencontre du dé : s'il n'est pas destructible par le joueur, il se déclenche aussitôt
-## (« impatient »). S'il l'est, le choix passe par le menu d'actions.
+## Meeting the die: if the player cannot destroy it, it goes off at once — it is "impatient".
+## If they can, the choice goes through the action menu.
 func on_enter(who: Node) -> void:
 	if not _active:
 		return
@@ -158,7 +158,8 @@ func on_enter(who: Node) -> void:
 	submit(who)
 
 
-## Actions proposées tant que le choix est en attente : détruire (contre un objet) ou subir.
+## What is offered while the choice is pending: destroy it, at the cost of an object, or
+## submit.
 func on_tile_actions(who: Node) -> Array:
 	if not _active or not _pending:
 		return []
@@ -179,8 +180,8 @@ func on_tile_actions(who: Node) -> Array:
 	return actions
 
 
-## Détruit le dieverting en consommant un objet destructeur (pelle en priorité). Retourne
-## true si détruit.
+## Destroys the dieverting, consuming one destroyer object — the spade first. Returns true when
+## it was destroyed.
 func destroy(_who: Node) -> bool:
 	if not _active:
 		return false
@@ -193,23 +194,23 @@ func destroy(_who: Node) -> bool:
 	return false
 
 
-## Subit le dé : le lance (ou `forced` pour les tests), le fait rouler devant le joueur,
-## annonce le résultat, puis applique l'issue. À AWAITER si l'on veut voir les effets appliqués
-## (l'issue n'est appliquée qu'une fois le dé retombé) ; `roll_duration = 0` court-circuite
-## l'animation. Retourne l'issue tirée.
+## Submits to the die: rolls it (or takes `forced`, for tests), tumbles it in front of the
+## player, announces the result, then applies the outcome. AWAIT it if you need the effects to
+## have landed — the outcome is only applied once the die has come down. `roll_duration = 0`
+## short-circuits the animation. Returns the outcome rolled.
 func submit(who: Node, forced: int = -1) -> int:
 	if not _active:
 		return -1
 	var outcome := forced if forced >= 0 else randi() % Outcome.size()
-	# Désarmé AVANT le roulement : le dé a joué, même si l'animation dure encore. (L'issue,
-	# elle, peut poser un coffre sur la case, faire apparaître des rivaux ou téléporter le
-	# joueur : elle n'est appliquée qu'à la retombée.)
+	# Disarmed BEFORE the roll: the die has played, even if the animation is still running. The
+	# outcome itself may drop a chest on the cell, spawn rivals or teleport the player, so it is
+	# only applied once the die has come down.
 	_active = false
 	_pending = false
 	var locked: bool = "input_locked" in who
 	if locked:
-		who.input_locked = true  # on ne s'en va pas au milieu d'un jet
-	await _play_roll(outcome + 1, who)  # face 1..6 = les 6 issues, dans l'ordre de la doc
+		who.input_locked = true  # you do not walk off in the middle of a roll
+	await _play_roll(outcome + 1, who)  # faces 1..6 are the 6 outcomes, in the design doc's order
 	_post_message("UI_DIEVERTING_ROLL", [outcome + 1, tr(MESSAGE_KEYS[outcome])])
 	await _settle_back()
 	_mark_rolled()
@@ -234,13 +235,13 @@ func _apply(outcome: int, who: Node) -> void:
 			_drop_chest(_lose_objects(objects_lost))
 			_damage_party_den(den_lost_each)
 		Outcome.DESTROY_OBJECTS:
-			_lose_objects(randi_range(1, max_objects_delta))  # « up to 3 »
+			_lose_objects(randi_range(1, max_objects_delta))  # "up to 3"
 		Outcome.ADD_OBJECTS:
 			_add_objects(max_objects_delta)
 
 
-## Renvoi à l'ENTRÉE du donjon. Repli (aucune entrée déclarée, ex. scénario de dev) : une
-## case au hasard, comme un piège de téléportation.
+## Sends the player back to the dungeon's ENTRANCE. With no entrance declared — a dev scenario,
+## say — it falls back to a random cell, like a teleport trap.
 func _teleport_to_entrance(who: Node) -> void:
 	if _dungeon == null:
 		return
@@ -250,8 +251,8 @@ func _teleport_to_entrance(who: Node) -> void:
 		_dungeon.teleport_actor(who)
 
 
-## Renvoi à une SORTIE du donjon, tirée au hasard s'il y en a plusieurs (doc). L'entrée
-## compte parmi les sorties (cf. [method DungeonManager.set_entrance]).
+## Sends the player to an EXIT, drawn at random when there is more than one, per the design
+## doc. The entrance counts as one (see [method DungeonManager.set_entrance]).
 func _teleport_to_exit(who: Node) -> void:
 	if _dungeon == null:
 		return
@@ -261,8 +262,8 @@ func _teleport_to_exit(who: Node) -> void:
 		_dungeon.teleport_actor(who)
 
 
-## Retire `count` objets au hasard de l'inventaire et retourne la liste de ce qui a été perdu
-## (pour le coffre). Un objet possédé en plusieurs exemplaires peut sortir plusieurs fois.
+## Removes `count` random objects from the inventory and returns what was lost, for the chest.
+## An object held in several copies can come up more than once.
 func _lose_objects(count: int) -> Array[StringName]:
 	var lost: Array[StringName] = []
 	for i in range(count):
@@ -275,8 +276,8 @@ func _lose_objects(count: int) -> Array[StringName]:
 	return lost
 
 
-## Dépose les objets perdus dans un coffre posé LÀ OÙ ÉTAIT le dieverting (doc). Le dé, lui,
-## est désormais inerte : les deux mécanismes cohabitent sur la case.
+## Drops the lost objects into a chest placed WHERE THE DIEVERTING WAS, per the design doc. The
+## die is inert by then, so both mechanisms share the cell.
 func _drop_chest(lost: Array[StringName]) -> void:
 	if lost.is_empty() or _dungeon == null:
 		return
@@ -293,7 +294,7 @@ func _add_objects(max_count: int) -> void:
 			GameSession.add_object(add_pool[randi() % add_pool.size()], 1)
 
 
-## Fait apparaître 1 à [member rival_spawn_max] groupes de rivaux près du joueur.
+## Spawns 1 to [member rival_spawn_max] groups of rivals near the player.
 func _spawn_rival_groups(who: Node) -> void:
 	if _dungeon == null or rival_pool.is_empty():
 		return
@@ -324,12 +325,12 @@ func _deactivate() -> void:
 	_mark_spent()
 
 
-## Un dé consommé (roulé ou détruit) ne revient pas d'une visite à l'autre.
+## A consumed die, rolled or destroyed, does not come back on the next visit.
 func reset_between_visits() -> void:
 	pass
 
 
-## Poste un message de feedback au joueur (le HUD l'affiche). `args` alimente le format.
+## Posts a feedback message for the player, shown by the HUD. `args` feeds the format string.
 func _post_message(key: String, args: Array) -> void:
 	if _dungeon == null:
 		return
@@ -340,14 +341,14 @@ func _post_message(key: String, args: Array) -> void:
 
 
 # --------------------------------------------------------------------------
-# Le dé : visuel et roulement
+# The die: visuals and rolling
 # --------------------------------------------------------------------------
 
 
 func _spawn_visual() -> void:
-	var mesh := _add_marker(Color(0.9, 0.35, 0.1), DIE_SIZE, DIE_SIZE)  # cube orange
-	# Le dé s'éclaire lui-même : la face qu'on doit LIRE est celle tournée vers le joueur,
-	# donc souvent celle qui est dans l'ombre du donjon.
+	var mesh := _add_marker(Color(0.9, 0.35, 0.1), DIE_SIZE, DIE_SIZE)  # orange cube
+	# The die lights itself: the face that has to be READ is the one turned towards the player,
+	# and so often the one in the dungeon's shadow.
 	var mat := mesh.material_override as StandardMaterial3D
 	if mat != null:
 		mat.emission_enabled = true
@@ -356,8 +357,8 @@ func _spawn_visual() -> void:
 	_add_pips()
 
 
-## Points des 6 faces, plaqués juste au-dessus de chaque face du cube. Enfants du marqueur :
-## ils culbutent avec lui.
+## Pips for all 6 faces, laid just proud of each face of the cube. Children of the marker, so
+## they tumble with it.
 func _add_pips() -> void:
 	if _marker == null:
 		return
@@ -366,13 +367,13 @@ func _add_pips() -> void:
 	var half := DIE_SIZE * 0.5
 	for value in FACE_NORMALS:
 		var n: Vector3 = FACE_NORMALS[value]
-		# Deux axes du PLAN de la face (n'importe lesquels : un dé n'a pas de haut).
+		# Two axes in the face's PLANE — any two will do, a die has no up.
 		var u := n.cross(Vector3.UP)
 		if u.length_squared() < 0.01:
 			u = n.cross(Vector3.BACK)
 		u = u.normalized()
 		var w := n.cross(u).normalized()
-		# Pastille plate (mince dans l'axe de la face) plutôt qu'un cube en saillie.
+		# A flat disc, thin along the face's axis, rather than a cube sticking out.
 		var size: Vector3 = (u.abs() + w.abs()) * PIP_SIZE + n.abs() * PIP_DEPTH
 		for offset in PIP_LAYOUTS[value]:
 			var pip := MeshInstance3D.new()
@@ -388,8 +389,8 @@ func _add_pips() -> void:
 			_marker.add_child(pip)
 
 
-## Culbute : le dé saute dans le champ de vision du joueur, tourne en décélérant et s'arrête
-## sur `face`, tournée vers lui. Retourne quand le dé est immobile (à awaiter).
+## The tumble: the die jumps into the player's view, spins as it slows, and stops on `face`,
+## turned towards them. Returns once the die is still, so await it.
 func _play_roll(face: int, who: Node) -> void:
 	if roll_duration <= 0.0 or _marker == null:
 		if _marker != null:
@@ -397,8 +398,8 @@ func _play_roll(face: int, who: Node) -> void:
 		return
 	var facing := _facing_of(who)
 	var air: Vector3 = _rest_position() + facing * AIR_DISTANCE + Vector3(0.0, AIR_HEIGHT, 0.0)
-	# Axe de culbute quelconque (un dé lancé ne tourne pas autour d'un axe choisi) et 2 à 3
-	# tours : assez pour lire le mouvement, pas assez pour brouiller la face finale.
+	# An arbitrary tumble axis — a thrown die does not spin around a chosen one — and 2 to 3
+	# turns: enough to read the motion, not enough to blur the final face.
 	_roll_axis = (
 		Vector3(randf_range(-1.0, 1.0), randf_range(-1.0, 1.0), randf_range(-1.0, 1.0)).normalized()
 	)
@@ -416,7 +417,7 @@ func _play_roll(face: int, who: Node) -> void:
 	await tween.finished
 
 
-## Un pas de culbute : rotation qui décélère, raccordée sur l'orientation finale à la fin.
+## One tumble step: a rotation that slows down, blended into the final orientation at the end.
 func _roll_step(t: float) -> void:
 	if not is_instance_valid(_marker):
 		return
@@ -426,7 +427,8 @@ func _roll_step(t: float) -> void:
 	_marker.basis = Basis(tumble.slerp(_roll_final, blend))
 
 
-## Le dé reste lisible en l'air le temps qu'on lise le message, puis retombe sur sa case.
+## The die stays readable in mid-air long enough to read the message, then drops back onto its
+## cell.
 func _settle_back() -> void:
 	if _marker == null or roll_duration <= 0.0:
 		return
@@ -441,14 +443,14 @@ func _settle_back() -> void:
 	await tween.finished
 
 
-## Position de repos du marqueur : posé au centre de sa case (cf. `_add_marker_box`).
+## The marker's rest position: resting at the centre of its cell (see `_add_marker_box`).
 func _rest_position() -> Vector3:
 	return Vector3(0.0, DIE_SIZE * 0.5, 0.0)
 
 
-## Orientation qui amène la face `value` sur la direction `toward` (LOCALE). Le roulis autour
-## de cet axe est un quart de tour tiré au hasard (deux jets ne se ressemblent pas) plus un
-## léger travers : un dé posé de guingois, pas un losange en équilibre sur la pointe.
+## The orientation that brings face `value` onto the LOCAL direction `toward`. Roll around that
+## axis is a random quarter turn — so two throws never look alike — plus a slight skew: a die
+## sitting askew, not a diamond balanced on its point.
 func _basis_for_face(value: int, toward: Vector3) -> Basis:
 	var n: Vector3 = FACE_NORMALS[value]
 	var axis := toward.normalized()
@@ -456,7 +458,7 @@ func _basis_for_face(value: int, toward: Vector3) -> Basis:
 	return Basis(Quaternion(axis, roll) * Quaternion(n, axis))
 
 
-## Direction « devant le joueur », exprimée dans le repère LOCAL du mécanisme.
+## The "in front of the player" direction, in the mechanism's LOCAL frame.
 func _facing_of(who: Node) -> Vector3:
 	var dir := Vector3.BACK
 	if who != null and who.has_method("facing_delta"):
@@ -466,16 +468,16 @@ func _facing_of(who: Node) -> Vector3:
 	return (global_transform.basis.inverse() * dir).normalized()
 
 
-## Un dé qui a roulé n'est plus actionnable : il se GRISE comme tout mécanisme épuisé
-## ([constant SPENT_COLOR]), au lieu de garder sa teinte vive de dé actif. Il garde en
-## revanche sa forme (pas de [method _mark_spent], qui aplatirait le cube) : la face sortie
-## reste tournée vers le joueur, seule trace durable de ce qui s'est joué sur cette case.
+## A rolled die is no longer actionable, so it GREYS OUT like any spent mechanism
+## ([constant SPENT_COLOR]) instead of keeping the bright hue of an active one. It does keep its
+## shape — no [method _mark_spent], which would flatten the cube — so the rolled face stays
+## turned towards the player: the one lasting trace of what happened on this cell.
 func _mark_rolled() -> void:
 	if _marker == null:
 		return
 	_grey_marker()
-	# Les points sont presque noirs : lisibles sur l'orange vif, plus du tout sur le gris
-	# sombre. On les éclaircit pour que la face reste déchiffrable une fois le dé éteint.
+	# The pips are nearly black: legible on bright orange, not at all on dark grey. Lighten them
+	# so the face stays readable once the die has gone dull.
 	var pip_mat := StandardMaterial3D.new()
 	pip_mat.albedo_color = Color(0.86, 0.86, 0.88)
 	for pip in _marker.get_children():

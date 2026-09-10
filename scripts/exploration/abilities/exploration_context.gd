@@ -1,16 +1,17 @@
-## Contexte d'exécution d'un effet d'exploration (capacité d'exploration OU objet).
+## What an exploration effect — an exploration ability or an object — is given to work with.
 ##
-## Équivalent exploration de [EncounterContext] : porte les références du monde d'exploration
-## (donjon, joueur) et expose les PRIMITIVES qu'un effet peut déclencher (invisibilité,
-## non-poursuite, soin, traversée de mur fissuré…). Les effets ne touchent jamais directement
-## le joueur / la session : ils passent par ces méthodes, journalisées dans [member log].
+## The exploration counterpart of [EncounterContext]: it holds the references to the
+## exploration world (dungeon, player) and exposes the PRIMITIVES an effect can trigger —
+## invisibility, not-chased, healing, crossing a cracked wall. Effects never touch the player or
+## the session directly; they go through these methods, which record what they did in
+## [member log].
 ##
-## Pas de `class_name` (piège du cache CLI) : référencé par `preload`. Référence l'autoload
-## GameSession (OK en jeu ; charger au runtime dans les tests).
+## No `class_name` (the CLI class-cache trap): referenced by `preload`. References the
+## GameSession autoload — fine in game, but tests have to load it at runtime.
 extends RefCounted
 
 var dungeon  ## DungeonManager
-var player  ## PlayerController (Node)
+var player  ## PlayerController (a Node)
 var rng: RandomNumberGenerator
 var log: Array[String] = []
 
@@ -30,27 +31,27 @@ func _note(msg: String) -> void:
 
 
 # --------------------------------------------------------------------------
-# Primitives d'effet
+# Effect primitives
 # --------------------------------------------------------------------------
 
 
-## Rend le joueur invisible des rivaux pendant `tiles` déplacements (fog mantel). Annulé par
-## une rencontre OU l'activation d'un piège.
+## Hides the player from the rivals for `tiles` moves (fog mantel). Cleared by an encounter OR
+## by springing a trap.
 func hide_from_rivals(tiles: int) -> void:
 	if player != null and player.has_method("set_invisible"):
 		player.set_invisible(tiles)
 	_note("invisible pour %d cases" % tiles)
 
 
-## Empêche les rivaux de poursuivre le joueur pendant `moves` déplacements (torment veil /
-## costume). `disguise_species` = espèce dont on prend l'apparence, le cas échéant.
+## Stops the rivals chasing the player for `moves` moves (torment veil, a costume).
+## `disguise_species` is the species being impersonated, when there is one.
 func avoid_pursuit(moves: int, disguise_species: StringName = &"") -> void:
 	if player != null and player.has_method("set_unpursued"):
 		player.set_unpursued(moves, disguise_species)
 	_note("non-poursuivi pour %d cases" % moves)
 
 
-## Soigne intégralement le poison du joueur (tea drop / capacité anti-poison).
+## Cures the player's poison outright (a tea drop, or an anti-poison ability).
 func cure_poison() -> void:
 	if player != null:
 		var aff = player.get("affliction")
@@ -59,15 +60,15 @@ func cure_poison() -> void:
 	_note("poison soigné")
 
 
-## Rend `amount` DEN aux deux personnages du duo (rune stone).
+## Gives `amount` DEN back to both characters of the duo (a rune stone).
 func heal_duo(amount: int) -> void:
 	GameSession.heal_den(GameSession.PartySlot.MAIN, amount)
 	GameSession.heal_den(GameSession.PartySlot.TEAMMATE, amount)
 	_note("duo soigné de %d DEN" % amount)
 
 
-## Traverse le mur fissuré de la case regardée, s'il y en a un (cranny crossing). Retourne
-## true si la traversée a eu lieu.
+## Crosses the cracked wall on the cell being faced, if there is one (cranny crossing). Returns
+## true when the crossing happened.
 func cross_faced_cracked_wall() -> bool:
 	if dungeon == null or player == null:
 		return false
@@ -82,9 +83,9 @@ func cross_faced_cracked_wall() -> bool:
 	return false
 
 
-## Guet (static camouflage) : le joueur se fige pour observer les groupes de rivaux errants.
-## ## TODO: révéler 2 à 4 groupes un par un et proposer de les affronter — dépend d'un système
-## de spawn de groupes de rivaux, absent. Placeholder : passe en état caché le temps du guet.
+## Scouting (static camouflage): the player holds still to watch the wandering rival groups.
+## ## TODO: reveal 2 to 4 groups one at a time and offer to take them on. This needs a
+## rival-group spawn system, which does not exist. Placeholder: goes hidden for the watch.
 func scout_groups() -> void:
 	hide_from_rivals(3)
 	_note("guet — révélation de groupes de rivaux TODO")

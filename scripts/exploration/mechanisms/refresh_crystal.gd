@@ -1,11 +1,10 @@
-## Cristal de rafraîchissement.
+## A refresh crystal.
 ##
-## Doc Notion (Level Design / Mechanisms « Refresh Crystal »). Obstacle INDESTRUCTIBLE
-## présent vers la mi-parcours des grands donjons. Quand le joueur est adjacent ET le
-## regarde, il peut réutiliser TOUTES ses capacités d'exploration déjà employées. Utilisable
-## une seule fois par visite de donjon.
+## From the design doc ("Mechanisms / Refresh Crystal"). An INDESTRUCTIBLE obstacle found around
+## the midpoint of the larger dungeons. With the player adjacent AND facing it, every exploration
+## ability already spent becomes usable again. Once per dungeon visit.
 ##
-## Pas de `class_name` : `extends` par chemin. Référence l'autoload GameSession.
+## No `class_name`: `extends` by path. References the GameSession autoload.
 extends "res://scripts/exploration/mechanisms/dungeon_mechanism.gd"
 
 const ExplorationAction := preload("res://scripts/exploration/exploration_action.gd")
@@ -13,14 +12,14 @@ const ExplorationAction := preload("res://scripts/exploration/exploration_action
 var _used := false
 
 
-## Obstacle indestructible : toujours infranchissable.
+## An indestructible obstacle: never passable.
 func blocks_walk() -> bool:
 	return true
 
 
-## Action « rafraîchir » disponible depuis une case adjacente en le regardant, tant qu'il
-## n'a pas déjà servi cette visite. (La direction du regard est gérée par
-## [method DungeonManager.actions_for] : le cristal est sur la case regardée.)
+## The refresh action, offered from an adjacent cell while facing it and while it has not been
+## used this visit. Facing is handled by [method DungeonManager.actions_for]: the crystal is on
+## the cell being looked at.
 func on_adjacent_actions(_who: Node, _facing: Vector3i) -> Array:
 	if _used:
 		return []
@@ -35,26 +34,26 @@ func is_used() -> bool:
 	return _used
 
 
-## Cristal déjà employé cette visite : plus rien à en tirer (règle transverse « épuisé »).
+## Already used this visit, so nothing left to get out of it.
 func is_spent() -> bool:
 	return _used
 
 
-## Rafraîchit toutes les capacités d'exploration utilisées (une seule fois par visite).
+## Refreshes every spent exploration ability. Once per visit.
 func refresh() -> void:
 	if _used:
 		return
 	_used = true
 	GameSession.refresh_all_exploration_abilities()
-	# Éteint, mais toujours là : c'est un obstacle indestructible, donc on le grise SANS
-	# l'aplatir (l'aplatir ferait croire qu'on peut passer).
+	# Dead but still there: it is an indestructible obstacle, so grey it out WITHOUT flattening
+	# it — flattening would suggest you can walk through.
 	_grey_marker()
 
 
 func reset_between_visits() -> void:
 	_used = false
-	_respawn_marker()  # de nouveau utilisable : il retrouve son cyan
+	_respawn_marker()  # usable again: it gets its cyan back
 
 
 func _spawn_visual() -> void:
-	_add_marker(Color(0.3, 0.8, 0.85), 1.0, 0.5)  # cristal cyan, haut (occupe toute la case)
+	_add_marker(Color(0.3, 0.8, 0.85), 1.0, 0.5)  # a tall cyan crystal, filling the cell

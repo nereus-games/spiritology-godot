@@ -1,58 +1,56 @@
-## Entrées du joueur en exploration : regard souris, rotation 90°, déplacement grille.
+## Player input during exploration: mouse look, 90-degree turns, grid movement.
 ##
-## Nœud enfant du Player. Modèle porté du proto Unity : le lacet visé = base rigide (par pas
-## de 90° au clavier) + décalage de regard libre (delta souris relatif). Le corps rejoint cet
-## angle en continu ([method PlayerController.set_yaw_target]) ; le pitch (regard vertical) est
-## appliqué au [CameraRig] et recentré pendant/après une rotation.
+## A child node of the Player. The model is ported from the prototype: the target yaw is a rigid
+## base (90-degree steps from the keyboard) plus a free-look offset (relative mouse delta). The
+## body continuously catches up to that angle ([method PlayerController.set_yaw_target]), while
+## pitch is applied to the [CameraRig] and recentred during and after a turn.
 ##
-## Curseur CAPTURÉ (caché, delta relatif — pas de recentrage) : c'est ce qui rend le regard
-## fluide et évite que le curseur ne « saute » (contrairement à l'ancienne visée absolue).
-## Échap libère le curseur (souris visible) pour cliquer l'UI ; recliquer dans la fenêtre le
-## recapture.
+## The cursor is CAPTURED — hidden, relative deltas, no recentring — which is what makes looking
+## around smooth and keeps the cursor from jumping, as it did under the old absolute aiming. Esc
+## releases the cursor so the UI can be clicked; clicking back in the window recaptures it.
 ##
-## Comptage des tours : un pas fait avancer le tour (via [PlayerController.try_move]), et une
-## rotation d'un quart de tour aussi — au clavier, ou dès que le regard libre s'écarte de
-## [member commit_angle] de l'orientation de déplacement.
+## Turn counting: a step advances the turn (through [PlayerController.try_move]), and so does a
+## quarter turn — from the keyboard, or as soon as free look drifts [member commit_angle] away
+## from the movement facing.
 ##
-## Disarray : la doc ne fait plus d'exception pour le regard libre. Un geste de souris est
-## dévié comme le reste, mais il ne DÉCOMPTE le piège que s'il enclenche une rotation — sinon
-## on le purgerait en agitant le curseur, sans jamais dépenser de tour. Cf.
-## [method _disarrayed_mouse] et [method _fold_offset].
+## Disarray: the design doc no longer makes an exception for free look. A mouse gesture is
+## deflected like anything else, but it only COUNTS the trap down if it commits a turn —
+## otherwise the trap could be drained by waggling the cursor, without ever spending a turn. See
+## [method _disarrayed_mouse] and [method _fold_offset].
 class_name PlayerInputHandler
 extends Node
 
 @export var move_repeat_delay := 0.22
-## Sensibilité souris, en degrés par pixel de déplacement.
+## Mouse sensitivity, in degrees per pixel moved.
 @export var mouse_sensitivity := 0.14
 @export var pitch_min := -60.0
 @export var pitch_max := 60.0
-## Degrés de dérive du regard libre au-delà desquels une rotation de 90° est VALIDÉE. Écart
-## SIGNÉ par rapport à l'orientation de déplacement : regarder autour de soi et revenir ne
-## valide rien (doc « Game Design / Dungeon Exploration »).
+## How far free look has to drift, in degrees, before a 90-degree turn is COMMITTED. A SIGNED
+## offset from the movement facing, so looking around and coming back commits nothing.
 @export var commit_angle := 50.0
 
-## Disarray : décalages applicables au geste de souris. Des quarts de tour, l'identité exclue —
-## un geste dévié doit toujours partir ailleurs.
+## Disarray: the offsets a mouse gesture can be given. Quarter turns, identity excluded — a
+## deflected gesture must always go somewhere else.
 const DISARRAY_MOUSE_TURNS := [90.0, 180.0, 270.0]
 
-## Temps sans le moindre mouvement de souris au bout duquel le GESTE en cours est clos. Le
-## mouvement suivant en ouvre un neuf, et retire donc un nouveau mouvement de disarray.
+## How long without any mouse motion closes the GESTURE in progress. The next motion opens a
+## fresh one, and so takes another move off the disarray queue.
 const MOUSE_BURST_IDLE := 0.12
-## Vitesse de recentrage du pitch après une rotation (deg/s).
+## How fast pitch recentres after a turn, in degrees per second.
 @export var pitch_recenter_speed := 240.0
 
 var _controller: PlayerController
 var _rig: CameraRig
 var _repeat_timer := 0.0
 
-var _base_yaw := 0.0  # orientation rigide (multiples de 90°) = orientation de déplacement
-var _yaw_offset := 0.0  # dérive du regard libre (souris) autour de la base
+var _base_yaw := 0.0  # the rigid facing (multiples of 90), which is the movement facing
+var _yaw_offset := 0.0  # free-look drift around that base
 var _pitch := 0.0
 var _recenter_pitch := false
 var _initialised := false
 
-# Geste de souris en cours (disarray) : ouverture, inactivité depuis le dernier événement, et
-# décalage d'angle tiré à l'ouverture (0 = geste non dévié).
+# The mouse gesture in progress, for disarray: whether one is open, how long since the last
+# event, and the angle offset rolled when it opened (0 means undeflected).
 var _mouse_burst_open := false
 var _mouse_burst_idle := 0.0
 var _mouse_burst_turn := 0.0
@@ -64,8 +62,7 @@ func _ready() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 
-## Regard souris (delta relatif) + bascule du curseur. Le regard libre n'agit qu'au repos
-## (pas pendant un pas), comme dans le proto.
+## Mouse look, from relative deltas, plus toggling the cursor.
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
 		_set_mouse_captured(Input.mouse_mode != Input.MOUSE_MODE_CAPTURED)
@@ -83,30 +80,30 @@ func _unhandled_input(event: InputEvent) -> void:
 		_apply_mouse_look(event.relative)
 
 
-## Applique un delta souris relatif au regard (yaw libre + pitch). Le regard libre n'agit
-## qu'au repos (pas pendant un pas), comme dans le proto.
+## Applies a relative mouse delta to the look — free yaw and pitch. Free look only acts at rest,
+## never mid-step, as in the prototype.
 func _apply_mouse_look(relative: Vector2) -> void:
 	relative = _disarrayed_mouse(relative)
 	if _controller.is_at_rest():
-		# Souris à droite (relative.x > 0) => regarder à droite => lacet décroît.
+		# Mouse right (relative.x > 0) means looking right, which decreases yaw.
 		_yaw_offset -= relative.x * mouse_sensitivity
 	if not _recenter_pitch:
-		# Souris vers le haut (relative.y < 0) => regarder en haut => pitch croît.
+		# Mouse up (relative.y < 0) means looking up, which increases pitch.
 		_pitch = clampf(_pitch - relative.y * mouse_sensitivity, pitch_min, pitch_max)
 
 
-## Disarray appliqué au regard libre (doc « Level Design / Mechanisms », piège Disarray).
+## Disarray applied to free look (the design doc's Disarray trap).
 ##
-## On fait pivoter la DIRECTION du geste d'un quart de tour, sans toucher à son AMPLITUDE : le
-## joueur parcourt la même distance, mais ailleurs. C'est ce qui évite de lui déclencher une
-## rotation — donc un tour — qu'il n'a pas voulue : un petit geste reste un petit geste, et ne
-## franchit pas [member commit_angle] davantage qu'il ne l'aurait fait sans le piège.
+## The gesture's DIRECTION is rotated a quarter turn, leaving its MAGNITUDE alone: the player
+## covers the same distance, but somewhere else. That is what avoids triggering a turn — and so
+## a game turn — they never asked for: a small gesture stays a small gesture, and crosses
+## [member commit_angle] no more readily than it would have without the trap.
 ##
-## Le décalage est tiré à l'OUVERTURE du geste (premier mouvement après un arrêt) et tenu
-## jusqu'à sa fin : tourner le poignet en cours de geste ne change rien, s'arrêter puis repartir
-## si. On CONSULTE la file sans la consommer — le décompte a lieu à la validation d'une rotation
-## ([method _fold_offset]) : un geste qui n'enclenche rien reste dévié sans rien coûter, sinon
-## le piège s'éliminerait en agitant le curseur.
+## The offset is rolled when the gesture OPENS, on the first motion after a pause, and held until
+## it ends: turning your wrist mid-gesture changes nothing, stopping and starting again does. The
+## queue is PEEKED rather than consumed — the count moves when a turn is committed (see
+## [method _fold_offset]) — so a gesture that commits nothing stays deflected but costs nothing,
+## since otherwise the trap could be drained by waggling the cursor.
 func _disarrayed_mouse(relative: Vector2) -> Vector2:
 	_mouse_burst_idle = 0.0
 	if not _mouse_burst_open:
@@ -142,13 +139,13 @@ func _process(delta: float) -> void:
 	_apply_look()
 
 
-## Valide une rotation de 90° dès que le regard libre dépasse [member commit_angle] (≈ 50°,
-## pas besoin d'atteindre 90°) : l'orientation de DÉPLACEMENT (et la mini-map) bascule alors,
-## et un tour est compté. La tête reste où pointe la souris (continuité visuelle).
+## Commits a 90-degree turn as soon as free look drifts past [member commit_angle] — about 50
+## degrees, so there is no need to reach 90. The MOVEMENT facing (and the mini-map) swings over,
+## and a turn is counted. The head stays where the mouse points, for visual continuity.
 ##
-## C'est ICI que le regard libre décompte le disarray : une rotation enclenchée est un mouvement,
-## un geste qui n'enclenche rien n'en est pas un. La déviation a déjà été appliquée au geste
-## ([method _disarrayed_mouse]) à partir de cette même entrée de file, d'où le résultat ignoré.
+## This is where free look counts disarray down: a committed turn is a move, a gesture that
+## commits nothing is not. The deflection was already applied to the gesture
+## ([method _disarrayed_mouse]) from this same queue entry, hence the ignored result here.
 func _fold_offset() -> void:
 	while _yaw_offset >= commit_angle:
 		_yaw_offset -= 90.0
@@ -165,17 +162,17 @@ func _fold_offset() -> void:
 func _handle_rotation() -> void:
 	if not _controller.is_at_rest():
 		return
-	# Cohérent avec la souris (regarder à droite => lacet décroît) : E (droite) => -90.
+	# Consistent with the mouse, where looking right decreases yaw: E (right) gives -90.
 	if Input.is_action_just_pressed("rotate_left"):
 		_rotate_step(90.0)
 	elif Input.is_action_just_pressed("rotate_right"):
 		_rotate_step(-90.0)
 
 
-## Rotation rigide de ±90° : snappe l'orientation courante au multiple de 90 le plus proche,
-## ajoute l'angle, remet le regard libre à zéro et recentre le pitch. Compte un tour.
+## A rigid turn of plus or minus 90 degrees: snaps the current facing to the nearest multiple of
+## 90, adds the angle, zeroes free look and recentres pitch. Counts as a turn.
 func _rotate_step(angle: float) -> void:
-	# Disarray : une part des rotations est inversée (« if rotation, another rotation »).
+	# Disarray: a share of turns is reversed ("if rotation, another rotation").
 	if _controller.affliction.consume_move():
 		angle = -angle
 	var current := _base_yaw + _yaw_offset
@@ -189,7 +186,7 @@ func _rotate_step(angle: float) -> void:
 func _handle_movement(delta: float) -> void:
 	var axis := Input.get_vector("move_left", "move_right", "move_forward", "move_back")
 	if axis == Vector2.ZERO:
-		_repeat_timer = 0.0  # 1er pas immédiat au prochain appui
+		_repeat_timer = 0.0  # so the next press steps immediately
 		return
 	_repeat_timer -= delta
 	if not _controller.is_at_rest() or _repeat_timer > 0.0:
@@ -204,8 +201,8 @@ func _handle_movement(delta: float) -> void:
 
 
 func _apply_look() -> void:
-	_controller.set_yaw_target(_base_yaw + _yaw_offset)  # orientation VISUELLE (continue)
-	_controller.set_move_yaw(_base_yaw)  # orientation DÉPLACEMENT (cardinale)
+	_controller.set_yaw_target(_base_yaw + _yaw_offset)  # the VISUAL facing, continuous
+	_controller.set_move_yaw(_base_yaw)  # the MOVEMENT facing, cardinal
 	if _rig != null:
 		_rig.set_pitch(_pitch)
 

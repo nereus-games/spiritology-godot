@@ -1,13 +1,13 @@
-## Case de pont étroit (tronc au-dessus du vide) — test d'équilibre.
+## One narrow-bridge cell — a log over a drop — and its balance test.
 ##
-## Doc Notion : le personnage AVANCE SEUL ; le joueur corrige en temps réel par des mouvements
-## latéraux pour rester en équilibre. Chaque case du pont porte ce mécanisme : entrer dessus
-## engage un test d'équilibre qui fait avancer d'UNE case dans le sens du REGARD (donc le pont
-## fonctionne dans les deux sens). La logique d'équilibre pure vit dans [NarrowBridgeBalance] ;
-## le pilote temps réel (entrée latérale, roulis caméra, chaînage de case en case, chute) est
-## dans `exploration.gd`.
+## Per the design doc the character ADVANCES ON ITS OWN, and the player corrects in real time
+## with lateral moves to stay upright. Every cell of the bridge carries this mechanism: stepping
+## onto one engages a balance test that advances ONE cell along the direction being FACED, so a
+## bridge works in both directions. The pure balance logic lives in [NarrowBridgeBalance]; the
+## real-time driver — lateral input, camera roll, chaining cell to cell, falling — is in
+## `exploration.gd`.
 ##
-## Pas de `class_name` : `extends` par chemin. Référence l'autoload GameSession (score PSY).
+## No `class_name`: `extends` by path. References the GameSession autoload, for the PSY score.
 extends "res://scripts/exploration/mechanisms/dungeon_mechanism.gd"
 
 const NarrowBridgeBalance := preload("res://scripts/exploration/narrow_bridge_balance.gd")
@@ -17,7 +17,7 @@ var _engaged := false
 var _dir := Vector3i(0, 0, 1)
 
 
-## Un pont n'est pas un obstacle : on peut y entrer (ce qui engage le test).
+## A bridge is not an obstacle: you can step onto it, which engages the test.
 func blocks_walk() -> bool:
 	return false
 
@@ -26,7 +26,7 @@ func on_enter(who: Node) -> void:
 	if _engaged:
 		return
 	if _dungeon != null and not _dungeon.is_player(who):
-		return  # le test d'équilibre ne concerne que le joueur
+		return  # the balance test only concerns the player
 	var disarrayed := false
 	var aff = who.get("affliction")
 	if aff != null:
@@ -34,17 +34,18 @@ func on_enter(who: Node) -> void:
 	engage(who.facing_delta(), disarrayed)
 
 
-## Engage le test d'équilibre pour avancer d'UNE case dans la direction `dir`.
+## Engages the balance test to advance ONE cell along `dir`.
 func engage(dir: Vector3i, disarrayed: bool) -> void:
 	_dir = dir if dir != Vector3i.ZERO else Vector3i(0, 0, 1)
 	_balance = NarrowBridgeBalance.new()
-	_balance.configure(GameSession.psy_score, 1, disarrayed)  # 1 case
+	_balance.configure(GameSession.psy_score, 1, disarrayed)  # one cell
 	_engaged = true
 
 
-## Reprend le test d'équilibre DÉJÀ EN COURS (traversée entamée sur la case précédente) au
-## lieu d'en démarrer un neuf : le déséquilibre et la vitesse latérale traversent le bord de
-## case, sinon l'élan serait effacé toutes les 2 s (l'inverse d'une inertie).
+## Picks up the balance test ALREADY UNDER WAY, from a crossing started on the previous cell,
+## rather than starting a fresh one: imbalance and lateral velocity carry across the cell
+## boundary. Otherwise the momentum would be wiped every couple of seconds — the opposite of
+## inertia.
 func adopt_balance(running) -> void:
 	if running == null:
 		return
@@ -52,8 +53,8 @@ func adopt_balance(running) -> void:
 	_balance.restart_cell()
 
 
-## Fait avancer le test d'un pas de temps avec l'entrée latérale (∈ [-1, 1]). Retourne
-## &"balancing", &"fell" ou &"complete".
+## Advances the test one time step with the lateral input, in [-1, 1]. Returns &"balancing",
+## &"fell" or &"complete".
 func advance(delta: float, lateral_input: float) -> StringName:
 	if not _engaged or _balance == null:
 		return &"complete"
@@ -75,8 +76,8 @@ func direction() -> Vector3i:
 	return _dir
 
 
-## Accès au modèle d'équilibre (le pilote lit/écrit imbalance pour le chaînage).
+## The balance model itself; the driver reads and writes imbalance through it to chain cells.
 func balance():
 	return _balance
 
-# Pas de marqueur générique : le visuel (planches) est posé par le scénario / level design.
+# No generic marker: the planks are placed by the scenario, or by level design.

@@ -1,23 +1,24 @@
-## Litière : actions Examine et Recycle.
+## Litter: the Examine and Recycle actions.
 ##
-## Doc Notion (Level Design / Mechanisms « Litter » + Walls + Decors). Tant qu'elle n'est
-## pas recyclée, la litière est un OBSTACLE (case infranchissable) : le joueur agit depuis
-## une case ADJACENTE. Deux actions :
-##  - Examine : livre une info d'encyclopédie sur un spirimonstre du pool associé (1×/visite) ;
-##  - Recycle : donne des objets aléatoires ET rafraîchit une capacité d'exploration au
-##    hasard, puis la litière devient un sol normal (franchissable, plus d'actions).
+## From the design doc ("Mechanisms / Litter" and "Walls + Decors"). Until it is recycled, litter
+## is an OBSTACLE — its cell is impassable — so the player acts on it from an ADJACENT cell. Two
+## actions:
+##  - Examine hands out one encyclopaedia info about a spirimonster from the associated pool,
+##    once per visit;
+##  - Recycle gives random objects AND refreshes a random exploration ability, after which the
+##    litter becomes ordinary floor: walkable, with no actions left.
 ##
-## Pas de `class_name` : `extends` par chemin. Référence l'autoload GameSession.
+## No `class_name`: `extends` by path. References the GameSession autoload.
 extends "res://scripts/exploration/mechanisms/dungeon_mechanism.gd"
 
 const ExplorationAction := preload("res://scripts/exploration/exploration_action.gd")
 
-## Spirimonstres dont un Examine de litière peut livrer une info (doc Walls + Decors).
+## The spirimonsters an Examine on litter can hand out an info about ("Walls + Decors").
 ##
-## ## TODO: la doc cite aussi « néarog », qui n'a aucune page d'espèce — donc aucun
-## `data/species/néarog.tres`. Le laisser dans la liste ne produisait rien : l'espèce
-## était simplement introuvable au tirage, sans erreur. À rétablir le jour où l'espèce
-## existe (cf. data_integrity_check, qui vérifie désormais ces listes).
+## ## TODO: the design doc also lists "néarog", which has no species page, and therefore no
+## `data/species/néarog.tres`. Leaving it in produced nothing at all: the species was simply
+## not found when drawn, with no error. Put it back the day the species exists (see
+## data_integrity_check, which now verifies these lists).
 const INFO_SPECIES: Array[StringName] = [
 	&"firulis",
 	&"razel",
@@ -27,7 +28,7 @@ const INFO_SPECIES: Array[StringName] = [
 	&"hibulus",
 ]
 
-## Objets qu'un recyclage peut donner (placeholder).
+## What a recycle can hand out. Placeholder.
 @export var loot_pool: Array[StringName] = [&"rune_stone", &"spade", &"tea_drop"]
 @export var loot_min := 1
 @export var loot_max := 2
@@ -36,12 +37,12 @@ var _recycled := false
 var _examined := false
 
 
-## Obstacle tant que non recyclée.
+## An obstacle until recycled.
 func blocks_walk() -> bool:
 	return not _recycled
 
 
-## Actions disponibles depuis une case adjacente (tant que non recyclée).
+## Available from an adjacent cell, while not yet recycled.
 func on_adjacent_actions(who: Node, _facing: Vector3i) -> Array:
 	if _recycled:
 		return []
@@ -62,7 +63,7 @@ func is_recycled() -> bool:
 	return _recycled
 
 
-## Litière recyclée : plus d'actions, la case est devenue un sol ordinaire (règle transverse).
+## Recycled litter has no actions left: the cell has become ordinary floor.
 func is_spent() -> bool:
 	return _recycled
 
@@ -71,7 +72,7 @@ func has_been_examined() -> bool:
 	return _examined
 
 
-## Examine : livre une info encyclo (une fois par visite).
+## Examine: hands out one encyclopaedia info, once per visit.
 func examine(_who: Node) -> void:
 	if _examined or _recycled:
 		return
@@ -81,13 +82,13 @@ func examine(_who: Node) -> void:
 		GameSession.award_ifp(sp, GameEnums.IfpAction.EXAMINE_DECOR)
 
 
-## Recycle : objets aléatoires + rafraîchit une capacité d'exploration, puis sol normal.
+## Recycle: random objects plus a refreshed exploration ability, then ordinary floor.
 func recycle(_who: Node) -> void:
 	if _recycled:
 		return
 	_recycled = true
-	# La case redevient un SOL NORMAL : le tas disparaît complètement (le griser laisserait
-	# croire à un obstacle éteint, alors qu'on marche dessus).
+	# The cell becomes ORDINARY FLOOR, so the heap goes away entirely. Greying it out would read
+	# as a dead obstacle, when in fact you walk over it.
 	_remove_marker()
 	var n := randi_range(loot_min, loot_max)
 	for i in range(n):
@@ -96,11 +97,11 @@ func recycle(_who: Node) -> void:
 	GameSession.refresh_random_exploration_ability()
 
 
-## Persistance entre visites : une litière recyclée reste un sol normal (acquis) ; le
-## replacement des décors examinés est géré au niveau donjon (incrément Examinable Decor).
+## Persistence between visits: recycled litter stays ordinary floor, for good. Replacing
+## examined decor is handled at the dungeon level.
 func reset_between_visits() -> void:
 	pass
 
 
 func _spawn_visual() -> void:
-	_add_marker(Color(0.35, 0.6, 0.35), 0.5, 0.75)  # tas vert (obstacle)
+	_add_marker(Color(0.35, 0.6, 0.35), 0.5, 0.75)  # a green heap, an obstacle

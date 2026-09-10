@@ -29,16 +29,16 @@ TransitionManager="*res://autoloads/transition_manager.gd"
 
 [display]
 
-; Résolution de référence : c'est l'échelle à laquelle l'UI est dessinée, pas une
-; limite de taille de fenêtre. En 1280x720 l'UI est "grossie" x1.5 sur un écran
-; 1080p et x2.25 sur un 4K — le texte de rencontre reste lisible de loin.
+; Reference resolution: the scale the UI is drawn at, not a limit on window size. At
+; 1280x720 the UI is "blown up" x1.5 on a 1080p screen and x2.25 on a 4K one — the
+; encounter text stays legible from a distance.
 window/size/viewport_width=1280
 window/size/viewport_height=720
-; 2 = MAXIMIZED : la fenêtre de jeu s'ouvre pleine taille d'entrée.
+; 2 = MAXIMIZED: the game window opens at full size straight away.
 window/size/mode=2
-; canvas_items : l'UI 2D est mise à l'échelle avec la fenêtre (sans stretch, elle
-; resterait dessinée en pixels fixes minuscules sur un grand écran).
-; expand : l'espace en plus est du vrai terrain gagné, pas des bandes noires.
+; canvas_items: the 2D UI scales with the window (without stretch it would stay drawn in
+; tiny fixed pixels on a large screen).
+; expand: the extra room is ground genuinely gained, not black bars.
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 

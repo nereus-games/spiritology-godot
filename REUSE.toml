@@ -3,25 +3,25 @@ SPDX-PackageName = "Spiritology"
 SPDX-PackageSupplier = "Nereus Games LLC"
 SPDX-PackageDownloadLocation = "https://github.com/nereus-games/spiritology-godot"
 
-# Ce dépôt est en DOUBLE LICENCE, et la frontière suit l'arborescence : un fichier est
-# couvert par le dossier qui le contient, sans exception ni en-tête à lire. C'est ce qui
-# permet à ce fichier de faire une douzaine de lignes au lieu de deux cents en-têtes SPDX,
-# et à `reuse lint` de prouver qu'aucun fichier n'est laissé sans licence.
+# This repository is DUALLY LICENSED, and the boundary follows the directory tree: a file
+# is covered by the directory holding it, with no exception and no header to read. That is
+# what lets this file be a dozen lines rather than two hundred SPDX headers, and lets
+# `reuse lint` prove that no file is left without a licence.
 #
 #   CODE    -> GPL-3.0-or-later
-#   CONTENU -> LAL-1.3 (assets, textes, données de game design, level design)
+#   CONTENT -> LAL-1.3 (assets, text, game-design and level-design data)
 #
-# Où poser un fichier neuf : s'il est exécuté, il est du code ; s'il est lu, joué,
-# affiché ou équilibré, il est du contenu. En cas de doute, le dossier tranche.
+# Where to put a new file: if it is executed, it is code; if it is read, played, displayed
+# or balanced, it is content. When in doubt, the directory decides.
 #
-# Un document qui EST du game design (et non de la documentation technique) va dans
-# `docs/design/` ; il faudra alors lui ajouter ici une annotation LAL.
+# A document that IS game design (as opposed to technical documentation) goes in
+# `docs/design/`; it then needs an LAL annotation here.
 
 [[annotations]]
 path = [
-    "assets/**",       # sprites, icône
-    "data/**",         # espèces, capacités, talents, objets — le game design lui-même
-    "translations/**", # tous les textes affichés
+    "assets/**",       # sprites, icon
+    "data/**",         # species, abilities, talents, objects — the game design itself
+    "translations/**", # every displayed string
 ]
 precedence = "aggregate"
 SPDX-FileCopyrightText = "2026 Nereus Games LLC and the Spiritology authors (see AUTHORS)"
@@ -35,7 +35,7 @@ path = [
     "scenes/**",
     "ui/**",
     "tools/**",
-    "docs/**",         # documentation technique ; le design va dans docs/design/
+    "docs/**",         # technical documentation; the design lives in docs/design/
     ".github/**",
     "project.godot",
     ".gitignore",
@@ -52,14 +52,14 @@ precedence = "aggregate"
 SPDX-FileCopyrightText = "2026 Nereus Games LLC and the Spiritology authors (see AUTHORS)"
 SPDX-License-Identifier = "GPL-3.0-or-later"
 
-# ORDRE SIGNIFICATIF : quand plusieurs annotations désignent le même fichier, REUSE retient
-# la DERNIÈRE (vérifié avec `reuse spdx`). Ce bloc doit donc rester après celui du code,
-# sinon `docs/**` reprend les captures et les fait basculer en GPL.
+# ORDER IS LOAD-BEARING: when several annotations name the same file, REUSE keeps the LAST
+# one (verified with `reuse spdx`). This block must therefore stay after the code one, or
+# `docs/**` takes the screenshots back and flips them to GPL.
 [[annotations]]
 path = ["docs/images/**", "docs/design/**"]
 precedence = "aggregate"
 SPDX-FileCopyrightText = "2026 Nereus Games LLC and the Spiritology authors (see AUTHORS)"
-# Une capture montre l'art du jeu : elle en dérive. docs/design/ EST du game design, par
-# opposition à la documentation technique de docs/ — c'est la distinction annoncée dans
+# A screenshot shows the game's art: it derives from it. docs/design/ IS game design, as
+# opposed to the technical documentation in docs/ — the distinction announced in
 # CONTRIBUTING.md.
 SPDX-License-Identifier = "LAL-1.3"

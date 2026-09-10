@@ -1,22 +1,21 @@
 #!/usr/bin/env bash
 #
-# Parse TOUS les scripts GDScript du projet et signale les vraies erreurs.
+# Parses EVERY GDScript file in the project and reports the real errors.
 #
 #   ./tools/parse_check.sh
-#   GODOT=/chemin/vers/Godot ./tools/parse_check.sh
+#   GODOT=/path/to/Godot ./tools/parse_check.sh
 #
-# Complète tools/run_checks.sh, qui EXÉCUTE du code : un script jamais chargé par aucune
-# scène de test peut être cassé sans que rien ne le dise. Ni `--quit-after` (qui ne compile
-# que le chemin de boot) ni `--import` ne parsent ces fichiers-là — seul `--check-only`,
-# fichier par fichier, les couvre.
+# Completes tools/run_checks.sh, which RUNS code: a script no test scene ever loads can be
+# broken with nothing saying so. Neither `--quit-after` (which only compiles the boot path)
+# nor `--import` parses those files — only `--check-only`, file by file, covers them.
 #
-# FAUX POSITIFS FILTRÉS : en `--check-only`, les autoloads ne sont pas enregistrés, donc
-# tout script qui en référence un sort « Identifier not found: <Autoload> » alors qu'il
-# est parfaitement valide. Les noms filtrés sont lus dans project.godot, et non codés en
-# dur, pour qu'un autoload ajouté demain ne fasse pas échouer la CI sans raison.
-# « Failed to compile depended scripts » est filtré pour la même raison : c'est la cascade
-# du faux positif chez un dépendant. Une VRAIE erreur dans une dépendance reste signalée
-# quand le balayage arrive sur le fichier fautif lui-même.
+# FALSE POSITIVES FILTERED OUT: under `--check-only` the autoloads are not registered, so
+# any script that references one reports "Identifier not found: <Autoload>" while being
+# perfectly valid. The names filtered are read from project.godot rather than hardcoded, so
+# that an autoload added tomorrow does not fail CI for no reason. "Failed to compile
+# depended scripts" is filtered for the same reason: it is the false positive cascading
+# into a dependent. A REAL error in a dependency is still reported when the sweep reaches
+# the offending file itself.
 #
 set -uo pipefail
 
@@ -24,11 +23,11 @@ set -uo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
 require_godot
-# Sans cache de classes, --check-only sort « Could not find type » sur tout le projet :
-# ce serait 200 faux échecs au lieu d'un balayage.
+# With no class cache, --check-only reports "Could not find type" across the whole
+# project: that would be 200 false failures instead of a sweep.
 ensure_class_cache
 
-# Noms des autoloads, extraits de la section [autoload] de project.godot.
+# The autoload names, read from project.godot's [autoload] section.
 autoloads=()
 while IFS= read -r name; do
 	[[ -n "$name" ]] && autoloads+=("$name")
@@ -40,8 +39,8 @@ for name in "${autoloads[@]}"; do
 done
 
 echo "Godot     : $GODOT"
-echo "Projet    : $PROJECT_DIR"
-echo "Autoloads : ${autoloads[*]:-aucun} (identifiants ignorés en --check-only)"
+echo "Project   : $PROJECT_DIR"
+echo "Autoloads : ${autoloads[*]:-none} (identifiers ignored under --check-only)"
 echo
 
 failed=()
@@ -53,15 +52,15 @@ while IFS= read -r file; do
 		| grep -vE "$ignore_re")"
 	if [[ -n "$errors" ]]; then
 		failed+=("$file")
-		echo "ÉCHEC $file"
+		echo "FAIL $file"
 		sed -e 's/^/      | /' <<<"$errors"
 	fi
 done < <(cd "$PROJECT_DIR" && find . -name '*.gd' -not -path './.godot/*' | sed 's|^\./||' | sort)
 
 echo
 if [[ ${#failed[@]} -eq 0 ]]; then
-	echo "$total scripts parsés, aucune erreur."
+	echo "$total scripts parsed, no error."
 	exit 0
 fi
-echo "Scripts en erreur (${#failed[@]}/$total) : ${failed[*]}"
+echo "Scripts in error (${#failed[@]}/$total): ${failed[*]}"
 exit 1

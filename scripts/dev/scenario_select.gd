@@ -64,7 +64,7 @@ func _ready() -> void:
 		entry.add_child(button)
 
 		var desc := Label.new()
-		desc.text = scenario.desc
+		desc.text = scenario.description
 		desc.custom_minimum_size = Vector2(460, 0)
 		desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		desc.add_theme_font_size_override("font_size", 12)

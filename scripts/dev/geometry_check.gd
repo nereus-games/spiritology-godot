@@ -28,19 +28,11 @@ func _ready() -> void:
 
 func _run_all() -> void:
 	await get_tree().process_frame  # laisse les autoloads et la racine s'installer
-	for id in [
-		&"movement",
-		&"traps",
-		&"gates",
-		&"grounds",
-		&"chests",
-		&"walls",
-		&"bridge",
-		&"bridge_rival",
-		&"stairs",
-		&"abilities"
-	]:
-		await _run_scenario(id)
+	# Balayage du CATALOGUE, et non d'une liste figée : un scénario ajouté à
+	# `data/scenarios/` est vérifié d'office, et s'il n'a pas de constructeur,
+	# ScenarioCatalog.build() le signale au lieu de retomber en silence sur un autre.
+	for scenario in ScenarioCatalog.list():
+		await _run_scenario(scenario.id)
 	print("")
 	if _fails.is_empty():
 		print("TOUT OK")

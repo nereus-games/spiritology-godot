@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="ScenarioData" format=3]
+
+[ext_resource type="Script" path="res://resources/scenario_data.gd" id="1_wadyd"]
+
+[resource]
+script = ExtResource("1_wadyd")
+id = &"abilities"
+order = 9
+title = "Capacités & objets d'exploration"
+description = "Dans le menu d'actions (Tab/Espace) : utilise « fog mantel » (le rival cesse de te suivre) ou « tea drop » (soigne le poison du piège)."

@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="ScenarioData" format=3]
+
+[ext_resource type="Script" path="res://resources/scenario_data.gd" id="1_s0puh"]
+
+[resource]
+script = ExtResource("1_s0puh")
+id = &"grounds"
+order = 3
+title = "Sols spéciaux (Dig · Recycle · Examine)"
+description = "Sur la plaque terreuse : action « dig » (consomme 1 pelle → objet/info). Face au tas vert (obstacle) : actions « examine » et « recycle »."

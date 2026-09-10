@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="ScenarioData" format=3]
+
+[ext_resource type="Script" path="res://resources/scenario_data.gd" id="1_xygpc"]
+
+[resource]
+script = ExtResource("1_xygpc")
+id = &"traps"
+order = 1
+title = "Pièges (poison · téléport · disarray)"
+description = "Marche sur les plaques. Violet = poison (le DEN baisse chaque tour). Bleu = téléport (tu changes de case). Orange = disarray (tes pas suivants partent parfois de travers)."

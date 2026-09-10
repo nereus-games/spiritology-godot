@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="ScenarioData" format=3]
+
+[ext_resource type="Script" path="res://resources/scenario_data.gd" id="1_8px16"]
+
+[resource]
+script = ExtResource("1_8px16")
+id = &"movement"
+title = "Déplacement & regard"
+description = "Salle vide avec piliers. Observe : fluidité du regard (souris), des rotations (Q/E) et du pas-à-pas (WASD). Échap libère le curseur."

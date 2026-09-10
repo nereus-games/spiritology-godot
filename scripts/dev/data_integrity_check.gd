@@ -20,6 +20,7 @@ const SPECIES_DIR := "res://data/species/"
 const ABILITIES_DIR := "res://data/abilities/"
 const OBJECTS_DIR := "res://data/objects/"
 const DUNGEONS_DIR := "res://data/dungeons/"
+const SCENARIOS_DIR := "res://data/scenarios/"
 const SPRITE_DIR := "res://assets/sprites/spirimonsters/"
 
 const PO_EN := "res://translations/en.po"
@@ -45,6 +46,7 @@ var _abilities: Dictionary = {}  ## id -> AbilityData
 var _talents: Dictionary = {}  ## id -> TalentData
 var _objects: Dictionary = {}  ## id -> ObjectData
 var _dungeons: Dictionary = {}  ## id -> DungeonConfig
+var _scenarios: Dictionary = {}  ## id -> ScenarioData (scénarios de test d'exploration)
 
 
 func _check(cond: bool, label: String) -> void:
@@ -96,7 +98,7 @@ func _check_loading() -> void:
 	var untyped: Array = []
 	var mismatched: Array = []
 	var total := 0
-	for dir_path in [SPECIES_DIR, ABILITIES_DIR, OBJECTS_DIR, DUNGEONS_DIR]:
+	for dir_path in [SPECIES_DIR, ABILITIES_DIR, OBJECTS_DIR, DUNGEONS_DIR, SCENARIOS_DIR]:
 		for file_name in _tres_files(dir_path):
 			total += 1
 			var path: String = dir_path + file_name
@@ -125,13 +127,14 @@ func _check_loading() -> void:
 	_check_empty(mismatched, "l'id de chaque ressource correspond à son nom de fichier")
 	print(
 		(
-			"  ·    %d espèces, %d capacités, %d talents, %d objets, %d donjons"
+			"  ·    %d espèces, %d capacités, %d talents, %d objets, %d donjons, %d scénarios"
 			% [
 				_species.size(),
 				_abilities.size(),
 				_talents.size(),
 				_objects.size(),
-				_dungeons.size()
+				_dungeons.size(),
+				_scenarios.size()
 			]
 		)
 	)
@@ -167,6 +170,8 @@ func _registry_for(res: Resource):
 		return _objects
 	if res is DungeonConfig:
 		return _dungeons
+	if res is ScenarioData:
+		return _scenarios
 	return null
 
 

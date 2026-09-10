@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="ScenarioData" format=3]
+
+[ext_resource type="Script" path="res://resources/scenario_data.gd" id="1_b4tmn"]
+
+[resource]
+script = ExtResource("1_b4tmn")
+id = &"walls"
+order = 5
+title = "Mur fissuré · Décor examinable"
+description = "Face au mur sombre : action « cranny crossing » pour le traverser. Face au décor magenta : action « examine » (gain d'encyclopédie)."

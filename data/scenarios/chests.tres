@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="ScenarioData" format=3]
+
+[ext_resource type="Script" path="res://resources/scenario_data.gd" id="1_dhsc6"]
+
+[resource]
+script = ExtResource("1_dhsc6")
+id = &"chests"
+order = 4
+title = "Coffres · Cristal · Dieverting"
+description = "Coffre doré = butin (ou téléport surprise : rien ne distingue un coffre piégé). Avec razél dans le duo (talent Reveal Traps), un coffre piégé propose « se laisser téléporter » ou « rester sur place » — du butin dans les deux cas, davantage en acceptant ; sans razél, il téléporte sec et sans rien donner. Cristal cyan (obstacle) = action « refresh » en face. Dés orange = effet aléatoire au contact : sur le premier tu as une pelle, donc le menu d'actions te propose « détruire » ou « subir » ; sur le second (pelle dépensée) le dé roule tout seul. Six issues possibles — renvoi à l'entrée ou à la sortie du fond, perte d'objets (déposés dans un coffre là où était le dé), perte d'ETH ou de DEN, apparition de rivaux, objets détruits ou gagnés."

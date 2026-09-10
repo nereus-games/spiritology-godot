@@ -1,13 +1,14 @@
-# gdlint: disable=max-line-length
-# Les descriptions de scénarios sont de longues chaînes de prose. Elles quitteront ce
-# fichier pour data/scenarios/ (le level design n'a pas à vivre dans du code) ; d'ici là,
-# les couper à 100 colonnes ne rendrait service à personne.
 ## Catalogue de scénarios de TEST (dev) : chaque scénario peuple un [DungeonManager] avec un
 ## sous-ensemble de mécanismes pour tester un élément à la fois, sans tout monter d'un coup.
 ##
-## Construit par CODE (pas de .tscn authoring). `selected_id` est posé par l'écran de sélection
-## puis lu par `exploration.gd`, qui appelle [method build] et place le joueur à la case
-## retournée. Le bouton MENU du HUD renvoie à l'écran de sélection (temporaire).
+## Deux moitiés, séparées à dessein : les TEXTES (titre, mode d'emploi) sont des [ScenarioData]
+## dans `data/scenarios/`, éditables sans toucher au code ; la CONSTRUCTION du donjon est le
+## code ci-dessous, un constructeur par scénario. L'`id` relie les deux, et
+## `data_integrity_check` vérifie qu'aucun des deux côtés ne pointe dans le vide.
+##
+## `selected_id` est posé par l'écran de sélection puis lu par `exploration.gd`, qui appelle
+## [method build] et place le joueur à la case retournée. Le bouton MENU du HUD renvoie à
+## l'écran de sélection (temporaire).
 ##
 ## Pas de `class_name` (piège du cache CLI) : référencé par `preload`. Réf. autoloads + scripts
 ## de mécanismes (OK en jeu, chargé après le boot).
@@ -64,71 +65,27 @@ static var teammate_species: StringName = &"razel"
 ## ce curseur est là pour l'éprouver à la main. 0 = valeur par défaut du rival.
 static var rival_den_override := 0
 
+const SCENARIO_DIR := "res://data/scenarios/"
 
-## Liste ordonnée {id, title, desc} pour l'écran de sélection. `desc` = ce qu'on doit observer.
+## Fiches des scénarios, dans l'ordre de l'écran de sélection. Le dossier se lit par ordre
+## alphabétique : c'est [member ScenarioData.order] qui fixe la progression voulue.
+static var _list: Array = []
+
+
 static func list() -> Array:
-	return [
-		{
-			"id": &"movement",
-			"title": "Déplacement & regard",
-			"desc":
-			"Salle vide avec piliers. Observe : fluidité du regard (souris), des rotations (Q/E) et du pas-à-pas (WASD). Échap libère le curseur."
-		},
-		{
-			"id": &"traps",
-			"title": "Pièges (poison · téléport · disarray)",
-			"desc":
-			"Marche sur les plaques. Violet = poison (le DEN baisse chaque tour). Bleu = téléport (tu changes de case). Orange = disarray (tes pas suivants partent parfois de travers)."
-		},
-		{
-			"id": &"gates",
-			"title": "Portes (auto · verrouillée · méditation)",
-			"desc":
-			"Les portes sont ENTRE deux cases (fines) : on peut se tenir de chaque côté. Grise = s'ouvre/ferme seule au fil des tours. Dorée = fais face + action « ouvrir » (paie 2 pelles). Verte = fais face + action « méditer » ×3, CONSÉCUTIVES (bouge ou détourne-toi et le compteur retombe à 0). Derrière la verte, un tas vert : ses actions n'apparaissent qu'une fois la porte ouverte — on n'agit pas sur ce qu'on ne voit pas."
-		},
-		{
-			"id": &"grounds",
-			"title": "Sols spéciaux (Dig · Recycle · Examine)",
-			"desc":
-			"Sur la plaque terreuse : action « dig » (consomme 1 pelle → objet/info). Face au tas vert (obstacle) : actions « examine » et « recycle »."
-		},
-		{
-			"id": &"chests",
-			"title": "Coffres · Cristal · Dieverting",
-			"desc":
-			"Coffre doré = butin (ou téléport surprise : rien ne distingue un coffre piégé). Avec razél dans le duo (talent Reveal Traps), un coffre piégé propose « se laisser téléporter » ou « rester sur place » — du butin dans les deux cas, davantage en acceptant ; sans razél, il téléporte sec et sans rien donner. Cristal cyan (obstacle) = action « refresh » en face. Dés orange = effet aléatoire au contact : sur le premier tu as une pelle, donc le menu d'actions te propose « détruire » ou « subir » ; sur le second (pelle dépensée) le dé roule tout seul. Six issues possibles — renvoi à l'entrée ou à la sortie du fond, perte d'objets (déposés dans un coffre là où était le dé), perte d'ETH ou de DEN, apparition de rivaux, objets détruits ou gagnés."
-		},
-		{
-			"id": &"walls",
-			"title": "Mur fissuré · Décor examinable",
-			"desc":
-			"Face au mur sombre : action « cranny crossing » pour le traverser. Face au décor magenta : action « examine » (gain d'encyclopédie)."
-		},
-		{
-			"id": &"bridge",
-			"title": "Pont étroit (équilibre)",
-			"desc":
-			"Entre sur la planche : une barre d'équilibre apparaît en haut. Corrige EN CONTINU avec A/D pour rester centré (sans rien faire, ou en corrigeant trop peu, une bourrasque te fait tomber). Chaque case franchie coûte un tour. Si tu tombes, tu atterris au fond du ravin (2 étages, dégâts de chute) et tu remontes au départ par les escaliers de droite. L'arrivée est une case unique murée, piégée au disarray : le retour se fait donc avec une commande latérale plus molle, et le compteur de disarray descend d'un cran par case de pont."
-		},
-		{
-			"id": &"bridge_rival",
-			"title": "Pont étroit + rival",
-			"desc":
-			"Même ravin, avec un rival de l'AUTRE côté : il doit prendre le pont pour t'atteindre, donc vous vous croisez forcément sur une planche. Il a son propre test d'équilibre (1 à 2 % de chute par case, tiré à sa création) et peut donc tomber tout seul en venant. Si vous vous croisez, vous tombez tous les deux sur la même case et la rencontre s'engage en bas. Et s'il t'a vu chuter, il peut sauter à ta suite."
-		},
-		{
-			"id": &"stairs",
-			"title": "Escaliers, ascenseurs & chutes (5 étages)",
-			"desc":
-			"Pyramide de cinq gradins. Un escalier bleu par palier (0→1→2→3→4), en quinconce vers le fond : c'est le chemin toujours praticable. Les plateformes orange sont des RACCOURCIS doublant ces escaliers — un ascenseur VERTICAL (1↔2) et un à trajet COMPLEXE (3↔4) qui sort au-dessus du vide et enchaîne des segments sur les trois axes. Un ascenseur reste où on l'a laissé : s'il est resté en haut, reprends l'escalier. Pour les chutes : à l'ouest chaque gradin surplombe le suivant (1 unité = aucun dégât) ; à l'est (dernière colonne) rien n'arrête avant le bas (1/2/3/4 unités = 0/10/15/20 DEN). En bas, tu peux marcher SOUS les gradins — et un PILIER y soutient un coin du gradin 1 : sa face haute est directement le sol du dessus, sans dalle ajoutée. Au sommet, les deux premières cases du bord est sont protégées par une RAMBARDE (basse : on voit le vide par-dessus, mais on ne le franchit pas) ; deux pas plus loin le même bord est ouvert, et fait tomber de 4 étages."
-		},
-		{
-			"id": &"abilities",
-			"title": "Capacités & objets d'exploration",
-			"desc":
-			"Dans le menu d'actions (Tab/Espace) : utilise « fog mantel » (le rival cesse de te suivre) ou « tea drop » (soigne le poison du piège)."
-		},
-	]
+	if not _list.is_empty():
+		return _list
+	var dir := DirAccess.open(SCENARIO_DIR)
+	if dir == null:
+		push_error("[ScenarioCatalog] dossier introuvable : %s" % SCENARIO_DIR)
+		return _list
+	for f in dir.get_files():
+		if f.ends_with(".tres"):
+			var res := load(SCENARIO_DIR + f) as ScenarioData
+			if res != null:
+				_list.append(res)
+	_list.sort_custom(func(a, b): return a.order < b.order)
+	return _list
 
 
 static func title_for(id: StringName) -> String:
@@ -162,6 +119,10 @@ static func build(id: StringName, dm) -> Vector3i:
 			return _stairs(dm)
 		&"abilities":
 			return _abilities(dm)
+	# Retomber en silence sur un autre scénario a fait croire pendant un moment qu'un id
+	# inconnu « marchait ». On construit toujours quelque chose pour ne pas planter le jeu,
+	# mais on le dit — et les checks échouent sur une erreur signalée.
+	push_error("[ScenarioCatalog] scénario sans constructeur : %s" % id)
 	return _traps(dm)
 
 

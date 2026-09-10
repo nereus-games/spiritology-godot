@@ -1,15 +1,15 @@
-## Capture d'écran de l'UI de rencontre, sans avoir à marcher jusqu'à un rival.
+## Screenshot of the encounter UI, without having to walk up to a rival.
 ##
-## En jeu, la rencontre n'est atteignable qu'en overlay depuis l'exploration, au contact
-## d'un rival — donc invérifiable en une commande. Ce script l'ouvre directement, laisse le
-## joueur au moment du choix, et écrit un PNG.
+## In game the encounter is only reachable as an overlay from exploration, on contact with a
+## rival, and so cannot be checked in a single command. This script opens it directly, leaves the
+## player at the moment of choosing, and writes a PNG.
 ##
-## Lancé par : Godot --path . res://scenes/dev/encounter_shot.tscn -- <sortie.png> [duo] [rivaux]
-##   duo, rivaux : slugs séparés par des virgules (défauts ci-dessous).
-## Pas de --headless : il faut un contexte de rendu (une fenêtre s'ouvre brièvement).
+## Run with: Godot --path . res://scenes/dev/encounter_shot.tscn -- <out.png> [duo] [rivals]
+##   duo and rivals are comma-separated slugs; defaults below.
+## No --headless: a rendering context is needed, so a window opens briefly.
 ##
-## C'est le SEUL contrôle visuel de `encounter_ui.gd`, qu'aucune vérification headless ne
-## couvre : la boucle de rencontre est testée sans son écran.
+## This is the ONLY visual check on `encounter_ui.gd`, which no headless check covers: the
+## encounter loop is tested without its screen.
 extends Node
 
 const ENCOUNTER := preload("res://scenes/encounter/encounter.tscn")
@@ -17,11 +17,11 @@ const ENCOUNTER := preload("res://scenes/encounter/encounter.tscn")
 const DEFAULT_PLAYERS := "kalilk,fliritus"
 const DEFAULT_RIVALS := "ravbak,skorpis"
 
-## Nombre de frames laissées à l'UI pour se poser (police, disposition, timeline).
+## How many frames the UI is given to settle: font, layout, turn order.
 const SETTLE_FRAMES := 40
 
-## Seed imposé à la rencontre : sans lui, l'ordre du tour est tiré au hasard et deux
-## captures du MÊME code diffèrent, ce qui rend la comparaison A/B inutilisable.
+## The seed forced on the encounter. Without it the turn order is random, and two shots of the
+## SAME code differ, which makes A/B comparison useless.
 const SEED := 20260909
 
 
@@ -35,7 +35,7 @@ func _run() -> void:
 	var players: String = args[1] if args.size() > 1 else DEFAULT_PLAYERS
 	var rivals: String = args[2] if args.size() > 2 else DEFAULT_RIVALS
 
-	await get_tree().process_frame  # la racine finit d'installer ses enfants
+	await get_tree().process_frame  # let the root finish installing its children
 	var ui := ENCOUNTER.instantiate()
 	get_tree().root.add_child(ui)
 	ui.begin(players.split(","), rivals.split(","), {}, [], SEED)
@@ -45,5 +45,5 @@ func _run() -> void:
 
 	var image := get_viewport().get_texture().get_image()
 	var err := image.save_png(out)
-	print("[shot] rencontre -> %s (%s)" % [out, "OK" if err == OK else "err %d" % err])
+	print("[shot] encounter -> %s (%s)" % [out, "OK" if err == OK else "err %d" % err])
 	get_tree().quit(0 if err == OK else 1)

@@ -1,12 +1,12 @@
-## Capture d'écran d'un scénario d'exploration, sans passer par l'éditeur — contrôle visuel
-## rapide (échelle, murs, portes) depuis la ligne de commande.
+## Screenshot of an exploration scenario without going through the editor — a quick visual check
+## on scale, walls and gateways from the command line.
 ##
-## Lancé par : Godot --path . res://scenes/dev/screenshot.tscn -- <scenario> <chemin.png> [vue]
-## `vue` (optionnelle) :
-##   - `top`            : caméra en surplomb au lieu de la vue subjective ;
-##   - `x,y,z@yaw`      : place d'abord le joueur sur cette case, tourné de `yaw` degrés
-##                        (0 = vers -z), puis capture sa vue subjective.
-## Pas de --headless : il faut un contexte de rendu (une fenêtre s'ouvre brièvement).
+## Run with: Godot --path . res://scenes/dev/screenshot.tscn -- <scenario> <path.png> [view]
+## `view` is optional:
+##   - `top`        : an overhead camera instead of the first-person view;
+##   - `x,y,z@yaw`  : first place the player on that cell, turned `yaw` degrees (0 faces -z),
+##                    then capture their first-person view.
+## No --headless: a rendering context is needed, so a window opens briefly.
 extends Node
 
 const ScenarioCatalog := preload("res://scripts/dev/scenario_catalog.gd")
@@ -22,7 +22,7 @@ func _run() -> void:
 	var id: StringName = StringName(args[0]) if args.size() > 0 else &"gates"
 	var out: String = args[1] if args.size() > 1 else "/tmp/shot.png"
 	ScenarioCatalog.selected_id = id
-	await get_tree().process_frame  # la racine finit d'installer ses enfants
+	await get_tree().process_frame  # let the root finish installing its children
 	var scene = EXPLORATION.instantiate()
 	get_tree().root.add_child(scene)
 	for i in range(30):
@@ -38,7 +38,7 @@ func _run() -> void:
 	var cam: Camera3D = pl.get_node("CameraRig/Camera3D")
 	print(
 		(
-			"[shot] joueur %s cell=%s yaw=%.0f° | caméra %s regarde %s | current=%s fov=%.0f"
+			"[shot] player %s cell=%s yaw=%.0f deg | camera %s looking at %s | current=%s fov=%.0f"
 			% [
 				pl.global_position,
 				pl.cell,
@@ -54,8 +54,8 @@ func _run() -> void:
 		var top := Camera3D.new()
 		scene.add_child(top)
 		top.global_position = pl.global_position + Vector3(0.0, 8.0, 4.0)
-		# Viser le joueur, pas le point juste sous la caméra : une visée verticale est colinéaire
-		# au vecteur « haut » et laisse `look_at` choisir une rotation arbitraire autour de Z.
+		# Aim at the player rather than at the point straight below the camera: a vertical aim is
+		# collinear with the up vector, and lets `look_at` pick an arbitrary rotation around Z.
 		top.look_at(pl.global_position, Vector3.UP)
 		top.current = true
 		await get_tree().process_frame

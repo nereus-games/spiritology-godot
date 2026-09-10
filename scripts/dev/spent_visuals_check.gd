@@ -1,10 +1,10 @@
-## Vérification headless de la règle transverse « mécanisme épuisé » : ce avec quoi on ne peut
-## plus interagir ne doit plus se présenter comme ACTIF — marqueur 3D grisé (ou retiré quand le
-## mécanisme ne laisse rien derrière lui), `is_spent()` vrai (c'est ce que la mini-map lit pour
-## éteindre la case), et retour à l'état actif au réarmement entre deux visites.
+## Headless check on the cross-cutting "spent mechanism" rule: anything you can no longer
+## interact with must stop presenting itself as ACTIVE — a greyed 3D marker (or a removed one,
+## when the mechanism leaves nothing behind), `is_spent()` true (which is what the mini-map reads
+## to dim the cell), and a return to the active state when it rearms between visits.
 ##
-## Lancé par : Godot --headless --path . res://scenes/dev/spent_visuals_check.tscn
-## (scène de démarrage, et non --script : voir geometry_check.gd.)
+## Run with: Godot --headless --path . res://scenes/dev/spent_visuals_check.tscn
+## As a start scene rather than --script; see geometry_check.gd.
 extends Node
 
 const ScenarioCatalog := preload("res://scripts/dev/scenario_catalog.gd")
@@ -34,14 +34,14 @@ func _run_all() -> void:
 	await _check_decor()
 	print("")
 	if _fails.is_empty():
-		print("TOUT OK")
+		print("ALL OK")
 	else:
-		print("ÉCHECS : %s" % [_fails])
+		print("FAILURES: %s" % [_fails])
 	get_tree().quit(0 if _fails.is_empty() else 1)
 
 
 # --------------------------------------------------------------------------
-# Outils
+# Helpers
 # --------------------------------------------------------------------------
 
 
@@ -60,7 +60,7 @@ func _teardown(ctx: Dictionary) -> void:
 	await get_tree().process_frame
 
 
-## Premier mécanisme d'une case exposant `prop` (chaque type a un état qui lui est propre).
+## The first mechanism on a cell exposing `prop`; each type has state of its own.
 func _mech_at(dm, cell: Vector3i, prop: String) -> Node:
 	for m in dm.mechanisms_at(cell):
 		if prop in m:
@@ -80,102 +80,99 @@ func _is_active_looking(m: Node) -> bool:
 
 
 # --------------------------------------------------------------------------
-# Sols spéciaux : sol friable creusé (grisé, réarmé entre visites) et litière recyclée
-# (marqueur RETIRÉ : la case est redevenue un sol ordinaire)
+# Special grounds: dug crumbly ground (greyed, rearmed between visits) and recycled litter
+# (marker REMOVED, since the cell has become ordinary floor)
 # --------------------------------------------------------------------------
 
 
 func _check_grounds() -> void:
-	print("[sol friable creusé · litière recyclée]")
+	print("[crumbly ground dug · litter recycled]")
 	var ctx := await _setup(&"grounds")
 	var ground := _mech_at(ctx.dm, Vector3i(1, 0, 1), "info_chance")
 	var litter := _mech_at(ctx.dm, Vector3i(1, 0, 3), "loot_max")
-	_check(ground != null and litter != null, "sol friable et litière en place")
+	_check(ground != null and litter != null, "crumbly ground and litter in place")
 	_check(
-		_is_active_looking(ground) and not ground.is_spent(), "avant : le sol friable a l'air actif"
+		_is_active_looking(ground) and not ground.is_spent(),
+		"before: the crumbly ground looks active"
 	)
 	ctx.player.teleport_to(Vector3i(1, 0, 1))
 	ground.dig(ctx.player)
 	_check(
 		ground.is_spent(),
-		"creusé : is_spent() (la carte éteint la case, cf. doc « an icon is shown »)"
+		'dug: is_spent(), so the map dims the cell — the doc\'s "an icon is shown"'
 	)
-	_check(_is_greyed(ground), "creusé : marqueur grisé")
+	_check(_is_greyed(ground), "dug: marker greyed out")
 	ground.reset_between_visits()
 	_check(
 		not ground.is_spent() and _is_active_looking(ground),
-		"visite suivante : de nouveau creusable ET de nouveau coloré"
+		"next visit: diggable again AND coloured again"
 	)
 
-	_check(
-		_is_active_looking(litter) and not litter.is_spent(), "avant : la litière a l'air active"
-	)
+	_check(_is_active_looking(litter) and not litter.is_spent(), "before: the litter looks active")
 	litter.recycle(ctx.player)
-	_check(litter.is_spent(), "recyclée : is_spent()")
-	_check(litter._marker == null, "recyclée : marqueur RETIRÉ (la case est un sol normal)")
-	_check(not litter.blocks_walk(), "recyclée : on marche dessus (cohérent avec le visuel)")
+	_check(litter.is_spent(), "recycled: is_spent()")
+	_check(litter._marker == null, "recycled: marker REMOVED, the cell is ordinary floor")
+	_check(not litter.blocks_walk(), "recycled: you walk over it, matching the visual")
 	await _teardown(ctx)
 
 
 # --------------------------------------------------------------------------
-# Cristal de rafraîchissement : grisé mais NON aplati (il reste un obstacle)
+# Refresh crystal: greyed but NOT flattened, since it is still an obstacle
 # --------------------------------------------------------------------------
 
 
 func _check_crystal() -> void:
-	print("[cristal de rafraîchissement utilisé]")
+	print("[refresh crystal used]")
 	var ctx := await _setup(&"chests")
 	var crystal := _mech_at(ctx.dm, Vector3i(0, 0, 2), "_used")
-	_check(crystal != null and _is_active_looking(crystal), "avant : le cristal a l'air actif")
+	_check(crystal != null and _is_active_looking(crystal), "before: the crystal looks active")
 	crystal.refresh()
-	_check(crystal.is_spent(), "utilisé : is_spent()")
-	_check(_is_greyed(crystal), "utilisé : marqueur grisé")
+	_check(crystal.is_spent(), "used: is_spent()")
+	_check(_is_greyed(crystal), "used: marker greyed out")
 	_check(
 		is_equal_approx(crystal._marker.scale.y, 1.0),
-		"utilisé : PAS aplati (c'est toujours un obstacle infranchissable)"
+		"used: NOT flattened, since it is still an impassable obstacle"
 	)
-	_check(crystal.blocks_walk(), "utilisé : bloque toujours le passage")
+	_check(crystal.blocks_walk(), "used: still blocks the passage")
 	crystal.reset_between_visits()
-	_check(
-		not crystal.is_spent() and _is_active_looking(crystal), "visite suivante : cristal réarmé"
-	)
+	_check(not crystal.is_spent() and _is_active_looking(crystal), "next visit: crystal rearmed")
 	await _teardown(ctx)
 
 
 # --------------------------------------------------------------------------
-# Piège : déjà conforme avant cette passe — on verrouille le comportement
+# Trap: already conformant before this pass — this locks the behaviour in
 # --------------------------------------------------------------------------
 
 
 func _check_trap() -> void:
-	print("[piège déclenché]")
+	print("[trap sprung]")
 	var ctx := await _setup(&"traps")
 	var trap := _mech_at(ctx.dm, Vector3i(1, 0, 2), "kind")
-	_check(trap != null and not trap.is_spent(), "avant : piège armé")
+	_check(trap != null and not trap.is_spent(), "before: trap armed")
 	trap.reactivates = true
 	trap.on_enter(ctx.player)
-	_check(trap.is_spent(), "déclenché : is_spent()")
-	_check(_is_greyed(trap), "déclenché : marqueur grisé")
+	_check(trap.is_spent(), "sprung: is_spent()")
+	_check(_is_greyed(trap), "sprung: marker greyed out")
 	trap.reset_between_visits()
 	_check(
 		not trap.is_spent() and _is_active_looking(trap),
-		"version réarmable : de nouveau armé ET de nouveau coloré"
+		"rearming version: armed again AND coloured again"
 	)
 	await _teardown(ctx)
 
 
 # --------------------------------------------------------------------------
-# Décor examinable : grisé, sans aplatissement (élément mural)
+# Examinable decor: greyed, not flattened, since it is a wall element
 # --------------------------------------------------------------------------
 
 
 func _check_decor() -> void:
-	print("[décor examiné]")
+	print("[decor examined]")
 	var ctx := await _setup(&"walls")
 	var decor := _mech_at(ctx.dm, Vector3i(0, 0, 1), "decor_type")
-	_check(decor != null and _is_active_looking(decor), "avant : le décor a l'air actif")
+	_check(decor != null and _is_active_looking(decor), "before: the decor looks active")
 	decor.examine(ctx.player)
-	_check(decor.is_spent(), "examiné : is_spent()")
-	_check(_is_greyed(decor), "examiné : marqueur grisé")
-	_check(is_equal_approx(decor._marker.scale.y, 1.0), "examiné : PAS aplati (élément mural)")
+	_check(decor.is_spent(), "examined: is_spent()")
+	_check(_is_greyed(decor), "examined: marker greyed out")
+	_check(is_equal_approx(decor._marker.scale.y, 1.0), "examined: NOT flattened, a wall element")
 	await _teardown(ctx)

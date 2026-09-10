@@ -1,10 +1,10 @@
-## Vérification headless des coffres contre la doc Notion (Level Design / Mechanisms
-## « Chest », plus les clauses « coffre » des talents Reveal Traps et Trick to Reveal).
-## Éprouve le butin, le piège déguisé, le choix offert par Reveal Traps et le fait qu'un
-## rival ne consomme pas un coffre à butin, dans le vrai scénario « chests ».
+## Headless check on chests against the design doc ("Mechanisms / Chest", plus the chest clauses
+## of the Reveal Traps and Trick to Reveal talents). Exercises the loot, the disguised trap, the
+## choice Reveal Traps offers, and the fact that a rival does not consume a loot chest — all in
+## the real "chests" scenario.
 ##
-## Lancé par : Godot --headless --path . res://scenes/dev/chest_check.tscn
-## (scène de démarrage, et non --script : voir geometry_check.gd.)
+## Run with: Godot --headless --path . res://scenes/dev/chest_check.tscn
+## As a start scene rather than --script; see geometry_check.gd.
 extends Node
 
 const ScenarioCatalog := preload("res://scripts/dev/scenario_catalog.gd")
@@ -12,13 +12,13 @@ const EXPLORATION := preload("res://scenes/exploration/exploration.tscn")
 const RIVAL_SCENE := preload("res://scenes/exploration/rival/rival.tscn")
 const DungeonMechanism := preload("res://scripts/exploration/mechanisms/dungeon_mechanism.gd")
 
-## Cases des deux coffres du scénario « chests ».
+## Cells of the two chests in the "chests" scenario.
 const LOOT_CELL := Vector3i(1, 0, 1)
 const TRAP_CELL := Vector3i(1, 0, 3)
 
-## Espèce coéquipière SANS le talent reveal_traps (érzélak porte trick_to_reveal).
+## A teammate species WITHOUT the reveal_traps talent (érzélak carries trick_to_reveal).
 const NO_TALENT_TEAMMATE := &"erzelak"
-## Espèce coéquipière AVEC le talent reveal_traps.
+## A teammate species WITH the reveal_traps talent.
 const REVEAL_TRAPS_TEAMMATE := &"razel"
 
 var _fails: Array[String] = []
@@ -46,19 +46,19 @@ func _run_all() -> void:
 	await _check_reveal_traps_accepted()
 	print("")
 	if _fails.is_empty():
-		print("TOUT OK")
+		print("ALL OK")
 	else:
-		print("ÉCHECS : %s" % [_fails])
+		print("FAILURES: %s" % [_fails])
 	get_tree().quit(0 if _fails.is_empty() else 1)
 
 
 # --------------------------------------------------------------------------
-# Terrain de test
+# The test field
 # --------------------------------------------------------------------------
 
 
-## Monte le scénario « chests » et retourne {scene, dm, player, loot, trap}.
-## `teammate` fixe le talent du duo (le coffre lit GameSession à l'ouverture).
+## Builds the "chests" scenario and returns {scene, dm, player, loot, trap}. `teammate` sets the
+## duo's talent, since the chest reads GameSession when it opens.
 func _setup(teammate: StringName) -> Dictionary:
 	ScenarioCatalog.selected_id = &"chests"
 	var scene = EXPLORATION.instantiate()
@@ -84,7 +84,7 @@ func _teardown(ctx: Dictionary) -> void:
 	await get_tree().process_frame
 
 
-## Coffre posé sur une case (ou null).
+## The chest on a cell, or null.
 func _chest_at(dm, cell: Vector3i) -> Node:
 	for m in dm.mechanisms_at(cell):
 		if "is_trap" in m:
@@ -99,7 +99,7 @@ func _inventory_total() -> int:
 	return total
 
 
-## Le marqueur du mécanisme est-il grisé (mécanisme épuisé) ?
+## Whether the mechanism's marker is greyed out, meaning spent.
 func _is_greyed(mechanism: Node) -> bool:
 	var marker: MeshInstance3D = mechanism._marker
 	if marker == null or marker.material_override == null:
@@ -115,43 +115,45 @@ func _action_ids(dm, cell: Vector3i, who: Node) -> Array:
 
 
 # --------------------------------------------------------------------------
-# Coffre à butin (doc : « will give objects if the player steps on them »)
+# Loot chest ("will give objects if the player steps on them")
 # --------------------------------------------------------------------------
 
 
 func _check_loot_chest() -> void:
-	print("[coffre à butin]")
+	print("[loot chest]")
 	var ctx := await _setup(REVEAL_TRAPS_TEAMMATE)
 	var chest = ctx.loot
-	_check(chest != null and not chest.is_trap, "un coffre à butin sur %s" % LOOT_CELL)
-	_check(not chest.is_opened() and not chest.revealed, "au départ : ni ouvert ni révélé")
+	_check(chest != null and not chest.is_trap, "a loot chest on %s" % LOOT_CELL)
+	_check(
+		not chest.is_opened() and not chest.revealed, "to start with: neither opened nor revealed"
+	)
 	chest.reveal()
 	_check(
 		chest.revealed and not chest.is_opened(),
-		"reveal() révèle sans ouvrir (talent Trick to Reveal)"
+		"reveal() reveals without opening (the Trick to Reveal talent)"
 	)
 	ctx.player.teleport_to(LOOT_CELL)
 	chest.on_enter(ctx.player)
 	var got := _inventory_total()
-	_check(chest.is_opened(), "marcher dessus l'ouvre")
+	_check(chest.is_opened(), "stepping on it opens it")
 	_check(
 		got >= chest.loot_min and got <= chest.loot_max,
-		"butin dans [%d, %d] (reçu %d)" % [chest.loot_min, chest.loot_max, got]
+		"loot within [%d, %d] (got %d)" % [chest.loot_min, chest.loot_max, got]
 	)
-	_check(_messages.size() == 1, "le butin est annoncé : « %s »" % ["".join(_messages)])
-	_check(_is_greyed(chest), "un coffre vidé est grisé (plus actionnable, donc plus « actif »)")
+	_check(_messages.size() == 1, 'the loot is announced: "%s"' % ["".join(_messages)])
+	_check(_is_greyed(chest), "an emptied chest is greyed out: no longer actionable, so not active")
 	chest.on_enter(ctx.player)
-	_check(_inventory_total() == got, "un coffre ne se rouvre pas (ouvert une seule fois)")
+	_check(_inventory_total() == got, "a chest does not reopen; it opens once only")
 	await _teardown(ctx)
 
 
 # --------------------------------------------------------------------------
-# Un rival qui passe sur un coffre à butin ne le consomme pas (il n'a pas d'inventaire)
+# A rival walking over a loot chest does not consume it: it has no inventory
 # --------------------------------------------------------------------------
 
 
 func _check_rival_on_loot_chest() -> void:
-	print("[rival sur un coffre à butin]")
+	print("[rival on a loot chest]")
 	var ctx := await _setup(REVEAL_TRAPS_TEAMMATE)
 	var chest = ctx.loot
 	var rival = RIVAL_SCENE.instantiate()
@@ -160,87 +162,88 @@ func _check_rival_on_loot_chest() -> void:
 	ctx.dm.add_child(rival)
 	await get_tree().process_frame
 	chest.on_enter(rival)
-	_check(not chest.is_opened(), "le coffre reste fermé")
-	_check(_inventory_total() == 0, "aucun objet versé à l'inventaire du joueur")
+	_check(not chest.is_opened(), "the chest stays closed")
+	_check(_inventory_total() == 0, "nothing added to the player's inventory")
 	ctx.player.teleport_to(LOOT_CELL)
 	chest.on_enter(ctx.player)
-	_check(chest.is_opened() and _inventory_total() > 0, "le butin attendait bien le joueur")
+	_check(
+		chest.is_opened() and _inventory_total() > 0, "the loot was indeed waiting for the player"
+	)
 	await _teardown(ctx)
 
 
 # --------------------------------------------------------------------------
-# Coffre piégé sans le talent (doc : « some are actually teleportation traps in disguise »)
+# Trapped chest without the talent ("some are actually teleportation traps in disguise")
 # --------------------------------------------------------------------------
 
 
 func _check_trap_chest() -> void:
-	print("[coffre piégé, duo sans Reveal Traps]")
+	print("[trapped chest, duo without Reveal Traps]")
 	var ctx := await _setup(NO_TALENT_TEAMMATE)
 	var chest = ctx.trap
-	_check(chest != null and chest.is_trap, "un coffre piégé sur %s" % TRAP_CELL)
+	_check(chest != null and chest.is_trap, "a trapped chest on %s" % TRAP_CELL)
 	ctx.player.teleport_to(TRAP_CELL)
-	ctx.player.set_invisible(5)  # fog mantel en cours : le piège doit le rompre
+	ctx.player.set_invisible(5)  # fog mantel running: the trap has to break it
 	chest.on_enter(ctx.player)
-	_check(not chest.is_pending(), "aucun choix offert sans le talent")
-	_check(chest.is_opened(), "le coffre est consommé")
-	_check(ctx.player.cell != TRAP_CELL, "le joueur est téléporté (%s)" % [ctx.player.cell])
-	_check(_inventory_total() == 0, "aucun butin (piège pur)")
-	_check(_is_greyed(chest), "un coffre piégé déclenché est grisé")
-	_check(not ctx.player.is_hidden_from_rivals(), "le piège rompt l'invisibilité (fog mantel)")
+	_check(not chest.is_pending(), "no choice offered without the talent")
+	_check(chest.is_opened(), "the chest is consumed")
+	_check(ctx.player.cell != TRAP_CELL, "the player is teleported (%s)" % [ctx.player.cell])
+	_check(_inventory_total() == 0, "no loot: a pure trap")
+	_check(_is_greyed(chest), "a sprung trapped chest is greyed out")
+	_check(not ctx.player.is_hidden_from_rivals(), "the trap breaks invisibility (fog mantel)")
 	await _teardown(ctx)
 
 
 # --------------------------------------------------------------------------
-# Coffre piégé avec Reveal Traps (doc : « they can decide to teleport or not. The chest
-# gives 1 or more object no matter what, but more if players choose to teleport. »)
+# Trapped chest with Reveal Traps ("they can decide to teleport or not. The chest gives 1 or
+# more object no matter what, but more if players choose to teleport.")
 # --------------------------------------------------------------------------
 
 
 func _check_reveal_traps_declined() -> void:
-	print("[coffre piégé + Reveal Traps : refus]")
+	print("[trapped chest + Reveal Traps: declined]")
 	var ctx := await _setup(REVEAL_TRAPS_TEAMMATE)
 	var chest = ctx.trap
-	_check(GameSession.party_has_talent(&"reveal_traps"), "le duo porte bien reveal_traps")
+	_check(GameSession.party_has_talent(&"reveal_traps"), "the duo does carry reveal_traps")
 	ctx.player.teleport_to(TRAP_CELL)
 	chest.on_enter(ctx.player)
-	_check(chest.is_pending() and not chest.is_opened(), "le coffre attend le choix du joueur")
-	_check(ctx.player.cell == TRAP_CELL, "personne n'est téléporté tant que rien n'est choisi")
+	_check(chest.is_pending() and not chest.is_opened(), "the chest waits for the player's choice")
+	_check(ctx.player.cell == TRAP_CELL, "nobody is teleported while nothing has been chosen")
 	var ids := _action_ids(ctx.dm, TRAP_CELL, ctx.player)
 	_check(
 		&"chest_teleport" in ids and &"chest_decline" in ids,
-		"les deux actions sont proposées (%s)" % [ids]
+		"both actions are offered (%s)" % [ids]
 	)
 	chest.decline_teleport(ctx.player)
-	_check(chest.is_opened() and not chest.is_pending(), "le coffre est consommé après le choix")
-	_check(ctx.player.cell == TRAP_CELL, "refus : le joueur reste sur place")
+	_check(chest.is_opened() and not chest.is_pending(), "the chest is consumed once chosen")
+	_check(ctx.player.cell == TRAP_CELL, "declined: the player stays put")
 	_check(
 		_inventory_total() == chest.trap_loot_declined,
-		"refus : %d objet(s) quand même" % chest.trap_loot_declined
+		"declined: %d object(s) anyway" % chest.trap_loot_declined
 	)
 	_check(
 		ctx.dm.actions_for(TRAP_CELL, Vector3i(0, 0, 1), ctx.player).is_empty(),
-		"plus aucune action sur la case"
+		"no action left on the cell"
 	)
 	await _teardown(ctx)
 
 
 func _check_reveal_traps_accepted() -> void:
-	print("[coffre piégé + Reveal Traps : acceptation]")
+	print("[trapped chest + Reveal Traps: accepted]")
 	var ctx := await _setup(REVEAL_TRAPS_TEAMMATE)
 	var chest = ctx.trap
 	ctx.player.teleport_to(TRAP_CELL)
 	chest.on_enter(ctx.player)
 	chest.accept_teleport(ctx.player)
 	_check(
-		ctx.player.cell != TRAP_CELL,
-		"acceptation : le joueur est téléporté (%s)" % [ctx.player.cell]
+		ctx.player.cell != TRAP_CELL, "accepted: the player is teleported (%s)" % [ctx.player.cell]
 	)
 	_check(
 		_inventory_total() == chest.trap_loot_accepted,
-		"acceptation : %d objets" % chest.trap_loot_accepted
+		"accepted: %d objects" % chest.trap_loot_accepted
 	)
 	_check(
 		chest.trap_loot_accepted > chest.trap_loot_declined,
-		"la doc impose davantage de butin en acceptant"
+		"the design doc requires more loot for accepting"
 	)
 	await _teardown(ctx)

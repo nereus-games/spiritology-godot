@@ -1,17 +1,17 @@
-## Catalogue de scénarios de TEST (dev) : chaque scénario peuple un [DungeonManager] avec un
-## sous-ensemble de mécanismes pour tester un élément à la fois, sans tout monter d'un coup.
+## Catalogue of dev TEST scenarios: each one populates a [DungeonManager] with a subset of
+## mechanisms, so one element can be tested at a time without standing the whole thing up.
 ##
-## Deux moitiés, séparées à dessein : les TEXTES (titre, mode d'emploi) sont des [ScenarioData]
-## dans `data/scenarios/`, éditables sans toucher au code ; la CONSTRUCTION du donjon est le
-## code ci-dessous, un constructeur par scénario. L'`id` relie les deux, et
-## `data_integrity_check` vérifie qu'aucun des deux côtés ne pointe dans le vide.
+## Two halves, split on purpose: the TEXTS (title, instructions) are [ScenarioData] in
+## `data/scenarios/`, editable without touching code; BUILDING the dungeon is the code below,
+## one builder per scenario. The `id` ties the two together, and `data_integrity_check` verifies
+## that neither side points at nothing.
 ##
-## `selected_id` est posé par l'écran de sélection puis lu par `exploration.gd`, qui appelle
-## [method build] et place le joueur à la case retournée. Le bouton MENU du HUD renvoie à
-## l'écran de sélection (temporaire).
+## `selected_id` is set by the selection screen and read by `exploration.gd`, which calls
+## [method build] and places the player on the cell it returns. The HUD's MENU button goes back
+## to the selection screen, for now.
 ##
-## Pas de `class_name` (piège du cache CLI) : référencé par `preload`. Réf. autoloads + scripts
-## de mécanismes (OK en jeu, chargé après le boot).
+## No `class_name` (the CLI class-cache trap): referenced by `preload`. References the autoloads
+## and the mechanism scripts, which is fine in game since it loads after boot.
 extends RefCounted
 
 const Trap := preload("res://scripts/exploration/mechanisms/trap.gd")
@@ -32,15 +32,15 @@ const AbilityCatalog := preload(
 )
 const RIVAL_SCENE := preload("res://scenes/exploration/rival/rival.tscn")
 
-## Scénario choisi dans l'écran de sélection (défaut : premier).
+## The scenario picked on the selection screen; the first one by default.
 static var selected_id: StringName = &"movement"
 
-## Espèces que le mini-quiz peut donner au PERSONNAGE PRINCIPAL (doc Notion « Story +
-## Characters / Introduction / Mini Personality Quiz », section Available Results).
+## The species the mini personality quiz can give the MAIN CHARACTER (the design doc's
+## "Introduction / Mini Personality Quiz", Available Results).
 const MAIN_SPECIES: Array[StringName] = [&"ravbak", &"akturlin", &"erzelak", &"zuk"]
 
-## Espèces que le mini-quiz peut donner au COÉQUIPIER : les mêmes que pour le principal,
-## plus six autres (doc, même section). Le duo peut porter deux fois la même espèce.
+## The species the quiz can give the TEAMMATE: the same as the main character's, plus six more
+## (same section). The duo can carry the same species twice.
 const TEAMMATE_SPECIES: Array[StringName] = [
 	&"ravbak",
 	&"akturlin",
@@ -54,21 +54,21 @@ const TEAMMATE_SPECIES: Array[StringName] = [
 	&"spodra",
 ]
 
-## DEV : duo imposé aux scénarios, choisi dans l'écran de sélection. En vrai c'est le
-## mini-quiz de personnalité qui l'attribue ; ici on le choisit à la main, en restant dans
-## les résultats que le quiz peut donner à chacun des deux rôles.
+## DEV: the duo forced on the scenarios, picked on the selection screen. In the real game the
+## personality quiz assigns it; here it is chosen by hand, staying within the results the quiz
+## can give each of the two roles.
 static var main_species: StringName = &"ravbak"
 static var teammate_species: StringName = &"razel"
 
-## DEV : DEN maximal imposé aux rivaux des scénarios, réglé au curseur dans l'écran de
-## sélection. Le DEN d'un rival est normalement un réglage de LEVEL DESIGN (donjon par donjon) ;
-## ce curseur est là pour l'éprouver à la main. 0 = valeur par défaut du rival.
+## DEV: the maximum DEN forced on the scenarios' rivals, set with a slider on the selection
+## screen. A rival's DEN is normally a LEVEL DESIGN knob, per dungeon; this slider exists to try
+## values by hand. 0 keeps the rival's own default.
 static var rival_den_override := 0
 
 const SCENARIO_DIR := "res://data/scenarios/"
 
-## Fiches des scénarios, dans l'ordre de l'écran de sélection. Le dossier se lit par ordre
-## alphabétique : c'est [member ScenarioData.order] qui fixe la progression voulue.
+## The scenario records, in the selection screen's order. The directory is read alphabetically,
+## so [member ScenarioData.order] is what sets the intended progression.
 static var _list: Array = []
 
 
@@ -77,7 +77,7 @@ static func list() -> Array:
 		return _list
 	var dir := DirAccess.open(SCENARIO_DIR)
 	if dir == null:
-		push_error("[ScenarioCatalog] dossier introuvable : %s" % SCENARIO_DIR)
+		push_error("[ScenarioCatalog] directory not found: %s" % SCENARIO_DIR)
 		return _list
 	for f in dir.get_files():
 		if f.ends_with(".tres"):
@@ -95,7 +95,7 @@ static func title_for(id: StringName) -> String:
 	return String(id)
 
 
-## Construit le scénario dans `dm` et retourne la case de départ du joueur.
+## Builds the scenario into `dm` and returns the player's starting cell.
 static func build(id: StringName, dm) -> Vector3i:
 	_reset_session()
 	match id:
@@ -119,15 +119,15 @@ static func build(id: StringName, dm) -> Vector3i:
 			return _stairs(dm)
 		&"abilities":
 			return _abilities(dm)
-	# Retomber en silence sur un autre scénario a fait croire pendant un moment qu'un id
-	# inconnu « marchait ». On construit toujours quelque chose pour ne pas planter le jeu,
-	# mais on le dit — et les checks échouent sur une erreur signalée.
-	push_error("[ScenarioCatalog] scénario sans constructeur : %s" % id)
+	# Silently falling back to another scenario made an unknown id look like it "worked" for a
+	# while. Something is still built, so the game does not crash, but it is said out loud — and
+	# the checks fail on a reported error.
+	push_error("[ScenarioCatalog] scenario with no builder: %s" % id)
 	return _traps(dm)
 
 
 # --------------------------------------------------------------------------
-# Outils de construction
+# Building helpers
 # --------------------------------------------------------------------------
 
 
@@ -153,14 +153,14 @@ static func _floor_line(dm, x: int, z0: int, length: int) -> void:
 		dm.add_floor(Vector3i(x, 0, z))
 
 
-## Sol rectangulaire à un ÉTAGE donné (y).
+## A rectangular floor at a given STOREY (y).
 static func _floor_rect_y(dm, x0: int, z0: int, w: int, d: int, y: int) -> void:
 	for x in range(x0, x0 + w):
 		for z in range(z0, z0 + d):
 			dm.add_floor(Vector3i(x, y, z))
 
 
-## Instancie un mécanisme, applique `props`, le pose sur `cell` et l'ajoute au donjon.
+## Instantiates a mechanism, applies `props`, puts it on `cell` and adds it to the dungeon.
 static func _place(dm, script, cell: Vector3i, props: Dictionary = {}) -> Node:
 	var m = script.new()
 	for k in props:
@@ -174,19 +174,19 @@ static func _spawn_rival(dm, species: StringName, cell: Vector3i) -> Node:
 	var r = RIVAL_SCENE.instantiate()
 	r.species_id = species
 	if rival_den_override > 0:
-		r.max_den = rival_den_override  # posé AVANT l'entrée dans l'arbre (lu par _ready)
+		r.max_den = rival_den_override  # set BEFORE entering the tree, since _ready reads it
 	r.position = dm.cell_to_world(cell)
 	dm.add_child(r)
 	return r
 
 
 # --------------------------------------------------------------------------
-# Scénarios
+# Scenarios
 # --------------------------------------------------------------------------
 
 
 static func _movement(dm) -> Vector3i:
-	# Salle vide avec quelques piliers (cases retirées → rendues en murs) pour naviguer.
+	# An empty room with a few pillars to navigate around; removing cells renders them as walls.
 	_floor_rect(dm, 0, 0, 7, 9)
 	for pillar in [
 		Vector3i(2, 0, 3),
@@ -208,13 +208,13 @@ static func _traps(dm) -> Vector3i:
 
 
 static func _gates(dm) -> Vector3i:
-	_floor_line(dm, 1, 0, 11)  # couloir 1 case de large : les portes bloquent vraiment
-	# Les portes sont posées sur l'ARÊTE entre la case d'ancrage et la suivante (+z) : les deux
-	# cases restent praticables, on peut donc attendre juste devant.
+	_floor_line(dm, 1, 0, 11)  # a one-cell corridor, so the gateways genuinely block
+	# The gateways sit on the EDGE between the anchor cell and the next one (+z), so both cells
+	# stay walkable and you can wait right in front.
 	var gate_edge := Vector3i(0, 0, 1)
 	_place(dm, Gateway, Vector3i(1, 0, 3), {"kind": Gateway.Kind.AUTOMATED, "edge_dir": gate_edge})
-	# Monnaie de CETTE porte : un choix de level design (la doc pose « pelles OU pierres
-	# runiques » comme le choix de l'auteur, pas comme une alternative offerte au joueur).
+	# THIS gateway's currency, a level-design choice: the design doc's "spades OR rune stones" is
+	# the author's pick, not an alternative offered to the player.
 	_place(
 		dm,
 		Gateway,
@@ -227,10 +227,10 @@ static func _gates(dm) -> Vector3i:
 		}
 	)
 	_place(dm, Gateway, Vector3i(1, 0, 9), {"kind": Gateway.Kind.MEDITATION, "edge_dir": gate_edge})
-	# Un tas DERRIÈRE la porte de méditation : tant qu'elle est fermée, elle cache ce tas, donc
-	# ses actions (examine / recycle) ne sont pas proposées. Elles apparaissent une fois ouverte.
+	# A heap BEHIND the meditation gateway: while it is closed the gateway hides the heap, so its
+	# examine and recycle actions are not offered. They appear once it opens.
 	_place(dm, Litter, Vector3i(1, 0, 10))
-	GameSession.add_object(&"spade", 2)  # de quoi ouvrir la porte verrouillée
+	GameSession.add_object(&"spade", 2)  # enough to open the locked gateway
 	return Vector3i(1, 0, 0)
 
 
@@ -238,34 +238,34 @@ static func _grounds(dm) -> Vector3i:
 	_floor_rect(dm, 0, 0, 3, 5)
 	_place(dm, CrumblyGround, Vector3i(1, 0, 1))
 	_place(dm, Litter, Vector3i(1, 0, 3))
-	GameSession.add_object(&"spade", 1)  # pour Dig
-	AbilityCatalog.dev_granted = [&"fog_mantel"]  # une capacité à rafraîchir via Recycle
+	GameSession.add_object(&"spade", 1)  # for Dig
+	AbilityCatalog.dev_granted = [&"fog_mantel"]  # an ability for Recycle to refresh
 	GameSession.mark_exploration_ability_used(&"fog_mantel")
 	return Vector3i(1, 0, 0)
 
 
 static func _chests(dm) -> Vector3i:
 	_floor_rect(dm, 0, 0, 3, 9)
-	_place(dm, Chest, Vector3i(1, 0, 1))  # butin
-	# Piège de téléportation déguisé. Avec razél dans le duo (talent Reveal Traps), il propose
-	# le choix « se laisser téléporter / rester » au lieu de téléporter sec.
+	_place(dm, Chest, Vector3i(1, 0, 1))  # loot
+	# A disguised teleport trap. With razél in the duo, and so the Reveal Traps talent, it offers
+	# the teleport-or-stay choice instead of teleporting outright.
 	_place(dm, Chest, Vector3i(1, 0, 3), {"is_trap": true})
-	_place(dm, RefreshCrystal, Vector3i(0, 0, 2))  # obstacle, action refresh en adjacent
-	# Deux dés : sur le premier le joueur a de quoi trancher (pelle), le second se déclenche
-	# tout seul (la pelle a été dépensée, ou perdue par l'issue tirée).
+	_place(dm, RefreshCrystal, Vector3i(0, 0, 2))  # an obstacle, refreshable from adjacent
+	# Two dice: on the first the player can choose, holding a spade; the second goes off on its
+	# own, the spade having been spent or lost to the outcome rolled.
 	_place(dm, Dieverting, Vector3i(1, 0, 5))
 	_place(dm, Dieverting, Vector3i(1, 0, 7))
-	GameSession.add_object(&"spade", 1)  # de quoi détruire UN dé
-	# Sortie au fond du couloir : de quoi distinguer « renvoyé à l'entrée » de « renvoyé à une
-	# sortie » (l'entrée, elle, est déclarée par `exploration.gd` sur la case de départ).
+	GameSession.add_object(&"spade", 1)  # enough to destroy ONE die
+	# An exit at the end of the corridor, to tell "sent back to the entrance" apart from "sent to
+	# an exit". The entrance itself is declared by `exploration.gd` on the starting cell.
 	dm.add_exit(Vector3i(1, 0, 8))
-	AbilityCatalog.dev_granted = [&"fog_mantel"]  # pour voir le cristal rafraîchir
+	AbilityCatalog.dev_granted = [&"fog_mantel"]  # so the crystal has something to refresh
 	GameSession.mark_exploration_ability_used(&"fog_mantel")
 	return Vector3i(1, 0, 0)
 
 
 static func _walls(dm) -> Vector3i:
-	# Deux zones séparées par une rangée de murs en z=3, percée d'un mur fissuré en (1,0,3).
+	# Two areas split by a row of walls at z=3, pierced by a cracked wall at (1,0,3).
 	_floor_rect(dm, 0, 0, 3, 3)  # z 0..2
 	_floor_rect(dm, 0, 4, 3, 3)  # z 4..6
 	_place(dm, CrackedWall, Vector3i(1, 0, 3))
@@ -276,15 +276,15 @@ static func _walls(dm) -> Vector3i:
 	return Vector3i(1, 0, 0)
 
 
-## Même ravin que [method _bridge], plus un rival sur la plateforme de départ : il te suit
-## sur la planche. Sert à éprouver les règles « rivaux » de la doc (test d'équilibre simplifié,
-## croisement = double chute, poursuite par la chute).
+## The same ravine as [method _bridge], plus a rival that follows you onto the plank. Exercises
+## the design doc's rival rules: the simplified balance test, meeting means both fall, and
+## chasing through a fall.
 static func _bridge_rival(dm) -> Vector3i:
-	# Sans piège disarray : ici on éprouve les règles « rivaux », pas l'inertie de commande.
+	# No disarray trap: what is being exercised here is the rival rules, not command inertia.
 	var start := _build_bridge_map(dm, false)
-	# Rival posé DE L'AUTRE CÔTÉ du ravin : il doit emprunter le pont pour t'atteindre, donc
-	# la rencontre a forcément lieu SUR une planche. Côté départ, il te rattrapait avant même
-	# que tu t'engages et on ne testait qu'un contact ordinaire.
+	# The rival is placed on the FAR SIDE of the ravine, so it has to take the bridge to reach
+	# you and the encounter necessarily happens ON a plank. Placed on the starting side it caught
+	# you before you even set off, and all that got tested was ordinary contact.
 	_spawn_rival(dm, &"ravbak", Vector3i(1, 2, 7))
 	return start
 
@@ -293,45 +293,46 @@ static func _bridge(dm) -> Vector3i:
 	return _build_bridge_map(dm)
 
 
-## Géométrie commune aux deux scénarios de pont. `disarray_trap` pose (ou non) le piège de la
-## case d'arrivée : utile pour tester le retour sous disarray, parasite pour tester les rivaux.
+## Geometry shared by both bridge scenarios. `disarray_trap` decides whether the trap on the
+## far cell is placed: useful to test the return trip under disarray, noise when testing rivals.
 static func _build_bridge_map(dm, disarray_trap: bool = true) -> Vector3i:
-	# Ravin à DEUX étages de profondeur, enjambé par un tronc étroit. Tomber du pont n'est pas
-	# un « retour au départ » : on atterrit au FOND (dégâts de chute normaux, ∝ profondeur) et
-	# on remonte par deux volées d'escalier côté x = 3.
+	# A ravine TWO storeys deep, spanned by a narrow log. Falling off the bridge is not a "back to
+	# the start": you land at the BOTTOM, taking normal fall damage proportional to the depth, and
+	# climb back up two flights of stairs on the x = 3 side.
 	#
-	#   y = 2  plateformes + pont      y = 1  corniche de retour      y = 0  fond du ravin
-	_floor_rect_y(dm, 0, 0, 3, 2, 2)  # plateforme de départ  x 0..2, z 0..1
-	dm.add_floor(Vector3i(3, 2, 0))  # palier haut de la 2e volée
-	dm.add_floor(Vector3i(1, 2, 7))  # arrivée : UNE case, murée sur 3 côtés par render_grid
-	# (le pont est la seule issue → on repart forcément
-	# dessus, sans gaspiller de mouvements de disarray)
-	# Le pont : chaque case porte le mécanisme (s'engage dans le sens du regard, deux sens) ;
-	# praticable mais « fosse » — seule la planche la tient, le ravin s'ouvre dessous.
+	#   y = 2  platforms + bridge     y = 1  return ledge     y = 0  floor of the ravine
+	_floor_rect_y(dm, 0, 0, 3, 2, 2)  # starting platform, x 0..2, z 0..1
+	dm.add_floor(Vector3i(3, 2, 0))  # top landing of the second flight
+	dm.add_floor(Vector3i(1, 2, 7))  # arrival: ONE cell, walled on 3 sides by render_grid
+	# (the bridge is the only way out, so the return trip
+	# starts on it without wasting disarray moves)
+	# The bridge: every cell carries the mechanism, engaged along whichever way you face. Walkable
+	# but marked a pit — only the plank holds it up, and the ravine opens below.
 	for z in range(2, 7):
 		var c := Vector3i(1, 2, z)
 		dm.add_floor(c)
 		dm.mark_pit(c)
 		_spawn_plank(dm, c)
 		_place(dm, NarrowBridge, c)
-	# Fond du ravin (2 étages plus bas) : reçoit la chute sur toute la longueur du pont.
+	# Floor of the ravine, 2 storeys down, catching a fall along the whole length of the bridge.
 	_floor_rect_y(dm, 0, 2, 4, 5, 0)  # x 0..3, z 2..6
-	dm._floor.erase(Vector3i(3, 0, 4))  # cage de la 1re volée (on n'atterrit pas SUR l'escalier)
-	# Corniche intermédiaire reliant les deux volées.
+	dm._floor.erase(Vector3i(3, 0, 4))  # the first flight's shaft: you never land ON the stairs
+	# The intermediate ledge linking the two flights.
 	dm.add_floor(Vector3i(3, 1, 2))
 	dm.add_floor(Vector3i(3, 1, 3))
-	# Remontée : fond → corniche, puis corniche → plateforme de DÉPART (on ne gagne pas la
-	# traversée en tombant). Chaque volée = une case montante + sa case descendante au-dessus.
+	# The climb back: floor to ledge, then ledge to the STARTING platform — falling does not win
+	# you the crossing. Each flight is one upward cell plus its downward cell above it.
 	_place(dm, Stairs, Vector3i(3, 0, 4), {"level_delta": 1, "face_dir": Vector3i(0, 0, -1)})
 	_place(dm, Stairs, Vector3i(3, 1, 4), {"level_delta": -1, "face_dir": Vector3i(0, 0, 1)})
 	_place(dm, Stairs, Vector3i(3, 1, 1), {"level_delta": 1, "face_dir": Vector3i(0, 0, -1)})
 	_place(dm, Stairs, Vector3i(3, 2, 1), {"level_delta": -1, "face_dir": Vector3i(0, 0, 1)})
-	# Piège disarray sur la case d'ARRIVÉE : il s'arme tout seul en sortant du pont, donc
-	# l'aller se teste en état normal et le retour sous disarray (inertie de commande +25 %).
-	# Durée relevée à 6-8 mouvements pour CE test (doc : 3-5) : faire demi-tour coûte déjà
-	# 2 mouvements et le pas sur la planche un 3e — à 3-5 la traversée retour serait à pile ou
-	# face déjà purgée du disarray. À 6-8 il en reste 3-5 pour le pont, qui les décompte case
-	# par case (on voit le compteur du HUD descendre pendant la traversée).
+	# A disarray trap on the ARRIVAL cell: it springs by itself as you step off the bridge, so the
+	# outward trip is tested in the normal state and the return under disarray (+25% command
+	# inertia). The duration is raised to 6-8 moves for THIS test, against the design doc's 3-5:
+	# turning around already costs 2 moves and stepping onto the plank a third, so at 3-5 the
+	# return crossing would be a coin flip on whether any disarray was left. At 6-8 there are 3-5
+	# left for the bridge, which counts them down cell by cell — you watch the HUD counter drop as
+	# you cross.
 	if disarray_trap:
 		_place(
 			dm,
@@ -342,8 +343,8 @@ static func _build_bridge_map(dm, disarray_trap: bool = true) -> Vector3i:
 	return Vector3i(1, 2, 0)
 
 
-## Planche du pont : boîte brune étroite orientée dans le sens de la traversée, sa face haute
-## au niveau du sol de la case (que la fosse, elle, a laissé vide).
+## A bridge plank: a narrow brown box along the direction of travel, its top face level with the
+## cell's floor — which the pit marking left empty.
 static func _spawn_plank(dm, cell: Vector3i) -> void:
 	var mi := MeshInstance3D.new()
 	var box := BoxMesh.new()
@@ -357,55 +358,55 @@ static func _spawn_plank(dm, cell: Vector3i) -> void:
 
 
 static func _stairs(dm) -> Vector3i:
-	# Pyramide à CINQ gradins, pour éprouver tout le barème de chute de la doc (1 unité = 0
-	# dégât, 2 = 10, 3 = 15, 4 = 20) et les deux formes d'ascenseur.
+	# A FIVE-tier pyramid, to exercise the design doc's whole fall scale (1 unit = 0 damage,
+	# 2 = 10, 3 = 15, 4 = 20) and both shapes of elevator.
 	#
-	#   étage 0 : x 0..7, z 0..12      (salle d'accès, passe SOUS tous les gradins)
-	#   étage 1 : x 1..6, z 4..12
-	#   étage 2 : x 2..6, z 4..12
-	#   étage 3 : x 3..6, z 4..12
-	#   étage 4 : x 4..6, z 4..12
+	#   storey 0: x 0..7, z 0..12      (the access hall, running UNDER every tier)
+	#   storey 1: x 1..6, z 4..12
+	#   storey 2: x 2..6, z 4..12
+	#   storey 3: x 3..6, z 4..12
+	#   storey 4: x 4..6, z 4..12
 	#
-	# Colonne EST (x = 7) : rien n'arrête la chute avant l'étage 0 — en sortir depuis les gradins
-	# 1/2/3/4 coûte 1/2/3/4 unités, soit 0/10/15/20 DEN. Côté OUEST, chaque gradin surplombe le
-	# suivant : une seule unité, donc indolore.
+	# The EAST column (x = 7): nothing stops a fall before storey 0, so stepping off tier 1/2/3/4
+	# costs 1/2/3/4 units, that is 0/10/15/20 DEN. On the WEST side each tier overhangs the next,
+	# a single unit, and so is painless.
 	_floor_rect_y(dm, 0, 0, 8, 13, 0)
 	_floor_rect_y(dm, 1, 4, 6, 9, 1)
 	_floor_rect_y(dm, 2, 4, 5, 9, 2)
 	_floor_rect_y(dm, 3, 4, 4, 9, 3)
 	_floor_rect_y(dm, 4, 4, 3, 9, 4)
 
-	# PILIER : on retire une case de l'étage 0 sous le gradin 1 — elle devient un bloc de mur,
-	# et c'est SA face haute qui sert de sol à la case du dessus (doc « Walls + Decors » : un mur
-	# peut servir de sol à l'étage au-dessus, ce qui évite d'empiler mur + dalle).
+	# A PILLAR: one cell of storey 0 is removed under tier 1, so it becomes a wall block and ITS
+	# top face serves as the floor of the cell above (the design doc's "Walls + Decors": a wall can
+	# serve as ground on the floor above it, which avoids stacking wall plus slab).
 	dm._floor.erase(Vector3i(1, 0, 8))
 
-	# RAMBARDES : le bord est du gradin du haut n'est protégé que sur ses deux premières cases.
-	# Deux pas plus loin, le même bord est ouvert et coûte une chute de 4 unités — de quoi
-	# comparer les deux à un pas d'intervalle.
+	# GUARDRAILS: the top tier's east edge is protected only along its first two cells. Two steps
+	# further the same edge is open, and costs a 4-unit fall — the two are a step apart, so they
+	# can be compared directly.
 	for z in [4, 5]:
 		_place(dm, Guardrail, Vector3i(6, 4, z), {"edge_dir": Vector3i(1, 0, 0)})
 
-	# UN ESCALIER PAR PALIER, en quinconce vers +z. C'est le chemin toujours praticable : un
-	# ascenseur reste où on l'a laissé (doc : il faut remonter dessus pour le rappeler), donc
-	# sans ces volées, tomber d'un étage desservi par le seul ascenseur rendrait le haut
-	# définitivement inaccessible.
+	# ONE STAIRCASE PER TIER, staggered towards +z. This is the always-usable route: an elevator
+	# stays where it was left — the design doc has you step back on to call it — so without these
+	# flights, falling off a storey served only by the elevator would make the top permanently
+	# unreachable.
 	for flight in [Vector3i(1, 0, 4), Vector3i(2, 1, 6), Vector3i(3, 2, 8), Vector3i(4, 3, 10)]:
 		var up: Vector3i = flight
 		var down: Vector3i = up + Vector3i(0, 1, 0)
-		dm._floor.erase(up)  # une case de volée n'est pas praticable : on est porté au-delà
+		dm._floor.erase(up)  # a flight's cell is not walkable: you are carried past it
 		dm._floor.erase(down)
 		_place(dm, Stairs, up, {"level_delta": 1, "face_dir": Vector3i(0, 0, 1)})
 		_place(dm, Stairs, down, {"level_delta": -1, "face_dir": Vector3i(0, 0, -1)})
 
-	# Les ascenseurs sont des RACCOURCIS, doublés par les escaliers ci-dessus.
-	# `path` est un Array[Vector3i] TYPÉ : lui passer une Array non typée via `set()` échouerait
-	# en silence (le mécanisme se retrouverait sans trajet).
-	# 1 <-> 2 : trajet VERTICAL tout simple (un seul point de passage).
+	# The elevators are SHORTCUTS, doubled by the staircases above.
+	# `path` is a TYPED Array[Vector3i]: passing an untyped Array through `set()` would fail
+	# silently, and the mechanism would end up with no path at all.
+	# 1 <-> 2: a plain VERTICAL trip, one waypoint.
 	var straight: Array[Vector3i] = [Vector3i(6, 2, 12)]
 	_place(dm, Elevator, Vector3i(6, 1, 12), {"path": straight})
-	# 3 <-> 4 : trajet COMPLEXE, qui sort au-dessus du vide et enchaîne des segments sur les
-	# trois axes (+x, +z, +y, -x) avant de se poser sur le gradin du haut.
+	# 3 <-> 4: a COMPLEX trip that swings out over empty space and chains segments along all three
+	# axes (+x, +z, +y, -x) before settling on the top tier.
 	var winding: Array[Vector3i] = [
 		Vector3i(7, 3, 5), Vector3i(7, 3, 12), Vector3i(7, 4, 12), Vector3i(6, 4, 12)
 	]
@@ -415,13 +416,13 @@ static func _stairs(dm) -> Vector3i:
 
 static func _abilities(dm) -> Vector3i:
 	_floor_rect(dm, 0, 0, 3, 10)
-	# Capacités accordées + objets d'exploration dans l'inventaire.
+	# Granted abilities plus exploration objects in the inventory.
 	AbilityCatalog.dev_granted = [&"fog_mantel", &"static_camouflage"]
 	GameSession.add_object(&"tea_drop", 1)
 	GameSession.add_object(&"rune_stone", 2)
 	GameSession.add_object(&"torment_veil", 1)
-	GameSession.add_object(&"smoke_bomb", 1)  # doit rester indisponible en explo
-	# Un piège de poison pour tester tea_drop, et un rival qui chasse pour tester fog/veil.
+	GameSession.add_object(&"smoke_bomb", 1)  # must stay unavailable during exploration
+	# A poison trap to test tea_drop, and a chasing rival to test fog mantel and torment veil.
 	_place(dm, Trap, Vector3i(1, 0, 2), {"kind": Trap.Kind.POISON, "revealed": true})
 	_spawn_rival(dm, &"ravbak", Vector3i(1, 0, 8))
 	return Vector3i(1, 0, 0)

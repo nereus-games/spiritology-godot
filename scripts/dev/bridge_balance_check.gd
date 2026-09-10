@@ -1,31 +1,31 @@
-## Vérification headless du MODÈLE d'équilibre du pont étroit ([NarrowBridgeBalance]).
+## Headless check on the narrow bridge's balance MODEL ([NarrowBridgeBalance]).
 ##
-## Le calage du pont ne se juge pas à l'œil : on simule des milliers de traversées avec des
-## « joueurs » virtuels de qualité croissante et on vérifie que le taux de chute reste dans la
-## bande visée. C'est ce qui protège le calage d'une régression silencieuse.
+## The bridge's tuning cannot be judged by eye: thousands of crossings are simulated with virtual
+## "players" of increasing skill, and the fall rate is checked to stay inside the intended band.
+## That is what protects the tuning from a silent regression.
 ##
-## Contrat de design vérifié ici :
-##   - ne rien faire      -> on tombe (le pendule inversé diverge) ;
-##   - corriger trop peu  -> on tombe souvent (les bourrasques poussent hors de la planche) ;
-##   - corriger normalement -> on passe la plupart du temps ;
-##   - corriger en anticipant -> on passe ;
-##   - le PSY durcit le test, le disarray aussi.
+## The design contract verified here:
+##   - do nothing            -> you fall (the inverted pendulum diverges);
+##   - correct too little    -> you fall often (the gusts push you off the plank);
+##   - correct normally      -> you get across most of the time;
+##   - correct with anticipation -> you get across;
+##   - PSY makes the test harder, and so does disarray.
 ##
-## Lancé par : Godot --headless --path . res://scenes/dev/bridge_balance_check.tscn
-## (scène de démarrage, et non --script : cf. geometry_check.gd.)
+## Run with: Godot --headless --path . res://scenes/dev/bridge_balance_check.tscn
+## As a start scene rather than --script; see geometry_check.gd.
 extends Node
 
 const NarrowBridgeBalance := preload("res://scripts/exploration/narrow_bridge_balance.gd")
 
-## Pas de temps simulé (60 Hz) et longueur du pont de référence.
+## The simulated time step (60 Hz) and the reference bridge length.
 const DT := 1.0 / 60.0
 const CELLS := 5
 const RUNS := 1500
 
 var _fails: Array[String] = []
 
-## Profils de « joueur » : latence de réaction (s), anticipation de la vitesse (s) et zone
-## morte (au-dessous, le joueur ne corrige pas). `passive` = ne touche à rien.
+## "Player" profiles: reaction latency (s), how far ahead velocity is anticipated (s), and a
+## dead zone below which the player does not correct at all. `passive` touches nothing.
 const PROFILES := {
 	"passif": {"reaction": 999.0, "lookahead": 0.0, "deadzone": 0.0, "passive": true},
 	"mou": {"reaction": 0.35, "lookahead": 0.0, "deadzone": 0.35, "passive": false},
@@ -47,26 +47,26 @@ func _ready() -> void:
 
 
 func _run_all() -> void:
-	print("Pont de %d cases, %d traversées par mesure.\n" % [CELLS, RUNS])
+	print("A %d-cell bridge, %d crossings per measurement.\n" % [CELLS, RUNS])
 
-	print("[taux de chute selon le joueur — PSY 0, sans disarray]")
+	print("[fall rate by player profile — PSY 0, no disarray]")
 	var base := {}
 	for name in PROFILES:
 		base[name] = _fall_rate(name, 0, false)
 		print("  %-9s %5.1f %%" % [name, base[name]])
-	_check(base["passif"] > 95.0, "ne rien faire fait tomber (%.1f %%)" % base["passif"])
-	_check(base["mou"] > 45.0, "corriger trop peu fait tomber souvent (%.1f %%)" % base["mou"])
+	_check(base["passif"] > 95.0, "doing nothing makes you fall (%.1f %%)" % base["passif"])
+	_check(base["mou"] > 45.0, "correcting too little makes you fall often (%.1f %%)" % base["mou"])
 	_check(
 		base["normal"] > 3.0 and base["normal"] < 30.0,
-		"un joueur normal passe le plus souvent, sans que ce soit acquis (%.1f %%)" % base["normal"]
+		"a normal player usually gets across, but never for granted (%.1f %%)" % base["normal"]
 	)
-	_check(base["attentif"] < 5.0, "anticiper suffit à traverser (%.1f %%)" % base["attentif"])
+	_check(base["attentif"] < 5.0, "anticipating is enough to cross (%.1f %%)" % base["attentif"])
 	_check(
 		base["mou"] > base["normal"] and base["normal"] > base["attentif"],
-		"le taux de chute décroît strictement avec la qualité du jeu"
+		"the fall rate decreases strictly with how well the player plays"
 	)
 
-	print("\n[effet du PSY — joueur normal, sans disarray]")
+	print("\n[effect of PSY — normal player, no disarray]")
 	var psy_rates := []
 	for psy in [0, 10, 20, 30, 40]:
 		var r := _fall_rate("normal", psy, false)
@@ -74,37 +74,37 @@ func _run_all() -> void:
 		print("  PSY %-3d %5.1f %%" % [psy, r])
 	_check(
 		psy_rates[4] > psy_rates[0] + 10.0,
-		"un PSY élevé durcit nettement le test (%.1f %% -> %.1f %%)" % [psy_rates[0], psy_rates[4]]
+		"a high PSY clearly hardens the test (%.1f %% -> %.1f %%)" % [psy_rates[0], psy_rates[4]]
 	)
 	_check(
 		psy_rates[4] < 85.0,
-		"un PSY élevé ne rend pas le pont infranchissable (%.1f %%)" % psy_rates[4]
+		"a high PSY does not make the bridge impassable (%.1f %%)" % psy_rates[4]
 	)
 
 	print(
 		(
-			"\n[effet du disarray — inertie de commande +%.0f %%]"
+			"\n[effect of disarray — command inertia +%.0f %%]"
 			% (NarrowBridgeBalance.DISARRAY_INERTIA * 100.0)
 		)
 	)
 	for psy in [0, 20]:
 		var clean := _fall_rate("normal", psy, false)
 		var dis := _fall_rate("normal", psy, true)
-		print("  PSY %-3d %5.1f %%  ->  %5.1f %% sous disarray" % [psy, clean, dis])
+		print("  PSY %-3d %5.1f %%  ->  %5.1f %% under disarray" % [psy, clean, dis])
 		_check(
 			dis > clean,
-			"PSY %d : le disarray rend le test plus dur (%.1f -> %.1f %%)" % [psy, clean, dis]
+			"PSY %d: disarray makes the test harder (%.1f -> %.1f %%)" % [psy, clean, dis]
 		)
 
 	print("")
 	if _fails.is_empty():
-		print("TOUT OK")
+		print("ALL OK")
 	else:
-		print("ÉCHECS : %s" % [_fails])
+		print("FAILURES: %s" % [_fails])
 	get_tree().quit(0 if _fails.is_empty() else 1)
 
 
-## Taux de chute (%) sur [constant RUNS] traversées complètes.
+## Fall rate, as a percentage, over [constant RUNS] complete crossings.
 func _fall_rate(profile: String, psy: int, disarrayed: bool) -> float:
 	var fell := 0
 	for i in range(RUNS):
@@ -113,9 +113,9 @@ func _fall_rate(profile: String, psy: int, disarrayed: bool) -> float:
 	return 100.0 * float(fell) / float(RUNS)
 
 
-## Une traversée complète : [constant CELLS] cases enchaînées sur le MÊME modèle (le
-## déséquilibre et la vitesse latérale traversent les bords de case). Retourne `true` si
-## le joueur simulé arrive de l'autre côté.
+## One complete crossing: [constant CELLS] cells chained on the SAME model, so imbalance and
+## lateral velocity carry across the cell boundaries. Returns `true` when the simulated player
+## reaches the other side.
 func _cross(profile: String, psy: int, disarrayed: bool, seed_value: int) -> bool:
 	var p: Dictionary = PROFILES[profile]
 	var bal = NarrowBridgeBalance.new(seed_value)
@@ -129,8 +129,8 @@ func _cross(profile: String, psy: int, disarrayed: bool, seed_value: int) -> boo
 				since += DT
 				if since >= p["reaction"]:
 					since = 0.0
-					# Le joueur vise le centre d'après ce qu'il VOIT (roulis) et, s'il est bon,
-					# d'après la vitesse à laquelle ça part.
+					# The player aims for the centre from what they SEE (the roll) and, if they are
+					# good, from how fast it is getting away.
 					var seen: float = bal.imbalance + p["lookahead"] * bal.lateral_velocity
 					input = 0.0 if absf(seen) < p["deadzone"] else (-1.0 if seen > 0.0 else 1.0)
 			bal.tick(DT, input)

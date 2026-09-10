@@ -25,7 +25,7 @@ TIMEOUT="${TIMEOUT:-300}"
 
 # Motifs qui trahissent un échec malgré un code de retour nul.
 # `^ERROR:` couvre les push_error du jeu lui-même : Godot les imprime et continue, donc un
-# check peut afficher « TOUT OK » et rendre 0 en ayant signalé une vraie faute. Vérifié
+# check peut afficher « ALL OK » et rendre 0 en ayant signalé une vraie faute. Vérifié
 # qu'aucun check n'en émet en fonctionnement normal. Les WARNING, eux, restent tolérés :
 # certains sont des diagnostics voulus (un scénario de test qui éprouve une chute).
 SILENT_FAILURES='SCRIPT ERROR|^ERROR:|Failed to load script|leaked at exit|still in use at exit'

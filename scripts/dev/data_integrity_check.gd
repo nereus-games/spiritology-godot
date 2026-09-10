@@ -1,19 +1,18 @@
-## Vérification headless de l'intégrité des données de `data/` et `translations/`.
-## Sort en code 1 si l'une d'elles régresse.
+## Headless check on the integrity of `data/` and `translations/`. Exits 1 if any of it
+## regresses.
 ##
-## Lancé par : Godot --headless --path . res://scenes/dev/data_integrity_check.tscn
-## (scène de démarrage, et non --script : voir geometry_check.gd.)
+## Run with: Godot --headless --path . res://scenes/dev/data_integrity_check.tscn
+## As a start scene rather than --script; see geometry_check.gd.
 ##
-## POURQUOI ce check est central : les .tres et les .po sont ÉCRITS À LA MAIN. Tant qu'un
-## générateur les produisait, leur cohérence était garantie par construction ; elle ne
-## l'est plus. Une faute de frappe dans un slug, une clé de traduction oubliée ou un enum
-## hors bornes ne lèvent AUCUNE erreur au chargement — le jeu démarre et se comporte mal
-## plus tard. C'est ici, et nulle part ailleurs, que ça doit s'arrêter.
+## WHY this check matters: the .tres and .po files are WRITTEN BY HAND. While a generator
+## produced them their consistency was guaranteed by construction; it no longer is. A typo in a
+## slug, a forgotten translation key or an out-of-range enum raise NO error at load — the game
+## starts and misbehaves later. This is where that has to stop, and nowhere else.
 ##
-## Ce qui est un ÉCHEC : toute incohérence interne (référence morte, clé manquante,
-## divergence en/fr, enum hors plage). Ce qui n'est qu'un DÉCOMPTE : les manques de
-## contenu connus (descriptions non rédigées, sprites non dessinés) — un check qui échoue
-## sur du contenu à produire ne signale plus les régressions.
+## What counts as a FAILURE: any internal inconsistency — a dead reference, a missing key, an
+## en/fr divergence, an out-of-range enum. What is only a COUNT: known content gaps, such as
+## descriptions not yet written or sprites not yet drawn. A check that fails on content still to
+## be produced stops signalling regressions.
 extends Node
 
 const SPECIES_DIR := "res://data/species/"
@@ -26,15 +25,14 @@ const SPRITE_DIR := "res://assets/sprites/spirimonsters/"
 const PO_EN := "res://translations/en.po"
 const PO_FR := "res://translations/fr.po"
 
-## Préfixes de clés adossées à une donnée : chacune doit avoir son .tres, et
-## réciproquement. Les UI_* sont écrites à la main et hors périmètre.
+## Key prefixes backed by data: each must have its .tres, and the other way round. UI_* keys are
+## written by hand and out of scope.
 const DATA_PREFIXES := ["SPECIES_", "ABILITY_", "TALENT_", "OBJECT_", "DUNGEON_"]
 
-## Constantes de code contenant des slugs d'espèces mais dont le NOM ne le dit pas.
-## Le balayage repère seul les constantes dont le nom contient « SPECIES » — d'où le nom
-## de CELLE-CI, qui doit y échapper pour ne pas se vérifier elle-même. Les exceptions
-## sont listées à la main plutôt que renommées : renommer du code de jeu pour arranger un
-## test, c'est déguiser le test en refactor.
+## Code constants holding species slugs whose NAME does not say so. The sweep only picks up
+## constants with "SPECIES" in the name — hence the name of THIS one, which has to escape it so
+## it does not check itself. The exceptions are listed by hand rather than renamed: renaming game
+## code to suit a test is a test dressed up as a refactor.
 const EXTRA_SLUG_CONSTANTS := {
 	"res://scripts/exploration/mechanisms/examinable_decor.gd": ["POOLS"],
 }
@@ -46,7 +44,7 @@ var _abilities: Dictionary = {}  ## id -> AbilityData
 var _talents: Dictionary = {}  ## id -> TalentData
 var _objects: Dictionary = {}  ## id -> ObjectData
 var _dungeons: Dictionary = {}  ## id -> DungeonConfig
-var _scenarios: Dictionary = {}  ## id -> ScenarioData (scénarios de test d'exploration)
+var _scenarios: Dictionary = {}  ## id -> ScenarioData (the exploration test scenarios)
 
 
 func _check(cond: bool, label: String) -> void:
@@ -57,7 +55,7 @@ func _check(cond: bool, label: String) -> void:
 		_fails.append(label)
 
 
-## Échec listant les fautifs, tronqué : trente slugs en vrac noient l'information utile.
+## A failure listing the offenders, truncated: thirty slugs in a heap drown the useful part.
 func _check_empty(offenders: Array, label: String) -> void:
 	if offenders.is_empty():
 		_check(true, label)
@@ -72,7 +70,7 @@ func _ready() -> void:
 
 
 func _run_all() -> void:
-	await get_tree().process_frame  # laisse les autoloads (GameData) charger
+	await get_tree().process_frame  # let the autoloads (GameData) load
 	_check_loading()
 	_check_enums()
 	_check_balance()
@@ -82,19 +80,19 @@ func _run_all() -> void:
 	_check_sprites()
 	print("")
 	if _fails.is_empty():
-		print("TOUT OK")
+		print("ALL OK")
 	else:
-		print("ÉCHECS : %s" % [_fails])
+		print("FAILURES: %s" % [_fails])
 	get_tree().quit(0 if _fails.is_empty() else 1)
 
 
 # --------------------------------------------------------------------------
-# Chargement : tout .tres se charge, se type, et son id colle à son nom de fichier
+# Loading: every .tres loads, types, and has an id matching its file name
 # --------------------------------------------------------------------------
 
 
 func _check_loading() -> void:
-	print("— chargement —")
+	print("— loading —")
 	var unloadable: Array = []
 	var untyped: Array = []
 	var mismatched: Array = []
@@ -112,23 +110,23 @@ func _check_loading() -> void:
 				untyped.append(file_name)
 				continue
 			if not ("id" in res) or String(res.id) == "":
-				untyped.append("%s (id vide)" % file_name)
+				untyped.append("%s (empty id)" % file_name)
 				continue
-			# Le nom de fichier fait foi ailleurs dans le code (`data/species/%s.tres` %
-			# slug, `assets/.../%s.png` % slug) : un id qui s'en écarte casse ces résolutions
-			# sans rien signaler. Comparaison via key_token pour ne pas buter sur la forme
-			# Unicode du nom de fichier (macOS écrit les accents en NFD, pas en NFC).
+			# The file name is authoritative elsewhere in the code (`data/species/%s.tres` % slug,
+			# `assets/.../%s.png` % slug), so an id that drifts from it breaks those lookups
+			# without a word. Compared through key_token so the file name's Unicode form does not
+			# trip it up — macOS writes accents in NFD, not NFC.
 			if GameEnums.key_token(file_name.get_basename()) != GameEnums.key_token(res.id):
-				mismatched.append("%s ≠ id '%s'" % [file_name, res.id])
+				mismatched.append("%s != id '%s'" % [file_name, res.id])
 				continue
 			registry[res.id] = res
-	_check(total > 0, "%d ressources trouvées dans data/" % total)
-	_check_empty(unloadable, "toutes les ressources se chargent")
-	_check_empty(untyped, "toutes les ressources ont un type et un id connus")
-	_check_empty(mismatched, "l'id de chaque ressource correspond à son nom de fichier")
+	_check(total > 0, "%d resources found under data/" % total)
+	_check_empty(unloadable, "every resource loads")
+	_check_empty(untyped, "every resource has a known type and id")
+	_check_empty(mismatched, "each resource's id matches its file name")
 	print(
 		(
-			"  ·    %d espèces, %d capacités, %d talents, %d objets, %d donjons, %d scénarios"
+			"  ·    %d species, %d abilities, %d talents, %d objects, %d dungeons, %d scenarios"
 			% [
 				_species.size(),
 				_abilities.size(),
@@ -139,11 +137,11 @@ func _check_loading() -> void:
 			]
 		)
 	)
-	# GameData refait ce tri au boot avec sa propre logique de routage : un écart
-	# signalerait que l'autoload ne voit pas les mêmes données que ce check.
+	# GameData redoes this sorting at boot with its own routing logic, so a discrepancy would mean
+	# the autoload is not seeing the same data as this check.
 	_check(
 		GameData.all_species().size() == _species.size(),
-		"GameData voit les mêmes espèces (%d)" % GameData.all_species().size()
+		"GameData sees the same species (%d)" % GameData.all_species().size()
 	)
 
 
@@ -159,7 +157,7 @@ func _tres_files(dir_path: String) -> Array:
 	return out
 
 
-## Registre correspondant au type d'une ressource, ou null si le type est inconnu.
+## The registry matching a resource's type, or null when the type is unknown.
 func _registry_for(res: Resource):
 	if res is SpeciesData:
 		return _species
@@ -177,7 +175,7 @@ func _registry_for(res: Resource):
 
 
 # --------------------------------------------------------------------------
-# Enums : les .tres stockent des entiers nus, une valeur hors plage passe inaperçue
+# Enums: the .tres store bare integers, so an out-of-range value goes unnoticed
 # --------------------------------------------------------------------------
 
 
@@ -190,7 +188,7 @@ func _check_enums() -> void:
 		for field in ["weakness_first", "weakness_middle", "weakness_last"]:
 			_expect_enum(bad, id, field, sp.get(field), GameEnums.Energy)
 		if sp.talker_chance < 0.0 or sp.talker_chance > 1.0:
-			bad.append("%s.talker_chance = %.2f hors [0, 1]" % [id, sp.talker_chance])
+			bad.append("%s.talker_chance = %.2f outside [0, 1]" % [id, sp.talker_chance])
 	for id in _abilities:
 		var ab: AbilityData = _abilities[id]
 		_expect_enum(bad, id, "type", ab.type, GameEnums.AbilityType)
@@ -198,7 +196,7 @@ func _check_enums() -> void:
 		_expect_enum(bad, id, "cost", ab.cost, GameEnums.Cost)
 	for id in _objects:
 		_expect_enum(bad, id, "effect", _objects[id].effect, GameEnums.ObjectEffect)
-	_check_empty(bad, "toutes les valeurs d'enum sont dans leur plage")
+	_check_empty(bad, "every enum value is within range")
 
 
 func _expect_enum(bad: Array, id, field: String, value, enum_dict: Dictionary) -> void:
@@ -207,18 +205,17 @@ func _expect_enum(bad: Array, id, field: String, value, enum_dict: Dictionary) -
 
 
 # --------------------------------------------------------------------------
-# Équilibrage : des chiffres à régler, mais pas n'importe lesquels
+# Balance: numbers meant to be tuned, but not to just anything
 # --------------------------------------------------------------------------
 
 
-## `data/balance.tres` existe pour être RÉGLÉ à la main — c'est bien pour ça qu'il est en
-## données. Ces bornes n'imposent donc aucune valeur : elles interdisent seulement celles
-## qui casseraient le jeu en silence (un coût négatif rendrait de l'ETH, un DEN de base nul
-## dissoudrait tout le monde au premier tour).
+## `data/balance.tres` exists to be TUNED by hand — that is exactly why it lives in data. These
+## bounds therefore impose no value: they only forbid the ones that would break the game silently
+## (a negative cost would give ETH back, a base DEN of zero would dissolve everyone on turn one).
 func _check_balance() -> void:
-	print("— équilibrage —")
+	print("— balance —")
 	var b := BalanceData.current()
-	_check(b != null, "data/balance.tres se charge")
+	_check(b != null, "data/balance.tres loads")
 	if b == null:
 		return
 	var bad: Array = []
@@ -226,25 +223,25 @@ func _check_balance() -> void:
 		"base_den", "base_eth", "damage_mini", "damage_small", "damage_normal", "damage_big"
 	]:
 		if int(b.get(field)) <= 0:
-			bad.append("%s = %s (doit être > 0)" % [field, b.get(field)])
+			bad.append("%s = %s (must be > 0)" % [field, b.get(field)])
 	for field in [
 		"cost_mini", "cost_normal", "cost_medium", "cost_a_lot", "object_heal_den", "meditate_eth"
 	]:
 		if int(b.get(field)) < 0:
-			bad.append("%s = %s (doit être >= 0)" % [field, b.get(field)])
+			bad.append("%s = %s (must be >= 0)" % [field, b.get(field)])
 	for field in ["modifier_per_condition", "meditate_damage_bonus"]:
 		if float(b.get(field)) < 0.0:
-			bad.append("%s = %s (doit être >= 0)" % [field, b.get(field)])
-	_check_empty(bad, "les valeurs d'équilibrage restent jouables")
+			bad.append("%s = %s (must be >= 0)" % [field, b.get(field)])
+	_check_empty(bad, "the balance values stay playable")
 
 
 # --------------------------------------------------------------------------
-# Références croisées : un slug mort ne se voit qu'au moment où il est suivi
+# Cross-references: a dead slug only shows up when something follows it
 # --------------------------------------------------------------------------
 
 
 func _check_cross_refs() -> void:
-	print("— références —")
+	print("— references —")
 	var dead: Array = []
 	for id in _species:
 		var sp: SpeciesData = _species[id]
@@ -278,31 +275,31 @@ func _check_cross_refs() -> void:
 		for sid in dg.possible_species:
 			if not _species.has(sid):
 				dead.append("%s.possible_species → %s" % [id, sid])
-	_check_empty(dead, "aucune référence morte entre données")
+	_check_empty(dead, "no dead reference between data")
 
-	# Relation 1:1 talent ↔ espèce : chaque talent est porté, chaque porteur est reconnu.
+	# The 1:1 talent-to-species relation: every talent is carried, every carrier is acknowledged.
 	var unowned: Array = []
 	for id in _talents:
 		var owner: StringName = _talents[id].owner_species
 		if owner == &"" or not _species.has(owner) or _species[owner].talent != id:
 			unowned.append("%s (owner_species=%s)" % [id, owner])
-	_check_empty(unowned, "chaque talent est porté par l'espèce qui le déclare")
+	_check_empty(unowned, "every talent is carried by the species that declares it")
 
 
 # --------------------------------------------------------------------------
-# Espèces citées par le CODE : un slug mort n'y déclenche rien du tout
+# Species named by CODE: a dead slug there triggers nothing at all
 # --------------------------------------------------------------------------
 
 
-## Les mécanismes d'exploration codent en dur des listes d'espèces (quel spirimonstre une
-## litière peut révéler, quel décor renvoie à qui). Un slug fautif y est INVISIBLE : la
-## liste se contente de ne rien donner, sans erreur. Le contrôle des références entre
-## `.tres` ne les voit pas — elles ne sont pas dans les données.
+## The exploration mechanisms hard-code lists of species: which spirimonster litter can reveal,
+## which decor points at whom. A wrong slug there is INVISIBLE — the list simply gives nothing,
+## with no error. The `.tres` cross-reference check does not see them, since they are not in the
+## data.
 ##
-## On lit les constantes des scripts chargés plutôt que de parser du GDScript : la table
-## de constantes est exacte là où une expression régulière serait approximative.
+## The loaded scripts' constants are read rather than parsing GDScript: the constant table is
+## exact where a regular expression would only approximate.
 func _check_code_species_refs() -> void:
-	print("— espèces citées par le code —")
+	print("— species named by code —")
 	var dead: Array = []
 	var checked := 0
 	for path in _gd_files("res://scripts/"):
@@ -317,12 +314,12 @@ func _check_code_species_refs() -> void:
 				checked += 1
 				if not _species.has(slug):
 					dead.append("%s.%s → %s" % [path.get_file(), name, slug])
-	_check(checked > 0, "%d slugs d'espèce cités dans le code" % checked)
-	_check_empty(dead, "toute espèce citée par le code existe dans data/species/")
+	_check(checked > 0, "%d species slugs named in the code" % checked)
+	_check_empty(dead, "every species named by code exists in data/species/")
 
 
-## Slugs contenus dans une constante, qu'elle soit un tableau ou un dictionnaire de
-## tableaux (les pools de décor sont indexés par type).
+## The slugs held in a constant, whether it is an array or a dictionary of arrays — the decor
+## pools are indexed by type.
 func _flatten_slugs(value) -> Array:
 	var out: Array = []
 	if value is Array:
@@ -350,18 +347,18 @@ func _gd_files(dir_path: String) -> Array:
 
 
 # --------------------------------------------------------------------------
-# Traductions : la clé manquante ne casse rien, elle affiche son propre nom
+# Translations: a missing key breaks nothing, it just displays its own name
 # --------------------------------------------------------------------------
 
 
 func _check_translations() -> void:
-	print("— traductions —")
+	print("— translations —")
 	var en := _parse_po(PO_EN)
 	var fr := _parse_po(PO_FR)
-	_check(not en["keys"].is_empty() and not fr["keys"].is_empty(), "les deux .po se lisent")
-	_check_empty(en["dupes"] + fr["dupes"], "aucun msgid en double")
+	_check(not en["keys"].is_empty() and not fr["keys"].is_empty(), "both .po files parse")
+	_check_empty(en["dupes"] + fr["dupes"], "no duplicate msgid")
 
-	# Parité en/fr : une clé traduite d'un seul côté affiche son slug brut dans l'autre langue.
+	# en/fr parity: a key translated on one side only shows its raw slug in the other language.
 	var only_en: Array = []
 	var only_fr: Array = []
 	for k in en["keys"]:
@@ -370,9 +367,9 @@ func _check_translations() -> void:
 	for k in fr["keys"]:
 		if not en["keys"].has(k):
 			only_fr.append(k)
-	_check_empty(only_en + only_fr, "en.po et fr.po portent les mêmes clés")
+	_check_empty(only_en + only_fr, "en.po and fr.po carry the same keys")
 
-	# Chaque donnée a son nom traduit, dans les deux langues.
+	# Every piece of data has its name translated, in both languages.
 	var missing: Array = []
 	for registry in [_species, _abilities, _talents, _objects, _dungeons]:
 		for id in registry:
@@ -380,11 +377,10 @@ func _check_translations() -> void:
 			for po in [["en", en], ["fr", fr]]:
 				if not po[1]["keys"].has(key):
 					missing.append("%s (%s)" % [key, po[0]])
-	_check_empty(missing, "chaque donnée a son nom traduit en/fr")
+	_check_empty(missing, "every piece of data has its name translated in en and fr")
 
-	# Réciproque : une clé de donnée orpheline survit à la suppression de sa donnée et
-	# reste invisible. Sans générateur idempotent pour réécrire les .po, c'est le seul
-	# moyen de la voir.
+	# The converse: an orphaned data key outlives the data it belonged to and stays invisible.
+	# With no idempotent generator to rewrite the .po files, this is the only way to see it.
 	var expected := {}
 	for registry in [_species, _abilities, _talents, _objects, _dungeons]:
 		for id in registry:
@@ -397,12 +393,12 @@ func _check_translations() -> void:
 	for k in en["keys"]:
 		if _is_data_key(k) and not expected.has(k):
 			orphans.append(k)
-	_check_empty(orphans, "aucune clé de donnée orpheline dans les .po")
+	_check_empty(orphans, "no orphaned data key in the .po files")
 
-	# Décomptes, pas des échecs : contenu à écrire, pas incohérence.
+	# Counts, not failures: content still to write, not inconsistency.
 	print(
 		(
-			"  ·    %d clés en / %d fr ; %d msgstr vides en, %d fr"
+			"  ·    %d keys en / %d fr; %d empty msgstr en, %d fr"
 			% [en["keys"].size(), fr["keys"].size(), en["empty"], fr["empty"]]
 		)
 	)
@@ -415,8 +411,8 @@ func _is_data_key(key: String) -> bool:
 	return false
 
 
-## Lecture minimale d'un .po : msgid/msgstr sur une ligne, ce qu'écrivent nos fichiers.
-## Les continuations multi-lignes (en-tête) sont ignorées, sans incidence sur les clés.
+## Minimal .po reading: msgid/msgstr on one line, which is what our files write. Multi-line
+## continuations, as in the header, are ignored, with no effect on the keys.
 func _parse_po(path: String) -> Dictionary:
 	var out := {"keys": {}, "dupes": [], "empty": 0}
 	var f := FileAccess.open(path, FileAccess.READ)
@@ -428,7 +424,7 @@ func _parse_po(path: String) -> Dictionary:
 		if line.begins_with('msgid "') and line.ends_with('"'):
 			var key := line.substr(7, line.length() - 8)
 			if key == "":
-				pending = ""  # en-tête du .po
+				pending = ""  # the .po header
 				continue
 			if out["keys"].has(key):
 				out["dupes"].append(key)
@@ -444,7 +440,7 @@ func _parse_po(path: String) -> Dictionary:
 
 
 # --------------------------------------------------------------------------
-# Sprites : un chemin déclaré doit exister ; ne pas en déclarer est un manque d'art
+# Sprites: a declared path must exist; declaring none is simply missing art
 # --------------------------------------------------------------------------
 
 
@@ -464,5 +460,5 @@ func _check_sprites() -> void:
 				broken.append("%s.%s → %s" % [id, field, path])
 		if not declared:
 			without += 1
-	_check_empty(broken, "tout sprite déclaré existe sur le disque")
-	print("  ·    %d espèces sans sprite déclaré (art à produire)" % without)
+	_check_empty(broken, "every declared sprite exists on disk")
+	print("  ·    %d species with no sprite declared (art still to produce)" % without)

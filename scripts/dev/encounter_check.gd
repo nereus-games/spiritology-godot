@@ -1,13 +1,13 @@
-## Vérification headless de la rencontre : les capacités s'exécutent sans corrompre l'état
-## de combat, la boucle est déterministe à seed égal, et chaque talent branche ses hooks.
-## Sort en code 1 si l'un de ces points régresse.
+## Headless check on the encounter: abilities run without corrupting the combat state, the loop
+## is deterministic for a given seed, and every talent wires up its hooks. Exits 1 if any of that
+## regresses.
 ##
-## Lancé par : Godot --headless --path . res://scenes/dev/encounter_check.tscn
-## (scène de démarrage, et non --script : voir geometry_check.gd.)
+## Run with: Godot --headless --path . res://scenes/dev/encounter_check.tscn
+## As a start scene rather than --script; see geometry_check.gd.
 ##
-## Le manager ignore délibérément [GameSession] (cf. ses signaux `ifp_earned` /
-## `object_consumed`, relayés par l'UI) : ce harnais tient donc le rôle que tient l'UI en
-## jeu, et n'a besoin d'aucun autoload.
+## The manager deliberately ignores [GameSession] — see its `ifp_earned` and `object_consumed`
+## signals, which the UI relays — so this harness plays the part the UI plays in game, and needs
+## no autoload at all.
 extends Node
 
 const TalentCatalog := preload("res://scripts/encounter/talents/talent_catalog.gd")
@@ -15,26 +15,26 @@ const TalentCatalog := preload("res://scripts/encounter/talents/talent_catalog.g
 const ABILITY_DIR := "res://data/abilities/"
 const TALENT_IMPL_DIR := "res://scripts/encounter/talents/impl/"
 
-## Seed de référence des rencontres rejouées. Toute valeur ferait l'affaire : ce qui
-## compte est qu'elle soit FIXE, sinon le déterminisme ne se teste pas.
+## Reference seed for the replayed encounters. Any value would do; what matters is that it is
+## FIXED, or determinism cannot be tested at all.
 const SEED := 20260909
 
-## Terrain de test : deux individus par camp, pour que les helpers de ciblage de
-## l'[EncounterContext] (allies / opponents / others / first_opponent_in_order) aient
-## tous de quoi répondre. Une capacité qui ne trouve pas de cible ne prouverait rien.
+## The test field: two individuals per side, so that all of [EncounterContext]'s targeting
+## helpers (allies / opponents / others / first_opponent_in_order) have something to answer with.
+## An ability that finds no target would prove nothing.
 const PLAYER_SPECIES: Array[StringName] = [&"kalilk", &"fliritus"]
 const RIVAL_SPECIES: Array[StringName] = [&"ravbak", &"skorpis"]
 
-## Capacité quelconque, passée aux hooks de talents qui en attendent une.
+## Any ability at all, handed to the talent hooks that expect one.
 const SAMPLE_ABILITY := &"anomaly"
 
 var _fails: Array[String] = []
 var _rng := RandomNumberGenerator.new()
 
 
-## Agent qui joue des actions imposées, pour éprouver les chemins que l'[AutoAgent] ne
-## prend jamais : il ne joue que des capacités et Meditate, donc Talk, Examine, Use Object,
-## Steal et Flee ne seraient exercés par rien.
+## An agent that plays scripted actions, to exercise the paths [AutoAgent] never takes: it only
+## plays abilities and Meditate, so Talk, Examine, Use Object, Steal and Flee would be exercised
+## by nothing.
 class ScriptedAgent:
 	extends EncounterAgent
 
@@ -57,7 +57,7 @@ func _ready() -> void:
 
 
 func _run_all() -> void:
-	await get_tree().process_frame  # laisse les autoloads et la racine s'installer
+	await get_tree().process_frame  # let the autoloads and the root settle
 	_rng.seed = SEED
 	_check_abilities()
 	await _check_actions()
@@ -66,19 +66,19 @@ func _run_all() -> void:
 	_check_talents()
 	print("")
 	if _fails.is_empty():
-		print("TOUT OK")
+		print("ALL OK")
 	else:
-		print("ÉCHECS : %s" % [_fails])
+		print("FAILURES: %s" % [_fails])
 	get_tree().quit(0 if _fails.is_empty() else 1)
 
 
 # --------------------------------------------------------------------------
-# Terrain de test
+# The test field
 # --------------------------------------------------------------------------
 
 
-## Quatre combattants neufs : [j0, j1, r0, r1]. Reconstruits pour CHAQUE capacité, sinon
-## une capacité qui dissout un camp priverait les suivantes de cibles.
+## Four fresh fighters: [p0, p1, r0, r1]. Rebuilt for EVERY ability, since one that dissolves a
+## side would leave the next ones with no targets.
 func _fresh_fighters() -> Array:
 	var out: Array = []
 	for id in PLAYER_SPECIES:
@@ -88,8 +88,8 @@ func _fresh_fighters() -> Array:
 	return out
 
 
-## Manager prêt à tourner. [EncounterManager] étant un Node jamais ajouté à l'arbre,
-## l'appelant DOIT le `free()` — sinon Godot signale des instances fuitées en sortie.
+## A manager ready to run. [EncounterManager] is a Node that is never added to the tree, so the
+## caller MUST `free()` it, or Godot reports leaked instances at exit.
 func _make_manager(seed: int = SEED) -> EncounterManager:
 	var fighters := _fresh_fighters()
 	var m := EncounterManager.new()
@@ -105,46 +105,46 @@ func _ability_files() -> Array:
 	for f in dir.get_files():
 		if f.ends_with(".tres"):
 			out.append(ABILITY_DIR + f)
-	out.sort()  # ordre stable : le journal du check reste comparable d'un run à l'autre
+	out.sort()  # a stable order keeps the check's output comparable between runs
 	return out
 
 
 # --------------------------------------------------------------------------
-# Capacités : chacune s'exécute et laisse l'état de combat cohérent
+# Abilities: each one runs and leaves the combat state consistent
 # --------------------------------------------------------------------------
 
 
 func _check_abilities() -> void:
-	print("— capacités —")
+	print("— abilities —")
 	var executed := 0
 	var broken: Array[String] = []
 	for path in _ability_files():
 		var res := load(path)
 		if not (res is AbilityData):
-			continue  # les TalentData vivent dans le même dossier, cf. _check_talents
+			continue  # TalentData live in the same directory; see _check_talents
 		var ability: AbilityData = res
 		if ability.type != GameEnums.AbilityType.ENCOUNTER:
-			continue  # les capacités d'exploration ont leur propre chemin d'exécution
+			continue  # exploration abilities have an execution path of their own
 		executed += 1
 		var problem := _execute_ability(ability)
 		if problem != "":
 			broken.append("%s (%s)" % [ability.id, problem])
-	_check(executed >= 100, "%d capacités de rencontre exécutées" % executed)
+	_check(executed >= 100, "%d encounter abilities executed" % executed)
 	_check(
 		broken.is_empty(),
 		(
-			"état de combat sain après chaque capacité%s"
+			"combat state sound after every ability%s"
 			% ("" if broken.is_empty() else " — " + ", ".join(broken))
 		)
 	)
 
 
-## Exécute une capacité sur un terrain neuf. Renvoie "" si l'état reste cohérent,
-## sinon la description du problème.
+## Runs one ability on a fresh field. Returns "" when the state stays consistent, and a
+## description of the problem otherwise.
 func _execute_ability(ability: AbilityData) -> String:
 	var fighters := _fresh_fighters()
 	var timeline := EncounterTimeline.new()
-	timeline.setup(fighters)  # sans rng : ordre stable, donc positions et faiblesses connues
+	timeline.setup(fighters)  # no rng: a stable order, so known positions and weaknesses
 	var ctx := EncounterContext.new()
 	ctx.ability = ability
 	ctx.user = fighters[0]
@@ -152,44 +152,44 @@ func _execute_ability(ability: AbilityData) -> String:
 	ctx.all_fighters = fighters
 	ctx.timeline = timeline
 	ctx.rng = _rng
-	# Une énergie concrète plutôt que NONE : c'est ce qui fait passer les capacités
-	# Random/Variable par le vrai chemin (modificateurs, immunités) au lieu du court-circuit.
+	# A concrete energy rather than NONE, which is what sends the Random and Variable abilities
+	# down the real path — modifiers, immunities — instead of the short circuit.
 	ctx.resolved_energy = GameEnums.Energy.HEAT
 	EffectCatalog.script_for(ability).execute(ctx)
 	var problem := _state_problem(fighters, timeline)
-	# Ces combattants ne passent pas par EncounterManager._finish() : c'est donc ici qu'il
-	# faut casser leurs cycles de références, sinon les 108 terrains de test fuient.
+	# These fighters never go through EncounterManager._finish(), so their reference cycles have
+	# to be broken here, or the 108 test fields leak.
 	for f in fighters:
 		f.release_cross_references()
 	return problem
 
 
-## Invariants que AUCUNE capacité ne doit pouvoir briser.
+## Invariants NO ability may be allowed to break.
 func _state_problem(fighters: Array, timeline: EncounterTimeline) -> String:
 	for f in fighters:
 		if f.den < 0 or f.den > f.max_den:
-			return "DEN %d hors [0, %d] sur %s" % [f.den, f.max_den, f.species_id()]
+			return "DEN %d outside [0, %d] on %s" % [f.den, f.max_den, f.species_id()]
 		if f.eth < 0 or f.eth > f.max_eth:
-			return "ETH %d hors [0, %d] sur %s" % [f.eth, f.max_eth, f.species_id()]
-	# Les réordonnancements sont mis en attente et appliqués en fin de tour : les appliquer
-	# ici est le seul moyen de voir l'ordre qu'une capacité a réellement demandé.
+			return "ETH %d outside [0, %d] on %s" % [f.eth, f.max_eth, f.species_id()]
+	# Reorderings are queued and applied at the end of the turn, so applying them here is the only
+	# way to see the order an ability actually asked for.
 	timeline.apply_pending()
 	if timeline.order.size() != fighters.size():
-		return "ordre du tour à %d entrées au lieu de %d" % [timeline.order.size(), fighters.size()]
+		return "turn order has %d entries instead of %d" % [timeline.order.size(), fighters.size()]
 	for f in fighters:
 		if not timeline.order.has(f):
-			return "%s absent de l'ordre du tour" % f.species_id()
+			return "%s missing from the turn order" % f.species_id()
 	return ""
 
 
 # --------------------------------------------------------------------------
-# Actions : chaque type de tour se résout et laisse l'état cohérent
+# Actions: every kind of turn resolves and leaves the state consistent
 # --------------------------------------------------------------------------
 
 
-## Éprouve les huit [enum EncounterAction.Kind] via la boucle PUBLIQUE — un agent scripté
-## impose l'action, `run()` la résout. Passer par `_resolve_action()` directement testerait
-## le résolveur sans son contexte ; ici on teste ce que le jeu exécute vraiment.
+## Exercises the eight [enum EncounterAction.Kind] through the PUBLIC loop — a scripted agent
+## forces the action, `run()` resolves it. Calling `_resolve_action()` directly would test the
+## resolver without its context; this tests what the game actually runs.
 func _check_actions() -> void:
 	print("— actions —")
 	var untested: Array[String] = []
@@ -198,13 +198,13 @@ func _check_actions() -> void:
 		var m := _make_manager()
 		var actor: EncounterFighter = m.players[0]
 		var target: EncounterFighter = m.rivals[0]
-		# Le manager ignore les autoloads : c'est l'UI qui lui résout les objets en jeu.
+		# The manager ignores the autoloads: in game the UI resolves objects for it.
 		m.object_provider = func(id): return load("res://data/objects/%s.tres" % id)
 		var agent := ScriptedAgent.new()
 		agent.queued = [_action_of_kind(kind, actor, target, m)]
 		m.set_agent(actor, agent)
-		# On écoute le tour de CET acteur : `run(1)` fait aussi jouer les autres, donc la
-		# taille du journal grossirait même si l'action imposée ne produisait rien.
+		# Listen to THIS actor's turn: `run(1)` makes the others play too, so the log would grow
+		# even if the forced action produced nothing.
 		var spoke := [false]
 		m.turn_taken.connect(
 			func(f, _a, lines):
@@ -221,11 +221,11 @@ func _check_actions() -> void:
 	_check(
 		untested.is_empty(),
 		(
-			"chaque type d'action produit une ligne de journal%s"
-			% ("" if untested.is_empty() else " — muets : " + ", ".join(untested))
+			"every kind of action produces a log line%s"
+			% ("" if untested.is_empty() else " — silent: " + ", ".join(untested))
 		)
 	)
-	_check_empty(broken, "état de combat sain après chaque type d'action")
+	_check_empty(broken, "combat state sound after every kind of action")
 
 
 func _action_of_kind(
@@ -246,7 +246,7 @@ func _action_of_kind(
 			return EncounterAction.of_kind(kind, [target])
 
 
-## Échec listant les fautifs (même forme que les autres checks du projet).
+## A failure listing the offenders, in the same shape as the project's other checks.
 func _check_empty(offenders: Array, label: String) -> void:
 	if offenders.is_empty():
 		_check(true, label)
@@ -255,21 +255,20 @@ func _check_empty(offenders: Array, label: String) -> void:
 
 
 # --------------------------------------------------------------------------
-# Déterminisme : c'est lui qui rendra tout refactor de la boucle vérifiable
+# Determinism: what will make any refactor of the loop verifiable
 # --------------------------------------------------------------------------
 
 
 func _check_determinism() -> void:
-	print("— déterminisme —")
+	print("— determinism —")
 	var a := await _run_once(SEED)
 	var b := await _run_once(SEED)
-	_check(a["result"] == b["result"], "même seed → même issue (%s)" % a["result"])
-	_check(a["rounds"] == b["rounds"], "même seed → même nombre de rondes (%d)" % a["rounds"])
-	_check(a["log"] == b["log"], "même seed → même journal (%d lignes)" % a["log"].size())
-	# Contrôle négatif : sans lui, les assertions ci-dessus passeraient tout aussi bien
-	# sur une rencontre où le rng ne piloterait plus rien. On compare des ordres du tour
-	# initiaux (24 permutations pour 4 combattants) plutôt que deux journaux, qui
-	# pourraient coïncider par hasard sur un combat court.
+	_check(a["result"] == b["result"], "same seed, same outcome (%s)" % a["result"])
+	_check(a["rounds"] == b["rounds"], "same seed, same number of rounds (%d)" % a["rounds"])
+	_check(a["log"] == b["log"], "same seed, same log (%d lines)" % a["log"].size())
+	# A negative control: without it the assertions above would pass just as well on an encounter
+	# where the rng drove nothing at all. Initial turn orders are compared — 24 permutations for 4
+	# fighters — rather than two logs, which could coincide by chance on a short fight.
 	var orders := {}
 	for i in 10:
 		var m := _make_manager(SEED + i)
@@ -277,7 +276,7 @@ func _check_determinism() -> void:
 		m.free()
 	_check(
 		orders.size() > 1,
-		"seeds différents → ordres du tour différents (%d distincts sur 10)" % orders.size()
+		"different seeds, different turn orders (%d distinct out of 10)" % orders.size()
 	)
 
 
@@ -290,57 +289,57 @@ func _run_once(seed: int) -> Dictionary:
 
 
 # --------------------------------------------------------------------------
-# Boucle : positions, faiblesses, terminaison
+# The loop: positions, weaknesses, termination
 # --------------------------------------------------------------------------
 
 
 func _check_loop_invariants() -> void:
-	print("— boucle —")
+	print("— loop —")
 	var m := _make_manager()
 	var order := m.timeline.order
-	_check(order.size() == 4, "ordre du tour : %d combattants" % order.size())
+	_check(order.size() == 4, "turn order: %d fighters" % order.size())
 	_check(
 		m.timeline.position_of(order[0]) == GameEnums.TurnPosition.FIRST,
-		"tête de l'ordre → position FIRST"
+		"head of the order is position FIRST"
 	)
 	_check(
 		m.timeline.position_of(order[1]) == GameEnums.TurnPosition.MIDDLE,
-		"milieu de l'ordre → position MIDDLE"
+		"middle of the order is position MIDDLE"
 	)
 	_check(
 		m.timeline.position_of(order[3]) == GameEnums.TurnPosition.LAST,
-		"queue de l'ordre → position LAST"
+		"tail of the order is position LAST"
 	)
-	# La faiblesse active est dérivée de la POSITION, pas de l'individu : c'est la règle
-	# qui rend les capacités de réordonnancement offensives.
+	# The active weakness comes from the POSITION, not from the individual: that is the rule that
+	# makes reordering abilities offensive.
 	var head: EncounterFighter = order[0]
 	_check(
 		(
 			head.active_weakness(GameEnums.TurnPosition.FIRST) == head.species.weakness_first
 			and head.active_weakness(GameEnums.TurnPosition.LAST) == head.species.weakness_last
 		),
-		"faiblesse active dérivée de la position"
+		"active weakness derived from the position"
 	)
 	m.free()
 
-	# Terminaison : la boucle rend toujours une des trois issues et respecte max_rounds.
+	# Termination: the loop always returns one of the three outcomes and respects max_rounds.
 	var m2 := _make_manager()
 	var res := await m2.run(3)
-	_check(res in [&"victory", &"defeat", &"timeout"], "issue valide : %s" % res)
+	_check(res in [&"victory", &"defeat", &"timeout"], "valid outcome: %s" % res)
 	_check(
 		m2.round_number >= 1 and m2.round_number <= 3,
-		"rondes bornées par max_rounds (%d)" % m2.round_number
+		"rounds bounded by max_rounds (%d)" % m2.round_number
 	)
-	_check(m2.result == res, "le champ result reflète l'issue rendue")
+	_check(m2.result == res, "the result field reflects the outcome returned")
 	_check(
 		not m2.battle_log.is_empty(),
-		"la rencontre a produit un journal (%d lignes)" % m2.battle_log.size()
+		"the encounter produced a log (%d lines)" % m2.battle_log.size()
 	)
 	m2.free()
 
 
 # --------------------------------------------------------------------------
-# Talents : chacun résout vers son script dédié et répond à tous les hooks
+# Talents: each resolves to its dedicated script and answers every hook
 # --------------------------------------------------------------------------
 
 
@@ -359,15 +358,15 @@ func _check_talents() -> void:
 		var td: TalentData = res
 		var impl := TALENT_IMPL_DIR + String(td.id) + ".gd"
 		if not ResourceLoader.exists(impl):
-			problems.append("%s sans script dédié" % td.id)
+			problems.append("%s has no dedicated script" % td.id)
 			continue
 		var script = TalentCatalog.script_for(td, owner, 1)
 		if script.get_script().resource_path != impl:
-			problems.append("%s non résolu vers son script" % td.id)
+			problems.append("%s does not resolve to its script" % td.id)
 			continue
 		resolved += 1
-		# Tous les hooks, dans l'ordre où la boucle les appelle. Les talents encore stubs
-		# doivent rester no-op : ne rien faire est une réponse valide, échouer ne l'est pas.
+		# Every hook, in the order the loop calls them. Talents that are still stubs must stay
+		# no-op: doing nothing is a valid answer, failing is not.
 		script.on_encounter_start(m)
 		script.modify_talk_chance(m, owner, other, 0.3)
 		script.on_talk_resolved(m, owner, other, true)
@@ -380,11 +379,11 @@ func _check_talents() -> void:
 		]
 		script.modify_menu(m, kinds)
 		if kinds.is_empty():
-			problems.append("%s vide le menu d'actions" % td.id)
+			problems.append("%s empties the action menu" % td.id)
 		script.on_encounter_end(m, &"victory")
-	_check(resolved == 10, "%d talents résolus vers leur script dédié" % resolved)
+	_check(resolved == 10, "%d talents resolved to their dedicated script" % resolved)
 	_check(
 		problems.is_empty(),
-		"hooks de talents opérants%s" % ("" if problems.is_empty() else " — " + ", ".join(problems))
+		"talent hooks working%s" % ("" if problems.is_empty() else " — " + ", ".join(problems))
 	)
 	m.free()

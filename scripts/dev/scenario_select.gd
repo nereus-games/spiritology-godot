@@ -1,8 +1,8 @@
-## Écran de sélection des scénarios de test (dev).
+## The dev test-scenario selection screen.
 ##
-## Liste les scénarios de [ScenarioCatalog] sous forme de boutons ; le choix pose
-## `ScenarioCatalog.selected_id` et lance la scène d'exploration. Écran TEMPORAIRE (le vrai
-## flux passera par l'écran-titre) — accessible aussi via le bouton MENU du HUD.
+## Lists [ScenarioCatalog]'s scenarios as buttons; picking one sets `ScenarioCatalog.selected_id`
+## and launches the exploration scene. TEMPORARY — the real flow will go through the title
+## screen. Also reachable from the HUD's MENU button.
 extends Control
 
 const ScenarioCatalog := preload("res://scripts/dev/scenario_catalog.gd")
@@ -10,11 +10,11 @@ const EXPLORATION := "res://scenes/exploration/exploration.tscn"
 
 
 func _ready() -> void:
-	# L'exploration capture le curseur ; on le rend visible pour cliquer les boutons.
+	# Exploration captures the cursor; make it visible again so the buttons can be clicked.
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	set_anchors_preset(Control.PRESET_FULL_RECT)
-	# En-tête FIXE (titre + réglages) et liste DÉROULANTE en dessous : les scénarios sont
-	# désormais plus nombreux qu'un écran.
+	# A FIXED header (title plus settings) with a SCROLLING list below it: there are now more
+	# scenarios than fit on a screen.
 	var margin := MarginContainer.new()
 	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
 	for side in ["margin_left", "margin_right", "margin_top", "margin_bottom"]:
@@ -36,11 +36,11 @@ func _ready() -> void:
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	scroll.follow_focus = true  # naviguer au clavier fait défiler la liste
+	scroll.follow_focus = true  # keyboard navigation scrolls the list along
 	box.add_child(scroll)
 
-	# Le ScrollContainer étire son enfant sur toute la largeur : pour centrer la grille sous
-	# l'en-tête, on la loge dans une rangée centrée plutôt que de compter sur ses size flags.
+	# A ScrollContainer stretches its child to the full width, so to centre the grid under the
+	# header it goes inside a centred row rather than relying on its size flags.
 	var centered := HBoxContainer.new()
 	centered.alignment = BoxContainer.ALIGNMENT_CENTER
 	centered.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -72,9 +72,9 @@ func _ready() -> void:
 		entry.add_child(desc)
 
 
-## Réglage DEV du duo jouable : une liste par rôle, restreinte aux espèces que le mini-quiz
-## peut donner à ce rôle (le principal n'a que 4 résultats possibles, le coéquipier 10 —
-## doc « Mini Personality Quiz »). Les deux peuvent tomber sur la même espèce, c'est prévu.
+## DEV control for the playable duo: one list per role, restricted to the species the mini quiz
+## can give that role — the main character has only 4 possible results, the teammate 10, per the
+## design doc's "Mini Personality Quiz". Both can land on the same species, by design.
 func _build_duo_row() -> Control:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 8)
@@ -98,7 +98,7 @@ func _build_duo_row() -> Control:
 	return row
 
 
-## Étiquette + liste déroulante d'espèces. `on_pick` reçoit le slug choisi.
+## A label plus a species dropdown. `on_pick` receives the slug chosen.
 func _species_picker(
 	label_text: String, species: Array, current: StringName, on_pick: Callable
 ) -> Control:
@@ -123,7 +123,7 @@ func _species_picker(
 	return cell
 
 
-## Nom traduit de l'espèce (repli sur le slug si la clé n'est pas dans les .po).
+## The species' translated name, falling back to the slug when the key is missing from the .po.
 func _species_name(id: StringName) -> String:
 	var sp: SpeciesData = GameData.species(id)
 	if sp == null:
@@ -132,9 +132,9 @@ func _species_name(id: StringName) -> String:
 	return String(id) if name == sp.name_key() else name
 
 
-## Réglage DEV du DEN des rivaux. En vrai c'est le LEVEL DESIGN qui l'attribue, donjon par
-## donjon ; ici on le choisit à la main pour les scénarios qui contiennent des rivaux. Les
-## boutons E / M / L placent le curseur sur les ordres de grandeur de la doc.
+## DEV control for rival DEN. In the real game LEVEL DESIGN assigns it, dungeon by dungeon; here
+## it is picked by hand for the scenarios that contain rivals. The E / M / L buttons put the
+## slider on the design doc's ballpark figures.
 func _build_rival_den_row() -> Control:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 8)
@@ -171,7 +171,7 @@ func _build_rival_den_row() -> Control:
 		b.pressed.connect(func() -> void: slider.value = preset.value)
 		row.add_child(b)
 
-	# Valeur de départ : celle déjà choisie, sinon l'ordre de grandeur « early » de la doc.
+	# Starting value: whatever was already picked, otherwise the design doc's "early" figure.
 	var start: int = ScenarioCatalog.rival_den_override
 	if start <= 0:
 		start = GameSession.RIVAL_DEN_EARLY
@@ -181,7 +181,7 @@ func _build_rival_den_row() -> Control:
 	return row
 
 
-## « DEN des rivaux : 100 — M (mid) » quand la valeur tombe sur un ordre de grandeur de la doc.
+## Appends the design doc's tag when the value lands on one of its ballpark figures.
 func _den_label(v: int) -> String:
 	var tag := ""
 	match v:

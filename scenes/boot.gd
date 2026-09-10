@@ -1,25 +1,24 @@
-## Scène d'amorçage. Premier nœud chargé (main_scene).
+## The boot scene: the first node loaded (main_scene).
 ##
-## Initialise la langue, vérifie la présence d'une sauvegarde, puis enchaîne vers
-## l'écran-titre. Les données statiques sont déjà chargées par l'autoload [GameData]
-## (qui s'initialise avant cette scène).
+## Sets the language, checks whether a save exists, then moves on to the title screen. The static
+## data is already loaded by the [GameData] autoload, which initialises before this scene.
 extends Node
 
-## Écran de sélection des scénarios de test : point d'entrée tant que l'écran-titre n'existe
-## pas (choisit quel scénario d'exploration lancer). Temporaire.
+## The test-scenario selection screen: the entry point while there is no title screen. It picks
+## which exploration scenario to launch. Temporary.
 const PLAY_SCENE := "res://scenes/dev/scenario_select.tscn"
 
 
 func _ready() -> void:
 	_init_locale()
 	var has_save := SaveSystem.has_save()
-	print("[Boot] langue=%s, sauvegarde=%s" % [TranslationServer.get_locale(), has_save])
-	# TODO: enchaîner vers title_screen.tscn quand l'écran-titre existera ; pour l'instant
-	# on entre dans l'écran de sélection des scénarios de test (F5).
+	print("[Boot] locale=%s, save=%s" % [TranslationServer.get_locale(), has_save])
+	# TODO: move on to title_screen.tscn once the title screen exists. For now, F5 lands in the
+	# test-scenario selection screen.
 	TransitionManager.change_scene(PLAY_SCENE)
 
 
-## Applique la langue système si elle est supportée, sinon le fallback EN.
+## Uses the system language when it is supported, and falls back to EN otherwise.
 func _init_locale() -> void:
 	var system_locale := OS.get_locale_language()
 	var supported := TranslationServer.get_loaded_locales()

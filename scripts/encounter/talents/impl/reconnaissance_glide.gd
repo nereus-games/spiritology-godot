@@ -1,15 +1,15 @@
 ## Reconnaissance Glide (ravbak).
 ##
-## Volet RENCONTRE (traité ici) — « Examine (if used by this character) gets 10 % more
-## info on target » : via [method modify_examine_info]. La magnitude d'un Examine n'est pas
-## chiffrée (le gain d'info d'Examine n'est pas bâti), donc l'effet reste un facteur
-## journalisé tant que ce système n'existe pas — STUB honnête, mais le hook est branché.
+## The ENCOUNTER half, handled here — "Examine (if used by this character) gets 10% more info on
+## target" — through [method modify_examine_info]. An Examine has no quantified magnitude, since
+## its info gain is not built, so the effect stays a factor with nothing to multiply until that
+## system exists: an honest stub, but the hook is wired.
 ##
-## Volet EXPLORATION (NON traité ici — attend le framework de donjon) — « Falling doesn't
-## deal any damage to player characters » : les chutes appartiennent aux mécanismes de donjon.
+## The EXPLORATION half is NOT handled here and waits on the dungeon framework — "Falling doesn't
+## deal any damage to player characters" belongs to the dungeon mechanisms.
 extends "res://scripts/encounter/talents/talent_script.gd"
 
-const EXAMINE_INFO_BONUS := 0.10  ## +10 % (valeur Notion), appliqué au gain de base.
+const EXAMINE_INFO_BONUS := 0.10  ## +10%, the design doc's figure, applied to the base gain.
 
 
 func modify_examine_info(_manager, _target, base: float) -> float:

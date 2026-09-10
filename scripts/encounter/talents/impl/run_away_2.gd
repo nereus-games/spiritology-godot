@@ -1,14 +1,14 @@
-## Run Away 2 (zuk) — « Run Away replaces Talk for this character. This character can't use
+## Run Away 2 (zuk) — "Run Away replaces Talk for this character. This character can't use
 ## Talk, but gets an extra action in encounters: Run Away. Unlike Slick Merchant, this
-## version succeeds at all time and doesn't require any QTE. »
+## version succeeds at all time and doesn't require any QTE."
 ##
-## Traduit en mutation de MENU : Talk retiré, Run Away (FLEE) ajouté, en permanence.
-## Contrairement à slick_merchant, sans condition ni coût ni QTE.
+## Expressed as a MENU mutation: Talk removed, Run Away (FLEE) added, permanently. Unlike
+## slick_merchant, with no condition, no cost and no QTE.
 ##
-## Deux dépendances de câblage, connues et communes à tout le volet « fuite » :
-##  1. le menu joueur / l'agent doivent CONSULTER [method modify_menu] (câblage à venir) ;
-##  2. quitter réellement la rencontre suppose la téléportation en exploration (3-5 cases,
-##     50 % que le rival disparaisse) — non bâtie ; la résolution de FLEE est un stub.
+## Two known wiring dependencies, shared by everything on the fleeing side:
+##  1. the player menu and the agent have to CONSULT [method modify_menu], which is not wired yet;
+##  2. actually leaving the encounter needs the exploration teleport (3-5 cells, a 50% chance the
+##     rival disappears), which is not built; resolving FLEE is a stub.
 extends "res://scripts/encounter/talents/talent_script.gd"
 
 

@@ -1,18 +1,17 @@
-## Menu des actions contextuelles d'exploration (élément 3 du HUD, doc Notion « User
-## Interface »).
+## The exploration contextual action menu (element 3 of the HUD, per the design doc's "User
+## Interface").
 ##
-## Affiche la liste des [ExplorationAction] disponibles pour le joueur (fournies par
-## [method DungeonManager.actions_for] : Dig, Recycle, Examine, Meditate, ouvrir une porte,
-## rafraîchir, traverser un mur fissuré…). Navigation au clavier : cycler la sélection puis
-## valider ; valider invoque le `callable` de l'action sélectionnée. Non modal (le déplacement
-## reste possible), volontairement construit PAR CODE et minimal — le rendu final (icônes
-## rondes, sous-menu USE/CANCEL, alignement sur l'icône présélectionnée) se peaufinera en
-## moteur.
+## Shows the [ExplorationAction]s available to the player, supplied by
+## [method DungeonManager.actions_for]: Dig, Recycle, Examine, Meditate, open a gateway, refresh,
+## cross a cracked wall. Keyboard navigation: cycle the selection, then confirm; confirming
+## invokes the selected action's `callable`. Not modal — movement stays possible — and
+## deliberately built IN CODE and minimal. The final look (round icons, the USE/CANCEL submenu,
+## alignment on the preselected icon) will be worked out in the engine.
 ##
-## Pas de `class_name` (piège du cache CLI) : référencé par `preload`.
+## No `class_name` (the CLI class-cache trap): referenced by `preload`.
 extends Control
 
-## Émis quand le joueur valide une action (après invocation de son callable).
+## Emitted when the player confirms an action, after its callable has been invoked.
 signal action_confirmed(id: StringName)
 
 const SELECTED_COLOR := Color(1.0, 0.9, 0.4)
@@ -28,8 +27,8 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_box = VBoxContainer.new()
 	_box.add_theme_constant_override("separation", 4)
-	# Ancré en bas à gauche, croît vers le HAUT : la dernière entrée (MENU) reste près du bas,
-	# les actions contextuelles s'empilent au-dessus, toutes visibles.
+	# Anchored bottom-left and growing UPWARDS: the last entry (MENU) stays near the bottom and the
+	# contextual actions stack above it, all of them visible.
 	_box.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
 	_box.grow_vertical = Control.GROW_DIRECTION_BEGIN
 	_box.position += Vector2(20, -40)
@@ -37,20 +36,19 @@ func _ready() -> void:
 	visible = false
 
 
-## Vrai si au moins une action est proposée.
 func has_actions() -> bool:
 	return not _actions.is_empty()
 
 
-## Id de l'action actuellement sélectionnée (&"" si aucune).
+## Id of the currently selected action, or &"" when there is none.
 func selected_id() -> StringName:
 	if _actions.is_empty():
 		return &""
 	return _actions[_selected].id
 
 
-## Remplace la liste d'actions. Ne reconstruit que si les ids ont changé (évite le
-## scintillement à chaque frame). Conserve la sélection sur le même id si possible.
+## Replaces the action list. Rebuilds only when the ids changed, which avoids flickering every
+## frame, and keeps the selection on the same id where it can.
 func set_actions(actions: Array) -> void:
 	if _same_ids(actions):
 		return
@@ -64,7 +62,7 @@ func set_actions(actions: Array) -> void:
 	_rebuild()
 
 
-## Cycle la sélection de `step` positions (avec bouclage).
+## Moves the selection `step` positions, wrapping around.
 func cycle(step: int) -> void:
 	if _actions.is_empty():
 		return
@@ -72,8 +70,8 @@ func cycle(step: int) -> void:
 	_update_highlight()
 
 
-## Valide l'action sélectionnée : invoque son callable et émet [signal action_confirmed].
-## Retourne false si aucune action n'est disponible.
+## Confirms the selected action: invokes its callable and emits [signal action_confirmed].
+## Returns false when no action is available.
 func confirm() -> bool:
 	if _actions.is_empty():
 		return false
@@ -106,8 +104,8 @@ func _rebuild() -> void:
 	_update_highlight()
 
 
-## Libellé affiché : traduction de `label_key` si disponible, sinon l'id « joliment » (repli
-## tant que les clés UI_ACTION_* ne sont pas dans les .po).
+## The label shown: `label_key` translated when available, otherwise a prettified id — a fallback
+## while the UI_ACTION_* keys are missing from the .po files.
 func _label_for(action) -> String:
 	var t := String(TranslationServer.translate(action.label_key))
 	if t == action.label_key:

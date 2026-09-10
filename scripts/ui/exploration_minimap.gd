@@ -1,27 +1,27 @@
-## Mini-map d'exploration (élément 1 du HUD, doc « User Interface »).
+## The exploration mini-map (element 1 of the HUD, per the design doc's "User Interface").
 ##
-## Dessine la grille LOGIQUE du donjon vue de dessus : dalles de sol, mécanismes, et la
-## position du joueur. Placeholder de test (formes simples), rafraîchi chaque frame. Interroge
-## le donjon (groupe "dungeon") et le joueur (groupe "player").
+## Draws the dungeon's LOGICAL grid from above: floor slabs, mechanisms, and the player's
+## position. A test placeholder made of simple shapes, redrawn every frame. Asks the dungeon (the
+## "dungeon" group) and the player (the "player" group).
 ##
-## Pas de `class_name` (piège du cache CLI) : référencé par `preload`.
+## No `class_name` (the CLI class-cache trap): referenced by `preload`.
 extends Control
 
-## Taille d'une case sur la mini-map (px).
+## How big one cell is on the mini-map, in pixels.
 const CELL_PX := 11.0
 
 const FLOOR_COLOR := Color(0.30, 0.30, 0.36)
-## Cases d'un étage INFÉRIEUR à celui du joueur : assombries, pour que la limite de l'étage
-## où l'on se trouve (bord d'une plateforme, trémie) se lise d'un coup d'œil.
+## Cells on a storey BELOW the player's: dimmed, so the edge of the storey you are on — a
+## platform's lip, a stairwell — reads at a glance.
 const FLOOR_BELOW_COLOR := Color(0.15, 0.15, 0.19)
-## Murs de l'étage courant : plus sombres que le sol mais nettement au-dessus du fond, pour que
-## le POURTOUR d'une salle se lise (doc « User Interface » : la carte montre sol + murs).
+## Walls on the current storey: darker than the floor but clearly above the background, so a
+## room's OUTLINE reads. The design doc has the map show floor and walls.
 const WALL_COLOR := Color(0.20, 0.20, 0.25)
 const MECH_COLOR := Color(0.90, 0.65, 0.20)
-## Mécanisme ÉPUISÉ (piège déclenché, coffre vidé, dé roulé, sol creusé…) : même règle qu'en
-## 3D — ce qui n'est plus actionnable ne doit plus attirer l'œil comme une piste à suivre.
-## Il reste dessiné (repère de navigation, et la doc demande explicitement une icône sur la
-## carte pour un sol friable déjà creusé), mais éteint.
+## A SPENT mechanism — a sprung trap, an emptied chest, a rolled die, dug ground. The same rule
+## as in 3D: what is no longer actionable must stop drawing the eye like a lead worth following.
+## It stays drawn, as a landmark, and because the design doc explicitly asks for an icon on the
+## map for crumbly ground already dug — but dulled.
 const MECH_SPENT_COLOR := Color(0.38, 0.33, 0.26)
 const PLAYER_COLOR := Color(0.40, 0.90, 0.55)
 const BG_COLOR := Color(0.05, 0.05, 0.07, 0.6)
@@ -32,7 +32,7 @@ var _player
 
 func _ready() -> void:
 	custom_minimum_size = Vector2(170, 170)
-	clip_contents = true  # un grand donjon ne doit pas déborder sur le reste du HUD
+	clip_contents = true  # a large dungeon must not spill over the rest of the HUD
 
 
 func _process(_delta: float) -> void:
@@ -50,7 +50,7 @@ func _draw() -> void:
 	var floors: Array = _dungeon._floor.keys()
 	if floors.is_empty():
 		return
-	# Bornes de la grille : sols ET murs, sinon le pourtour se dessinerait hors du cadre.
+	# Grid bounds over floors AND walls, or the outline would be drawn outside the frame.
 	var minx: int = floors[0].x
 	var minz: int = floors[0].z
 	var maxx: int = minx
@@ -63,10 +63,10 @@ func _draw() -> void:
 	var grid := Vector2((maxx - minx + 1) * CELL_PX, (maxz - minz + 1) * CELL_PX)
 	var origin := (size - grid) * 0.5
 
-	# Étage courant du joueur : ce qui est en dessous est assombri, ce qui est au-dessus n'est
-	# pas cartographié (on ne voit pas à travers un plafond).
+	# The player's current storey: what is below is dimmed, what is above is not mapped at all —
+	# you do not see through a ceiling.
 	var level: int = _player.cell.y if is_instance_valid(_player) else 0
-	# Dalles de sol : les étages inférieurs d'abord, l'étage courant par-dessus.
+	# Floor slabs: the lower storeys first, the current one over them.
 	for c in floors:
 		if c.y < level:
 			draw_rect(
@@ -79,21 +79,21 @@ func _draw() -> void:
 				Rect2(_cell_px(c, origin, maxx, maxz), Vector2(CELL_PX - 1.0, CELL_PX - 1.0)),
 				FLOOR_COLOR
 			)
-	# Murs de l'étage courant, par-dessus les sols (un mur peut porter le sol de l'étage du
-	# dessus : à cet étage-ci, c'est un mur qu'on doit voir).
+	# Walls on the current storey, over the floors: a wall may carry the storey above's floor, and
+	# on this storey what you should see is a wall.
 	for w in _dungeon.wall_cells():
 		if w.y == level:
 			draw_rect(
 				Rect2(_cell_px(w, origin, maxx, maxz), Vector2(CELL_PX - 1.0, CELL_PX - 1.0)),
 				WALL_COLOR
 			)
-	# Mécanismes de l'étage courant : sur une case (pavé plein) ou sur une arête entre deux
-	# cases (barre fine, pour les portes — elles n'occupent aucune case).
+	# Mechanisms on the current storey: on a cell (a solid block) or on the edge between two cells
+	# (a thin bar, for the gateways, which occupy no cell).
 	for m in get_tree().get_nodes_in_group("dungeon_mechanism"):
 		if not is_instance_valid(m) or m.cell.y != level or not m.shows_on_map():
-			continue  # un piège inconnu ne se trahit pas sur la carte
-		# Un mécanisme peut imposer sa teinte (rambarde : gris de décor, puisqu'on ne l'actionne
-		# pas) ; sinon l'orange des mécanismes interactifs, grisé une fois épuisés.
+			continue  # an unknown trap does not give itself away on the map
+		# A mechanism may impose its own hue — a guardrail uses the grey of decor, since you never
+		# act on it. Otherwise the orange of interactive mechanisms, dulled once spent.
 		var color: Color = MECH_SPENT_COLOR if m.is_spent() else MECH_COLOR
 		if m.has_method("map_color"):
 			color = m.map_color()
@@ -105,27 +105,27 @@ func _draw() -> void:
 				Rect2(_cell_px(m.cell, origin, maxx, maxz), Vector2(CELL_PX - 1.0, CELL_PX - 1.0)),
 				color
 			)
-	# Joueur : flèche orientée dans le sens du regard.
+	# The player, as an arrow pointing the way they face.
 	if is_instance_valid(_player):
 		var p := _cell_px(_player.cell, origin, maxx, maxz) + Vector2(CELL_PX, CELL_PX) * 0.5
 		_draw_player_arrow(p)
 
 
-## Case -> pixel. La carte est tournée de 180° (axes inversés) pour que la position de départ
-## soit EN BAS et l'avant du donjon (+z) VERS LE HAUT, avec gauche/droite cohérents avec le
-## déplacement.
+## Cell to pixel. The map is turned 180 degrees — both axes inverted — so the starting position is
+## at the BOTTOM and the front of the dungeon (+z) points UP, with left and right matching how you
+## move.
 func _cell_px(c: Vector3i, origin: Vector2, maxx: int, maxz: int) -> Vector2:
 	return origin + Vector2((maxx - c.x) * CELL_PX, (maxz - c.z) * CELL_PX)
 
 
-## Mécanisme d'arête (porte) : barre fine sur la frontière entre `cell` et `cell + edge_dir`,
-## posée du côté qui correspond à l'inversion d'axes de la carte.
+## An edge mechanism (a gateway): a thin bar on the boundary between `cell` and
+## `cell + edge_dir`, laid on the side matching the map's inverted axes.
 func _draw_edge_mech(
 	cell: Vector3i, edge_dir: Vector3i, origin: Vector2, maxx: int, maxz: int, color: Color
 ) -> void:
 	const THICK := 2.0
 	var p := _cell_px(cell, origin, maxx, maxz)
-	# La carte inverse les deux axes : la voisine +x/+z est donc en -px sur la carte.
+	# The map inverts both axes, so the +x/+z neighbour is at -px on it.
 	if edge_dir.x != 0:
 		var x := p.x + (0.0 if edge_dir.x > 0 else CELL_PX - THICK)
 		draw_rect(Rect2(Vector2(x, p.y), Vector2(THICK, CELL_PX - 1.0)), color)
@@ -134,13 +134,13 @@ func _draw_edge_mech(
 		draw_rect(Rect2(Vector2(p.x, y), Vector2(CELL_PX - 1.0, THICK)), color)
 
 
-## Petit triangle pointant dans la direction de DÉPLACEMENT du joueur (cardinale, multiple de
-## 90°) — pas le regard libre : on anticipe ainsi les déplacements effectifs.
+## A small triangle pointing along the player's MOVEMENT direction — cardinal, a multiple of 90
+## degrees — rather than free look, so it predicts where a step would actually go.
 func _draw_player_arrow(center: Vector2) -> void:
-	var dir := Vector2(0.0, -1.0)  # défaut : vers le haut
+	var dir := Vector2(0.0, -1.0)  # default: upwards
 	if _player.has_method("facing_delta"):
-		var fd: Vector3i = _player.facing_delta()  # delta de case cardinal
-		var d := Vector2(-fd.x, -fd.z)  # même inversion d'axes que la carte
+		var fd: Vector3i = _player.facing_delta()  # a cardinal cell delta
+		var d := Vector2(-fd.x, -fd.z)  # the same axis inversion as the map
 		if d.length() > 0.01:
 			dir = d.normalized()
 	var perp := Vector2(-dir.y, dir.x)

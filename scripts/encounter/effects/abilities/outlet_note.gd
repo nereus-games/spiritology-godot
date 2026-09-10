@@ -1,6 +1,6 @@
 ## Outlet Note — érzélak · Fluid · medium · usage unique · [limit actions, recover DEN]
-## MÉCANIQUE : une cible de l'équipe récupère tout son DEN ; le user ne peut utiliser que
-## Méditer au prochain tour.
+## MECHANIC: a target on the team recovers all its DEN; the user can only use Meditate next
+## turn.
 extends AbilityScript
 
 

@@ -1,6 +1,6 @@
 ## Banner — zuk · Fluid · medium · [change weakness, damage reduction/immunity]
-## MÉCANIQUE : la faiblesse du coéquipier devient celle du user ; les dégâts Chaleur ou
-## Cristal reçus par l'équipe sont réduits de moitié jusqu'à la fin du tour.
+## MECHANIC: the teammate's weakness becomes the user's; Heat and Crystal damage taken by the
+## team is halved until the end of the turn.
 extends AbilityScript
 
 

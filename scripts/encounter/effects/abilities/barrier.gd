@@ -1,6 +1,6 @@
 ## Barrier — razél · Crystal · medium · [damage reduction/immunity, recover ETH]
-## MÉCANIQUE : une cible alliée (soi ou coéquipier) récupère X ETH ; les prochains dégâts
-## Fluide, Toxique ou Cristal qui la touchent sont réduits de moitié.
+## MECHANIC: an allied target — the user or its teammate — recovers X ETH; the next Fluid, Toxic
+## or Crystal damage that hits it is halved.
 extends AbilityScript
 
 

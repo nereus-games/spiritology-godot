@@ -1,8 +1,8 @@
 # @unimplemented
-## Anti-Stress — Encounter · origine skorpis · Variable · coût none · dégâts none
-## Tags : change weakness, recover DEN
+## Anti-Stress — Encounter · from skorpis · Variable · cost none · damage none
+## Tags: change weakness, recover DEN
 ##
-## MÉCANIQUE (Notion) :
+## MECHANIC (from the design doc):
 ##   Resolved inline commentsBlock text: destroys an item from inventory
 ##   - Alexandre Ultré Apr 3, 2024, 1:32 PM
 ##   @Néd J. player-picked or at random?
@@ -22,7 +22,6 @@ extends AbilityScript
 
 
 func execute(ctx: EncounterContext) -> void:
-	# TODO: implémenter la mécanique ci-dessus, puis retirer le « @unimplemented »
-	# en tête. En attendant, les effets génériques dérivés des tags s'appliquent —
-	# c'est un échafaudage, pas la mécanique réelle.
+	# TODO: implement the mechanic above, then drop the leading "@unimplemented". Until then the
+	# generic effects derived from the tags apply — that is scaffolding, not the real mechanic.
 	super.execute(ctx)

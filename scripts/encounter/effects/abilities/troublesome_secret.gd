@@ -1,6 +1,6 @@
 ## Troublesome Secret — basipik · mini (5) · [ETH loss, limit actions]
-## MÉCANIQUE : le rival ciblé perd X ETH et ne peut plus utiliser Examiner ni aucun Objet
-## jusqu'à la fin de la rencontre (ou jusqu'à ce qu'il Médite).
+## MECHANIC: the targeted rival loses X ETH and can no longer use Examine or any Object for the
+## rest of the encounter, or until it Meditates.
 extends AbilityScript
 
 

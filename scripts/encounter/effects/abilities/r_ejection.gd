@@ -1,7 +1,7 @@
 ## (R)ejection — sénskor · Fluid · medium · [change weakness]
-## MÉCANIQUE : la faiblesse du user est cachée aux rivaux jusqu'à son prochain tour ; au
-## hasard (50 %) il perd sa faiblesse OU retrouve sa faiblesse par défaut (annulant une
-## modification du tour) ; il est immunisé aux dégâts Fluide et Toxique jusqu'à son prochain tour.
+## MECHANIC: the user's weakness is hidden from the rivals until its next turn; a coin flip
+## either strips its weakness OR restores its default one, undoing a change made this turn; and
+## it is immune to Fluid and Toxic damage until its next turn.
 extends AbilityScript
 
 

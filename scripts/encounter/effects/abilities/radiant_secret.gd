@@ -1,6 +1,6 @@
 ## Radiant Secret — forlorn fliritus · Heat · normal · [change weakness, force Talk]
-## MÉCANIQUE : la faiblesse du user et de ses alliés devient Chaleur jusqu'à leur prochain
-## tour ; aux tours suivants, le rival ciblé dialogue plus volontiers (TODO).
+## MECHANIC: the user's and its allies' weakness becomes Heat until their next turn; on later
+## turns the targeted rival talks more readily (TODO).
 extends AbilityScript
 
 

@@ -1,6 +1,6 @@
 ## Ghosting — fliritus · Toxic · mini · normal (10) · [damage]
-## MÉCANIQUE : (le user doit avoir Parlé à un rival au tour précédent, encore présent) le
-## user fuit la rencontre (seul) ; le rival à qui il a parlé subit des dégâts.
+## MECHANIC: requires the user to have Talked to a rival on the previous turn, and that rival to
+## still be around. The user flees the encounter alone, and the rival it spoke to takes damage.
 extends AbilityScript
 
 

@@ -1,5 +1,5 @@
 ## Awe — érdouss · Heat · [damage]
-## MÉCANIQUE : un rival subit des dégâts pour chaque natif d'Ardent (Fiery) présent.
+## MECHANIC: one rival takes damage once per Fiery native present.
 extends AbilityScript
 
 

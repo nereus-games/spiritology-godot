@@ -1,6 +1,6 @@
 ## Reappraisal — hibulus · Arcane · [change weakness, recover ETH]
-## MÉCANIQUE : (inutilisable au 1er tour). La faiblesse du user est cachée aux rivaux jusqu'à
-## son prochain tour ; il choisit une nouvelle faiblesse parmi 2 (cachée et stable) ; +X ETH.
+## MECHANIC: unusable on turn 1. The user's weakness is hidden from the rivals until its next
+## turn; it picks a new weakness out of 2, hidden and stable; and it gains X ETH.
 extends AbilityScript
 
 

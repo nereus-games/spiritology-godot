@@ -1,6 +1,6 @@
 ## Sublimation — forlorn jézal · Variable · [change next TO]
-## MÉCANIQUE : choisir sa position au prochain tour (1re, 2e, ou après tous les alliés).
-## Politique auto : se placer en tête.
+## MECHANIC: pick your position next turn — first, second, or after all the allies. The automatic
+## policy is to go to the front.
 extends AbilityScript
 
 

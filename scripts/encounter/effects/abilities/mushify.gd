@@ -1,5 +1,5 @@
 ## Mushify — malcouli · Heat · a lot · normal (10) · [change weakness, damage]
-## MÉCANIQUE : la cible subit des dégâts, puis sa faiblesse devient Fluide.
+## MECHANIC: the target takes damage, then its weakness becomes Fluid.
 extends AbilityScript
 
 

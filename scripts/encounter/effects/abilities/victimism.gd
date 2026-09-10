@@ -1,7 +1,7 @@
 ## Victimism — granop · Toxic · mini/small · [damage, redirect next damage received]
-## MÉCANIQUE : le user subit de petits dégâts ; tout rival utilisant Talk avant la fin du
-## tour subit des dégâts (TODO : déclencheur Talk) ; les autres dégâts qui devaient le
-## toucher sont redirigés vers un coéquipier au hasard.
+## MECHANIC: the user takes small damage; any rival that uses Talk before the end of the turn
+## takes damage (the Talk trigger is a TODO); other damage that would have hit the user is
+## redirected to a random teammate.
 extends AbilityScript
 
 

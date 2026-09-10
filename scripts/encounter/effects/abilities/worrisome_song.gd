@@ -1,5 +1,5 @@
 ## Worrisome Song — korig · Toxic · small (7) · [change weakness, damage]
-## MÉCANIQUE : la cible subit des dégâts, puis sa faiblesse devient Chaleur (= Sad Song).
+## MECHANIC: the target takes damage, then its weakness becomes Heat (the mirror of Sad Song).
 extends AbilityScript
 
 

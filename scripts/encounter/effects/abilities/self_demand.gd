@@ -1,6 +1,6 @@
 ## Self-Demand — gaiaz · Variable · normal · [limit actions, recover DEN]
-## MÉCANIQUE : le user gagne X DEN ; à son prochain tour, il ne peut utiliser que des
-## capacités de la même énergie que celle-ci.
+## MECHANIC: the user gains X DEN; on its next turn it can only use abilities of this ability's
+## energy.
 extends AbilityScript
 
 

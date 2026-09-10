@@ -1,6 +1,6 @@
 ## Black Soaking — forlorn malcouli · Arcane · normal · [change weakness, immunity]
-## MÉCANIQUE : le user choisit une nouvelle faiblesse (parmi 3 au hasard) pour ce tour et
-## le suivant ; il est immunisé aux dégâts Arcane jusqu'à son prochain tour.
+## MECHANIC: the user picks a new weakness from 3 random ones, for this turn and the next, and
+## is immune to Arcane damage until its next turn.
 extends AbilityScript
 
 

@@ -1,6 +1,6 @@
 ## Call of the Void — vérnal · Arcane · a lot · big (15) · [change weakness, damage]
-## MÉCANIQUE : tous les rivaux SANS faiblesse subissent des dégâts ;
-## la faiblesse du user et de ses alliés devient Arcane.
+## MECHANIC: every rival WITHOUT a weakness takes damage; the user's and its allies' weakness
+## becomes Arcane.
 extends AbilityScript
 
 

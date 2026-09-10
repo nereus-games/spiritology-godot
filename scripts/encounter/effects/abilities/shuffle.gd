@@ -1,6 +1,6 @@
 ## Shuffle — sadakbia · Fluid · medium · [change next TO, recover ETH]
-## MÉCANIQUE : l'ordre du tour est mélangé ; les individus de faiblesse Chaleur font le
-## plein d'ETH. (Échange d'ETH selon les positions : TODO.)
+## MECHANIC: the turn order is shuffled; individuals whose weakness is Heat refill their ETH.
+## Trading ETH according to the positions is a TODO.
 extends AbilityScript
 
 
@@ -9,4 +9,4 @@ func execute(ctx: EncounterContext) -> void:
 	for f in ctx.all_fighters:
 		if not f.is_dissolved() and ctx.weakness_of(f) == GameEnums.Energy.HEAT:
 			ctx.recover_eth(f, f.max_eth)
-	# TODO : chaque ETH devient celui de l'individu précédemment à cette position.
+	# TODO: each individual's ETH should become that of whoever held its new position before.

@@ -1,6 +1,6 @@
 ## Appeal to Popularity — granop · Toxic · a lot · normal (10) · [damage]
-## MÉCANIQUE : requiert ≥2 individus partageant la même faiblesse ; un rival subit
-## les dégâts autant de fois que le plus grand groupe de même faiblesse.
+## MECHANIC: requires at least 2 individuals sharing a weakness; one rival takes the damage as
+## many times as the largest same-weakness group is big.
 extends AbilityScript
 
 

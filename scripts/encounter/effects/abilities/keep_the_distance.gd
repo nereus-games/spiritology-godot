@@ -1,7 +1,7 @@
 ## Keep the Distance — fonéchal · Crystal · normal · [change next TO, limit actions]
-## MÉCANIQUE : le user choisit sa position et celle de la cible au prochain tour (l'un
-## premier, l'autre dernier). Politique auto : user premier, cible dernière ; la cible ne
-## peut utiliser que Méditer au prochain tour.
+## MECHANIC: the user picks its own and the target's position next turn, one first and the other
+## last. The automatic policy is user first, target last; the target can only use Meditate next
+## turn.
 extends AbilityScript
 
 

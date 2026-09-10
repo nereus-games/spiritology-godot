@@ -1,6 +1,6 @@
 ## Spirit Searching — sopiark · usage unique · [limit actions]
-## MÉCANIQUE : le rival ciblé ne peut utiliser que Parler, Examiner et Méditer jusqu'à la
-## fin de la rencontre (parmi ses actions par ailleurs disponibles).
+## MECHANIC: the targeted rival can only use Talk, Examine and Meditate for the rest of the
+## encounter — among the actions otherwise available to it.
 extends AbilityScript
 
 

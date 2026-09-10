@@ -1,9 +1,9 @@
 ## Business Card — hibulus · Variable · usage unique · [force Talk, recover DEN]
-## MÉCANIQUE : au tour suivant, les rivaux de même origine que le user Parlent plus souvent
-## avec lui (TODO) ; le user gagne X DEN chaque fois qu'un rival lui Parle (déclencheur TODO).
+## MECHANIC: next turn, rivals sharing the user's origin Talk to it more often (TODO); the user
+## gains X DEN each time a rival Talks to it (trigger TODO).
 extends AbilityScript
 
 
 func execute(ctx: EncounterContext) -> void:
 	ctx.recover_den(ctx.user, ctx.dmg(&"small"))
-	# TODO : bonus de dialogue (même origine) + gain de DEN quand un rival Parle au user.
+	# TODO: a talk bonus for same-origin rivals, plus DEN gained when a rival Talks to the user.

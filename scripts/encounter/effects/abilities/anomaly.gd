@@ -1,5 +1,5 @@
 ## Anomaly — kalilk · small (7) · [damage, limit actions]
-## MÉCANIQUE : petits dégâts à un rival ; le user perd une de ses actions au tour suivant.
+## MECHANIC: small damage to one rival; the user loses one of its actions next turn.
 extends AbilityScript
 
 

@@ -1,6 +1,6 @@
 ## Hardening — firulis · Crystal · normal · [damage reduction/immunity]
-## MÉCANIQUE : une cible de l'équipe devient immunisée aux dégâts Cristal et voit tous ses
-## dégâts réduits de moitié jusqu'à son prochain tour. (Malus d'info via Talk : TODO.)
+## MECHANIC: a target on the team becomes immune to Crystal damage and has all damage it takes
+## halved until its next turn. The info penalty on Talk is a TODO.
 extends AbilityScript
 
 

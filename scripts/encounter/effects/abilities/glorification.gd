@@ -1,7 +1,7 @@
 ## Glorification — malcouli · [change weakness, recover ETH]
-## MÉCANIQUE : le user adopte la faiblesse de la cible (approx. des 3) et gagne de l'ETH :
-## peu si coéquipier, plus si rival de même origine, encore plus si rival d'origine différente.
-## (Perte de cet ETH si la cible le blesse ensuite : TODO.)
+## MECHANIC: the user takes on the target's weakness (approximated across the 3) and gains ETH:
+## a little from a teammate, more from a rival of the same origin, more still from a rival of a
+## different one. Losing that ETH if the target then hurts it is a TODO.
 extends AbilityScript
 
 

@@ -1,6 +1,6 @@
 ## Hyping Up — ravbak · Arcane · medium · mini (5) · [damage, force Talk]
-## MÉCANIQUE : chaque rival subit des dégâts ; ensuite, 50 % de chances que TOUT LE MONDE
-## subisse des dégâts ; aux tours suivants, les rivaux initient Talk plus souvent (TODO).
+## MECHANIC: every rival takes damage; then a 50% chance that EVERYONE takes damage; on later
+## turns the rivals start Talk more often (TODO).
 extends AbilityScript
 
 

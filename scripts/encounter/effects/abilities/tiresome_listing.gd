@@ -1,7 +1,7 @@
 ## Tiresome Listing — érzélak · Toxic · normal · small (7) · [damage]
-## MÉCANIQUE : la cible subit des dégâts pour chaque tranche de capacités enregistrées dans
-## l'encyclopédie ; le user a 1/3 de chances d'en subir la moitié. (Nombre de capacités
-## connues : approximé par le nombre d'espèces complétées.)
+## MECHANIC: the target takes damage once per band of abilities recorded in the encyclopaedia;
+## the user has a 1-in-3 chance of taking half of it. How many abilities are known is
+## approximated by the number of completed species.
 extends AbilityScript
 
 

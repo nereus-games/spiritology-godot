@@ -1,7 +1,7 @@
 ## Self-Denial — yilir · Variable · [ETH loss, change weakness]
-## MÉCANIQUE : le rival ciblé perd un peu d'ETH chaque tour (TODO : récurrence) ; ses trois
-## faiblesses deviennent l'énergie de cette capacité jusqu'à la fin de la rencontre ; il peut
-## annuler ces effets en Méditant.
+## MECHANIC: the targeted rival loses a little ETH every turn (the recurrence is a TODO); all
+## three of its weaknesses become this ability's energy for the rest of the encounter; and it can
+## clear both effects by Meditating.
 extends AbilityScript
 
 

@@ -1,6 +1,6 @@
 ## Giving the Floor — korig · Fluid · usage unique · [force Talk, limit actions]
-## MÉCANIQUE : jusqu'au prochain tour du user, chacun ne peut utiliser que des capacités
-## Fluides ; la prochaine action du rival ciblé est Parler.
+## MECHANIC: until the user's next turn, everyone can only use Fluid abilities; the targeted
+## rival's next action is Talk.
 extends AbilityScript
 
 

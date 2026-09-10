@@ -1,7 +1,6 @@
 ## Dodge Blur — podargolo · Toxic · medium · mini/small · [damage, damage reduction]
-## MÉCANIQUE : le user subit de petits dégâts ; tout rival utilisant Talk avant la fin du
-## tour subit des dégâts (TODO) ; tous les autres dégâts infligés avant la fin du tour sont
-## réduits de moitié.
+## MECHANIC: the user takes small damage; any rival that uses Talk before the end of the turn
+## takes damage (TODO); all other damage dealt before the end of the turn is halved.
 extends AbilityScript
 
 

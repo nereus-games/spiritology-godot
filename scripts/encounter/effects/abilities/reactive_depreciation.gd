@@ -1,8 +1,8 @@
 ## Reactive Depreciation — fonéchal · normal · [ETH loss, limit actions]
-## MÉCANIQUE : (requiert qu'un tour soit passé et que le user ait déjà agi) le dernier rival
-## ayant utilisé une action/énergie différente de celle du user perd X ETH ; s'il n'a alors
-## plus d'ETH, il perd une action au tour suivant. (Sélection historique : approximée à un
-## rival au hasard.)
+## MECHANIC: requires a turn to have passed and the user to have already acted. The last rival
+## that used an action or energy different from the user's loses X ETH, and if it is then out of
+## ETH it loses an action next turn. Picking that rival from history is approximated by a random
+## one.
 extends AbilityScript
 
 

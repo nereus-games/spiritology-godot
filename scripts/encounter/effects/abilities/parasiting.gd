@@ -1,6 +1,6 @@
 ## Parasiting — kurkab · Toxic · a lot · mini (5) · [damage, limit actions]
-## MÉCANIQUE : le rival ciblé subit des dégâts et n'a plus accès qu'à 1/4 de ses capacités
-## jusqu'à la fin de la rencontre (arrondi sup., tirées au hasard, non cumulatif).
+## MECHANIC: the targeted rival takes damage and is left with only a quarter of its abilities
+## for the rest of the encounter — rounded up, drawn at random, and not cumulative.
 extends AbilityScript
 
 

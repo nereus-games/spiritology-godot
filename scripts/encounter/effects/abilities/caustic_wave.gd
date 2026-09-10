@@ -1,6 +1,6 @@
 ## Caustic Wave — spodra · Toxic · mini · mini (5) · [change weakness, damage]
-## MÉCANIQUE : tous les rivaux subissent des dégâts ; chaque rival touché a X %
-## de chances de voir sa faiblesse devenir Toxique.
+## MECHANIC: every rival takes damage; each one hit has an X% chance of its weakness turning
+## Toxic.
 extends AbilityScript
 
 const WEAKNESS_CHANCE := 0.5  ## X % (à équilibrer)

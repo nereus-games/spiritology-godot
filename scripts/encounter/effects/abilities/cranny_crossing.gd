@@ -1,7 +1,7 @@
 # @unimplemented
-## Cranny Crossing — Exploration · origine — · — · coût — · dégâts — · usage unique
+## Cranny Crossing — Exploration · from — · — · cost — · damage — · usage unique
 ##
-## MÉCANIQUE (Notion) :
+## MECHANIC (from the design doc):
 ##   📖
 ##   In-game description:Pass through a wall.
 ##   Allows players to go through a cracked wall once and appear on the other side of that
@@ -15,7 +15,6 @@ extends AbilityScript
 
 
 func execute(ctx: EncounterContext) -> void:
-	# TODO: implémenter la mécanique ci-dessus, puis retirer le « @unimplemented »
-	# en tête. En attendant, les effets génériques dérivés des tags s'appliquent —
-	# c'est un échafaudage, pas la mécanique réelle.
+	# TODO: implement the mechanic above, then drop the leading "@unimplemented". Until then the
+	# generic effects derived from the tags apply — that is scaffolding, not the real mechanic.
 	super.execute(ctx)

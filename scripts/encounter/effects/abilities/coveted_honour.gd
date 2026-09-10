@@ -1,6 +1,6 @@
 ## Coveted Honour — fopin · Arcane · mini (5) · [damage, recover DEN]
-## MÉCANIQUE : le dernier (dans l'ordre du tour) parmi le user et ses alliés gagne X DEN ;
-## un rival au hasard subit des dégâts.
+## MECHANIC: whichever of the user and its allies is last in the turn order gains X DEN; a random
+## rival takes damage.
 extends AbilityScript
 
 

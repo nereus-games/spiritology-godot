@@ -1,6 +1,6 @@
 ## Dark Gambit — yadol · Toxic · [change weakness, limit actions]
-## MÉCANIQUE : deux cibles échangent leur faiblesse actuelle ; un coéquipier au hasard ne
-## peut utiliser qu'Examiner ou des capacités Toxiques ce tour (= Dark Caroussel).
+## MECHANIC: two targets swap their current weakness; a random teammate can only use Examine or
+## Toxic abilities this turn (the mirror of Dark Caroussel).
 extends AbilityScript
 
 

@@ -1,6 +1,6 @@
 ## Overthrow — sopiark · Heat · a lot · small (7) · [damage, limit actions, recover DEN]
-## MÉCANIQUE : le rival ciblé subit des dégâts ; s'il est dévitalisé, le user gagne X DEN ;
-## la cible perd une action au tour suivant.
+## MECHANIC: the targeted rival takes damage; if it is devitalised, the user gains X DEN; the
+## target loses an action next turn.
 extends AbilityScript
 
 

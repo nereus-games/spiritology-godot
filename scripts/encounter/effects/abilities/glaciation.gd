@@ -1,6 +1,6 @@
 ## Glaciation — yilir · Crystal · small (7) · [damage, damage reduction/immunity]
-## MÉCANIQUE : un rival subit des dégâts. Si la cible est dans l'équipe, elle annule tous
-## les dégâts (et effets toxiques) du tour courant.
+## MECHANIC: one rival takes damage. If the target is on the team, it cancels all damage — and
+## toxic effects — for the current turn.
 extends AbilityScript
 
 

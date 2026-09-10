@@ -1,7 +1,6 @@
 ## Denial-Driven Fantasy — yilir · Arcane · mini · [recover ETH]
-## MÉCANIQUE : requiert que le user ait une faiblesse. Il récupère X ETH par individu ayant
-## une faiblesse différente, sans faiblesse, ou à faiblesse cachée ; l'indicateur d'ordre du
-## tour est masqué (UI).
+## MECHANIC: requires the user to have a weakness. It recovers X ETH per individual whose
+## weakness differs, is absent, or is hidden; the turn order readout is hidden (a UI effect).
 extends AbilityScript
 
 
@@ -9,9 +8,9 @@ func execute(ctx: EncounterContext) -> void:
 	var uw := ctx.weakness_of(ctx.user)
 	if uw == GameEnums.Energy.NONE:
 		return
-	# Boucle explicite plutôt qu'un filter() à lambda multi-lignes : gdformat casse ce
-	# dernier quand il est enchaîné (.others().filter(...).size()), et le résultat ne
-	# compile plus. Même sémantique, et plus lisible.
+	# An explicit loop rather than a filter() with a multi-line lambda: gdformat breaks the latter
+	# when it is chained (.others().filter(...).size()), and the result no longer compiles. Same
+	# meaning, and easier to read.
 	var count := 0
 	for f in ctx.others():
 		var w := ctx.weakness_of(f)

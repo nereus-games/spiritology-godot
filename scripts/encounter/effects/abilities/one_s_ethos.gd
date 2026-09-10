@@ -1,6 +1,6 @@
 ## One's Ethos — akturlin · Crystal · mini · small (7) · [damage]
-## MÉCANIQUE : le premier rival dans l'ordre du tour subit des dégâts ; les rivaux de même
-## origine que le user dialoguent +5 % plus souvent jusqu'à la fin (TODO).
+## MECHANIC: the first rival in the turn order takes damage; rivals sharing the user's origin
+## talk 5% more often for the rest of the encounter (TODO).
 extends AbilityScript
 
 

@@ -1,7 +1,7 @@
 ## Anodyne Excess — vérnal · Variable · usage unique · [change weakness]
-## MÉCANIQUE : chaque tour, les autres individus ont une forte chance d'adopter l'énergie de
-## cette capacité comme faiblesse ; les indicateurs ETH/DEN des rivaux deviennent invisibles
-## (UI). Effets jusqu'à la fin de la rencontre ou jusqu'à ce que le user Médite.
+## MECHANIC: every turn, the other individuals have a high chance of taking this ability's
+## energy as their weakness, and the rivals' ETH/DEN readouts go invisible (a UI effect). Both
+## last until the end of the encounter, or until the user Meditates.
 extends AbilityScript
 
 const WEAKNESS_CHANCE := 0.7

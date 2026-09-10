@@ -1,6 +1,6 @@
 ## Broad Assault — basipik · Variable · medium · small (7) · [damage]
-## MÉCANIQUE : l'énergie de la capacité = faiblesse actuelle du user ;
-## deux rivaux au hasard subissent des dégâts.
+## MECHANIC: the ability's energy is the user's current weakness; two random rivals take
+## damage.
 extends AbilityScript
 
 

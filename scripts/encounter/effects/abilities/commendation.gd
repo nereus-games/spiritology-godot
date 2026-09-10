@@ -1,7 +1,7 @@
 ## Commendation — lulupéa · [damage reduction/increase, recover ETH]
-## MÉCANIQUE : une cible (différente du user) gagne beaucoup d'ETH, mais chaque dégât Arcane
-## ou Cristal qu'elle reçoit jusqu'à son prochain tour a 50 % de chances d'être doublé.
-## (Approximé par un facteur moyen ×1.25.)
+## MECHANIC: a target other than the user gains a lot of ETH, but every Arcane or Crystal hit it
+## takes until its next turn has a 50% chance of being doubled. Approximated by an average factor
+## of x1.25.
 extends AbilityScript
 
 

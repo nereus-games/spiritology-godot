@@ -1,6 +1,6 @@
 ## Gray-Gray — basipik · Arcane · usage unique · [damage reduction/immunity]
-## MÉCANIQUE : les rivaux ne voient plus la DEN ni la faiblesse du user (UI) jusqu'à la
-## fin de la rencontre ; le user est immunisé aux dégâts Arcane jusqu'à son prochain tour.
+## MECHANIC: the rivals can no longer see the user's DEN or weakness (a UI effect) for the rest
+## of the encounter; the user is immune to Arcane damage until its next turn.
 extends AbilityScript
 
 

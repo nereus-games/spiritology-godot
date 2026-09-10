@@ -1,5 +1,5 @@
 ## Oily Residue — sadakbia · Fluid · [damage]
-## MÉCANIQUE : un rival subit des dégâts pour chaque natif de Merveilleux (Wonderful).
+## MECHANIC: one rival takes damage once per Wonderful native.
 extends AbilityScript
 
 

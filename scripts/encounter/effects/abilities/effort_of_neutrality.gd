@@ -1,7 +1,7 @@
 ## Effort of Neutrality — forlorn érzélak · Fluid · normal · usage unique · [change weakness]
-## MÉCANIQUE : le user n'a plus de faiblesse jusqu'à son prochain tour ; si l'action du
-## coéquipier n'inflige pas de dégâts, il perd aussi sa faiblesse (condition d'action future
-## approximée : appliquée aux alliés).
+## MECHANIC: the user has no weakness until its next turn; if the teammate's action deals no
+## damage, it loses its weakness too. The condition on a future action is approximated by
+## applying it to the allies.
 extends AbilityScript
 
 

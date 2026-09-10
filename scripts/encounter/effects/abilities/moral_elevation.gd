@@ -1,7 +1,7 @@
 ## Moral Elevation — sopiark · normal (10) · usage unique · [change weakness, immunity, recover ETH]
-## MÉCANIQUE : (utilisable seulement si un individu a aidé un rival à récupérer ETH/DEN ou lui
-## a donné un objet récemment) le user refait le plein d'ETH, perd sa faiblesse, et personne
-## ne peut changer sa faiblesse jusqu'à son prochain tour. (Condition d'entraide : TODO.)
+## MECHANIC: usable only if someone recently helped a rival recover ETH or DEN, or gave it an
+## object. The user refills its ETH, loses its weakness, and nobody can change that weakness
+## until its next turn. The mutual-aid condition is a TODO.
 extends AbilityScript
 
 

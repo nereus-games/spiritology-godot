@@ -1,5 +1,5 @@
 ## Squall — podargolo · Heat · small (7) · [change weakness, damage]
-## MÉCANIQUE : la cible subit des dégâts, puis sa faiblesse devient Cristal.
+## MECHANIC: the target takes damage, then its weakness becomes Crystal.
 extends AbilityScript
 
 

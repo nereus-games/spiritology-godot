@@ -1,6 +1,6 @@
 ## Isotropy — firulis · [damage reduction/immunity]
-## MÉCANIQUE : jusqu'à son prochain tour, le user ne peut perdre/gagner de DEN, sa
-## faiblesse ne peut être changée et reste sa faiblesse actuelle (quelle que soit la position).
+## MECHANIC: until its next turn the user can neither lose nor gain DEN, and its weakness cannot
+## be changed: it stays the current one whatever position it holds.
 extends AbilityScript
 
 

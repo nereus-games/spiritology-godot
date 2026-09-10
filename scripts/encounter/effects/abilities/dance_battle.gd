@@ -1,5 +1,5 @@
 ## Dance Battle — jézal · Heat · medium · normal (10) · [damage]
-## MÉCANIQUE : le premier rival dans l'ordre du tour subit des dégâts.
+## MECHANIC: the first rival in the turn order takes damage.
 extends AbilityScript
 
 

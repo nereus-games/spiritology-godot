@@ -1,6 +1,6 @@
 ## Placebo Sprinkle — matzal · Fluid · mini · mini (5) · [change weakness, damage, recover actions]
-## MÉCANIQUE : tout le monde subit des dégâts ; au tour suivant, des individus au hasard
-## perdent leur faiblesse et retrouvent toutes leurs actions/capacités disponibles.
+## MECHANIC: everyone takes damage; next turn, random individuals lose their weakness and get
+## all their actions and abilities back.
 extends AbilityScript
 
 

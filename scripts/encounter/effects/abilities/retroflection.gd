@@ -1,6 +1,6 @@
 ## Retroflection — forlorn akturlin · Arcane · mini/normal · [change weakness, damage, recover ETH]
-## MÉCANIQUE : inflige des dégâts au user (mini à la 1re utilisation, normal ensuite),
-## lui refait le plein d'ETH et lui fait choisir une faiblesse parmi 3 au hasard.
+## MECHANIC: damages the user — mini on the first use, normal afterwards — refills its ETH, and
+## has it pick a weakness out of 3 random ones.
 extends AbilityScript
 
 

@@ -1,6 +1,6 @@
 ## Dark Caroussel — yadol · Arcane · [change weakness, limit actions]
-## MÉCANIQUE : deux cibles échangent leur faiblesse actuelle ; un coéquipier au hasard ne
-## peut utiliser qu'Examiner ou des capacités Arcane ce tour (= Dark Gambit).
+## MECHANIC: two targets swap their current weakness; a random teammate can only use Examine or
+## Arcane abilities this turn (the mirror of Dark Gambit).
 extends AbilityScript
 
 

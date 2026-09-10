@@ -1,6 +1,6 @@
 ## Brooding Fire — fliritus · Heat · normal · [change weakness, recover DEN, recover ETH]
-## MÉCANIQUE : le coéquipier perd sa faiblesse ; si la faiblesse du user est Chaleur,
-## le coéquipier gagne X DEN et X ETH.
+## MECHANIC: the teammate loses its weakness; if the user's weakness is Heat, the teammate also
+## gains X DEN and X ETH.
 extends AbilityScript
 
 

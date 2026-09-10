@@ -1,7 +1,6 @@
 ## Saving Face — sénskor · Variable · medium · normal (10) · [damage, recover DEN]
-## MÉCANIQUE : une cible de l'équipe récupère X DEN, plus Y DEN par coéquipier de même
-## faiblesse ; le user a 1/3 de chances de subir des dégâts Toxiques (1/2 si sa faiblesse
-## est Toxique).
+## MECHANIC: a target on the team recovers X DEN, plus Y DEN per teammate sharing its weakness;
+## the user has a 1-in-3 chance of taking Toxic damage, or 1-in-2 if its own weakness is Toxic.
 extends AbilityScript
 
 

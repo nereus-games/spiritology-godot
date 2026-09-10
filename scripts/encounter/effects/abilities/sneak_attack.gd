@@ -1,5 +1,5 @@
 ## Sneak Attack — zuk · Heat · medium · normal (10) · [damage]
-## MÉCANIQUE : le dernier rival dans l'ordre du tour subit des dégâts.
+## MECHANIC: the last rival in the turn order takes damage.
 extends AbilityScript
 
 

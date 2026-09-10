@@ -1,6 +1,6 @@
 ## Shadow Work — spodra · Arcane · a lot · usage unique · [examine bonus, recover ETH]
-## MÉCANIQUE : (pas au 1er tour) le user obtient de l'info sur toutes les espèces de la
-## rencontre ; il gagne X ETH si sa faiblesse est Arcane ou cachée aux rivaux.
+## MECHANIC: not on turn 1. The user gets info on every species in the encounter, and gains X ETH
+## if its weakness is Arcane or hidden from the rivals.
 extends AbilityScript
 
 

@@ -1,8 +1,8 @@
 ## Priming — fopin · Variable · medium · [change next TO, change weakness, immunity]
-## MÉCANIQUE : un coéquipier ciblé passe premier au prochain tour et adopte l'énergie de
-## cette capacité comme faiblesse ; jusqu'au prochain tour du user, les dégâts des coéquipiers
-## montent d'un cran (mini→small→normal→big) et ils obtiennent plus d'info. (Boost de dégâts
-## sortants et info : TODO.)
+## MECHANIC: a targeted teammate moves first next turn and takes this ability's energy as its
+## weakness; until the user's next turn, the teammates' damage steps up one tier
+## (mini to small to normal to big) and they get more info. The outgoing-damage and info boosts
+## are TODOs.
 extends AbilityScript
 
 

@@ -1,5 +1,5 @@
 ## Perpetual Motion — forlorn matzal · [ETH loss → en fait recover ETH]
-## MÉCANIQUE : la cible récupère X ETH (davantage si elle n'a pas de faiblesse).
+## MECHANIC: the target recovers X ETH, more if it has no weakness.
 extends AbilityScript
 
 

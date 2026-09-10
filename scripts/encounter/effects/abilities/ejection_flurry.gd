@@ -1,6 +1,6 @@
 ## Ejection Flurry — forlorn razél · Arcane · a lot · big (15) · [change next TO, damage]
-## MÉCANIQUE : le premier rival de l'ordre subit des dégâts et passe dernier au tour
-## suivant. Si sa faiblesse est Fluide, les dégâts sont de l'énergie Fluide.
+## MECHANIC: the first rival in the order takes damage and moves last next turn. If its weakness
+## is Fluid, the damage is Fluid energy.
 extends AbilityScript
 
 

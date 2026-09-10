@@ -1,5 +1,5 @@
 ## Hypnotize — jézal · Fluid · [ETH loss, limit actions]
-## MÉCANIQUE : le rival ciblé perd une action au hasard à son prochain tour et perd X ETH.
+## MECHANIC: the targeted rival loses a random action on its next turn, and loses X ETH.
 extends AbilityScript
 
 

@@ -1,6 +1,6 @@
 ## Prohibition — gaiaz · Crystal · normal · normal (10) · [damage, limit actions]
-## MÉCANIQUE : le rival ciblé a 50 % de chances de subir des dégâts ; il ne peut utiliser
-## que Méditer au prochain tour.
+## MECHANIC: the targeted rival has a 50% chance of taking damage, and can only use Meditate next
+## turn.
 extends AbilityScript
 
 

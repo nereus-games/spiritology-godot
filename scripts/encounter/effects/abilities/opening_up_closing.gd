@@ -1,5 +1,5 @@
 ## Opening up Closing — ravbak · Crystal · small (7) · [damage]
-## MÉCANIQUE : inflige des dégâts au user ET au rival ciblé ; le user fuit en fin de tour.
+## MECHANIC: damages the user AND the targeted rival; the user flees at the end of the turn.
 extends AbilityScript
 
 

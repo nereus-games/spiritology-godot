@@ -1,5 +1,5 @@
 ## Strict Audit — fonéchal · Arcane · [damage]
-## MÉCANIQUE : un rival subit des dégâts pour chaque natif de Terne (Gloom).
+## MECHANIC: one rival takes damage once per Gloom native.
 extends AbilityScript
 
 

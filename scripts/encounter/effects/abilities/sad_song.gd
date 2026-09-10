@@ -1,5 +1,6 @@
 ## Sad Song — korig · Arcane · small (7) · [change weakness, damage]
-## MÉCANIQUE : la cible subit des dégâts, puis sa faiblesse devient Chaleur (= Worrisome Song).
+## MECHANIC: the target takes damage, then its weakness becomes Heat (the mirror of Worrisome
+## Song).
 extends AbilityScript
 
 

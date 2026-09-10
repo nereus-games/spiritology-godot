@@ -1,6 +1,6 @@
 ## Fake News — matzal · Toxic · a lot · [damage reduction/immunity]
-## MÉCANIQUE : le user est immunisé aux dégâts Fluide jusqu'au prochain tour ; les dégâts
-## Toxiques infligés aux autres individus sont amplifiés (normal/big).
+## MECHANIC: the user is immune to Fluid damage until the next turn; Toxic damage dealt to the
+## other individuals is amplified, from normal to big.
 extends AbilityScript
 
 

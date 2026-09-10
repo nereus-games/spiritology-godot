@@ -1,10 +1,10 @@
 ## Catatonia — niyat · Crystal · [examine bonus]
-## MÉCANIQUE : améliore l'Examiner et le Méditer du user au tour suivant (plus d'info, plus
-## d'ETH et de dégâts) ; bonus accrus s'il a subi des dégâts ce tour ou le précédent (encore
-## plus si infligés par son coéquipier). (Modulation par historique de dégâts : TODO.)
+## MECHANIC: improves the user's Examine and Meditate next turn — more info, more ETH, more
+## damage — with larger bonuses if it took damage this turn or the previous one, larger still if
+## its own teammate dealt it. Scaling from the damage history is a TODO.
 extends AbilityScript
 
 
 func execute(ctx: EncounterContext) -> void:
 	ctx.grant_examine_bonus(ctx.user, 2)
-	# TODO : amplifier Examine/Meditate au prochain tour, modulé par les dégâts récents.
+	# TODO: boost Examine and Meditate next turn, scaled by the recent damage.

@@ -1,7 +1,7 @@
 ## Gaslighting — zuk · Toxic · normal (10) · [change weakness, damage]
-## MÉCANIQUE : le user choisit un coéquipier et un rival : leur faiblesse est cachée aux
-## rivaux et changée au hasard. Puis un rival ciblé subit des dégâts pour chaque individu
-## dont la faiblesse est cachée (ou absente de l'encyclopédie).
+## MECHANIC: the user picks one teammate and one rival, whose weakness is hidden from the rivals
+## and changed at random. Then a targeted rival takes damage once per individual whose weakness
+## is hidden, or missing from the encyclopaedia.
 extends AbilityScript
 
 

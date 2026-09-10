@@ -1,7 +1,7 @@
 ## Liminal Ritual — lulupéa · Variable · usage unique · [change weakness, recover DEN]
-## MÉCANIQUE : utilisable seulement s'il existe un individu sans faiblesse. Tous les
-## individus sans faiblesse regagnent X DEN et reçoivent la faiblesse de l'énergie de cette
-## capacité (jusqu'à la fin de la rencontre, sauf changement par une autre capacité).
+## MECHANIC: usable only while some individual has no weakness. Every individual without one
+## regains X DEN and takes this ability's energy as its weakness, until the end of the encounter
+## unless another ability changes it.
 extends AbilityScript
 
 

@@ -1,7 +1,8 @@
 ## Absorption Guard — gélmi · Variable · small (7) · [damage, examine bonus, recover DEN]
-## MÉCANIQUE : l'énergie = faiblesse actuelle du user. Un rival au hasard subit des dégâts ;
-## si ce rival agit sur le user ce tour, le user l'Examine sans représailles et gagne X DEN
-## (moitié du % d'info connu sur son espèce). (Condition « agit sur le user » : approximée.)
+## MECHANIC: the energy is the user's current weakness. A random rival takes damage; if that
+## rival acts on the user this turn, the user Examines it without reprisal and gains X DEN (half
+## the percentage of info known about its species). The "acts on the user" condition is
+## approximated.
 extends AbilityScript
 
 

@@ -1,7 +1,6 @@
 ## Growth Mindset — kurkab · Random · usage unique · [immunity, recover DEN, recover ETH]
-## MÉCANIQUE : requiert que le user ait perdu DEN/ETH récemment. Il regagne X DEN par
-## autre individu ; s'il n'a plus d'ETH, il fait le plein ; il ne peut plus perdre de DEN
-## jusqu'à son prochain tour.
+## MECHANIC: requires the user to have lost DEN or ETH recently. It regains X DEN per other
+## individual; if it is out of ETH, it refills; and it cannot lose DEN until its next turn.
 extends AbilityScript
 
 

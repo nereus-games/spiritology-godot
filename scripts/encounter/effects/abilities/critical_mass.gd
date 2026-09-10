@@ -1,6 +1,6 @@
 ## Critical Mass — gélmi · a lot · [damage, recover DEN]
-## MÉCANIQUE : chaque membre de l'équipe gagne X DEN, puis si tout le DEN de l'équipe est au
-## maximum, inflige des dégâts à chaque rival.
+## MECHANIC: every team member gains X DEN, and then, if the whole team is at full DEN, every
+## rival takes damage.
 extends AbilityScript
 
 

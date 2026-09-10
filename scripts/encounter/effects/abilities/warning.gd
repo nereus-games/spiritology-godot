@@ -1,6 +1,6 @@
 ## Warning — oléni · Variable · [ETH loss, damage reduction/increase or immunity]
-## MÉCANIQUE : cible un autre individu, qui perd X ETH ; les dégâts de l'énergie de cette
-## capacité qui lui sont infligés sont réduits de moitié jusqu'à son prochain tour.
+## MECHANIC: targets another individual, which loses X ETH; damage of this ability's energy dealt
+## to it is halved until its next turn.
 extends AbilityScript
 
 

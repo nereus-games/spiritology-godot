@@ -1,6 +1,6 @@
 ## Libation — mastél · Fluid · mini · [change weakness, recover DEN]
-## MÉCANIQUE : le user et un rival ciblé gagnent X DEN ; leur faiblesse devient Fluide
-## (pour ce tour et le suivant — persistance approximée à la ronde).
+## MECHANIC: the user and a targeted rival both gain X DEN, and their weakness becomes Fluid for
+## this turn and the next — the persistence is approximated to the round.
 extends AbilityScript
 
 

@@ -1,6 +1,6 @@
 ## Steep in — vérnal · Variable · mini · [change weakness, examine bonus]
-## MÉCANIQUE : l'énergie de la capacité = faiblesse actuelle du user. Le user Examine la
-## cible, puis sa propre faiblesse devient celle de la cible.
+## MECHANIC: the ability's energy is the user's current weakness. The user Examines the target,
+## then its own weakness becomes the target's.
 extends AbilityScript
 
 

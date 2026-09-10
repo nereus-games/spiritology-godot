@@ -1,6 +1,6 @@
 ## Thermal Beam — razél · Heat · normal · normal (10) · [damage]
-## MÉCANIQUE : 3 cibles rivales (répétitions possibles) subissent des dégâts ;
-## réduits si le user est bas en vie : small entre 50–75 % DEN, mini sous 50 %.
+## MECHANIC: 3 rival targets take damage, repeats allowed, reduced when the user is low: small
+## between 50 and 75% DEN, mini below 50%.
 extends AbilityScript
 
 

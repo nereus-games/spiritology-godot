@@ -1,7 +1,7 @@
 ## Docking — draka · Fluid · medium · normal/small · [change weakness, damage]
-## MÉCANIQUE : cible un rival juste avant ou juste après le user dans l'ordre du tour
-## (sinon rien). Dégâts normaux s'ils partagent la faiblesse, petits sinon ; la faiblesse
-## de la cible devient celle du user ; puis petits dégâts à nouveau (deux fois).
+## MECHANIC: targets a rival immediately before or after the user in the turn order, and does
+## nothing otherwise. Normal damage if they share a weakness, small otherwise; the target's
+## weakness becomes the user's; then small damage again, so twice in all.
 extends AbilityScript
 
 

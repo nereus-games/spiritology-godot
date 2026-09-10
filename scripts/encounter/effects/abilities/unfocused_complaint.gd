@@ -1,7 +1,7 @@
 ## Unfocused Complaint — niyat · Toxic · a lot · small (7) · [ETH loss, damage, limit actions]
-## MÉCANIQUE : tout autre individu utilisant Méditer ce tour subit des dégâts, perd X ETH et
-## ne peut pas Méditer au tour suivant. (Déclencheur « utilise Méditer » : approximé à tous
-## les autres pour l'instant — à restreindre quand le système d'actions existera.)
+## MECHANIC: any other individual that uses Meditate this turn takes damage, loses X ETH, and
+## cannot Meditate next turn. The "uses Meditate" trigger is approximated to everyone else for
+## now, and should be narrowed once the action system exists.
 extends AbilityScript
 
 

@@ -1,7 +1,8 @@
 ## Emotional Blackmail — draka · Toxic · small (7) · [change weakness, damage, limit actions]
-## MÉCANIQUE : le user impose au rival ciblé une action (Parler ou Donner un objet) ; s'il
-## refuse, il subit des dégâts et tous les rivaux ne voient plus la faiblesse du user et de
-## ses coéquipiers, laquelle est changée au hasard. (Choix/refus : cas du refus appliqué.)
+## MECHANIC: the user forces an action on the targeted rival, Talk or Give an object; if it
+## refuses, it takes damage and no rival can see the user's or its teammates' weakness any more,
+## which is also changed at random. Of the accept/refuse branch, only the refusal is
+## implemented.
 extends AbilityScript
 
 

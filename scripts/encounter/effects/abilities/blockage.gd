@@ -1,6 +1,6 @@
 ## Blockage — spodra · Fluid · mini · usage unique · [ETH loss, change weakness]
-## MÉCANIQUE : la cible n'a plus de faiblesse jusqu'à son prochain tour ;
-## si c'est un coéquipier ou un rival, elle perd X ETH.
+## MECHANIC: the target has no weakness until its next turn; if it is a teammate or a rival, it
+## also loses X ETH.
 extends AbilityScript
 
 

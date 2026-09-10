@@ -1,6 +1,6 @@
 ## Misty Secret — vilgane · Fluid · normal · [change weakness, limit actions]
-## MÉCANIQUE : la faiblesse de tout le monde devient Fluide jusqu'à leur prochain tour ;
-## aux tours suivants, les rivaux Méditent / utilisent des objets plus souvent (TODO).
+## MECHANIC: everyone's weakness becomes Fluid until their next turn; on later turns the rivals
+## Meditate and use objects more often (TODO).
 extends AbilityScript
 
 

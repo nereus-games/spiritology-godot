@@ -1,6 +1,6 @@
 ## Social Capital — oléni · normal · [change weakness, recover ETH]
-## MÉCANIQUE : un coéquipier ciblé gagne X ETH par individu de la rencontre (hors lui et le
-## user) ; le user peut (ou non) lui choisir une nouvelle faiblesse parmi 2.
+## MECHANIC: a targeted teammate gains X ETH per individual in the encounter, not counting itself
+## or the user; the user may, or may not, pick it a new weakness out of 2.
 extends AbilityScript
 
 

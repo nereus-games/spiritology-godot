@@ -1,6 +1,6 @@
 ## Insatiability — kalilk · Fluid · [damage, recover DEN]
-## MÉCANIQUE : le user prélève X DEN à tous les autres individus (dégâts + soin de soi),
-## puis perd tout son ETH.
+## MECHANIC: the user drains X DEN from every other individual — damage to them, healing for
+## itself — then loses all its ETH.
 extends AbilityScript
 
 

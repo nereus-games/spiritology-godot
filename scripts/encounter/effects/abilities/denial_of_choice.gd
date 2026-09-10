@@ -1,5 +1,5 @@
 ## Denial of Choice — kurkab · Toxic · a lot · [change weakness, recover DEN]
-## MÉCANIQUE : le user gagne X DEN et perd sa faiblesse ; un rival au hasard ayant une
+## MECHANIC: le user gagne X DEN et perd sa faiblesse ; un rival au hasard ayant une
 ## faiblesse la perd aussi.
 extends AbilityScript
 

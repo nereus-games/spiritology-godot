@@ -1,5 +1,5 @@
 ## Strong Gust — forlorn podargolo · Heat · normal (10) · [change next TO, damage]
-## MÉCANIQUE : la cible subit des dégâts (si rival) et passe dernière au tour suivant.
+## MECHANIC: the target takes damage, if it is a rival, and moves last next turn.
 extends AbilityScript
 
 

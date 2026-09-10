@@ -1,12 +1,11 @@
 # @unimplemented
-## Avoidant Gaze — Encounter · origine niyat · Variable · coût — · dégâts —
+## Avoidant Gaze — Encounter · from niyat · Variable · cost — · damage —
 ##
-## MÉCANIQUE : non documentée dans Notion (à définir).
+## MECHANIC: undocumented in the design doc, still to be defined.
 extends AbilityScript
 
 
 func execute(ctx: EncounterContext) -> void:
-	# TODO: implémenter la mécanique ci-dessus, puis retirer le « @unimplemented »
-	# en tête. En attendant, les effets génériques dérivés des tags s'appliquent —
-	# c'est un échafaudage, pas la mécanique réelle.
+	# TODO: implement the mechanic above, then drop the leading "@unimplemented". Until then the
+	# generic effects derived from the tags apply — that is scaffolding, not the real mechanic.
 	super.execute(ctx)

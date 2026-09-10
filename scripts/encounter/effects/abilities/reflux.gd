@@ -1,7 +1,7 @@
 ## Reflux — sadakbia · Fluid · medium · [damage reduction/immunity]
-## MÉCANIQUE : jusqu'au prochain tour du user, les dégâts qu'il reçoit sont réduits de
-## moitié et l'autre moitié est renvoyée à l'attaquant ; les coéquipiers de même Spiricosme
-## en bénéficient aussi. (Approximé au coup suivant via next_damage_factor.)
+## MECHANIC: until the user's next turn, damage it takes is halved and the other half is sent
+## back to the attacker; teammates of the same Spiricosm get this too. Approximated to the next
+## hit only, through next_damage_factor.
 extends AbilityScript
 
 

@@ -1,7 +1,7 @@
 ## Cold Wave — draka · Heat · normal · mini (5) · [ETH loss, change weakness, damage]
-## MÉCANIQUE : le dernier rival ayant fait perdre DEN/ETH au user perd tout son ETH ;
-## si sa faiblesse est Chaleur, il subit des dégâts ; le user choisit sa propre faiblesse
-## du prochain tour parmi Fluide, Chaleur et sa faiblesse actuelle.
+## MECHANIC: the last rival to have cost the user DEN or ETH loses all its ETH, and takes damage
+## if its weakness is Heat; the user picks its own next-turn weakness from Fluid, Heat and its
+## current one.
 extends AbilityScript
 
 

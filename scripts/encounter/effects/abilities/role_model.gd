@@ -1,6 +1,6 @@
 ## Role Model — fopin · Fluid · [force Talk]
-## MÉCANIQUE : les rivaux à faiblesse Fluide sont forcés de Parler (dans leur ordre) ;
-## si aucun n'a cette faiblesse, un rival est choisi au hasard.
+## MECHANIC: rivals whose weakness is Fluid are forced to Talk, in turn order; if none has that
+## weakness, one rival is picked at random.
 extends AbilityScript
 
 

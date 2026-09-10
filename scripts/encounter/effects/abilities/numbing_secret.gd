@@ -1,6 +1,6 @@
 ## Numbing Secret — mastél · mini (5) · [damage, limit actions]
-## MÉCANIQUE : le rival ciblé subit des dégâts et ne peut plus utiliser Talk ni aucune
-## capacité Chaleur jusqu'à la fin de la rencontre (ou jusqu'à ce qu'il Médite).
+## MECHANIC: the targeted rival takes damage and can no longer use Talk or any Heat ability for
+## the rest of the encounter, or until it Meditates.
 extends AbilityScript
 
 

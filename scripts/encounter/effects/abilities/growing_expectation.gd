@@ -1,6 +1,6 @@
 ## Growing Expectation — sénskor · Crystal · a lot · [change weakness, recover DEN]
-## MÉCANIQUE : le user gagne X DEN, sa faiblesse devient Chaleur ;
-## la faiblesse du rival ciblé devient Cristal.
+## MECHANIC: the user gains X DEN and its weakness becomes Heat; the targeted rival's weakness
+## becomes Crystal.
 extends AbilityScript
 
 

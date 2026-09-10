@@ -1,6 +1,6 @@
 ## Active Listening — gélmi · Arcane · mini · small (7) · [damage reduction, examine bonus]
-## MÉCANIQUE : le user subit des dégâts ; il est immunisé à TOUS les dégâts non-Arcane
-## jusqu'à son prochain tour ; son prochain Talk rapporte autant d'info qu'Examiner (TODO).
+## MECHANIC: the user takes damage and is immune to ALL non-Arcane damage until its next turn;
+## its next Talk yields as much info as an Examine (TODO).
 extends AbilityScript
 
 

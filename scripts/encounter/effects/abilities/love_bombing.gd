@@ -1,7 +1,6 @@
 ## Love Bombing — forlorn yadol · normal · [ETH loss, change weakness]
-## MÉCANIQUE : le rival ciblé perd X ETH, et encore autant par allié du user partageant la
-## faiblesse du user ; si la cible n'a alors plus d'ETH et est seule, elle prend la
-## faiblesse du user.
+## MECHANIC: the targeted rival loses X ETH, and as much again per ally of the user sharing the
+## user's weakness; if the target is then out of ETH and alone, it takes the user's weakness.
 extends AbilityScript
 
 

@@ -1,7 +1,6 @@
 ## Miasma Bomb — hibulus · Random · mini/small · usage unique · [damage, limit actions]
-## MÉCANIQUE : le user et ses coéquipiers subissent de petits dégâts (mini), les rivaux des
-## dégâts moyens (small) ; les capacités non Toxiques ni Fluides sont indisponibles au tour
-## suivant (pour tout le monde).
+## MECHANIC: the user and its teammates take mini damage, the rivals small; abilities that are
+## neither Toxic nor Fluid are unavailable next turn, to everyone.
 extends AbilityScript
 
 

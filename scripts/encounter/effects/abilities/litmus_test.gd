@@ -1,7 +1,6 @@
 ## Litmus Test — granop · [limit actions, recover ETH]
-## MÉCANIQUE : les 2 dernières capacités utilisées par la cible lui deviennent inutilisables
-## jusqu'à la fin de la rencontre ; le user et la cible gagnent X ETH s'ils sont
-## d'origine différente.
+## MECHANIC: the last 2 abilities the target used become unusable to it for the rest of the
+## encounter; the user and the target each gain X ETH if their origins differ.
 extends AbilityScript
 
 

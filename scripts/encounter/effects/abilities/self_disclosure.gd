@@ -1,7 +1,7 @@
 ## Self-Disclosure — vilgane · [recover ETH]
-## MÉCANIQUE : un total d'ETH (proportionnel au nombre de capacités utilisées par le user
-## durant la rencontre) est partagé équitablement entre tous les individus. (Compteur de
-## capacités utilisées : TODO → montant fixe par individu pour l'instant.)
+## MECHANIC: a pool of ETH, proportional to how many abilities the user has used during the
+## encounter, is shared equally between all individuals. Counting the abilities used is a TODO,
+## so for now each individual gets a fixed amount.
 extends AbilityScript
 
 

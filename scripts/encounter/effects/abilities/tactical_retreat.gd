@@ -1,10 +1,10 @@
 ## Tactical Retreat — akturlin · Crystal · [change next TO, redirect next damage received]
-## MÉCANIQUE : le user passe dernier au tour suivant ; les dégâts Arcane qu'il reçoit sont
-## convertis en gain d'ETH jusqu'à son prochain tour (conversion : approximée par immunité).
+## MECHANIC: the user moves last next turn; Arcane damage it takes is converted into ETH until
+## its next turn. The conversion is approximated by immunity.
 extends AbilityScript
 
 
 func execute(ctx: EncounterContext) -> void:
 	ctx.move_to_last(ctx.user)
 	ctx.grant_immunity(ctx.user, [GameEnums.Energy.ARCANE])
-	# TODO : convertir les dégâts Arcane évités en gain d'ETH.
+	# TODO: convert the Arcane damage avoided into ETH.

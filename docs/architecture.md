@@ -113,29 +113,41 @@ Two details that are easy to get wrong:
 Drawing is separate: `DungeonRenderer` turns the grid into meshes and reads the dungeon only
 through its public API, so anything the drawing needs, the model has to name.
 
-## The seam between the two, and what is missing from it
+## The seam between the two
 
-Going **in** works, partly: exploration passes each rival's map state — `{den, max_den}` —
-through to the encounter, where the maximum is a level-design setting and the current value
-carries over damage taken while exploring.
+**A silhouette on the map is a GROUP, not an individual.** `RivalBehavior` carries its
+`members` (`rival_member.gd`), each with its own variety, DEN and ETH; on the map the group
+moves and decides as one. A rival placed with only `species_id` and `max_den` is a group of
+one, which is what hand-built scenarios rely on.
 
-Coming **back** barely happens. `exploration._on_encounter_finished` only dissolves the
-rival on a victory. On any other outcome — fleeing, defeat, timeout — the rival stays on the
-map with the DEN it had *before* the encounter, and the damage it just took is lost.
-Fleeing is what makes this visible, since the doc wants the rival to remain in the dungeon.
+**Going in**, exploration hands the encounter every member with its current state, so damage
+taken on the map — a fall — is still there. **Coming back**, the encounter hands exploration
+a report, one entry per member (`EncounterManager.rival_report`), and the group takes it:
+dissolved members are gone, the others keep the DEN and ETH they came out with.
 
-**A silhouette on the map is a GROUP, not an individual.** What you meet in exploration
-stands for several individuals who will appear together in the encounter, and who may have
-different characteristics. None of that is modelled: `RivalBehavior` carries one species and
-one DEN, exploration passes a single species slug, and individuals have no per-species stats.
-Today every individual in a dungeon starts identical, which is a stated simplification and
-not the intended rule.
+An encounter no longer ends only when a side is dissolved. An individual can **leave**:
+`EncounterManager.withdraw` takes it out of its side and of the turn order, so no targeting
+rule, talent or ability has to know about departures. Run Away and a smoke bomb take a whole
+side away; Ghosting and Opening up Closing only their user. `pacify` is the way out the
+dialogue system will use — nothing calls it in play yet, the debug view's F2 does. The
+outcomes follow: `victory` (every rival dissolved, the only one the FDE counter rewards),
+`defeat`, `fled`, `pacified`, `rivals_fled`, `timeout`.
 
-That gap raises questions with no answer yet, and they will shape whatever group model
-arrives: if a group's individuals have different DEN, how is damage taken *on the map* —
-a fall from a bridge — shared among them? Equally? In proportion? And a rival's refusal to
-jump when it would devitalise itself: is that decided on the weakest of the group, on the
-average, or does the group split?
+When the duo has fled, it lands 3 to 5 walkable steps away and the group is gone half the
+time. A group still on the map after any encounter rests a few turns, or it would open the
+next one straight away. The figures are in `data/balance.tres`.
+
+Decisions taken where the design doc is silent, to revisit when it speaks:
+
+- damage on the map reaches **every** member in full, and whether to jump after the player is
+  weighed on the **weakest** member;
+- a **pacified** rival leaves its group on the map;
+- the rest after an encounter, and its length.
+
+**Groups appear by the dungeon's rules**, in `DungeonConfig`: S spawn points, P groups on first
+entry, N more every T turns, each composed at random X % of the time and picked from special
+compositions otherwise, plus fixed groups on their own tiles. `rival_spawner.gd` applies them.
+"First entry" is every entry for now, since no dungeon state survives a visit.
 
 ## How the project tests itself
 

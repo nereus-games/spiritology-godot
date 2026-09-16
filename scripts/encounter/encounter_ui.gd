@@ -114,9 +114,13 @@ func begin(
 		if map_max > 0:
 			f.max_den = map_max
 			f.den = map_max
+		var map_max_eth: int = int(state.get("max_eth", 0))
+		if map_max_eth > 0:
+			f.max_eth = map_max_eth
+			f.eth = map_max_eth
 		var map_den: int = int(state.get("den", 0))
 		if map_den > 0:
-			f.load_persistent_state(map_den, f.max_eth)
+			f.load_persistent_state(map_den, int(state.get("eth", f.eth)))
 		rf.append(f)
 
 	_manager.turn_taken.connect(_on_turn_taken)

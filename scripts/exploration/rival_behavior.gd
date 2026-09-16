@@ -1,4 +1,8 @@
-## A rival on the dungeon grid, drawn as a billboard sprite. Acts on every player turn.
+## A rival GROUP on the dungeon grid, drawn as one billboard sprite. Acts on every player turn.
+##
+## One silhouette stands for several individuals who appear together in the encounter — the
+## [member members], each with its own variety, DEN and ETH. On the map the group moves and
+## decides as one.
 ##
 ## Behaviour ported from the prototype onto the logical grid: chases the player while it is
 ## in sight, remembers its last known position for a few turns, and otherwise wanders. Moving
@@ -8,8 +12,16 @@ class_name RivalBehavior
 extends Node3D
 
 const AfflictionState := preload("res://scripts/exploration/mechanisms/affliction_state.gd")
+const RivalMember := preload("res://scripts/exploration/rival_member.gd")
 
-@export var species_id := &"ravbak"  ## species, used to build the encounter
+## The individuals this silhouette stands for, as `rival_member.gd` instances. Set BEFORE the
+## rival enters the tree. Left empty, the group is a single individual built from
+## [member species_id], [member max_den] and [member max_eth] — the shorthand for placing one
+## lone rival by hand.
+var members: Array = []
+
+## The variety of a lone rival. Once the group exists, the variety of its first member.
+@export var species_id := &"ravbak"
 @export var vision_range := 5  ## detection range, in tiles (Manhattan)
 @export var turns_between_actions := 1  ## 1 = acts every turn, 2 = every other turn
 @export var memory_turns := 2  ## turns of memory after losing sight
@@ -20,10 +32,14 @@ const AfflictionState := preload("res://scripts/exploration/mechanisms/afflictio
 ## spilling into its neighbours, whatever the shape of the drawing.
 @export var world_height := 0.9
 
-## The rival's maximum DEN, SET BY LEVEL DESIGN dungeon by dungeon. The design doc's
+## A lone rival's maximum DEN, SET BY LEVEL DESIGN dungeon by dungeon. The design doc's
 ## ballpark figures are in [constant GameSession.RIVAL_DEN_EARLY] / _MID / _LATE, but nothing
-## requires sticking to them exactly — this is a per-dungeon knob.
+## requires sticking to them exactly — this is a per-dungeon knob. Ignored when
+## [member members] is given.
 @export var max_den := GameSession.RIVAL_DEN_EARLY
+
+## A lone rival's maximum ETH. 0 means [member BalanceData.base_eth].
+@export var max_eth := 0
 
 ## Chance of falling PER narrow-bridge tile crossed. The design doc: "a simple probability to
 ## fall of 1 to 2% — exact percentage is generated along with the rival". 0 means roll one.
@@ -52,10 +68,21 @@ var tile: Vector3i
 var _dungeon: DungeonManager
 var _busy := false
 
-## Current DEN ON THE MAP, never displayed. Falls eat into it, it carries over into the
-## encounter that follows, and a rival down to 0 is dissolved where it stands, with no
-## encounter at all.
-var den := 0
+## The DEN of the group's WEAKEST member, never displayed — the figure every decision about
+## damage on the map is taken on. Each member keeps its own DEN: falls eat into all of them,
+## it carries over into the encounter that follows, and a member down to 0 is dissolved where
+## it stands, with no encounter at all.
+var den: int:
+	get:
+		var weakest := 0
+		for m in members:
+			if weakest == 0 or m.den < weakest:
+				weakest = m.den
+		return weakest
+
+## Turns left during which the group neither moves nor starts an encounter — it has just come
+## out of one. See [method rest].
+var _rest := 0
 
 ## Cross-floor chase: the tile the player was seen arriving on, and the turns left to reach
 ## it.
@@ -75,7 +102,10 @@ var _cooldown := 0
 
 func _ready() -> void:
 	_fit_sprite()
-	den = max_den
+	if members.is_empty():
+		var eth := max_eth if max_eth > 0 else BalanceData.current().base_eth
+		members = [RivalMember.new(species_id, max_den, eth)]
+	species_id = members[0].species_id
 	# "exact percentage is generated along with the rival": each rival gets its own sure-
 	# footedness, rolled once and for all inside the design doc's range.
 	if bridge_fall_chance <= 0.0:
@@ -120,6 +150,9 @@ func _fit_sprite() -> void:
 ## Played by the DungeonManager every turn, with the player's current tile.
 func take_turn(player_tile: Vector3i) -> void:
 	if _busy or _dungeon == null:
+		return
+	if _rest > 0:
+		_rest -= 1
 		return
 	if _cooldown > 0:
 		_cooldown -= 1
@@ -331,6 +364,9 @@ func _open_drop_edge(toward: Vector3i) -> Vector3i:
 ## devitalise the rival is ALWAYS refused — a rival does not kill itself over a chase, and it
 ## would hand the player a free elimination; in between, the appetite drops with the share of
 ## its remaining density the fall would cost.
+##
+## A group jumps together and every member takes the whole fall, so all of this is weighed on
+## its WEAKEST member ([member den]): a group does not leave one of its own behind.
 func fall_pursuit_chance(levels: int) -> float:
 	var damage := DungeonManager.fall_damage(levels)
 	if damage <= 0:
@@ -424,23 +460,90 @@ func drop_to(target: Vector3i, levels: int) -> bool:
 	return true
 
 
-## Applies damage taken ON THE MAP, from a fall. The remaining DEN carries into the encounter
-## that follows; at 0 the rival is devitalised where it stands and dissolved, with NO encounter,
-## per the design doc. Returns true when the rival survives.
+## Applies damage taken ON THE MAP, from a fall. The whole group falls, so EVERY member takes
+## the full amount. The remaining DEN carries into the encounter that follows; a member at 0 is
+## devitalised where it stands and dissolved, with NO encounter, per the design doc, and the
+## group is gone once none is left. Returns true when the group survives.
 ##
 ## A devitalisation ON THE MAP does NOT count as an encounter devitalisation: it feeds neither
 ## the FDE counter nor PSY (design decision, 2026-08-12). `GameSession.register_encounter_end`
 ## is deliberately not called here.
 func apply_map_damage(amount: int) -> bool:
-	den = maxi(den - amount, 0)
-	if den > 0:
+	for m in members:
+		m.den = maxi(m.den - amount, 0)
+	return _drop_dissolved()
+
+
+## Forgets the members down to 0 DEN, and removes the group from the dungeon once nobody is
+## left. Returns true when the group survives.
+func _drop_dissolved() -> bool:
+	members = members.filter(func(m): return not m.is_dissolved())
+	if members.is_empty():
+		remove_from_dungeon()
+		return false
+	species_id = members[0].species_id
+	return true
+
+
+# --------------------------------------------------------------------------
+# Encounters: what the group takes in, and what it comes back with
+# --------------------------------------------------------------------------
+
+
+## The varieties the encounter is built from, one per member, in order.
+func encounter_species() -> Array:
+	return members.map(func(m): return m.species_id)
+
+
+## The state each member enters the encounter with, parallel to [method encounter_species].
+func encounter_states() -> Array:
+	return members.map(func(m): return m.encounter_state())
+
+
+## Writes back how the encounter left the group. `report` is
+## [method EncounterManager.rival_report], parallel to [member members].
+##
+## A dissolved member is gone. A PACIFIED member is gone too — a provisional reading: the design
+## doc does not say yet what a rival talked out of an encounter does on the map. Everyone else —
+## still in the encounter at its end, or fled from it — carries on in the group with the DEN and
+## ETH it came out with. Returns true when anyone is left.
+func take_encounter_report(report: Array) -> bool:
+	if report.size() != members.size():
+		push_warning(
+			"[RivalBehavior] report for %d rivals, group of %d." % [report.size(), members.size()]
+		)
 		return true
-	_dissolve()
-	return false
+	for i in members.size():
+		var entry: Dictionary = report[i]
+		var member = members[i]
+		member.take_encounter_state(entry)
+		if entry.get("outcome", &"") in [&"dissolved", &"pacified"]:
+			member.den = 0
+	return _drop_dissolved()
 
 
-## Devitalised outside an encounter: the rival leaves the grid.
-func _dissolve() -> void:
+## The group has just come out of an encounter and stays put for `turns` turns: it neither
+## moves, nor chases, nor starts an encounter by walking into the player. Without it, a group
+## still standing next to the duo would open the next encounter on the very next turn. The
+## player can still walk into it.
+##
+## It also loses track of the player — its memory, and any chase to another floor.
+func rest(turns: int) -> void:
+	_rest = maxi(turns, 0)
+	_has_target = false
+	_memory = 0
+	_level_pursuit = 0
+
+
+func is_resting() -> bool:
+	return _rest > 0
+
+
+## The group leaves the grid for good — devitalised outside an encounter, or gone after the duo
+## ran away. Neither counts as an encounter devitalisation.
+func remove_from_dungeon() -> void:
+	if _dungeon == null:
+		return
 	_dungeon.release(tile)
 	_dungeon.unregister_rival(self)
 	_dungeon = null  # keeps _exit_tree from unregistering a second time

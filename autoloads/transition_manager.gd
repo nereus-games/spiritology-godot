@@ -57,8 +57,9 @@ var _hidden_hud: Array[CanvasLayer] = []
 ## exploration scene is paused (process_mode = DISABLED) and stays visible behind the 2D UI.
 ##
 ## `rival_states` runs parallel to `rival_ids` and carries each rival's state on the map,
-## as `{"den": int, "max_den": int}`. The maximum is a LEVEL DESIGN setting, tuned per
-## dungeon; the current value carries over damage taken while exploring, such as a fall.
+## as `{"den": int, "max_den": int, "eth": int, "max_eth": int}`. The maximums are LEVEL
+## DESIGN settings, tuned per dungeon; the current values carry over what happened before —
+## a fall, an earlier encounter.
 ## A missing or empty entry means the rival starts on its own defaults.
 func open_encounter(
 	player_ids: Array, rival_ids: Array, completed: Dictionary = {}, rival_states: Array = []

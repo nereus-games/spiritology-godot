@@ -95,9 +95,20 @@ static func title_for(id: StringName) -> String:
 	return String(id)
 
 
-## Builds the scenario into `dm` and returns the player's starting tile.
+## The scenario record with this id, or null.
+static func find(id: StringName) -> ScenarioData:
+	for s in list():
+		if s.id == id:
+			return s
+	return null
+
+
+## Builds the scenario into `dm` and returns the player's starting tile. A scenario that runs
+## under a [DungeonConfig] hands it to `dm`, where exploration picks it up.
 static func build(id: StringName, dm) -> Vector3i:
 	_reset_session()
+	var record := find(id)
+	dm.config = record.dungeon if record != null else null
 	match id:
 		&"movement":
 			return _movement(dm)
@@ -119,6 +130,8 @@ static func build(id: StringName, dm) -> Vector3i:
 			return _stairs(dm)
 		&"abilities":
 			return _abilities(dm)
+		&"rivals":
+			return _rivals(dm)
 	# Silently falling back to another scenario made an unknown id look like it "worked" for a
 	# while. Something is still built, so the game does not crash, but it is said out loud — and
 	# the checks fail on a reported error.
@@ -426,3 +439,15 @@ static func _abilities(dm) -> Vector3i:
 	_place(dm, Trap, Vector3i(1, 0, 2), {"kind": Trap.Kind.POISON, "revealed": true})
 	_spawn_rival(dm, &"ravbak", Vector3i(1, 0, 8))
 	return Vector3i(1, 0, 0)
+
+
+## Rival groups under a dungeon's spawn rules (`data/dungeons/dev_rivals.tres`): a room with six
+## spawn points, a fixed rival near the entrance, groups appearing on arrival and then in waves.
+## Smoke bombs to run away with, so the whole round trip can be walked: into an encounter, out of
+## it, and back to a group that remembers what happened.
+static func _rivals(dm) -> Vector3i:
+	_floor_rect(dm, 0, 0, 9, 13)
+	for pillar in [Vector3i(2, 0, 4), Vector3i(6, 0, 4), Vector3i(4, 0, 9)]:
+		dm._floor.erase(pillar)
+	GameSession.add_object(&"smoke_bomb", 3)
+	return Vector3i(4, 0, 0)

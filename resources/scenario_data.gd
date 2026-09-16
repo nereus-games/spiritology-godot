@@ -17,6 +17,11 @@ extends Resource
 ## the directory reads alphabetically.
 @export var order: int = 0
 
+## The dungeon configuration the scenario runs under, when it exercises one — the rival spawn
+## rules, for now. Its spawn points and fixed groups refer to the tiles the builder lays out, so
+## the two are written together; geometry_check verifies that they land on floor.
+@export var dungeon: DungeonConfig
+
 ## The button label and the instructions are NOT fields here: they live in the .po files
 ## under the keys below, like every other displayed string in the project. What is left is
 ## the pair the code needs — which scenario, and where it sits in the list.

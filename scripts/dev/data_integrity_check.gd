@@ -74,6 +74,7 @@ func _run_all() -> void:
 	_check_loading()
 	_check_enums()
 	_check_balance()
+	_check_rival_spawns()
 	_check_cross_refs()
 	_check_code_species_refs()
 	_check_translations()
@@ -248,6 +249,56 @@ func _check_balance() -> void:
 
 
 # --------------------------------------------------------------------------
+# Rival spawns: figures a dungeon can be given, but not any
+# --------------------------------------------------------------------------
+
+
+## A dungeon's spawn rules are level design, tuned by hand like the balance. What is refused is
+## what would quietly spawn nothing, or nonsense: an inverted range, a random-composition chance
+## outside the design doc's 50-100 %, spawns asked for with nowhere to put them, a group with
+## nobody in it.
+func _check_rival_spawns() -> void:
+	print("— rival spawns —")
+	var bad: Array = []
+	for id in _dungeons:
+		var dg: DungeonConfig = _dungeons[id]
+		if dg.random_composition_chance < 0.5 or dg.random_composition_chance > 1.0:
+			bad.append(
+				"%s.random_composition_chance = %s (0.5 to 1)" % [id, dg.random_composition_chance]
+			)
+		for field in ["initial_spawns", "spawns_per_wave", "spawn_interval_turns"]:
+			if int(dg.get(field)) < 0:
+				bad.append("%s.%s = %s (must be >= 0)" % [id, field, dg.get(field)])
+		for range_name in ["group_size", "member_max_den", "member_max_eth"]:
+			var low: int = dg.get(range_name + "_min")
+			var high: int = dg.get(range_name + "_max")
+			if low > high:
+				bad.append("%s.%s_min/_max = %d/%d (inverted)" % [id, range_name, low, high])
+		if dg.group_size_min < 1 or dg.member_max_den_min < 1 or dg.member_max_eth_min < 0:
+			bad.append("%s: a random group needs at least 1 member with at least 1 DEN" % id)
+		var spawns_asked := (
+			dg.initial_spawns > 0 or (dg.spawns_per_wave > 0 and dg.spawn_interval_turns > 0)
+		)
+		if spawns_asked and dg.spawn_points.is_empty():
+			bad.append("%s: spawns asked for, but no spawn point" % id)
+		if spawns_asked and dg.possible_species.is_empty() and dg.special_compositions.is_empty():
+			bad.append("%s: spawns asked for, but nothing to compose a group from" % id)
+		if dg.random_composition_chance < 1.0 and dg.special_compositions.is_empty():
+			bad.append("%s: a chance of special compositions, but none is listed" % id)
+		for list_name in ["special_compositions", "fixed_groups"]:
+			var groups: Array = dg.get(list_name)
+			for i in groups.size():
+				var group: RivalGroupData = groups[i]
+				if group == null or group.members.is_empty():
+					bad.append("%s.%s[%d] has no member" % [id, list_name, i])
+					continue
+				for member in group.members:
+					if member == null or member.max_den < 1 or member.max_eth < 0:
+						bad.append("%s.%s[%d] has a member with no DEN" % [id, list_name, i])
+	_check_empty(bad, "every dungeon's rival spawn rules can actually spawn")
+
+
+# --------------------------------------------------------------------------
 # Cross-references: a dead slug only shows up when something follows it
 # --------------------------------------------------------------------------
 
@@ -287,6 +338,9 @@ func _check_cross_refs() -> void:
 		for sid in dg.possible_species:
 			if not _species.has(sid):
 				dead.append("%s.possible_species → %s" % [id, sid])
+		for sid in dg.all_rival_species():
+			if not _species.has(sid):
+				dead.append("%s rival group member → %s" % [id, sid])
 	_check_empty(dead, "no dead reference between data")
 
 	# The 1:1 talent-to-species relation: every talent is carried, every carrier is acknowledged.

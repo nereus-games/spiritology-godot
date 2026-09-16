@@ -25,6 +25,7 @@ extends "res://scripts/exploration/mechanisms/dungeon_mechanism.gd"
 const ExplorationAction := preload("res://scripts/exploration/exploration_action.gd")
 const ChestScript := preload("res://scripts/exploration/mechanisms/chest.gd")
 const RIVAL_SCENE := preload("res://scenes/exploration/rival/rival.tscn")
+const RivalSpawner := preload("res://scripts/exploration/rival_spawner.gd")
 
 ## The die's 6 outcomes, from the design doc.
 enum Outcome {
@@ -49,10 +50,10 @@ const DESTROYERS: Array[StringName] = [&"spade", &"rune_stone"]
 @export var max_objects_delta := 3
 
 ## The SPAWN_RIVALS outcome: up to 3 GROUPS of rivals (one silhouette on the map is one group)
-## within `rival_spawn_radius` tiles of the player.
-## ## TODO: the design doc says "specifics TBD" — the count, the distance and above all the
-## species will have to come from level design (DungeonConfig.possible_species) once dungeons
-## are authored. The pool below is a test placeholder.
+## within `rival_spawn_radius` tiles of the player. Each group is composed by the dungeon's own
+## spawn rules when it has some; `rival_pool` is only the fallback for a room without, and gives
+## lone rivals.
+## ## TODO: the design doc says "specifics TBD" for the count and the distance.
 @export var rival_spawn_max := 3
 @export var rival_spawn_radius := 4
 @export var rival_pool: Array[StringName] = [&"ravbak", &"kalilk"]
@@ -301,7 +302,12 @@ func _spawn_rival_groups(who: Node) -> void:
 	var origin: Vector3i = who.tile if "tile" in who else tile
 	var spots: Array[Vector3i] = _dungeon.free_tiles_near(origin, rival_spawn_radius)
 	var n: int = mini(randi_range(1, rival_spawn_max), spots.size())
+	var spawner = RivalSpawner.new(_dungeon.config, _dungeon) if _dungeon.config != null else null
 	for i in range(n):
+		var members: Array = spawner.roll_composition() if spawner != null else []
+		if not members.is_empty():
+			spawner.spawn_group(members, spots[i])
+			continue
 		var rival = RIVAL_SCENE.instantiate()
 		rival.species_id = rival_pool[randi() % rival_pool.size()]
 		rival.position = _dungeon.tile_to_world(spots[i])

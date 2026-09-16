@@ -77,6 +77,10 @@ signal message_posted(text: String)
 
 var turn_count := 0
 
+## The dungeon's level-design configuration — which rival groups appear, where and when. Null
+## for a room built by hand with no such rules, as most test scenarios are.
+var config: DungeonConfig
+
 # Walkable tiles (floor). tile:Vector3i -> true.
 var _floor: Dictionary = {}
 # Occupancy: tile:Vector3i -> Node (a rival). The player does NOT occupy a tile — stepping

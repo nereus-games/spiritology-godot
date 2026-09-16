@@ -287,6 +287,15 @@ msgstr "Capacités & objets d'exploration"
 msgid "SCENARIO_ABILITIES_DESC"
 msgstr "Dans le menu d'actions (Tab/Espace) : utilise « fog mantel » (le rival cesse de te suivre) ou « tea drop » (soigne le poison du piège)."
 
+msgid "SCENARIO_RIVALS_TITLE"
+msgstr "Groupes de rivaux : apparitions, fuite, retour"
+
+msgid "SCENARIO_RIVALS_DESC"
+msgstr "Un rival seul attend près de l'entrée, deux groupes apparaissent sur des points d'apparition à ton arrivée, puis un autre tous les 12 tours. Un groupe est tiré au hasard 70 % du temps (1 à 3 parmi ravbak, kalilk, skorpis, fliritus), sinon c'est une meute de trois ravbak ou un skorpis seul. En rencontre, utilise une bombe fumigène pour fuir : tu atterris à 3 à 5 pas, et le groupe a disparu une fois sur deux. En vue de debug, F2 apaise les rivaux. Quelle que soit l'issue, un groupe resté sur la carte garde les dégâts subis, et se repose quelques tours."
+
+msgid "DUNGEON_DEV_RIVALS_NAME"
+msgstr "Salle de test des rivaux"
+
 # --- The encounter log ---------------------------------------------------------------
 # One line per thing an action or an ability effect does, as the LOG panel shows it. The
 # manager prefixes each with the individual's name, so these lines start mid-sentence and

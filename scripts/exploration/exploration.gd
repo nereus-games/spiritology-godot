@@ -7,10 +7,14 @@
 extends Node3D
 
 const ScenarioCatalog := preload("res://scripts/dev/scenario_catalog.gd")
+const RivalSpawner := preload("res://scripts/exploration/rival_spawner.gd")
 
 @onready var _dungeon: DungeonManager = $DungeonManager
 
 var _pending_rival: Node
+
+## Makes rival groups appear, when the dungeon has spawn rules. Null otherwise.
+var _spawner
 
 # --- Real-time narrow-bridge driver (per tile, in both directions) ---
 var _active_bridge  ## the bridge tile in progress, or null
@@ -49,6 +53,14 @@ func _ready() -> void:
 		# wall behind them. Turn them towards the dungeon, body and yaw target alike.
 		if player.has_method("set_start_yaw"):
 			player.set_start_yaw(PI)
+	# Rival groups appear last, once the player stands where they entered: no group may appear
+	# on them or next to them.
+	## TODO: "on first entry" — every entry is a first one for now, since nothing keeps a dungeon's
+	## state between two visits. Once GameSession.dungeon_states does, the groups still on the map
+	## have to be saved and restored instead.
+	if _dungeon.config != null:
+		_spawner = RivalSpawner.new(_dungeon.config, _dungeon)
+		_spawner.populate()
 
 
 func _on_encounter_requested(rival: Node, initiated_by_rival: bool) -> void:
@@ -153,8 +165,11 @@ func _on_party_wiped() -> void:
 	## dungeon entrance — once inter-scene navigation exists.
 
 
-func _on_turn_advanced(_turn: int) -> void:
-	pass  # turn hook: PSY, IFP, and so on
+func _on_turn_advanced(turn: int) -> void:
+	# New rival groups every T turns, per the dungeon's spawn rules. PSY, IFP and the like will
+	# hook in here too.
+	if _spawner != null:
+		_spawner.on_turn(turn)
 
 
 # --------------------------------------------------------------------------

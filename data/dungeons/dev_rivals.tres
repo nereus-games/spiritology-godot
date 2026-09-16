@@ -1,0 +1,66 @@
+[gd_resource type="Resource" script_class="DungeonConfig" load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://resources/dungeon_config.gd" id="1_dungeon"]
+[ext_resource type="Script" path="res://resources/rival_group_data.gd" id="2_group"]
+[ext_resource type="Script" path="res://resources/rival_member_data.gd" id="3_member"]
+
+[sub_resource type="Resource" id="Resource_pack_1"]
+script = ExtResource("3_member")
+species_id = &"ravbak"
+max_den = 40
+max_eth = 30
+
+[sub_resource type="Resource" id="Resource_pack_2"]
+script = ExtResource("3_member")
+species_id = &"ravbak"
+max_den = 40
+max_eth = 30
+
+[sub_resource type="Resource" id="Resource_pack_3"]
+script = ExtResource("3_member")
+species_id = &"ravbak"
+max_den = 40
+max_eth = 30
+
+[sub_resource type="Resource" id="Resource_pack"]
+script = ExtResource("2_group")
+members = Array[ExtResource("3_member")]([SubResource("Resource_pack_1"), SubResource("Resource_pack_2"), SubResource("Resource_pack_3")])
+
+[sub_resource type="Resource" id="Resource_heavy_1"]
+script = ExtResource("3_member")
+species_id = &"skorpis"
+max_den = 90
+max_eth = 50
+
+[sub_resource type="Resource" id="Resource_heavy"]
+script = ExtResource("2_group")
+members = Array[ExtResource("3_member")]([SubResource("Resource_heavy_1")])
+
+[sub_resource type="Resource" id="Resource_guard_1"]
+script = ExtResource("3_member")
+species_id = &"kalilk"
+max_den = 25
+max_eth = 20
+
+[sub_resource type="Resource" id="Resource_guard"]
+script = ExtResource("2_group")
+members = Array[ExtResource("3_member")]([SubResource("Resource_guard_1")])
+tile = Vector3i(1, 0, 3)
+
+[resource]
+script = ExtResource("1_dungeon")
+id = &"dev_rivals"
+possible_species = Array[StringName]([&"ravbak", &"kalilk", &"skorpis", &"fliritus"])
+spawn_points = Array[Vector3i]([Vector3i(1, 0, 7), Vector3i(7, 0, 7), Vector3i(1, 0, 11), Vector3i(7, 0, 11), Vector3i(4, 0, 12), Vector3i(4, 0, 7)])
+initial_spawns = 2
+spawns_per_wave = 1
+spawn_interval_turns = 12
+random_composition_chance = 0.7
+group_size_min = 1
+group_size_max = 3
+member_max_den_min = 30
+member_max_den_max = 60
+member_max_eth_min = 30
+member_max_eth_max = 50
+special_compositions = Array[ExtResource("2_group")]([SubResource("Resource_pack"), SubResource("Resource_heavy")])
+fixed_groups = Array[ExtResource("2_group")]([SubResource("Resource_guard")])

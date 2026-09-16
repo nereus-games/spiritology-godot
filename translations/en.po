@@ -283,6 +283,15 @@ msgstr "Exploration abilities & objects"
 msgid "SCENARIO_ABILITIES_DESC"
 msgstr "In the action menu (Tab/Space): use “fog mantel” (the rival stops following you) or “tea drop” (cures the trap's poison)."
 
+msgid "SCENARIO_RIVALS_TITLE"
+msgstr "Rival groups: spawns, flight, the way back"
+
+msgid "SCENARIO_RIVALS_DESC"
+msgstr "A lone rival waits near the entrance, two groups appear on spawn points as you arrive, and another one every 12 turns. A group is drawn at random 70 % of the time (1 to 3 of ravbak, kalilk, skorpis, fliritus), otherwise it is a pack of three ravbak or a lone skorpis. In an encounter, use a smoke bomb to run away: you land 3 to 5 steps off, and the group is gone half the time. In the debug view, F2 pacifies the rivals. Whatever the outcome, a group still on the map keeps the damage it took, and rests a few turns."
+
+msgid "DUNGEON_DEV_RIVALS_NAME"
+msgstr "Rival test room"
+
 # --- The encounter log ---------------------------------------------------------------
 # One line per thing an action or an ability effect does, as the LOG panel shows it. The
 # manager prefixes each with the individual's name, so these lines start mid-sentence and

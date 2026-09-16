@@ -63,6 +63,7 @@ func _run_all() -> void:
 	await _check_actions()
 	await _check_determinism()
 	await _check_loop_invariants()
+	_check_unfinished_release()
 	_check_talents()
 	print("")
 	if _fails.is_empty():
@@ -338,6 +339,34 @@ func _check_loop_invariants() -> void:
 		"the encounter produced a log (%d lines)" % m2.encounter_log.size()
 	)
 	m2.free()
+
+
+## An encounter freed before it ends never reaches [method EncounterManager._finish], and must
+## still break its individuals' cycles. Both shapes are built here: two individuals that hit each
+## other, and one hurt by its own ability, which is its own last damager. A leak shows twice —
+## these weak references survive the manager, and `run_checks.sh` sees "leaked at exit".
+func _check_unfinished_release() -> void:
+	print("— unfinished encounter —")
+	var refs := _abandon_encounter_with_cycles()
+	var alive := 0
+	for r in refs:
+		if r.get_ref() != null:
+			alive += 1
+	_check(alive == 0, "individuals released when freed mid-encounter (%d still alive)" % alive)
+
+
+## Returns weak references only, so that nothing in the caller keeps an individual alive.
+func _abandon_encounter_with_cycles() -> Array:
+	var m := _make_manager()
+	var p0: EncounterIndividual = m.players[0]
+	var r0: EncounterIndividual = m.rivals[0]
+	var r1: EncounterIndividual = m.rivals[1]
+	p0.last_damager = r0
+	r0.last_damager = p0
+	r1.last_damager = r1
+	var refs := [weakref(p0), weakref(r0), weakref(r1)]
+	m.free()
+	return refs
 
 
 # --------------------------------------------------------------------------

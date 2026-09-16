@@ -76,9 +76,8 @@ func _on_encounter_requested(rival: Node, initiated_by_rival: bool) -> void:
 
 func _on_encounter_finished(result: StringName) -> void:
 	print("[Exploration] Encounter over: %s." % result)
-	# FDE counter: every rival devitalised is exactly &"victory" — a defeat, a timeout or a
-	# flight does not count.
-	GameSession.register_encounter_end(result == &"victory")
+	# The FDE counter is NOT updated here: the encounter UI already does it when the encounter
+	# ends, where it can see every rival. Doing it here as well counted each victory twice.
 	if result == &"victory" and is_instance_valid(_pending_rival):
 		_pending_rival.queue_free()  # the rival is dissolved
 	_pending_rival = null

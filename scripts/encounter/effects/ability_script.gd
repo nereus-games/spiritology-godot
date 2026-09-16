@@ -13,6 +13,13 @@ class_name AbilityScript
 extends RefCounted
 
 
+## Whether the ability takes its own user out of the encounter — Ghosting, Opening up Closing.
+## Read by [AutoAgent], which is not meant to leave on its own; the effect itself still goes
+## through [method EncounterContext.flee].
+func takes_user_away() -> bool:
+	return false
+
+
 ## Override with the ability's real mechanic.
 func execute(ctx: EncounterContext) -> void:
 	for effect in EffectCatalog.tag_effects(ctx.ability.tags):

@@ -14,9 +14,7 @@
 ##     first turn or below 10 % DEN, for 10 ETH, and behind a QTE that can fail;
 ##   - an ability RUNS it directly, bypassing the menu — [method EncounterContext.flee],
 ##     called by `ghosting` and `opening_up_closing`.
-## ## TODO: neither route actually leaves the encounter. Both end at the same wall —
-## fleeing means teleporting 3-5 tiles away in exploration, with a 50 % chance the rival
-## disappears, and that is unbuilt. See docs/roadmap.md.
+## The menu action takes the whole side away; an ability, only the individual it names.
 class_name EncounterAction
 extends RefCounted
 

@@ -3,7 +3,7 @@
 ## The player's duo is driven by a single [UiAgent]: on each of their turns the
 ## [EncounterManager] loop suspends, the menu opens, and the submitted choice resumes it.
 ## Rivals keep the manager's automatic agent. [signal finished] tells [TransitionManager]
-## to tear the overlay down and unpause exploration.
+## to tear the overlay down and unpause exploration, and hands it how each rival came out.
 ##
 ## Layout follows the design doc's mockup (User Interface / Encounters): LOG and MENU top
 ## left, the turn order across the top with one cell per individual, the rivals' full artwork
@@ -14,7 +14,9 @@
 ## pinned outside the scroll.
 extends CanvasLayer
 
-signal finished(result: StringName)
+## `rivals` is [method EncounterManager.rival_report]: one entry per rival, in the order
+## [method begin] received them. Empty when the encounter was abandoned rather than finished.
+signal finished(result: StringName, rivals: Array)
 
 ## Preloaded rather than named: see that script's header.
 const TimelineEntry := preload("res://scripts/ui/encounter_timeline_entry.gd")
@@ -51,6 +53,7 @@ var _debug_view := OS.is_debug_build()
 var _menu: MenuPanel
 
 var _result := &""
+var _rival_report: Array = []
 var _awaiting_close := false
 
 ## Whose turn it is, or null between choices. The turn order uses it to enlarge a cell.
@@ -118,6 +121,7 @@ func begin(
 
 	_manager.turn_taken.connect(_on_turn_taken)
 	_manager.ended.connect(_on_ended)
+	_manager.departed.connect(_on_departed)
 	_manager.ifp_earned.connect(_on_ifp_earned)
 	_manager.object_consumed.connect(_on_object_consumed)
 	# The manager knows no autoloads, so it is handed a way to resolve object slugs.
@@ -186,12 +190,13 @@ func _refresh_timeline() -> void:
 			individual.active_weakness(position),
 			(i + 1) if _debug_view else 0
 		)
-	# A dissolved rival fades, like its cell in the turn order.
+	# A dissolved rival fades, like its cell in the turn order; one that left is gone. Hidden
+	# through its alpha rather than `visible`, so the others do not slide along the row.
 	for c in _rivals_row.get_children():
 		var art := c as TextureRect
 		if art and art.has_meta("individual"):
 			var f: EncounterIndividual = art.get_meta("individual")
-			art.modulate.a = 0.25 if f.is_dissolved() else 1.0
+			art.modulate.a = 0.0 if f.has_left() else (0.25 if f.is_dissolved() else 1.0)
 
 
 ## Whether the species is in the encyclopaedia at all, which is what the doc makes the
@@ -208,7 +213,7 @@ func _knows(individual: EncounterIndividual) -> bool:
 ## scene takes exploration with it.
 ## ## TODO: wire the real pause screen.
 func _on_menu_pressed() -> void:
-	finished.emit(&"menu")
+	finished.emit(&"menu", [])
 	TransitionManager.change_scene(SCENARIO_SELECT)
 
 
@@ -340,10 +345,11 @@ func _show_actions(individual: EncounterIndividual, manager: EncounterManager) -
 	)
 	# Actions a talent added; never available by default.
 	if kinds.has(EncounterAction.Kind.FLEE):
-		# Run Away takes no target. Actually leaving is still a stub.
+		# Run Away takes no target, and takes the whole duo away. Greyed when a talent charges
+		# ETH for it that the character does not have (Slick Merchant).
 		_menu.add_bar_action(
 			tr("UI_ENCOUNTER_ACTION_FLEE"),
-			true,
+			individual.eth >= manager.flee_cost(individual),
 			func(): _submit(EncounterAction.of_kind(EncounterAction.Kind.FLEE))
 		)
 	if kinds.has(EncounterAction.Kind.STEAL):
@@ -527,7 +533,7 @@ func _highlight_target(target: EncounterIndividual) -> void:
 		if art == null or not art.has_meta("individual"):
 			continue
 		var f: EncounterIndividual = art.get_meta("individual")
-		if f.is_dissolved():
+		if f.is_dissolved() or f.has_left():
 			continue
 		art.modulate = Color(1, 1, 1) if f == target else Color(0.55, 0.55, 0.6)
 
@@ -536,7 +542,9 @@ func _clear_highlight() -> void:
 	for c in _rivals_row.get_children():
 		var art := c as TextureRect
 		if art and art.has_meta("individual"):
-			art.modulate = Color(1, 1, 1)
+			var f: EncounterIndividual = art.get_meta("individual")
+			if not f.has_left():
+				art.modulate = Color(1, 1, 1)
 
 
 func _submit(action: EncounterAction) -> void:
@@ -598,12 +606,20 @@ func _on_object_consumed(object_id: StringName) -> void:
 	GameSession.remove_object(object_id)
 
 
+## Someone left before the end: the turn order and the artwork no longer show them.
+func _on_departed(_individual: EncounterIndividual, _reason: StringName) -> void:
+	_refresh_timeline()
+
+
 func _on_ended(result: StringName) -> void:
 	_result = result
+	# Read now: the manager releases its individuals' cross references right after this signal,
+	# and exploration only gets the report once the player has closed the screen.
+	_rival_report = _manager.rival_report()
 	_close_menu()
-	# The FDE counter — the hidden "murderous spree". Dissolving EVERY rival increments it;
-	# any other outcome resets it.
-	GameSession.register_encounter_end(_manager.rivals.all(func(f): return f.is_dissolved()))
+	# The FDE counter — the hidden "murderous spree". Dissolving EVERY rival increments it; any
+	# other outcome resets it, a rival that fled or was pacified included.
+	GameSession.register_encounter_end(_manager.all_rivals.all(func(f): return f.is_dissolved()))
 	_sync_back_to_session()
 	_append("\n[b]→ %s[/b]" % tr("UI_ENCOUNTER_RESULT_%s" % result.to_upper()))
 	_refresh_timeline()
@@ -632,6 +648,16 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 		return
 	if (
+		_debug_view
+		and event is InputEventKey
+		and event.pressed
+		and not event.echo
+		and event.keycode == KEY_F2
+	):
+		_debug_pacify_rivals()
+		get_viewport().set_input_as_handled()
+		return
+	if (
 		_awaiting_close
 		and (
 			event.is_action_pressed("ui_accept")
@@ -640,7 +666,23 @@ func _unhandled_input(event: InputEvent) -> void:
 		)
 	):
 		_awaiting_close = false
-		finished.emit(_result)
+		finished.emit(_result, _rival_report)
+
+
+## Debug view, F2: every rival still here is pacified, and the acting character passes.
+##
+## The dialogue system that should decide this does not exist; this key is how the way out it
+## will use — [method EncounterManager.pacify] — gets walked from start to finish in the
+## meantime, all the way back to the map. Only while a character is choosing: that is when the
+## loop is suspended, so nothing is resolving underneath.
+func _debug_pacify_rivals() -> void:
+	if _acting_individual == null:
+		return
+	for r in _manager.rivals.duplicate():
+		if not r.is_dissolved():
+			_manager.pacify(r)
+			_append("    [color=#b9b9c4]%s[/color]" % (tr("LOG_DEV_PACIFIED") % r.display_name()))
+	_submit(EncounterAction.of_kind(EncounterAction.Kind.PASS))
 
 
 func _append(line: String) -> void:

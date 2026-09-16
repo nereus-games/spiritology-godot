@@ -74,7 +74,7 @@ func _on_encounter_requested(rival: Node, initiated_by_rival: bool) -> void:
 	TransitionManager.open_encounter(_player_duo(), [rival_id], {}, [rival_state])
 
 
-func _on_encounter_finished(result: StringName) -> void:
+func _on_encounter_finished(result: StringName, _rivals: Array) -> void:
 	print("[Exploration] Encounter over: %s." % result)
 	# The FDE counter is NOT updated here: the encounter UI already does it when the encounter
 	# ends, where it can see every rival. Doing it here as well counted each victory twice.

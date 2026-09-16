@@ -101,6 +101,15 @@ msgstr "Duo dissolved"
 msgid "UI_ENCOUNTER_RESULT_TIMEOUT"
 msgstr "The encounter peters out"
 
+msgid "UI_ENCOUNTER_RESULT_FLED"
+msgstr "The duo got away"
+
+msgid "UI_ENCOUNTER_RESULT_PACIFIED"
+msgstr "The rivals are appeased"
+
+msgid "UI_ENCOUNTER_RESULT_RIVALS_FLED"
+msgstr "The rivals ran away"
+
 msgid "UI_ENCOUNTER_CONTINUE"
 msgstr "Press to continue"
 
@@ -423,7 +432,7 @@ msgid "LOG_RESTRICTED"
 msgstr "%s may now only: %s [to come]."
 
 msgid "LOG_FLEES"
-msgstr "%s takes flight [to come]."
+msgstr "%s flees the encounter."
 
 # The fragments LOG_RESTRICTED lists. Each names what the target may still do, in the
 # vocabulary of the design doc. Action names come from the UI_ENCOUNTER_ACTION_* keys.
@@ -492,10 +501,7 @@ msgstr "gives %s to %s: DEN %d -> %d."
 
 # %s = the object. Fleeing belongs to exploration, which does not handle it yet.
 msgid "LOG_OBJECT_FLEE_USED"
-msgstr "uses %s: flight (exploration TODO)."
-
-msgid "LOG_OBJECT_FLEE_GIVEN"
-msgstr "gives %s: flight (exploration TODO)."
+msgstr "uses %s to run away."
 
 # The objects whose effect belongs to exploration, or to nothing at all.
 msgid "LOG_OBJECT_USED"
@@ -510,8 +516,17 @@ msgstr "has nobody to steal from."
 msgid "LOG_STEAL"
 msgstr "tries to steal from %s [stolen object / Coal Vetch to come]."
 
-msgid "LOG_FLEE_ATTEMPT"
-msgstr "tries to leave the encounter [exploration teleport to come]."
+# Run Away: the whole side leaves. In LOG_FLEE_NO_ETH, %d = the ETH a talent charges for it.
+msgid "LOG_FLEE_SIDE"
+msgstr "runs away, and their side leaves the encounter."
+
+msgid "LOG_FLEE_NO_ETH"
+msgstr "cannot run away: it takes %d ETH."
+
+# The encounter's debug view (F2) pacifying a rival, standing in for a dialogue system that
+# does not exist yet. %s = the rival.
+msgid "LOG_DEV_PACIFIED"
+msgstr "[debug] %s is appeased and leaves the encounter."
 
 # Meditate. %d = ETH before, %d = ETH after, %d = the damage bonus in per cent.
 msgid "LOG_MEDITATE"

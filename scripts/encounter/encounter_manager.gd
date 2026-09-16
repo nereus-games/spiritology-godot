@@ -15,7 +15,13 @@ extends Node
 signal turn_taken(
 	individual: EncounterIndividual, action: EncounterAction, lines: PackedStringArray
 )
-signal ended(result: StringName)  ## &"victory" / &"defeat" / &"timeout"
+## How the encounter ended — see [method _check_end] for when each one applies:
+## &"victory", &"defeat", &"fled", &"pacified", &"rivals_fled", &"timeout".
+signal ended(result: StringName)
+
+## An individual left the encounter before its end. `reason` is [constant FLED] or
+## [constant PACIFIED].
+signal departed(individual: EncounterIndividual, reason: StringName)
 
 ## IFP earned by a player action on a rival — Examine, Talk, or dissolving it.
 ##
@@ -37,13 +43,26 @@ var object_provider: Callable = Callable()
 
 const ABILITY_DIR := "res://data/abilities/"
 
+## Why an individual left: it ran away (Run Away, a smoke bomb, Ghosting)...
+const FLED := &"fled"
+## ...or it was talked out of the encounter. Nothing decides that yet — the dialogue system
+## does not exist — but the way out is built: see [method pacify].
+const PACIFIED := &"pacified"
+
 ## Resolves a talent to its script. Reached by preload rather than by name: neither
 ## [TalentCatalog] nor [TalentScript] declares a `class_name`, because only the editor
 ## regenerates the global class cache and this game is launched from the command line.
 const TalentCatalog := preload("res://scripts/encounter/talents/talent_catalog.gd")
 
+## The individuals still IN the encounter, dissolved ones included. One who leaves is taken out
+## of these lists and out of the turn order, so that no targeting rule, no talent and no
+## ability has to learn about departures.
 var players: Array = []
 var rivals: Array = []
+## Everyone who took part, in the order [method setup] received them — departed included.
+## What [method rival_report] reads.
+var all_players: Array = []
+var all_rivals: Array = []
 var timeline: EncounterTimeline
 var rng := RandomNumberGenerator.new()
 ## Species whose encyclopaedia page is complete — one of the damage conditions.
@@ -76,8 +95,10 @@ var _round_energy := GameEnums.Energy.NONE
 func setup(
 	player_individuals: Array, rival_individuals: Array, seed: int = 0, completed: Dictionary = {}
 ) -> void:
-	players = player_individuals
-	rivals = rival_individuals
+	players = player_individuals.duplicate()
+	rivals = rival_individuals.duplicate()
+	all_players = player_individuals.duplicate()
+	all_rivals = rival_individuals.duplicate()
 	completed_species = completed
 	rng.seed = seed
 	result = &""
@@ -266,7 +287,7 @@ func run(max_rounds: int = 30) -> StringName:
 	for _r in max_rounds:
 		_begin_round()
 		for individual in timeline.order.duplicate():
-			if individual.is_dissolved():
+			if individual.is_dissolved() or individual.has_left():
 				continue
 			await _take_turn(individual)
 			var res := _check_end()
@@ -302,7 +323,7 @@ func _notification(what: int) -> void:
 ## Breaks the reference cycles between individuals (see
 ## [method EncounterIndividual.release_cross_references]). Safe to call more than once.
 func _release_individuals() -> void:
-	for f in players + rivals:
+	for f in all_players + all_rivals:
 		f.release_cross_references()
 
 
@@ -399,16 +420,13 @@ func _resolve_object(individual: EncounterIndividual, action: EncounterAction) -
 					% [tr(obj.name_key()), target.display_name(), before, target.den]
 				)
 			)
-		GameEnums.ObjectEffect.FLEE_ENCOUNTER:
-			# "allows to Run away from an encounter". Fleeing itself — teleporting 3-5 tiles
-			# away, with a 50 % chance the rival disappears — belongs to exploration, which
-			# does not handle it yet.
-			lines.append(
-				(
-					_tr("LOG_OBJECT_FLEE_GIVEN" if given else "LOG_OBJECT_FLEE_USED")
-					% tr(obj.name_key())
-				)
-			)
+		GameEnums.ObjectEffect.FLEE_ENCOUNTER when not given:
+			# "allows to Run away from an encounter" — the whole side, like Run Away. Given to a
+			# rival it is only a gift, and falls through to the default below.
+			lines.append(_tr("LOG_OBJECT_FLEE_USED") % tr(obj.name_key()))
+			_emit_turn(individual, action, lines)
+			_flee_side(individual)
+			return
 		_:
 			# NONE, CURE_POISON, DISGUISE, DIG, AVOID_PURSUIT do nothing IN AN ENCOUNTER.
 			# Notice is explicitly "no effect" and exists to be given away; the rest belong
@@ -436,13 +454,95 @@ func _resolve_steal(individual: EncounterIndividual, action: EncounterAction) ->
 	_emit_turn(individual, action, [_tr("LOG_STEAL") % target.display_name()])
 
 
-## Run Away, put in the menu by a talent (run_away_2, slick_merchant). Actually leaving
-## needs the exploration-side teleport, which is unbuilt — hence the stub.
+## Run Away, put in the menu by a talent (run_away_2, slick_merchant). The whole SIDE leaves,
+## which is what sets it apart from Ghosting — whose doc says the user flees "alone".
 ##
-## slick_merchant costs 10 ETH and a QTE that can fail; run_away_2 is free and certain.
-## Those conditions belong to the talents, and will be enforced once fleeing works.
+## What happens next is exploration's business: the duo lands 3-5 tiles away, and the group
+## may be gone. The encounter only records who left.
+##
+## slick_merchant charges 10 ETH, through [method flee_cost].
+## ## TODO: slick_merchant's QTE, which can make the attempt fail. There is no QTE system; until
+## there is, its Run Away always succeeds.
 func _resolve_flee(individual: EncounterIndividual, action: EncounterAction) -> void:
-	_emit_turn(individual, action, [_tr("LOG_FLEE_ATTEMPT")])
+	var cost := flee_cost(individual)
+	if individual.eth < cost:
+		_emit_turn(individual, action, [_tr("LOG_FLEE_NO_ETH") % cost])
+		return
+	individual.pay_eth(cost)
+	_emit_turn(individual, action, [_tr("LOG_FLEE_SIDE")])
+	_flee_side(individual)
+
+
+## What running away costs this individual in ETH — 0 unless one of its talents charges for
+## it. The menu greys Run Away out when it cannot be paid.
+func flee_cost(individual: EncounterIndividual) -> int:
+	var cost := 0
+	for t in _talents:
+		if t.owner == individual:
+			cost = maxi(cost, t.flee_eth_cost(self))
+	return cost
+
+
+## Everyone still standing on the individual's side leaves. The dissolved stay behind: they
+## are not going anywhere, and exploration reads their state from the encounter as it is.
+func _flee_side(individual: EncounterIndividual) -> void:
+	for f in allies_of(individual).duplicate():
+		if not f.is_dissolved():
+			withdraw(f, FLED)
+
+
+# --- Leaving before the end ---
+
+
+## Takes an individual out of the encounter: out of its side, out of the turn order. It keeps
+## its DEN and ETH, and [method rival_report] tells exploration how it left.
+##
+## Does not end the encounter by itself — the loop checks for that after every turn, which is
+## where a departure happens.
+func withdraw(individual: EncounterIndividual, reason: StringName) -> void:
+	if individual == null or individual.has_left() or individual.is_dissolved():
+		return
+	if not (players.has(individual) or rivals.has(individual)):
+		return
+	individual.departure = reason
+	players.erase(individual)
+	rivals.erase(individual)
+	timeline.remove(individual)
+	departed.emit(individual, reason)
+
+
+## The way out through dialogue: the individual leaves the encounter without being dissolved.
+##
+## The entry point the dialogue system will call once it exists. Nothing in the game decides
+## that a rival is pacified yet — the design doc gives no rule, and none is invented here. The
+## encounter UI has a debug key that calls this, so that the route can be walked end to end.
+func pacify(individual: EncounterIndividual) -> void:
+	withdraw(individual, PACIFIED)
+
+
+## How each rival came out of the encounter, in the order [method setup] received them. This
+## is what exploration writes back onto the group on the map.
+##
+## `outcome` is &"dissolved", [constant FLED], [constant PACIFIED], or &"stayed" for a rival
+## still in the encounter when it ended — after a defeat, a flight or a timeout.
+func rival_report() -> Array:
+	var out: Array = []
+	for f in all_rivals:
+		var outcome := &"stayed"
+		if f.is_dissolved():
+			outcome = &"dissolved"
+		elif f.has_left():
+			outcome = f.departure
+		var entry := {
+			"species_id": f.species_id(),
+			"den": f.den,
+			"max_den": f.max_den,
+			"eth": f.eth,
+			"max_eth": f.max_eth,
+			"outcome": outcome,
+		}
+		out.append(entry)
+	return out
 
 
 ## Meditate: "character recovers X ETH; damage +Y % until next turn".
@@ -583,6 +683,10 @@ func _resolve_ability(individual: EncounterIndividual, action: EncounterAction) 
 	for l in ctx.log_lines:
 		encounter_log.append(_tr("LOG_LINE_ABILITY") % [individual.display_name(), ability.id, l])
 	turn_taken.emit(individual, action, ctx.log_lines)
+	# Departures happen at the END of the turn — Opening up Closing's "the user flees at the end
+	# of the turn" — so that the rest of the effect still sees everyone.
+	for f in ctx.departures:
+		withdraw(f, FLED)
 
 
 ## Targets whose exposed weakness matches the ability's effective energy.
@@ -606,10 +710,26 @@ func _weakness_touched_targets(
 	return out
 
 
+## The encounter is over once one side has nobody standing left IN it — dissolved, or gone.
+##
+## - &"victory": every rival was dissolved. The only outcome that feeds the FDE counter.
+## - &"pacified": the rivals are all gone, and at least one was talked out of it.
+## - &"rivals_fled": the rivals are all gone, at least one by running away, none pacified.
+## - &"fled": the player characters are all gone, and at least one ran away.
+## - &"defeat": the player characters were all dissolved.
+##
+## Rivals are looked at first, as they always were: a turn that empties both sides counts
+## for the player.
 func _check_end() -> StringName:
 	if rivals.all(func(f): return f.is_dissolved()):
-		return &"victory"
+		if all_rivals.all(func(f): return f.is_dissolved()):
+			return &"victory"
+		if all_rivals.any(func(f): return f.departure == PACIFIED):
+			return &"pacified"
+		return &"rivals_fled"
 	if players.all(func(f): return f.is_dissolved()):
+		if all_players.any(func(f): return f.departure == FLED):
+			return &"fled"
 		return &"defeat"
 	return &""
 

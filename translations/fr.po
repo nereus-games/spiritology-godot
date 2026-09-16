@@ -102,6 +102,15 @@ msgstr "Duo dissous"
 msgid "UI_ENCOUNTER_RESULT_TIMEOUT"
 msgstr "La rencontre s'essouffle"
 
+msgid "UI_ENCOUNTER_RESULT_FLED"
+msgstr "Le duo a pris la fuite"
+
+msgid "UI_ENCOUNTER_RESULT_PACIFIED"
+msgstr "Les rivaux sont apaisés"
+
+msgid "UI_ENCOUNTER_RESULT_RIVALS_FLED"
+msgstr "Les rivaux ont pris la fuite"
+
 msgid "UI_ENCOUNTER_CONTINUE"
 msgstr "Appuyez pour continuer"
 
@@ -428,7 +437,7 @@ msgid "LOG_RESTRICTED"
 msgstr "%s ne peut plus faire que : %s [à venir]."
 
 msgid "LOG_FLEES"
-msgstr "%s prend la fuite [à venir]."
+msgstr "%s prend la fuite."
 
 # The fragments LOG_RESTRICTED lists. Each names what the target may still do, in the
 # vocabulary of the design doc. Action names come from the UI_ENCOUNTER_ACTION_* keys.
@@ -497,10 +506,7 @@ msgstr "donne %s à %s : DEN %d -> %d."
 
 # %s = the object. Fleeing belongs to exploration, which does not handle it yet.
 msgid "LOG_OBJECT_FLEE_USED"
-msgstr "utilise %s : fuite (TODO exploration)."
-
-msgid "LOG_OBJECT_FLEE_GIVEN"
-msgstr "donne %s : fuite (TODO exploration)."
+msgstr "utilise %s pour prendre la fuite."
 
 # The objects whose effect belongs to exploration, or to nothing at all.
 msgid "LOG_OBJECT_USED"
@@ -515,8 +521,17 @@ msgstr "n'a personne à voler."
 msgid "LOG_STEAL"
 msgstr "tente de voler %s [objet volé / Coal Vetch à venir]."
 
-msgid "LOG_FLEE_ATTEMPT"
-msgstr "tente de quitter la rencontre [téléportation exploration à venir]."
+# Run Away: the whole side leaves. In LOG_FLEE_NO_ETH, %d = the ETH a talent charges for it.
+msgid "LOG_FLEE_SIDE"
+msgstr "prend la fuite, et son camp quitte la rencontre."
+
+msgid "LOG_FLEE_NO_ETH"
+msgstr "ne peut pas fuir : il faut %d ETH."
+
+# The encounter's debug view (F2) pacifying a rival, standing in for a dialogue system that
+# does not exist yet. %s = the rival.
+msgid "LOG_DEV_PACIFIED"
+msgstr "[debug] %s est apaisé et quitte la rencontre."
 
 # Meditate. %d = ETH before, %d = ETH after, %d = the damage bonus in per cent.
 msgid "LOG_MEDITATE"

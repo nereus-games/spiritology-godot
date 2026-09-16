@@ -80,6 +80,14 @@ func apply_pending() -> bool:
 	return true
 
 
+## Takes an individual out of the order for good — it left the encounter. Also struck from a
+## pending reordering, which would otherwise put it back at the end of the turn.
+func remove(individual) -> void:
+	order.erase(individual)
+	if _pending != null:
+		_pending.erase(individual)
+
+
 ## Individuals still standing.
 func living() -> Array:
 	return order.filter(func(f): return not f.is_dissolved())

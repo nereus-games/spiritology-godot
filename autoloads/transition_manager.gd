@@ -43,7 +43,9 @@ func fade_in() -> Signal:
 
 const ENCOUNTER_SCENE := "res://scenes/encounter/encounter.tscn"
 
-signal encounter_finished(result: StringName)
+## `rivals` is [method EncounterManager.rival_report], parallel to the `rival_ids` given to
+## [method open_encounter] — empty if the encounter was abandoned.
+signal encounter_finished(result: StringName, rivals: Array)
 
 var _encounter: CanvasLayer
 
@@ -74,14 +76,14 @@ func open_encounter(
 	_encounter.begin(player_ids, rival_ids, completed, rival_states)
 
 
-func _on_encounter_finished(result: StringName, exploration: Node) -> void:
+func _on_encounter_finished(result: StringName, rivals: Array, exploration: Node) -> void:
 	if is_instance_valid(_encounter):
 		_encounter.queue_free()
 	_encounter = null
 	if is_instance_valid(exploration):
 		exploration.process_mode = Node.PROCESS_MODE_INHERIT
 		_restore_scene_hud()
-	encounter_finished.emit(result)
+	encounter_finished.emit(result, rivals)
 
 
 ## Hides the exploration scene's CanvasLayers for the duration of an encounter.

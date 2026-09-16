@@ -8,10 +8,10 @@
 ##    Note that in the current model a Talk's "effectiveness" is a proxy on talker_chance (see
 ##    EncounterManager._resolve_talk), so the +15% lands there. A deliberate approximation.
 ##
-## The MENU half is NOT handled here and waits on the menu-mutation wiring: "on turn 1, and when
-## this character has 10 % DEN or less, it can't Use Ability, but gets an extra action: Run Away,
-## which costs 10 ETH" — with a QTE, and so fallible; the QTE is not built. It is expressed
-## through [method modify_menu] so the manager or the agent can consult it when the time comes.
+## The MENU half: "on turn 1, and when this character has 10 % DEN or less, it can't Use
+## Ability, but gets an extra action: Run Away, which costs 10 ETH" — [method modify_menu] and
+## [method flee_eth_cost]. The doc puts a QTE behind it, so the attempt can fail; no QTE system
+## exists, so for now it always succeeds.
 extends "res://scripts/encounter/talents/talent_script.gd"
 
 const EARLY_TURNS := 3
@@ -47,6 +47,10 @@ func modify_menu(manager, kinds: Array) -> void:
 		kinds.erase(EncounterAction.Kind.ABILITY)
 		if not kinds.has(EncounterAction.Kind.FLEE):
 			kinds.append(EncounterAction.Kind.FLEE)
+
+
+func flee_eth_cost(_manager) -> int:
+	return RUN_AWAY_ETH
 
 
 func _label() -> String:

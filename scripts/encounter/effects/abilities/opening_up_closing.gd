@@ -3,6 +3,10 @@
 extends AbilityScript
 
 
+func takes_user_away() -> bool:
+	return true
+
+
 func execute(ctx: EncounterContext) -> void:
 	var t = ctx.primary()
 	if t:

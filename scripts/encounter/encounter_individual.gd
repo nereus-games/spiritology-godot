@@ -47,6 +47,14 @@ var outgoing_damage_bonus := 0.0
 ## Scheduled for NEXT turn; promoted by [method clear_turn_state].
 var _pending_outgoing_bonus := 0.0
 
+## Why this individual left the encounter before its end — [constant EncounterManager.FLED]
+## or [constant EncounterManager.PACIFIED] — or &"" while it is still in it. Set by
+## [method EncounterManager.withdraw], and only there.
+##
+## Leaving is not being dissolved: the individual comes out with whatever DEN it has left,
+## and in exploration it carries on with it.
+var departure := &""
+
 var _used_single: Dictionary = {}  ## ability id -> true, once its single use is spent
 var _weakness_override := false
 var _weakness_energy := GameEnums.Energy.NONE  ## The weakness forced for this turn
@@ -87,6 +95,11 @@ func display_name() -> String:
 
 func is_dissolved() -> bool:
 	return den <= 0
+
+
+## Whether it left the encounter before the end, fleeing or pacified.
+func has_left() -> bool:
+	return departure != &""
 
 
 ## The weakness currently exposed: the one for this position, unless overridden.

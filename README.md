@@ -39,7 +39,7 @@ another that does not exist yet.
 
 ## Running it
 
-Requires **Godot 4.6**. No build step — open the project, or launch it straight from the
+Requires **Godot 4.7**. No build step — open the project, or launch it straight from the
 command line and skip the editor entirely:
 
 ```bash

@@ -284,11 +284,26 @@ func _finish(res: StringName) -> StringName:
 	for t in _talents:
 		t.on_encounter_end(self, res)
 	ended.emit(res)
-	# AFTER the signal, so listeners still see the full state: break the reference cycles
-	# between individuals (see EncounterIndividual.release_cross_references).
+	# AFTER the signal, so listeners still see the full state.
+	_release_individuals()
+	return res
+
+
+## Also released when the manager is freed, because an encounter can be torn down before
+## [method _finish] ever runs: the game quit while the player is choosing, or a dev harness
+## that screenshots the moment of choice. Doing it only in [method _finish] leaked every
+## cycle of an unfinished encounter — including an individual hurt by its own ability, which
+## is its own [member EncounterIndividual.last_damager].
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_PREDELETE:
+		_release_individuals()
+
+
+## Breaks the reference cycles between individuals (see
+## [method EncounterIndividual.release_cross_references]). Safe to call more than once.
+func _release_individuals() -> void:
 	for f in players + rivals:
 		f.release_cross_references()
-	return res
 
 
 func _begin_round() -> void:

@@ -7,7 +7,7 @@ on:
 env:
   # Must stay in step with `config/features` in project.godot. The archive name follows
   # the Godot release convention: Godot_v<version>-stable_linux.x86_64.zip
-  GODOT_VERSION: "4.6.3"
+  GODOT_VERSION: "4.7.2"
 
 jobs:
   checks:

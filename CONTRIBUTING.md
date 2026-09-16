@@ -50,7 +50,7 @@ nothing would warn you. See `NOTICE`.
 
 ## Before you push
 
-Requires Godot 4.6.
+Requires Godot 4.7.
 
 ```bash
 ./tools/parse_check.sh   # parses every GDScript file

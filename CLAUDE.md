@@ -12,7 +12,7 @@ directory is empty.
 
 ## Commands
 
-Requires **Godot 4.6**, and the binary is not on the PATH on the author's machine:
+Requires **Godot 4.7**, and the binary is not on the PATH on the author's machine:
 `/Applications/Godot.app/Contents/MacOS/Godot`. Set `GODOT` if yours is elsewhere.
 
 ```bash

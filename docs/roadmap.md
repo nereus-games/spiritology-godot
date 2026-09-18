@@ -30,6 +30,13 @@ Each is explicit in the doc, has no prerequisite, and is wrong in play right now
 - **A known chest looks like an unknown one.** The minimap hides a trap until it is revealed but
   draws every chest regardless, so `Chest.revealed` — and Trick to Reveal's chest clause — has
   no visible effect. (`chest.gd`)
+- **Some text does not reach the player in their language.** This breaks the project's own rule
+  (every displayed line in both `.po` files) rather than the doc, and carries no `TODO`. Five
+  ability descriptions are empty in `en.po` — Fake News, Flow State, Gaslighting, Ghosting,
+  One's Ethos — though `fr.po` has them. Fifteen `fr.po` entries are still flagged `#, fuzzy`,
+  left over from the old generator; Godot skips fuzzy entries, so French players see English
+  there. They include every object description, which the encounter's Use / Give menu now
+  shows, and seven talent names. `msgfmt --statistics translations/*.po` lists both.
 
 ## 2. Encounter hooks that unlock abilities in bulk
 
@@ -76,11 +83,11 @@ can be picked up alone, after the hooks above if it needs one.
 Larger pieces, each of which a handful of markers wait on. Roughly in order of how much they
 unblock.
 
-- **Leaving a dungeon, and navigating between scenes.** A devitalised duo stays where it fell,
-  and the exit interaction is unwired: there is no world map to return to. The title screen,
-  the pause screen (the encounter's Menu button drops to the scenario picker) and boot's
-  hand-off belong to the same piece. (`exploration.gd`, `dungeon_manager.gd`, `encounter_ui.gd`,
-  `boot.gd`)
+- **Leaving a dungeon, and navigating between scenes.** A devitalised duo now leaves the
+  dungeon, but for the scenario picker, standing in for a world map that does not exist; the
+  exit interaction is still unwired. The title screen, the pause screen (the encounter's Menu
+  button is hidden until it exists) and boot's hand-off belong to the same piece.
+  (`exploration.gd`, `dungeon_manager.gd`, `encounter_ui.gd`, `boot.gd`)
 - **Dungeon state between visits.** `GameSession.dungeon_states` is saved and loaded but never
   written: every entry is a first entry, so groups, examined decor and opened chests all reset.
   (`exploration.gd`, `examinable_decor.gd`)
@@ -92,8 +99,9 @@ unblock.
 - **A dungeon authoring format, and a validator.** Walls and holes are derived from the floor
   grid instead of declared; the doc's level-design rules — stairs lead to floor with nothing
   directly above, a narrow bridge always spans a floor, no bottomless hole — are checked only
-  on the dev scenario, and caught at runtime otherwise. Becomes urgent with the first real
-  dungeon. (`dungeon_manager.gd`, `stairs.gd`, `exploration.gd`, `player_controller.gd` —
+  on the dev scenario, and caught at runtime otherwise. Safe areas already report their own
+  faults (`safe_areas.violations()`), but only a check calls it. Becomes urgent with the first
+  real dungeon. (`dungeon_manager.gd`, `stairs.gd`, `exploration.gd`, `player_controller.gd` —
   tagged `TODO(dungeon checker)`)
 - **Rivals carrying objects.** Examine should "reveal objects they carry", Steal has nothing to
   take, and Altruism has nothing to destroy. (`encounter_manager.gd`, `altruism.gd`)
@@ -125,6 +133,14 @@ pages the doc has not given yet.
 - The PSY threshold above which examining decor can spawn rivals (`examinable_decor.gd`).
 - Species pages for *néarog* and *mazir*, listed in the doc's pools but absent from `data/`
   (`litter.gd`, `examinable_decor.gd`).
+
+Two decisions were taken in code, and the doc has to catch up — or say otherwise:
+
+- **Fleeing** takes out only the character who runs, and the rivals stay on their tile; the
+  "50 % chance the rival disappears" was dropped on 2026-09-18, because from the map it looked
+  exactly like the whole group being devitalised (`exploration.gd`, `_run_away`).
+- **A linked elevator moves empty**, leaving whoever stands on it behind. The doc does not say
+  (`elevator.gd`, `linked`).
 
 One is waiting on play rather than on the doc: **how long a level-wide pursuit lasts**
 (`rival_behavior.gd`, `level_pursuit_turns`) has never been tried in game, and goes into the

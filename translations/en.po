@@ -39,6 +39,27 @@ msgstr "Which object for %s?"
 msgid "UI_ENCOUNTER_CHOOSE_TARGET"
 msgstr "Target for %s?"
 
+# The object's target. Using it on a character and giving it to a rival are two different
+# moves, and each option says which it is. %s = the object, then the target and its DEN.
+msgid "UI_ENCOUNTER_USE_OR_GIVE"
+msgstr "%s: use it on a character, or give it to a rival?"
+
+msgid "UI_ENCOUNTER_USE_ON"
+msgstr "Use on %s"
+
+msgid "UI_ENCOUNTER_GIVE_TO"
+msgstr "Give to %s"
+
+msgid "UI_ENCOUNTER_GIVE_HINT"
+msgstr "Giving an object to a rival is a move in itself. If the object acts on a target, it acts on that rival."
+
+# The log's header for a Use / Give Object turn.
+msgid "UI_ENCOUNTER_LOG_USE_OBJECT"
+msgstr "Uses an object"
+
+msgid "UI_ENCOUNTER_LOG_GIVE_OBJECT"
+msgstr "Gives an object"
+
 msgid "UI_ENCOUNTER_BACK"
 msgstr "Back"
 

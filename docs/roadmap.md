@@ -1,6 +1,6 @@
 # What isn't built yet
 
-The code carries 81 `TODO` markers. Scattered through the source they read like neglect;
+The code carries 82 `TODO` markers. Scattered through the source they read like neglect;
 grouped, they are something else — an accurate map of what the game still needs, and most
 of them are not debt at all. They are one system waiting on another that does not exist.
 
@@ -51,17 +51,20 @@ Objects are consumed and their effects resolve, but rivals carry none, so Examin
 "reveal objects they carry" and Steal has nothing to take. Abilities that destroy an object
 in exchange for an effect (Altruism) have nothing to destroy.
 
-## Rival groups and the Coal Vetch — ~4 markers
+## Rival groups and the Coal Vetch — ~3 markers
 
-Several abilities and mechanisms reveal, summon, or avoid *groups* of rivals; the dungeon
-spawns individuals. The Coal Vetch — a faction that can appear mid-encounter after repeated
-Examines — has no implementation at all.
+Groups exist and spawn by each dungeon's rules, but nothing *reveals* or *chooses* them yet:
+Static Camouflage should show 2 to 4 wandering groups one at a time. The Coal Vetch — a
+faction that can appear mid-encounter after repeated Examines — has no implementation at all.
 
-## Fleeing — 2 markers
+A dungeon's groups do not survive leaving it, because no dungeon state does; every entry
+spawns afresh.
 
-Both routes into it are wired (a talent adds it to the menu, an ability triggers it
-directly) and both stop at the same wall: leaving an encounter means teleporting 3–5 tiles
-away in exploration, with a 50 % chance the rival disappears. That has not been built.
+## Leaving an encounter — 1 marker
+
+Fleeing works end to end, and so does the way out through dialogue — but nothing decides a
+rival is pacified until the dialogue system exists. Slick Merchant's Run Away should hide
+behind a QTE that can fail; there is no QTE.
 
 ## Figures the design doc does not give — 3 markers
 

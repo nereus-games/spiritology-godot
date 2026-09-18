@@ -41,6 +41,19 @@ extends Resource
 ## 0, which is to say for as long as the doc writes "Y DEN" instead of a number.
 @export var object_heal_den: int = 25
 
+## Running away from an encounter: "teleporting 3 to 5 tiles away", counted in steps actually
+## walkable from where the encounter took place. Figures the doc gives.
+@export var flee_distance_min: int = 3
+@export var flee_distance_max: int = 5
+
+## The chance that the group the duo ran from is gone when they land. The doc gives 50 %.
+@export var flee_group_vanish_chance: float = 0.5
+
+## Turns a group still on the map stays put after an encounter, so that it does not open the
+## next one straight away. The doc says nothing about it: a placeholder, see
+## [method RivalBehavior.rest].
+@export var rival_rest_turns: int = 3
+
 const PATH := "res://data/balance.tres"
 
 static var _current: BalanceData

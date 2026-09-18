@@ -1,15 +1,20 @@
 ## Root of the exploration scene: 3D, and persistent.
 ##
 ## Connects the [DungeonManager]'s encounter request to opening an encounter as an additive
-## OVERLAY through [TransitionManager] — exploration is paused, and stays visible behind. On a
-## victory the rival is removed from the dungeon.
+## OVERLAY through [TransitionManager] — exploration is paused, and stays visible behind. When
+## it ends, the group on the map takes back what the encounter left of it, and a duo that ran
+## away lands a few tiles off.
 extends Node3D
 
 const ScenarioCatalog := preload("res://scripts/dev/scenario_catalog.gd")
+const RivalSpawner := preload("res://scripts/exploration/rival_spawner.gd")
 
 @onready var _dungeon: DungeonManager = $DungeonManager
 
 var _pending_rival: Node
+
+## Makes rival groups appear, when the dungeon has spawn rules. Null otherwise.
+var _spawner
 
 # --- Real-time narrow-bridge driver (per tile, in both directions) ---
 var _active_bridge  ## the bridge tile in progress, or null
@@ -48,6 +53,14 @@ func _ready() -> void:
 		# wall behind them. Turn them towards the dungeon, body and yaw target alike.
 		if player.has_method("set_start_yaw"):
 			player.set_start_yaw(PI)
+	# Rival groups appear last, once the player stands where they entered: no group may appear
+	# on them or next to them.
+	## TODO: "on first entry" — every entry is a first one for now, since nothing keeps a dungeon's
+	## state between two visits. Once GameSession.dungeon_states does, the groups still on the map
+	## have to be saved and restored instead.
+	if _dungeon.config != null:
+		_spawner = RivalSpawner.new(_dungeon.config, _dungeon)
+		_spawner.populate()
 
 
 func _on_encounter_requested(rival: Node, initiated_by_rival: bool) -> void:
@@ -58,33 +71,90 @@ func _on_encounter_requested(rival: Node, initiated_by_rival: bool) -> void:
 	var pl := get_tree().get_first_node_in_group("player")
 	if pl != null and pl.has_method("clear_hidden"):
 		pl.clear_hidden()
-	var rival_id: StringName = rival.species_id if "species_id" in rival else &"ravbak"
-	# The rival's map state: its maximum DEN is a LEVEL DESIGN knob, and damage taken during
-	# exploration — a fall — carries into the encounter. An empty dictionary means nothing was
-	# tracked on the map, and the individual starts from its defaults.
-	var rival_state := {}
-	if "den" in rival and "max_den" in rival:
-		rival_state = {"den": rival.den, "max_den": rival.max_den}
+	# The whole group comes into the encounter, each member with its map state: its maximums are
+	# LEVEL DESIGN, and damage taken while exploring — a fall — carries over.
+	var ids: Array = rival.encounter_species()
+	var states: Array = rival.encounter_states()
 	print(
 		(
-			"[Exploration] Encounter with '%s' (rival-initiated=%s, map state=%s)."
-			% [rival_id, initiated_by_rival, rival_state]
+			"[Exploration] Encounter with %s (rival-initiated=%s, map state=%s)."
+			% [ids, initiated_by_rival, states]
 		)
 	)
-	TransitionManager.open_encounter(_player_duo(), [rival_id], {}, [rival_state])
+	TransitionManager.open_encounter(_player_duo(), ids, {}, states)
 
 
-func _on_encounter_finished(result: StringName) -> void:
+## `rivals` is the encounter's report on each member of the group, in order — empty when the
+## encounter was abandoned rather than finished.
+func _on_encounter_finished(result: StringName, rivals: Array) -> void:
 	print("[Exploration] Encounter over: %s." % result)
-	# FDE counter: every rival devitalised is exactly &"victory" — a defeat, a timeout or a
-	# flight does not count.
-	GameSession.register_encounter_end(result == &"victory")
-	if result == &"victory" and is_instance_valid(_pending_rival):
-		_pending_rival.queue_free()  # the rival is dissolved
+	# The FDE counter is NOT updated here: the encounter UI already does it when the encounter
+	# ends, where it can see every rival. Doing it here as well counted each victory twice.
+	var group: Node = _pending_rival if is_instance_valid(_pending_rival) else null
 	_pending_rival = null
+	# The group takes back what the encounter left of it, and is gone if that is nobody.
+	if group != null and not rivals.is_empty() and not group.take_encounter_report(rivals):
+		group = null
+	var balance := BalanceData.current()
+	if result == &"fled":
+		_run_away(group)
+	elif group != null:
+		group.rest(balance.rival_rest_turns)
 	# If the whole duo is devitalised, this restores DEN to 1 each and emits party_wiped, which
 	# runs _on_party_wiped to take the duo out of the dungeon.
 	GameSession.resolve_party_wipe()
+
+
+## The duo ran away: it lands 3 to 5 walkable steps from where the encounter took place, and
+## the group it ran from is gone half the time — the design doc's rule for fleeing. A group
+## that is still there rests, like after any other encounter.
+func _run_away(group: Node) -> void:
+	var balance := BalanceData.current()
+	var player := get_node_or_null("Player")
+	if player != null:
+		var dest := flight_destination(player.tile)
+		if dest != player.tile:
+			player.teleport_to(dest)
+	if group == null:
+		return
+	if randf() < balance.flee_group_vanish_chance:
+		group.remove_from_dungeon()
+	else:
+		group.rest(balance.rival_rest_turns)
+
+
+## Where a duo running away from `from` lands: a random tile between
+## [member BalanceData.flee_distance_min] and _max walkable steps away, preferring one with no
+## mechanism on it and no rival next to it — running away onto a trap, or into the next
+## group, would not be much of an escape. When nothing that far is reachable, the farthest
+## reachable tile; `from` itself when there is none.
+func flight_destination(from: Vector3i) -> Vector3i:
+	var balance := BalanceData.current()
+	var steps: Dictionary = _dungeon.walking_distances(from, balance.flee_distance_max)
+	var in_range: Array[Vector3i] = []
+	var quiet: Array[Vector3i] = []
+	var farthest := from
+	for t in steps:
+		var tile: Vector3i = t
+		if steps[tile] > steps[farthest]:
+			farthest = tile
+		if steps[tile] < balance.flee_distance_min:
+			continue
+		in_range.append(tile)
+		if _dungeon.mechanisms_at(tile).is_empty() and not _next_to_rival(tile):
+			quiet.append(tile)
+	if not quiet.is_empty():
+		return quiet[randi() % quiet.size()]
+	if not in_range.is_empty():
+		return in_range[randi() % in_range.size()]
+	return farthest
+
+
+func _next_to_rival(tile: Vector3i) -> bool:
+	for d in [Vector3i(1, 0, 0), Vector3i(-1, 0, 0), Vector3i(0, 0, 1), Vector3i(0, 0, -1)]:
+		if _dungeon.occupant_at(tile + d) != null:
+			return true
+	return false
 
 
 ## The whole duo has been devitalised. [GameSession] has already restored DEN to 1 each;
@@ -95,8 +165,11 @@ func _on_party_wiped() -> void:
 	## dungeon entrance — once inter-scene navigation exists.
 
 
-func _on_turn_advanced(_turn: int) -> void:
-	pass  # turn hook: PSY, IFP, and so on
+func _on_turn_advanced(turn: int) -> void:
+	# New rival groups every T turns, per the dungeon's spawn rules. PSY, IFP and the like will
+	# hook in here too.
+	if _spawner != null:
+		_spawner.on_turn(turn)
 
 
 # --------------------------------------------------------------------------

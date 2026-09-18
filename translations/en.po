@@ -101,6 +101,15 @@ msgstr "Duo dissolved"
 msgid "UI_ENCOUNTER_RESULT_TIMEOUT"
 msgstr "The encounter peters out"
 
+msgid "UI_ENCOUNTER_RESULT_FLED"
+msgstr "The duo got away"
+
+msgid "UI_ENCOUNTER_RESULT_PACIFIED"
+msgstr "The rivals are appeased"
+
+msgid "UI_ENCOUNTER_RESULT_RIVALS_FLED"
+msgstr "The rivals ran away"
+
 msgid "UI_ENCOUNTER_CONTINUE"
 msgstr "Press to continue"
 
@@ -274,6 +283,15 @@ msgstr "Exploration abilities & objects"
 msgid "SCENARIO_ABILITIES_DESC"
 msgstr "In the action menu (Tab/Space): use “fog mantel” (the rival stops following you) or “tea drop” (cures the trap's poison)."
 
+msgid "SCENARIO_RIVALS_TITLE"
+msgstr "Rival groups: spawns, flight, the way back"
+
+msgid "SCENARIO_RIVALS_DESC"
+msgstr "A lone rival waits near the entrance, two groups appear on spawn points as you arrive, and another one every 12 turns. A group is drawn at random 70 % of the time (1 to 3 of ravbak, kalilk, skorpis, fliritus), otherwise it is a pack of three ravbak or a lone skorpis. In an encounter, use a smoke bomb to run away: you land 3 to 5 steps off, and the group is gone half the time. In the debug view, F2 pacifies the rivals. Whatever the outcome, a group still on the map keeps the damage it took, and rests a few turns."
+
+msgid "DUNGEON_DEV_RIVALS_NAME"
+msgstr "Rival test room"
+
 # --- The encounter log ---------------------------------------------------------------
 # One line per thing an action or an ability effect does, as the LOG panel shows it. The
 # manager prefixes each with the individual's name, so these lines start mid-sentence and
@@ -423,7 +441,7 @@ msgid "LOG_RESTRICTED"
 msgstr "%s may now only: %s [to come]."
 
 msgid "LOG_FLEES"
-msgstr "%s takes flight [to come]."
+msgstr "%s flees the encounter."
 
 # The fragments LOG_RESTRICTED lists. Each names what the target may still do, in the
 # vocabulary of the design doc. Action names come from the UI_ENCOUNTER_ACTION_* keys.
@@ -492,10 +510,7 @@ msgstr "gives %s to %s: DEN %d -> %d."
 
 # %s = the object. Fleeing belongs to exploration, which does not handle it yet.
 msgid "LOG_OBJECT_FLEE_USED"
-msgstr "uses %s: flight (exploration TODO)."
-
-msgid "LOG_OBJECT_FLEE_GIVEN"
-msgstr "gives %s: flight (exploration TODO)."
+msgstr "uses %s to run away."
 
 # The objects whose effect belongs to exploration, or to nothing at all.
 msgid "LOG_OBJECT_USED"
@@ -510,8 +525,17 @@ msgstr "has nobody to steal from."
 msgid "LOG_STEAL"
 msgstr "tries to steal from %s [stolen object / Coal Vetch to come]."
 
-msgid "LOG_FLEE_ATTEMPT"
-msgstr "tries to leave the encounter [exploration teleport to come]."
+# Run Away: the whole side leaves. In LOG_FLEE_NO_ETH, %d = the ETH a talent charges for it.
+msgid "LOG_FLEE_SIDE"
+msgstr "runs away, and their side leaves the encounter."
+
+msgid "LOG_FLEE_NO_ETH"
+msgstr "cannot run away: it takes %d ETH."
+
+# The encounter's debug view (F2) pacifying a rival, standing in for a dialogue system that
+# does not exist yet. %s = the rival.
+msgid "LOG_DEV_PACIFIED"
+msgstr "[debug] %s is appeased and leaves the encounter."
 
 # Meditate. %d = ETH before, %d = ETH after, %d = the damage bonus in per cent.
 msgid "LOG_MEDITATE"

@@ -96,6 +96,8 @@ func _run_scenario(id: StringName) -> void:
 	_check(misplaced == 0, "every slab and wall aligned on its storey")
 	_check(too_thick == 0, "no floor rendered as a solid block")
 	_check_no_double_ground(dm, slabs)
+	if dm.config != null:
+		_check_spawn_tiles(dm)
 
 	if id == &"movement":
 		await _check_bottomless(dm, player)
@@ -313,6 +315,26 @@ func _check_traps_hidden_on_map(dm) -> void:
 		m.revealed = true
 		_check(m.shows_on_map(), "known trap: present on the map")
 	_check(traps > 0 and shown == traps, "%d trap(s) in the test scenario, all revealed" % traps)
+
+
+## A dungeon's spawn points and fixed groups name tiles the scenario builder lays out: the two
+## are written apart, so a moved wall can leave a spawn point inside it. Nothing would fail — the
+## spawner skips a tile it cannot use — and groups would quietly stop appearing.
+func _check_spawn_tiles(dm) -> void:
+	var off: Array = []
+	for point in dm.config.spawn_points:
+		if not dm.is_floor(point) or dm.is_blocked_by_mechanism(point):
+			off.append("spawn point %s" % point)
+	for group in dm.config.fixed_groups:
+		if not dm.is_floor(group.tile):
+			off.append("fixed group %s" % group.tile)
+	_check(
+		off.is_empty(),
+		(
+			"every spawn tile of %s is walkable floor%s"
+			% [dm.config.id, "" if off.is_empty() else " — " + ", ".join(off)]
+		)
+	)
 
 
 ## The design doc's "Visuals + Sounds": a rival sprite fits in 90 cm x 90 cm. Tried on a species

@@ -35,6 +35,10 @@ var completed_species: Dictionary = {}
 ## Forced energy, for abilities that take on the user's own weakness. NONE means off.
 var energy_override := GameEnums.Energy.NONE
 
+## Individuals the effect made flee. The manager takes them out of the encounter once the
+## turn is over; the context only collects them, since it cannot reach the manager.
+var departures: Array = []
+
 ## What this effect did, in readable lines. Reaches the player through the encounter log.
 var log_lines: PackedStringArray = PackedStringArray()
 
@@ -411,12 +415,13 @@ func abilities_of_key(energy: GameEnums.Energy) -> String:
 	return _ABILITIES_OF_KEYS.get(energy, "LOG_RESTRICT_ABILITIES_HEAT")
 
 
-## Makes an individual flee. Fleeing does not exist; this logs.
+## Makes an individual flee the encounter ALONE — Ghosting, Opening up Closing. Its side
+## carries on without it. It leaves at the end of the turn, and not at all if it is dissolved
+## by then.
 func flee(target) -> void:
 	note(_tr("LOG_FLEES") % _name(target))
-	request_ui(
-		&"flee", {"individual": target.species_id() if target is EncounterIndividual else target}
-	)
+	if target is EncounterIndividual and not departures.has(target):
+		departures.append(target)
 
 
 # --- Counting and asking ---

@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://b0sprivalspawncheck"]
+
+[ext_resource type="Script" path="res://scripts/dev/rival_spawn_check.gd" id="1"]
+
+[node name="RivalSpawnCheck" type="Node"]
+script = ExtResource("1")

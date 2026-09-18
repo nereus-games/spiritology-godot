@@ -77,6 +77,10 @@ signal message_posted(text: String)
 
 var turn_count := 0
 
+## The dungeon's level-design configuration — which rival groups appear, where and when. Null
+## for a room built by hand with no such rules, as most test scenarios are.
+var config: DungeonConfig
+
 # Walkable tiles (floor). tile:Vector3i -> true.
 var _floor: Dictionary = {}
 # Occupancy: tile:Vector3i -> Node (a rival). The player does NOT occupy a tile — stepping
@@ -314,6 +318,26 @@ func free_tile_near(tile: Vector3i) -> Vector3i:
 		if is_walkable(n) and occupant_at(n) == null:
 			return n
 	return tile
+
+
+## How many steps it takes to walk to every tile reachable from `from` in at most `max_steps`,
+## as tile -> steps (`from` itself at 0). A walk, not a flight: it goes around walls, closed
+## gateways and occupied tiles, and stays on one floor — stairs and falls are not steps.
+func walking_distances(from: Vector3i, max_steps: int) -> Dictionary:
+	var steps := {from: 0}
+	var frontier: Array[Vector3i] = [from]
+	while not frontier.is_empty():
+		var current: Vector3i = frontier.pop_front()
+		var d: int = steps[current]
+		if d >= max_steps:
+			continue
+		for delta in [Vector3i(1, 0, 0), Vector3i(-1, 0, 0), Vector3i(0, 0, 1), Vector3i(0, 0, -1)]:
+			var n: Vector3i = current + delta
+			if steps.has(n) or not can_step(current, n):
+				continue
+			steps[n] = d + 1
+			frontier.append(n)
+	return steps
 
 
 ## Free floor tiles AROUND `tile`, on the same floor, within `radius` tiles (Manhattan

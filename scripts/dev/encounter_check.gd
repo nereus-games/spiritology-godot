@@ -64,6 +64,7 @@ func _run_all() -> void:
 	await _check_determinism()
 	await _check_loop_invariants()
 	_check_unfinished_release()
+	await _check_departures()
 	_check_talents()
 	print("")
 	if _fails.is_empty():
@@ -367,6 +368,171 @@ func _abandon_encounter_with_cycles() -> Array:
 	var refs := [weakref(p0), weakref(r0), weakref(r1)]
 	m.free()
 	return refs
+
+
+# --------------------------------------------------------------------------
+# Departures: leaving an encounter without dissolving anyone
+# --------------------------------------------------------------------------
+
+
+func _check_departures() -> void:
+	print("— departures —")
+	await _check_side_flight()
+	await _check_lone_flight()
+	await _check_rivals_leaving()
+	await _check_flee_cost()
+	_check_departure_and_reordering()
+
+
+## Run Away takes the whole side out, and the encounter ends as a flight with the rivals still in
+## it.
+func _check_side_flight() -> void:
+	var m := _make_manager()
+	var actor: EncounterIndividual = m.players[0]
+	var agent := ScriptedAgent.new()
+	agent.queued = [EncounterAction.of_kind(EncounterAction.Kind.FLEE)]
+	m.set_agent(actor, agent)
+	var res := await m.run(1)
+	_check(res == &"fled", "Run Away ends the encounter as a flight (%s)" % res)
+	_check(
+		m.all_players.all(func(f): return f.departure == EncounterManager.FLED),
+		"Run Away takes the whole duo out"
+	)
+	_check(
+		m.players.is_empty() and m.timeline.order.all(func(f): return not f.is_player),
+		"the duo is out of its side and out of the turn order"
+	)
+	var outcomes: Array = m.rival_report().map(func(r): return r["outcome"])
+	_check(outcomes == [&"stayed", &"stayed"], "the report leaves the rivals in (%s)" % [outcomes])
+	m.free()
+
+
+## Opening up Closing makes its user flee ALONE: the teammate carries on, and the user neither acts
+## again nor can be aimed at.
+func _check_lone_flight() -> void:
+	var m := _make_manager()
+	var actor: EncounterIndividual = m.players[0]
+	var teammate: EncounterIndividual = m.players[1]
+	var ability := m.resolve_ability(&"opening_up_closing")
+	var agent := ScriptedAgent.new()
+	agent.queued = [
+		EncounterAction.use_ability(ability, [m.rivals[0]]),
+		EncounterAction.of_kind(EncounterAction.Kind.PASS),
+	]
+	m.set_agent(actor, agent)
+	var res := await m.run(2)
+	_check(actor.departure == EncounterManager.FLED, "Opening up Closing: its user leaves")
+	_check(teammate.departure == &"" and m.players == [teammate], "the teammate stays in")
+	_check(res != &"fled", "one character leaving does not end the encounter (%s)" % res)
+	_check(agent.queued.size() == 1, "a character who left takes no further turn")
+	_check(
+		not m.opponents_of(m.rivals[0]).has(actor) and not m.timeline.order.has(actor),
+		"a character who left can no longer be aimed at"
+	)
+	m.free()
+
+	# The flight is resolved at the END of the turn: an individual the same ability dissolves is
+	# dissolved, not gone.
+	var m2 := _make_manager()
+	var doomed: EncounterIndividual = m2.players[0]
+	doomed.den = 1
+	var agent2 := ScriptedAgent.new()
+	agent2.queued = [EncounterAction.use_ability(ability, [m2.rivals[0]])]
+	m2.set_agent(doomed, agent2)
+	await m2.run(1)
+	_check(
+		doomed.is_dissolved() and not doomed.has_left(),
+		"an individual dissolved by its own flight stays dissolved"
+	)
+	m2.free()
+
+
+## The rivals' side: every rival gone decides the outcome, according to how they went.
+func _check_rivals_leaving() -> void:
+	var m := _make_manager()
+	for r in m.rivals.duplicate():
+		m.pacify(r)
+	var res := await m.run(1)
+	_check(res == &"pacified", "every rival pacified ends the encounter as pacified (%s)" % res)
+	var outcomes: Array = m.rival_report().map(func(r): return r["outcome"])
+	_check(outcomes == [&"pacified", &"pacified"], "the report says so (%s)" % [outcomes])
+	m.free()
+
+	var m2 := _make_manager()
+	var runner: EncounterIndividual = m2.rivals[0]
+	var fallen: EncounterIndividual = m2.rivals[1]
+	m2.withdraw(runner, EncounterManager.FLED)
+	fallen.den = 0
+	var res2 := await m2.run(1)
+	_check(
+		res2 == &"rivals_fled", "one rival fled and the other dissolved: rivals_fled (%s)" % res2
+	)
+	var report := m2.rival_report()
+	_check(
+		report[0]["outcome"] == &"fled" and report[0]["den"] == runner.den,
+		"the report keeps the fled rival's DEN (%d)" % runner.den
+	)
+	_check(report[1]["outcome"] == &"dissolved", "and records the dissolved one")
+	m2.free()
+
+	var m3 := _make_manager()
+	for r in m3.rivals:
+		r.den = 0
+	var res3 := await m3.run(1)
+	_check(res3 == &"victory", "every rival dissolved is still a victory (%s)" % res3)
+	m3.free()
+
+
+## Slick Merchant's Run Away costs 10 ETH, and does nothing when that cannot be paid.
+func _check_flee_cost() -> void:
+	var merchant := EncounterManager.make_individual(&"fopin", true)
+	var teammate := EncounterManager.make_individual(&"kalilk", true)
+	var rivals := [
+		EncounterManager.make_individual(&"ravbak", false),
+		EncounterManager.make_individual(&"skorpis", false)
+	]
+	var m := EncounterManager.new()
+	m.setup([merchant, teammate], rivals, SEED)
+	_check(m.flee_cost(merchant) == 10, "Slick Merchant: Run Away costs 10 ETH")
+	_check(m.flee_cost(teammate) == 0, "everyone else runs for free")
+	merchant.eth = 4
+	var agent := ScriptedAgent.new()
+	agent.queued = [EncounterAction.of_kind(EncounterAction.Kind.FLEE)]
+	m.set_agent(merchant, agent)
+	await m.run(1)
+	_check(not merchant.has_left(), "without the ETH, Slick Merchant stays")
+	m.free()
+
+	var merchant2 := EncounterManager.make_individual(&"fopin", true)
+	var m2 := EncounterManager.new()
+	m2.setup(
+		[merchant2, EncounterManager.make_individual(&"kalilk", true)],
+		[
+			EncounterManager.make_individual(&"ravbak", false),
+			EncounterManager.make_individual(&"skorpis", false)
+		],
+		SEED
+	)
+	merchant2.eth = 25
+	var agent2 := ScriptedAgent.new()
+	agent2.queued = [EncounterAction.of_kind(EncounterAction.Kind.FLEE)]
+	m2.set_agent(merchant2, agent2)
+	await m2.run(1)
+	_check(merchant2.has_left(), "with the ETH, Slick Merchant gets away")
+	_check(merchant2.eth == 15, "and pays 10 ETH for it (%d left)" % merchant2.eth)
+	m2.free()
+
+
+## A reordering queued before someone leaves must not put them back in the order.
+func _check_departure_and_reordering() -> void:
+	var m := _make_manager()
+	var leaving: EncounterIndividual = m.players[0]
+	m.timeline.request_move_last(leaving)
+	m.withdraw(leaving, EncounterManager.FLED)
+	m.timeline.apply_pending()
+	_check(not m.timeline.order.has(leaving), "a pending reordering does not bring back who left")
+	_check(m.timeline.order.size() == 3, "and keeps everyone else (%d)" % m.timeline.order.size())
+	m.free()
 
 
 # --------------------------------------------------------------------------

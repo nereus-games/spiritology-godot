@@ -1,9 +1,13 @@
 ## Plays an individual automatically — every rival, and players in headless runs.
 ##
 ## SCAFFOLDING, not a design from the doc: the first usable offensive ability, else the
-## first usable one at all, aimed at the first legal target. Targeting goes through the
-## manager's shared rule ([method EncounterManager.candidate_targets]), the same one the
-## player's menu uses, so the two cannot drift apart.
+## first usable one at all, aimed at the first legal target. It never plays an ability that
+## takes its user out of the encounter: picking the first damaging ability, ravbak would open
+## every encounter with Opening up Closing and be gone by the second turn.
+##
+## Targeting goes through the manager's shared rule
+## ([method EncounterManager.candidate_targets]), the same one the player's menu uses, so the two
+## cannot drift apart.
 class_name AutoAgent
 extends EncounterAgent
 
@@ -23,6 +27,8 @@ func decide(individual: EncounterIndividual, manager: EncounterManager) -> Encou
 func _choose_ability(individual: EncounterIndividual, manager: EncounterManager) -> AbilityData:
 	var fallback: AbilityData = null
 	for a in manager.usable_abilities(individual):
+		if EffectCatalog.script_for(a).takes_user_away():
+			continue
 		if fallback == null:
 			fallback = a
 		if a.base_damage > 0:

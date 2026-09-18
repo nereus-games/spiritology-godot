@@ -23,7 +23,7 @@ Run after **any** edit under `data/` or `translations/`:
 | `data/species/<slug>.tres` | `SpeciesData` | 36 |
 | `data/abilities/<slug>.tres` | `AbilityData` **and** `TalentData` | 111 + 10 |
 | `data/objects/<slug>.tres` | `ObjectData` | 6 |
-| `data/dungeons/<slug>.tres` | `DungeonConfig` | 0 (none authored yet) |
+| `data/dungeons/<slug>.tres` | `DungeonConfig` | 1 (`dev_rivals`, for the "rivals" test scenario) |
 | `data/scenarios/<slug>.tres` | `ScenarioData` | 10 (the dev test scenarios) |
 
 Abilities and talents deliberately share one directory: in Notion they are one database,
@@ -131,6 +131,25 @@ unlock order: `1st:` at 15 fragments, `2nd:` at 30. `forlorn_ability` is that bl
 36 species have no sprite yet; leaving the field empty is correct, and the integrity check
 only verifies that a **declared** path resolves.
 
+## Dungeons and their rival groups
+
+A `DungeonConfig` says how rival groups appear, and every figure is per dungeon:
+
+| Field | Rule |
+|---|---|
+| `spawn_points` | S — the tiles a group may appear on |
+| `initial_spawns` | P — groups on first entry |
+| `spawns_per_wave` / `spawn_interval_turns` | N groups every T turns; T = 0, no waves |
+| `random_composition_chance` | X, from 0.5 to 1 — a group drawn at random, else a special one |
+| `possible_species` | the varieties a random group is drawn from |
+| `group_size_*`, `member_max_den_*`, `member_max_eth_*` | the random draw's bounds |
+| `special_compositions` | `RivalGroupData`, picked when not drawn at random |
+| `fixed_groups` | `RivalGroupData` with a `tile`: tutorials, bosses, once on entry |
+
+A `RivalGroupData` lists `RivalMemberData` — a species, a maximum DEN and ETH — as
+sub-resources of the dungeon file. The integrity check refuses rules that cannot spawn;
+geometry_check, spawn tiles that are not floor.
+
 ## Objects
 
 Objects are not a Notion database — they are a bullet list inside the *Game Design* page,
@@ -170,6 +189,9 @@ cost would *give* ETH back), never a particular balance.
 | `modifier_per_condition` | +36 % | the one figure the doc does give |
 | `meditate_eth` / `meditate_damage_bonus` | 12 / +36 % | "recovers X ETH; damage +Y %" |
 | `object_heal_den` | 25 | "gives Y DEN to a target" |
+| `flee_distance_min` / `_max` | 3 / 5 | the doc's figures: "teleporting 3–5 tiles away" |
+| `flee_group_vanish_chance` | 0.5 | the doc's figure |
+| `rival_rest_turns` | 3 | nothing — a group's pause after an encounter is our own |
 
 `ObjectData.magnitude` stays `0`, meaning "not stated by Notion"; consumers fall back to
 the balance value above.

@@ -43,7 +43,9 @@ func fade_in() -> Signal:
 
 const ENCOUNTER_SCENE := "res://scenes/encounter/encounter.tscn"
 
-signal encounter_finished(result: StringName)
+## `rivals` is [method EncounterManager.rival_report], parallel to the `rival_ids` given to
+## [method open_encounter] — empty if the encounter was abandoned.
+signal encounter_finished(result: StringName, rivals: Array)
 
 var _encounter: CanvasLayer
 
@@ -55,8 +57,9 @@ var _hidden_hud: Array[CanvasLayer] = []
 ## exploration scene is paused (process_mode = DISABLED) and stays visible behind the 2D UI.
 ##
 ## `rival_states` runs parallel to `rival_ids` and carries each rival's state on the map,
-## as `{"den": int, "max_den": int}`. The maximum is a LEVEL DESIGN setting, tuned per
-## dungeon; the current value carries over damage taken while exploring, such as a fall.
+## as `{"den": int, "max_den": int, "eth": int, "max_eth": int}`. The maximums are LEVEL
+## DESIGN settings, tuned per dungeon; the current values carry over what happened before —
+## a fall, an earlier encounter.
 ## A missing or empty entry means the rival starts on its own defaults.
 func open_encounter(
 	player_ids: Array, rival_ids: Array, completed: Dictionary = {}, rival_states: Array = []
@@ -74,14 +77,14 @@ func open_encounter(
 	_encounter.begin(player_ids, rival_ids, completed, rival_states)
 
 
-func _on_encounter_finished(result: StringName, exploration: Node) -> void:
+func _on_encounter_finished(result: StringName, rivals: Array, exploration: Node) -> void:
 	if is_instance_valid(_encounter):
 		_encounter.queue_free()
 	_encounter = null
 	if is_instance_valid(exploration):
 		exploration.process_mode = Node.PROCESS_MODE_INHERIT
 		_restore_scene_hud()
-	encounter_finished.emit(result)
+	encounter_finished.emit(result, rivals)
 
 
 ## Hides the exploration scene's CanvasLayers for the duration of an encounter.

@@ -94,6 +94,12 @@ func modify_examine_info(_manager, _target, base: float) -> float:
 # --- Menu ---
 
 
+## What Run Away costs the bearer in ETH. Slick Merchant charges 10; everyone else runs for
+## free.
+func flee_eth_cost(_manager) -> int:
+	return 0
+
+
 ## Mutates the actions offered to the bearer, in place. Run Away and Steal both arrive
 ## this way, each replacing Talk. An action a talent removes is ABSENT from the menu rather
 ## than greyed out: the talent replaces it, it does not forbid it.

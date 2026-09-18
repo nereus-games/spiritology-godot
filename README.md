@@ -27,14 +27,14 @@ This is a work in progress, and the parts that do not work yet are worth stating
 - **Exploration** — dungeon geometry, traps, chests, gates, stairs, lifts, narrow bridges,
   crumbly ground and rival AI all run, with headless checks for each.
 - **Talents** — all 10 are wired into the loop. Several are limited by systems that do not
-  exist yet: there is no dialogue system, no fleeing, and rivals carry no objects, so those
-  talents currently log their intent rather than act on it.
+  exist yet: there is no dialogue system and rivals carry no objects, so those talents
+  currently log their intent rather than act on it.
 - **Balance numbers are placeholders.** The design doc writes them as `X %` and `Y DEN`;
   they can only be settled by playing. `docs/data-model.md` lists every one of them.
 - No audio, no save/load UI, no dungeon content beyond the test scenarios.
 
-The 81 `TODO` markers in the source are indexed in **[docs/roadmap.md](docs/roadmap.md)**,
-grouped by what they are waiting on. Most are not debt: they are one system waiting on
+The `TODO` markers in the source are indexed in **[docs/roadmap.md](docs/roadmap.md)**,
+grouped by what they are waiting on and ranked. Most are not debt: they are one system waiting on
 another that does not exist yet.
 
 ## Running it

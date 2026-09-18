@@ -68,8 +68,8 @@ enum IfpAction {
 ## What an inventory object DOES — not how much of it, which is parametric on
 ## [ObjectData]. Every object is consumable and stackable.
 ## Source: design doc, Game Design / Objects + Inventory.
-## ## TODO: the gameplay these feed — fleeing, poison, disguise, crumbly ground, pursuit —
-## is largely unbuilt. See docs/roadmap.md.
+## Every effect has a consumer: `exploration_objects.gd` in exploration, and
+## [method EncounterManager._resolve_object] for the Smoke bomb and the Rune stone.
 enum ObjectEffect {
 	NONE,  ## no mechanical effect; exists to be given away (Notice)
 	HEAL_DEN,  ## Rune stone

@@ -185,9 +185,8 @@ func ifp_amount(
 ##     the way to the cap and 0 once reached.
 ## ## TODO: give Forlorn pages their own percentage. Today their points are added to the
 ## species' existing page.
-## ## TODO: exploration never calls this. Examining decor and ground is the one source of
-## IFP with no call site — encounters go through
-## [signal EncounterManager.ifp_earned], relayed here by the encounter UI.
+## Called directly by exploration (examinable decor, litter, crumbly ground); encounters go
+## through [signal EncounterManager.ifp_earned], relayed here by the encounter UI.
 func award_ifp(
 	species_id: StringName,
 	action: GameEnums.IfpAction,

@@ -88,8 +88,8 @@ func examine(_who: Node) -> void:
 	if not pool.is_empty():
 		GameSession.award_ifp(pool[randi() % pool.size()], GameEnums.IfpAction.EXAMINE_DECOR)
 	# ## TODO: at a high PSY, a chance to spawn one or more rivals nearby, but not on the
-	## player's tile. The design doc leaves the "how much?" threshold unquantified; this needs a
-	## spawn system.
+	## player's tile. The design doc leaves the "how much?" threshold unquantified. Spawning
+	## itself exists — `rival_spawner.gd`, and the dieverting already does it.
 
 
 ## Persistence between visits: unexamined decor keeps its place, examined decor disappears and

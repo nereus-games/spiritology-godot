@@ -42,8 +42,9 @@ const REVEAL_TRAPS := &"reveal_traps"
 ## The chest is known to the player, by having been stepped on or revealed by "Trick to
 ## Reveal". Does NOT imply knowing whether it is trapped — the design doc makes these DISGUISED
 ## traps.
-## ## TODO: the map does not draw mechanisms yet; this flag is what it will read (same job as
-## `Trap.revealed`).
+## ## TODO: nothing reads this flag. The minimap draws every chest, known or not, whereas a
+## trap stays off it until [member Trap.revealed] — so "Trick to Reveal" revealing a chest
+## changes nothing on screen. Overriding `shows_on_map` would settle it.
 @export var revealed := false
 
 var _opened := false

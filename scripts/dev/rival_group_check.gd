@@ -16,9 +16,8 @@ const RivalMember := preload("res://scripts/exploration/rival_member.gd")
 const START := Vector3i(3, 0, 0)
 const NEXT_TO_START := Vector3i(3, 0, 1)
 
-## Runs of a flight, to see the group both vanish and stay. With a 50 % chance, all of them
-## coming out the same way would take a 1 in 2^39 fluke.
-const FLIGHTS := 40
+## Runs of a flight: the landing tile is drawn at random, so one run proves little.
+const FLIGHTS := 20
 
 var _fails: Array[String] = []
 
@@ -44,9 +43,12 @@ func _run_all() -> void:
 	await _check_rest(ctx)
 	await _check_flight(ctx)
 	_check_walking_distances(ctx)
-	ctx.scene.queue_free()
-	await get_tree().process_frame
+	await _check_closing_key(ctx)
 	await _check_encounter_states()
+	# Last: leaving the dungeon changes scene, which frees the exploration scene. The timer lets
+	# the fade and the change run their course before quitting.
+	await _check_leaving_the_dungeon(ctx)
+	await get_tree().create_timer(1.0).timeout
 	print("")
 	if _fails.is_empty():
 		print("ALL OK")
@@ -265,8 +267,7 @@ func _check_flight(ctx: Dictionary) -> void:
 	var scene = ctx.scene
 	var player = ctx.player
 	var balance := BalanceData.current()
-	var vanished := 0
-	var stayed := 0
+	var left_behind: Array = []
 	var off_range: Array = []
 	for i in FLIGHTS:
 		player.teleport_to(START)
@@ -278,14 +279,13 @@ func _check_flight(ctx: Dictionary) -> void:
 		if walked < balance.flee_distance_min or walked > balance.flee_distance_max:
 			off_range.append("%s (%d steps)" % [player.tile, walked])
 		await get_tree().process_frame
-		if is_instance_valid(g):
-			stayed += 1
-			if not g.is_resting() or g.den != 33:
-				off_range.append("a group left behind is not resting with its DEN")
-			g.remove_from_dungeon()
-			await get_tree().process_frame
-		else:
-			vanished += 1
+		if not is_instance_valid(g):
+			left_behind.append("the group is gone")
+			continue
+		if g.tile != NEXT_TO_START or not g.is_resting() or g.den != 33:
+			left_behind.append("%s, resting=%s, DEN %d" % [g.tile, g.is_resting(), g.den])
+		g.remove_from_dungeon()
+		await get_tree().process_frame
 	_check(
 		off_range.is_empty(),
 		(
@@ -298,10 +298,81 @@ func _check_flight(ctx: Dictionary) -> void:
 		)
 	)
 	_check(
-		vanished > 0 and stayed > 0,
-		"the group is sometimes gone, sometimes not (%d gone, %d stayed)" % [vanished, stayed]
+		left_behind.is_empty(),
+		(
+			"the rivals stay on their tile, resting, with the damage they took%s"
+			% ("" if left_behind.is_empty() else " — " + "; ".join(left_behind.slice(0, 3)))
+		)
 	)
 	player.teleport_to(START)
+
+
+## The key that closes the encounter screen must stop there. Exploration wakes up within the same
+## event, and Space is its `interact` too: after a flight, on a tile offering nothing but MENU,
+## the key went on to confirm it and the scenario was left for the picker.
+func _check_closing_key(ctx: Dictionary) -> void:
+	print("[closing the encounter screen]")
+	var scene = ctx.scene
+	var player = ctx.player
+	var hud = scene.get_node("HudExploration")
+	get_tree().current_scene = scene  # what TransitionManager pauses and wakes up
+	player.teleport_to(START)
+	TransitionManager.open_encounter([&"draka", &"kalilk"], [&"kalilk"], {}, [])
+	var ui = TransitionManager._encounter
+	await get_tree().process_frame
+	var ui_menu_visible := [ui._menu_button.visible]
+	# The encounter is over: the screen waits for a key to close.
+	ui._result = &"fled"
+	ui._rival_report = []
+	ui._awaiting_close = true
+	var key := InputEventKey.new()
+	# Both codes: the engine's ui_accept matches the logical key, the project's `interact` the
+	# physical one — which is exactly how one key press reaches both.
+	key.keycode = KEY_SPACE
+	key.physical_keycode = KEY_SPACE
+	key.pressed = true
+	Input.parse_input_event(key)
+	await get_tree().process_frame
+	var release := key.duplicate()
+	release.pressed = false
+	Input.parse_input_event(release)
+	for i in 5:
+		await get_tree().process_frame
+	_check(TransitionManager._encounter == null, "Space closes the encounter screen")
+	_check(
+		hud._action_menu.selected_id() == &"menu",
+		"the duo lands where MENU is the action on offer (%s)" % hud._action_menu.selected_id()
+	)
+	_check(
+		is_instance_valid(scene) and TransitionManager._fade.modulate.a == 0.0,
+		"and the same key does not go on to leave the scenario"
+	)
+	_check(not ui_menu_visible[0], "the encounter offers no shortcut to the scenario picker")
+
+
+## An encounter is left for exploration, and only a devitalised duo leaves the dungeon.
+func _check_leaving_the_dungeon(ctx: Dictionary) -> void:
+	print("[leaving the dungeon]")
+	var scene = ctx.scene
+	get_tree().current_scene = scene
+	# One character down, the other ran: still in the dungeon.
+	GameSession.set_den(GameSession.PartySlot.MAIN, 0)
+	GameSession.set_den(GameSession.PartySlot.TEAMMATE, 40)
+	scene._on_encounter_finished(&"fled", [])
+	for i in 5:
+		await get_tree().process_frame
+	_check(
+		TransitionManager._fade.modulate.a == 0.0,
+		"one character devitalised: the duo stays in the dungeon"
+	)
+	# Both down: out of the dungeon — which, in dev, is the scenario picker.
+	GameSession.set_den(GameSession.PartySlot.TEAMMATE, 0)
+	scene._on_encounter_finished(&"defeat", [])
+	for i in 5:
+		await get_tree().process_frame
+	_check(
+		TransitionManager._fade.modulate.a > 0.0, "the whole duo devitalised: it leaves the dungeon"
+	)
 
 
 ## Distances are walked, not measured as the crow flies: a pillar stands at (2, 0, 3).

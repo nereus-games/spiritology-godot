@@ -233,7 +233,7 @@ func _check_balance() -> void:
 	for field in ["modifier_per_condition", "meditate_damage_bonus"]:
 		if float(b.get(field)) < 0.0:
 			bad.append("%s = %s (must be >= 0)" % [field, b.get(field)])
-	# Running away must actually move the duo, and a vanishing chance is a probability.
+	# Running away must actually move the duo.
 	if b.flee_distance_min < 1 or b.flee_distance_max < b.flee_distance_min:
 		bad.append(
 			(
@@ -241,8 +241,6 @@ func _check_balance() -> void:
 				% [b.flee_distance_min, b.flee_distance_max]
 			)
 		)
-	if b.flee_group_vanish_chance < 0.0 or b.flee_group_vanish_chance > 1.0:
-		bad.append("flee_group_vanish_chance = %s (must be in [0, 1])" % b.flee_group_vanish_chance)
 	if b.rival_rest_turns < 0:
 		bad.append("rival_rest_turns = %d (must be >= 0)" % b.rival_rest_turns)
 	_check_empty(bad, "the balance values stay playable")

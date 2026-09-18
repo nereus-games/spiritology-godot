@@ -39,6 +39,27 @@ msgstr "Which object for %s?"
 msgid "UI_ENCOUNTER_CHOOSE_TARGET"
 msgstr "Target for %s?"
 
+# The object's target. Using it on a character and giving it to a rival are two different
+# moves, and each option says which it is. %s = the object, then the target and its DEN.
+msgid "UI_ENCOUNTER_USE_OR_GIVE"
+msgstr "%s: use it on a character, or give it to a rival?"
+
+msgid "UI_ENCOUNTER_USE_ON"
+msgstr "Use on %s"
+
+msgid "UI_ENCOUNTER_GIVE_TO"
+msgstr "Give to %s"
+
+msgid "UI_ENCOUNTER_GIVE_HINT"
+msgstr "Giving an object to a rival is a move in itself. If the object acts on a target, it acts on that rival."
+
+# The log's header for a Use / Give Object turn.
+msgid "UI_ENCOUNTER_LOG_USE_OBJECT"
+msgstr "Uses an object"
+
+msgid "UI_ENCOUNTER_LOG_GIVE_OBJECT"
+msgstr "Gives an object"
+
 msgid "UI_ENCOUNTER_BACK"
 msgstr "Back"
 
@@ -277,6 +298,12 @@ msgstr "Stairs, elevators & falls (5 storeys)"
 msgid "SCENARIO_STAIRS_DESC"
 msgstr "A pyramid of five tiers. One blue staircase per landing (0→1→2→3→4), staggered towards the back: that is the way that always works. The orange platforms are SHORTCUTS doubling those stairs — one VERTICAL elevator (1↔2) and one on a COMPLEX path (3↔4) that comes out over the void and chains segments on all three axes. An elevator stays where it was left: if it stayed at the top, take the stairs. For falls: to the west each tier overhangs the next (1 unit = no damage); to the east (the last column) nothing stops you before the bottom (1/2/3/4 units = 0/10/15/20 DEN). At the bottom you can walk UNDER the tiers — and a PILLAR there holds up a corner of tier 1: its top face is directly the floor above, with no slab added. At the summit, the first two tiles of the east edge are protected by a GUARDRAIL (a low one: you see the void over it, but you do not cross it); two steps further the same edge is open, and drops you 4 storeys."
 
+msgid "SCENARIO_ELEVATOR_SAFEGUARDS_TITLE"
+msgstr "Elevator safeguards (linked · teleport gate · safe area)"
+
+msgid "SCENARIO_ELEVATOR_SAFEGUARDS_DESC"
+msgstr "An elevator stays where it was left, so every area it reaches needs a way back if its platform is stranded at the top. Three raised areas, one safeguard each. WEST — LINKED elevators: two orange platforms, one at the bottom, one at the top; stepping onto either sends both the other way. Ride up, then jump off the edge (10 DEN): a platform is waiting for you at the bottom. MIDDLE — a TELEPORT GATE: the violet panel on the back wall. It glows one turn in three (closed, closed, open); walk into it while it glows and you land in the hall, with no gate to go back through. Nothing tells you where it leads. EAST — a SAFE AREA (green floor): railed all round, no trap, and the rival never follows you there — you leave it the way you came in, by the elevator. In the hall, a two-sided teleport gate: from either side it sends you to the far corner, and never across — walk round it."
+
 msgid "SCENARIO_ABILITIES_TITLE"
 msgstr "Exploration abilities & objects"
 
@@ -287,7 +314,7 @@ msgid "SCENARIO_RIVALS_TITLE"
 msgstr "Rival groups: spawns, flight, the way back"
 
 msgid "SCENARIO_RIVALS_DESC"
-msgstr "A lone rival waits near the entrance, two groups appear on spawn points as you arrive, and another one every 12 turns. A group is drawn at random 70 % of the time (1 to 3 of ravbak, kalilk, skorpis, fliritus), otherwise it is a pack of three ravbak or a lone skorpis. In an encounter, use a smoke bomb to run away: you land 3 to 5 steps off, and the group is gone half the time. In the debug view, F2 pacifies the rivals. Whatever the outcome, a group still on the map keeps the damage it took, and rests a few turns."
+msgstr "A lone rival waits near the entrance, two groups appear on spawn points as you arrive, and another one every 12 turns. A group is drawn at random 70 % of the time (1 to 3 of ravbak, kalilk, skorpis, fliritus), otherwise it is a pack of three ravbak or a lone skorpis. In an encounter, use a smoke bomb to run away: you land 3 to 5 steps off, with the group still where it was. If only one character runs, the other carries on. In the debug view, F2 pacifies the rivals. Whatever the outcome, a group still on the map keeps the damage it took, and rests a few turns."
 
 msgid "DUNGEON_DEV_RIVALS_NAME"
 msgstr "Rival test room"
@@ -514,9 +541,9 @@ msgstr "uses %s on %s: DEN %d -> %d."
 msgid "LOG_OBJECT_HEAL_GIVEN"
 msgstr "gives %s to %s: DEN %d -> %d."
 
-# %s = the object. Fleeing belongs to exploration, which does not handle it yet.
+# %s = the object, then the character it sends running.
 msgid "LOG_OBJECT_FLEE_USED"
-msgstr "uses %s to run away."
+msgstr "uses %s: %s runs away."
 
 # The objects whose effect belongs to exploration, or to nothing at all.
 msgid "LOG_OBJECT_USED"
@@ -531,9 +558,10 @@ msgstr "has nobody to steal from."
 msgid "LOG_STEAL"
 msgstr "tries to steal from %s [stolen object / Coal Vetch to come]."
 
-# Run Away: the whole side leaves. In LOG_FLEE_NO_ETH, %d = the ETH a talent charges for it.
-msgid "LOG_FLEE_SIDE"
-msgstr "runs away, and their side leaves the encounter."
+# Run Away: the character leaves, its teammate stays. In LOG_FLEE_NO_ETH, %d = the ETH a
+# talent charges for it.
+msgid "LOG_FLEE"
+msgstr "runs away and leaves the encounter."
 
 msgid "LOG_FLEE_NO_ETH"
 msgstr "cannot run away: it takes %d ETH."

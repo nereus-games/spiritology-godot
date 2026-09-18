@@ -441,27 +441,54 @@ func _check_departures() -> void:
 	_check_departure_and_reordering()
 
 
-## Run Away takes the whole side out, and the encounter ends as a flight with the rivals still in
-## it.
+## Run Away takes out the character who runs, and only it: the encounter goes on with the
+## teammate, and ends as a flight once the teammate has run too.
 func _check_side_flight() -> void:
 	var m := _make_manager()
-	var actor: EncounterIndividual = m.players[0]
+	var first: EncounterIndividual = m.players[0]
+	var second: EncounterIndividual = m.players[1]
 	var agent := ScriptedAgent.new()
 	agent.queued = [EncounterAction.of_kind(EncounterAction.Kind.FLEE)]
-	m.set_agent(actor, agent)
+	m.set_agent(first, agent)
 	var res := await m.run(1)
-	_check(res == &"fled", "Run Away ends the encounter as a flight (%s)" % res)
+	_check(first.departure == EncounterManager.FLED, "Run Away takes the character out")
 	_check(
-		m.all_players.all(func(f): return f.departure == EncounterManager.FLED),
-		"Run Away takes the whole duo out"
+		second.departure == &"" and m.players == [second] and res != &"fled",
+		"the teammate stays, and the encounter goes on (%s)" % res
 	)
+	m.free()
+
+	var m2 := _make_manager()
+	for f in m2.players:
+		var runner := ScriptedAgent.new()
+		runner.queued = [EncounterAction.of_kind(EncounterAction.Kind.FLEE)]
+		m2.set_agent(f, runner)
+	var res2 := await m2.run(1)
+	_check(res2 == &"fled", "both characters run: the encounter ends as a flight (%s)" % res2)
 	_check(
-		m.players.is_empty() and m.timeline.order.all(func(f): return not f.is_player),
+		m2.players.is_empty() and m2.timeline.order.all(func(f): return not f.is_player),
 		"the duo is out of its side and out of the turn order"
 	)
-	var outcomes: Array = m.rival_report().map(func(r): return r["outcome"])
+	var outcomes: Array = m2.rival_report().map(func(r): return r["outcome"])
 	_check(outcomes == [&"stayed", &"stayed"], "the report leaves the rivals in (%s)" % [outcomes])
-	m.free()
+	m2.free()
+
+	# A smoke bomb sends running the character it is used on — here, the teammate.
+	var m3 := _make_manager()
+	m3.object_provider = func(id): return load("res://data/objects/%s.tres" % id)
+	var user: EncounterIndividual = m3.players[0]
+	var mate: EncounterIndividual = m3.players[1]
+	var bomb := EncounterAction.of_kind(EncounterAction.Kind.USE_OBJECT, [mate])
+	bomb.object_id = &"smoke_bomb"
+	var agent3 := ScriptedAgent.new()
+	agent3.queued = [bomb]
+	m3.set_agent(user, agent3)
+	await m3.run(1)
+	_check(
+		mate.departure == EncounterManager.FLED and user.departure == &"",
+		"a smoke bomb sends running the character it is used on, and only it"
+	)
+	m3.free()
 
 
 ## Opening up Closing makes its user flee ALONE: the teammate carries on, and the user neither acts

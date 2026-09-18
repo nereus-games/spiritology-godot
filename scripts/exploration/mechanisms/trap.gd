@@ -71,6 +71,11 @@ func is_active() -> bool:
 	return _active
 
 
+## Every kind hurts or moves the player: never inside a safe area.
+func is_hazard() -> bool:
+	return true
+
+
 func is_spent() -> bool:
 	return not _active
 

@@ -3,8 +3,9 @@
 ## Kept apart from [DungeonManager], which holds the model — where the floor is, what blocks,
 ## who occupies what. This script only makes boxes out of it, and reads the dungeon through its
 ## PUBLIC API alone ([method DungeonManager.floor_tiles], [method DungeonManager.pit_tiles],
-## [method DungeonManager.fall_landing]). That is what makes the boundary real: if rendering
-## needs a fact, the model has to name it rather than leave it lying around in private.
+## [method DungeonManager.fall_landing], [member DungeonManager.safe_areas]). That is what makes
+## the boundary real: if rendering needs a fact, the model has to name it rather than leave it
+## lying around in private.
 ##
 ## No `class_name` (the CLI class-cache trap): obtained by `preload`.
 extends RefCounted
@@ -12,6 +13,8 @@ extends RefCounted
 const FLOOR_COLOR := Color(0.24, 0.24, 0.30)
 const PIT_COLOR := Color(0.12, 0.12, 0.16)
 const WALL_COLOR := Color(0.14, 0.14, 0.17)
+## A safe area's floor: the same slab, tinted green, so the player can tell where it starts.
+const SAFE_FLOOR_COLOR := Color(0.22, 0.34, 0.27)
 
 
 ## Lays the visible geometry into `dm`: a one-tile wall block on each of `wall_tiles`, and a
@@ -20,12 +23,14 @@ const WALL_COLOR := Color(0.14, 0.14, 0.17)
 ## serves as the floor, per the design doc's "Walls + Decors".
 static func render_grid(dm, wall_tiles: Dictionary) -> void:
 	var floor_mat := _material(FLOOR_COLOR)
+	var safe_mat := _material(SAFE_FLOOR_COLOR)
 	for c in dm.floor_tiles():
 		if dm.pit_tiles().has(c):
 			continue  # the lowered slab is rendered further down; the bridge plank goes over it
 		if wall_tiles.has(c + Vector3i.DOWN):
 			continue  # a wall block serves as the floor, so no slab on top of it
-		dm.add_child(_make_slab(dm, dm.tile_to_world(c), floor_mat))
+		var mat := safe_mat if dm.safe_areas.has(c) else floor_mat
+		dm.add_child(_make_slab(dm, dm.tile_to_world(c), mat))
 
 	# Pits get a dark bottom slab below them ONLY when there is no real floor further down —
 	# otherwise we would hide the very ravine you are meant to be able to fall into.

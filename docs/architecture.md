@@ -100,7 +100,15 @@ same way rivals do. The base is `mechanisms/dungeon_mechanism.gd`, and the hooks
 `blocks_walk()`, `on_enter(who)`, `on_turn(turn)`, `on_tile_actions(who)`,
 `on_adjacent_actions(who, facing)`, `reset_between_visits()`. Thirteen mechanisms exist on
 that base: traps, gates, chests, crumbly ground, litter, refresh crystals, the dieverting
-die, cracked walls, examinable decor, narrow bridges, stairs, lifts, guardrails.
+die, cracked walls, examinable decor, narrow bridges, stairs, lifts, guardrails. Gates come
+in four kinds, the fourth being the teleport gate, and lifts can be linked so that stepping
+onto one moves the others.
+
+**Safe areas** are not a mechanism but a declaration: level design marks tiles in
+`dungeon_manager.safe_areas` (`safe_areas.gd`), rivals never enter them, and
+`safe_areas.violations()` reports a hazard (`is_hazard()`), an unrailed ledge or a spawn point
+left inside one. With linked lifts and teleport gates they are the design doc's three
+safeguards for an area reached by lift.
 
 Two details that are easy to get wrong:
 
@@ -127,14 +135,16 @@ dissolved members are gone, the others keep the DEN and ETH they came out with.
 
 An encounter no longer ends only when a side is dissolved. An individual can **leave**:
 `EncounterManager.withdraw` takes it out of its side and of the turn order, so no targeting
-rule, talent or ability has to know about departures. Run Away and a smoke bomb take a whole
-side away; Ghosting and Opening up Closing only their user. `pacify` is the way out the
+rule, talent or ability has to know about departures. Whatever the way out — Run Away, a
+smoke bomb, Ghosting, Opening up Closing — one individual leaves, and its side carries on
+without it. `pacify` is the way out the
 dialogue system will use — nothing calls it in play yet, the debug view's F2 does. The
 outcomes follow: `victory` (every rival dissolved, the only one the FDE counter rewards),
 `defeat`, `fled`, `pacified`, `rivals_fled`, `timeout`.
 
-When the duo has fled, it lands 3 to 5 walkable steps away and the group is gone half the
-time. A group still on the map after any encounter rests a few turns, or it would open the
+When the duo has fled, it lands 3 to 5 walkable steps away, and the rivals still in the
+encounter stay on their tile. (A "50 % chance the rival disappears" was dropped: it looked
+exactly like the whole group being devitalised.) A group still on the map after any encounter rests a few turns, or it would open the
 next one straight away. The figures are in `data/balance.tres`.
 
 Decisions taken where the design doc is silent, to revisit when it speaks:

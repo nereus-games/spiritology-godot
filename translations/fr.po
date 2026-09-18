@@ -39,6 +39,27 @@ msgstr "Quel objet pour %s ?"
 msgid "UI_ENCOUNTER_CHOOSE_TARGET"
 msgstr "Cible de %s ?"
 
+# The object's target. Using it on a character and giving it to a rival are two different
+# moves, and each option says which it is. %s = the object, then the target and its DEN.
+msgid "UI_ENCOUNTER_USE_OR_GIVE"
+msgstr "%s : l'utiliser sur un personnage, ou le donner à un rival ?"
+
+msgid "UI_ENCOUNTER_USE_ON"
+msgstr "Utiliser sur %s"
+
+msgid "UI_ENCOUNTER_GIVE_TO"
+msgstr "Donner à %s"
+
+msgid "UI_ENCOUNTER_GIVE_HINT"
+msgstr "Donner un objet à un rival est un geste en soi. Si l'objet agit sur une cible, il agit sur ce rival."
+
+# The log's header for a Use / Give Object turn.
+msgid "UI_ENCOUNTER_LOG_USE_OBJECT"
+msgstr "Utilise un objet"
+
+msgid "UI_ENCOUNTER_LOG_GIVE_OBJECT"
+msgstr "Donne un objet"
+
 msgid "UI_ENCOUNTER_BACK"
 msgstr "Retour"
 
@@ -281,6 +302,12 @@ msgstr "Escaliers, ascenseurs & chutes (5 étages)"
 msgid "SCENARIO_STAIRS_DESC"
 msgstr "Pyramide de cinq gradins. Un escalier bleu par palier (0→1→2→3→4), en quinconce vers le fond : c'est le chemin toujours praticable. Les plateformes orange sont des RACCOURCIS doublant ces escaliers — un ascenseur VERTICAL (1↔2) et un à trajet COMPLEXE (3↔4) qui sort au-dessus du vide et enchaîne des segments sur les trois axes. Un ascenseur reste où on l'a laissé : s'il est resté en haut, reprends l'escalier. Pour les chutes : à l'ouest chaque gradin surplombe le suivant (1 unité = aucun dégât) ; à l'est (dernière colonne) rien n'arrête avant le bas (1/2/3/4 unités = 0/10/15/20 DEN). En bas, tu peux marcher SOUS les gradins — et un PILIER y soutient un coin du gradin 1 : sa face haute est directement le sol du dessus, sans dalle ajoutée. Au sommet, les deux premières cases du bord est sont protégées par une RAMBARDE (basse : on voit le vide par-dessus, mais on ne le franchit pas) ; deux pas plus loin le même bord est ouvert, et fait tomber de 4 étages."
 
+msgid "SCENARIO_ELEVATOR_SAFEGUARDS_TITLE"
+msgstr "Garde-fous des ascenseurs (liés · porte de téléportation · zone sûre)"
+
+msgid "SCENARIO_ELEVATOR_SAFEGUARDS_DESC"
+msgstr "Un ascenseur reste où on l'a laissé : toute zone qu'il dessert doit avoir une issue si sa plateforme reste bloquée en haut. Trois zones surélevées, un garde-fou chacune. OUEST — ascenseurs LIÉS : deux plateformes orange, l'une en bas, l'autre en haut ; monter sur l'une envoie les deux en sens inverse. Monte, puis saute du bord (10 DEN) : une plateforme t'attend en bas. MILIEU — une PORTE DE TÉLÉPORTATION : le panneau violet sur le mur du fond. Elle s'allume un tour sur trois (fermée, fermée, ouverte) ; avance dedans quand elle brille et tu arrives dans le hall, sans porte pour repartir. Rien n'indique où elle mène. EST — une ZONE SÛRE (sol vert) : rambardes tout autour, aucun piège, et le rival ne t'y suit jamais — tu en ressors comme tu es entré, par l'ascenseur. Dans le hall, une porte de téléportation à double face : des deux côtés elle t'envoie au coin opposé, jamais de l'autre côté — contourne-la."
+
 msgid "SCENARIO_ABILITIES_TITLE"
 msgstr "Capacités & objets d'exploration"
 
@@ -291,7 +318,7 @@ msgid "SCENARIO_RIVALS_TITLE"
 msgstr "Groupes de rivaux : apparitions, fuite, retour"
 
 msgid "SCENARIO_RIVALS_DESC"
-msgstr "Un rival seul attend près de l'entrée, deux groupes apparaissent sur des points d'apparition à ton arrivée, puis un autre tous les 12 tours. Un groupe est tiré au hasard 70 % du temps (1 à 3 parmi ravbak, kalilk, skorpis, fliritus), sinon c'est une meute de trois ravbak ou un skorpis seul. En rencontre, utilise une bombe fumigène pour fuir : tu atterris à 3 à 5 pas, et le groupe a disparu une fois sur deux. En vue de debug, F2 apaise les rivaux. Quelle que soit l'issue, un groupe resté sur la carte garde les dégâts subis, et se repose quelques tours."
+msgstr "Un rival seul attend près de l'entrée, deux groupes apparaissent sur des points d'apparition à ton arrivée, puis un autre tous les 12 tours. Un groupe est tiré au hasard 70 % du temps (1 à 3 parmi ravbak, kalilk, skorpis, fliritus), sinon c'est une meute de trois ravbak ou un skorpis seul. En rencontre, utilise une bombe fumigène pour fuir : tu atterris à 3 à 5 pas, et le groupe est toujours là où il était. Si un seul personnage fuit, l'autre continue. En vue de debug, F2 apaise les rivaux. Quelle que soit l'issue, un groupe resté sur la carte garde les dégâts subis, et se repose quelques tours."
 
 msgid "DUNGEON_DEV_RIVALS_NAME"
 msgstr "Salle de test des rivaux"
@@ -519,9 +546,9 @@ msgstr "utilise %s sur %s : DEN %d -> %d."
 msgid "LOG_OBJECT_HEAL_GIVEN"
 msgstr "donne %s à %s : DEN %d -> %d."
 
-# %s = the object. Fleeing belongs to exploration, which does not handle it yet.
+# %s = the object, then the character it sends running.
 msgid "LOG_OBJECT_FLEE_USED"
-msgstr "utilise %s pour prendre la fuite."
+msgstr "utilise %s : %s prend la fuite."
 
 # The objects whose effect belongs to exploration, or to nothing at all.
 msgid "LOG_OBJECT_USED"
@@ -536,9 +563,10 @@ msgstr "n'a personne à voler."
 msgid "LOG_STEAL"
 msgstr "tente de voler %s [objet volé / Coal Vetch à venir]."
 
-# Run Away: the whole side leaves. In LOG_FLEE_NO_ETH, %d = the ETH a talent charges for it.
-msgid "LOG_FLEE_SIDE"
-msgstr "prend la fuite, et son camp quitte la rencontre."
+# Run Away: the character leaves, its teammate stays. In LOG_FLEE_NO_ETH, %d = the ETH a
+# talent charges for it.
+msgid "LOG_FLEE"
+msgstr "prend la fuite et quitte la rencontre."
 
 msgid "LOG_FLEE_NO_ETH"
 msgstr "ne peut pas fuir : il faut %d ETH."

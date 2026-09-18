@@ -15,6 +15,11 @@
 ## The trip costs no extra turn: the step onto the platform already spent one, and the design doc
 ## says the trip fits "in one turn".
 ##
+## Some elevators are LINKED ([member linked]): stepping onto one also moves the others. A pair
+## linked both ways, one platform up and one down, keeps a platform waiting at each end whatever
+## happens — the design doc lists linked elevators among the safeguards against a platform left
+## stranded at the far end.
+##
 ## No `class_name`: `extends` by path.
 extends "res://scripts/exploration/mechanisms/dungeon_mechanism.gd"
 
@@ -31,6 +36,15 @@ extends "res://scripts/exploration/mechanisms/dungeon_mechanism.gd"
 ## register that a platform is moving, but aboard you read the route — and on a path that goes
 ## sideways before climbing, you need time to see where it leads.
 @export var rider_segment_duration := 1.2
+
+## The elevators that set off whenever someone steps onto THIS one. Node references, so set by
+## the level-design code once every platform exists rather than exported. A link is one way:
+## list each in the other's for a pair that moves together whichever is stepped on.
+##
+## A linked platform moves EMPTY: whoever stands on it stays behind, on the floor tile it leaves.
+## Carrying them off would move the player, or a rival, on someone else's step — the design doc
+## does not say that it should, and inside a safe area it must not.
+var linked: Array = []
 
 var _origin: Vector3i
 var _at_far_end := false
@@ -71,9 +85,10 @@ func on_enter(who: Node) -> void:
 	ride(who)
 
 
-## Takes `who` and the platform to the far end. Returns the destination tile, or the current one
-## when the trip could not happen.
-func ride(who: Node) -> Vector3i:
+## Takes `who` and the platform to the far end, and sets off the [member linked] platforms.
+## Returns the destination tile, or the current one when the trip could not happen. `who` null
+## moves the platform empty — how a linked one travels.
+func ride(who: Node, pass_on := true) -> Vector3i:
 	var route := _route()
 	if _moving or _dungeon == null or route.is_empty():
 		return tile
@@ -83,6 +98,16 @@ func ride(who: Node) -> Vector3i:
 	if not _dungeon.is_floor(dest):
 		push_warning("[Elevator] %s -> %s: the destination is not floor." % [tile, dest])
 		return tile
+	# No rival is ever carried into a safe area. Rivals do not step onto such a platform in the
+	# first place (see SafeAreas.rival_may_enter); this is the backstop.
+	if who != null and not _dungeon.is_player(who) and _dungeon.safe_areas.has(dest):
+		return tile
+	# Only the platform actually stepped onto passes the move on, so a pair linked both ways does
+	# not bounce back and forth.
+	if pass_on:
+		for other in linked:
+			if is_instance_valid(other) and other != self:
+				other.ride(null, false)
 	var from := tile
 	_moving = true
 	_dungeon.unregister_mechanism(from, self)

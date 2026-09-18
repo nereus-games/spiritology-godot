@@ -190,7 +190,6 @@ cost would *give* ETH back), never a particular balance.
 | `meditate_eth` / `meditate_damage_bonus` | 12 / +36 % | "recovers X ETH; damage +Y %" |
 | `object_heal_den` | 25 | "gives Y DEN to a target" |
 | `flee_distance_min` / `_max` | 3 / 5 | the doc's figures: "teleporting 3–5 tiles away" |
-| `flee_group_vanish_chance` | 0.5 | the doc's figure |
 | `rival_rest_turns` | 3 | nothing — a group's pause after an encounter is our own |
 
 `ObjectData.magnitude` stays `0`, meaning "not stated by Notion"; consumers fall back to

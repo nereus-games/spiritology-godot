@@ -9,6 +9,9 @@ extends Node3D
 const ScenarioCatalog := preload("res://scripts/dev/scenario_catalog.gd")
 const RivalSpawner := preload("res://scripts/exploration/rival_spawner.gd")
 
+## DEV: where a devitalised duo goes, standing in for the world map.
+const SCENARIO_SELECT := "res://scenes/dev/scenario_select.tscn"
+
 @onready var _dungeon: DungeonManager = $DungeonManager
 
 var _pending_rival: Node
@@ -84,8 +87,10 @@ func _on_encounter_requested(rival: Node, initiated_by_rival: bool) -> void:
 	TransitionManager.open_encounter(_player_duo(), ids, {}, states)
 
 
-## `rivals` is the encounter's report on each member of the group, in order — empty when the
-## encounter was abandoned rather than finished.
+## `rivals` is the encounter's report on each member of the group, in order.
+##
+## Every encounter ends back here — the one exception being a devitalised duo, which
+## [method _on_party_wiped] then takes out of the dungeon.
 func _on_encounter_finished(result: StringName, rivals: Array) -> void:
 	print("[Exploration] Encounter over: %s." % result)
 	# The FDE counter is NOT updated here: the encounter UI already does it when the encounter
@@ -105,9 +110,12 @@ func _on_encounter_finished(result: StringName, rivals: Array) -> void:
 	GameSession.resolve_party_wipe()
 
 
-## The duo ran away: it lands 3 to 5 walkable steps from where the encounter took place, and
-## the group it ran from is gone half the time — the design doc's rule for fleeing. A group
-## that is still there rests, like after any other encounter.
+## The duo ran away: it lands 3 to 5 walkable steps from where the encounter took place. The
+## rivals still in the encounter stay on the group's tile, and rest like after any other
+## encounter.
+##
+## The design doc was once read as adding "a 50 % chance the rival disappears"; that was dropped
+## (2026-09-18) — a group vanishing looked exactly like every rival in it being devitalised.
 func _run_away(group: Node) -> void:
 	var balance := BalanceData.current()
 	var player := get_node_or_null("Player")
@@ -115,11 +123,7 @@ func _run_away(group: Node) -> void:
 		var dest := flight_destination(player.tile)
 		if dest != player.tile:
 			player.teleport_to(dest)
-	if group == null:
-		return
-	if randf() < balance.flee_group_vanish_chance:
-		group.remove_from_dungeon()
-	else:
+	if group != null:
 		group.rest(balance.rival_rest_turns)
 
 
@@ -157,12 +161,20 @@ func _next_to_rival(tile: Vector3i) -> bool:
 	return false
 
 
-## The whole duo has been devitalised. [GameSession] has already restored DEN to 1 each;
-## exploration has to take the duo out of the current dungeon.
+## The whole duo has been devitalised — in an encounter, by a fall, by poison. [GameSession]
+## has already restored DEN to 1 each; the duo leaves the dungeon. It is the one way out of an
+## encounter that does not come back to exploration.
+##
+## DEV: the scenario picker stands in for the world map.
+## ## TODO: the world map, once it exists.
 func _on_party_wiped() -> void:
 	print("[Exploration] Duo devitalised: leaving the dungeon.")
-	## TODO: actually take the duo out of the dungeon — back to the world map, or to the
-	## dungeon entrance — once inter-scene navigation exists.
+	# Only the running scene has anywhere to leave to. A check that builds an exploration scene
+	# under itself is the current scene, and a scene change would swap the check out for the
+	# picker — geometry_check's bottomless fall wipes the duo.
+	if get_tree().current_scene != self:
+		return
+	TransitionManager.change_scene(SCENARIO_SELECT)
 
 
 func _on_turn_advanced(turn: int) -> void:

@@ -19,6 +19,7 @@ class_name DungeonManager
 extends Node3D
 
 const DungeonRenderer := preload("res://scripts/exploration/dungeon_renderer.gd")
+const SafeAreas := preload("res://scripts/exploration/safe_areas.gd")
 
 ## Tile size in world units (metres). A wall block is 1 m x 1 m x 1 m.
 const TILE_SIZE := 1.0
@@ -76,6 +77,10 @@ signal message_posted(text: String)
 @export var demo_interior_walls: Array[Vector3i] = []
 
 var turn_count := 0
+
+## The safe areas level design declared, and what keeps rivals out of them. A member rather than
+## methods of this manager, which is big enough already.
+var safe_areas = SafeAreas.new(self)
 
 ## The dungeon's level-design configuration — which rival groups appear, where and when. Null
 ## for a room built by hand with no such rules, as most test scenarios are.
@@ -469,11 +474,12 @@ func actions_for(from_tile: Vector3i, facing: Vector3i, who: Node) -> Array:
 	return actions
 
 
-## A random walkable floor tile other than `exclude`. Returns `exclude` when there is none.
-func random_floor_tile(exclude: Vector3i) -> Vector3i:
+## A random walkable floor tile other than `exclude`, outside every safe area when
+## `avoid_safe` — where a random teleport may drop a rival. Returns `exclude` when there is none.
+func random_floor_tile(exclude: Vector3i, avoid_safe := false) -> Vector3i:
 	var candidates: Array = []
 	for c in _floor:
-		if c != exclude and is_walkable(c):
+		if c != exclude and is_walkable(c) and not (avoid_safe and safe_areas.has(c)):
 			candidates.append(c)
 	if candidates.is_empty():
 		return exclude
@@ -481,10 +487,10 @@ func random_floor_tile(exclude: Vector3i) -> Vector3i:
 
 
 ## Teleports an actor to a random free floor tile — the teleport trap. Returns the tile it
-## landed on, unchanged when no destination was free.
+## landed on, unchanged when no destination was free. A rival never lands in a safe area.
 func teleport_actor(who: Node) -> Vector3i:
 	var from: Vector3i = who.tile
-	return teleport_actor_to(who, random_floor_tile(from))
+	return teleport_actor_to(who, random_floor_tile(from, not is_player(who)))
 
 
 ## Teleports an actor to a SPECIFIC tile — a dungeon entrance or exit, a dieverting. Falls

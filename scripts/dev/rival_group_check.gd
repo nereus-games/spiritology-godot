@@ -45,9 +45,11 @@ func _run_all() -> void:
 	await _check_flight(ctx)
 	_check_walking_distances(ctx)
 	await _check_closing_key(ctx)
-	ctx.scene.queue_free()
-	await get_tree().process_frame
 	await _check_encounter_states()
+	# Last: leaving the dungeon changes scene, which frees the exploration scene. The timer lets
+	# the fade and the change run their course before quitting.
+	await _check_leaving_the_dungeon(ctx)
+	await get_tree().create_timer(1.0).timeout
 	print("")
 	if _fails.is_empty():
 		print("ALL OK")
@@ -318,6 +320,7 @@ func _check_closing_key(ctx: Dictionary) -> void:
 	TransitionManager.open_encounter([&"draka", &"kalilk"], [&"kalilk"], {}, [])
 	var ui = TransitionManager._encounter
 	await get_tree().process_frame
+	var ui_menu_visible := [ui._menu_button.visible]
 	# The encounter is over: the screen waits for a key to close.
 	ui._result = &"fled"
 	ui._rival_report = []
@@ -343,6 +346,32 @@ func _check_closing_key(ctx: Dictionary) -> void:
 	_check(
 		is_instance_valid(scene) and TransitionManager._fade.modulate.a == 0.0,
 		"and the same key does not go on to leave the scenario"
+	)
+	_check(not ui_menu_visible[0], "the encounter offers no shortcut to the scenario picker")
+
+
+## An encounter is left for exploration, and only a devitalised duo leaves the dungeon.
+func _check_leaving_the_dungeon(ctx: Dictionary) -> void:
+	print("[leaving the dungeon]")
+	var scene = ctx.scene
+	get_tree().current_scene = scene
+	# One character down, the other ran: still in the dungeon.
+	GameSession.set_den(GameSession.PartySlot.MAIN, 0)
+	GameSession.set_den(GameSession.PartySlot.TEAMMATE, 40)
+	scene._on_encounter_finished(&"fled", [])
+	for i in 5:
+		await get_tree().process_frame
+	_check(
+		TransitionManager._fade.modulate.a == 0.0,
+		"one character devitalised: the duo stays in the dungeon"
+	)
+	# Both down: out of the dungeon — which, in dev, is the scenario picker.
+	GameSession.set_den(GameSession.PartySlot.TEAMMATE, 0)
+	scene._on_encounter_finished(&"defeat", [])
+	for i in 5:
+		await get_tree().process_frame
+	_check(
+		TransitionManager._fade.modulate.a > 0.0, "the whole duo devitalised: it leaves the dungeon"
 	)
 
 

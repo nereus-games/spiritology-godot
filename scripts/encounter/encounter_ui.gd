@@ -15,15 +15,12 @@
 extends CanvasLayer
 
 ## `rivals` is [method EncounterManager.rival_report]: one entry per rival, in the order
-## [method begin] received them. Empty when the encounter was abandoned rather than finished.
+## [method begin] received them.
 signal finished(result: StringName, rivals: Array)
 
 ## Preloaded rather than named: see that script's header.
 const TimelineEntry := preload("res://scripts/ui/encounter_timeline_entry.gd")
 const MenuPanel := preload("res://scripts/ui/encounter_menu_panel.gd")
-
-## Where MENU goes for now, since the encounter pause screen does not exist.
-const SCENARIO_SELECT := "res://scenes/dev/scenario_select.tscn"
 
 ## Width of the docked log in the debug view.
 const DEBUG_LOG_WIDTH := 380.0
@@ -142,11 +139,12 @@ func begin(
 	_log_button.pressed.connect(_toggle_log)
 	_log_button.text = tr("UI_ENCOUNTER_LOG")
 	# MENU will open the encounter pause — Monstropaedia, Settings, Leave The Gloom. None of
-	# those screens exists, so for now it returns to the scenario picker. Deliberately not
-	# `disabled`: a disabled button is skipped by keyboard navigation and becomes
-	# unreachable by Tab.
+	# those screens exists, and the button is HIDDEN until they do. It used to jump straight to
+	# the scenario picker, but an encounter is only ever left for exploration; the picker is
+	# reached from there.
+	## TODO: wire the encounter pause screen, and show the button again.
 	_menu_button.text = tr("UI_ENCOUNTER_MENU")
-	_menu_button.pressed.connect(_on_menu_pressed)
+	_menu_button.visible = false
 
 	_apply_debug_view()
 	_build_rival_art(rf)
@@ -207,18 +205,6 @@ func _refresh_timeline() -> void:
 ## display of a rival's density and weakness depend on. The debug view lifts the veil.
 func _knows(individual: EncounterIndividual) -> bool:
 	return _debug_view or individual.is_player or GameSession.knows_species(individual.species_id())
-
-
-## Back to the scenario picker.
-##
-## The encounter is CLOSED first. Its overlay lives under `/root` rather than in the current
-## scene, so a plain scene change would leave it drawn on top of the new screen. Emitting
-## `finished` goes through [TransitionManager]'s normal teardown, after which changing the
-## scene takes exploration with it.
-## ## TODO: wire the real pause screen.
-func _on_menu_pressed() -> void:
-	finished.emit(&"menu", [])
-	TransitionManager.change_scene(SCENARIO_SELECT)
 
 
 func _toggle_log() -> void:

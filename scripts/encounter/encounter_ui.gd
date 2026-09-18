@@ -673,6 +673,11 @@ func _unhandled_input(event: InputEvent) -> void:
 		)
 	):
 		_awaiting_close = false
+		# Handled BEFORE emitting: `finished` wakes exploration up within this very event, and the
+		# key would carry on to it. Space is also `interact` there, which confirmed whatever the
+		# action menu had selected — after a flight, on a tile with nothing else, that was MENU,
+		# and the scenario was left. Escape would have toggled the mouse capture.
+		get_viewport().set_input_as_handled()
 		finished.emit(_result, _rival_report)
 
 

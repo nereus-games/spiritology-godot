@@ -44,6 +44,7 @@ func _run_all() -> void:
 	await _check_rest(ctx)
 	await _check_flight(ctx)
 	_check_walking_distances(ctx)
+	await _check_closing_key(ctx)
 	ctx.scene.queue_free()
 	await get_tree().process_frame
 	await _check_encounter_states()
@@ -302,6 +303,47 @@ func _check_flight(ctx: Dictionary) -> void:
 		"the group is sometimes gone, sometimes not (%d gone, %d stayed)" % [vanished, stayed]
 	)
 	player.teleport_to(START)
+
+
+## The key that closes the encounter screen must stop there. Exploration wakes up within the same
+## event, and Space is its `interact` too: after a flight, on a tile offering nothing but MENU,
+## the key went on to confirm it and the scenario was left for the picker.
+func _check_closing_key(ctx: Dictionary) -> void:
+	print("[closing the encounter screen]")
+	var scene = ctx.scene
+	var player = ctx.player
+	var hud = scene.get_node("HudExploration")
+	get_tree().current_scene = scene  # what TransitionManager pauses and wakes up
+	player.teleport_to(START)
+	TransitionManager.open_encounter([&"draka", &"kalilk"], [&"kalilk"], {}, [])
+	var ui = TransitionManager._encounter
+	await get_tree().process_frame
+	# The encounter is over: the screen waits for a key to close.
+	ui._result = &"fled"
+	ui._rival_report = []
+	ui._awaiting_close = true
+	var key := InputEventKey.new()
+	# Both codes: the engine's ui_accept matches the logical key, the project's `interact` the
+	# physical one — which is exactly how one key press reaches both.
+	key.keycode = KEY_SPACE
+	key.physical_keycode = KEY_SPACE
+	key.pressed = true
+	Input.parse_input_event(key)
+	await get_tree().process_frame
+	var release := key.duplicate()
+	release.pressed = false
+	Input.parse_input_event(release)
+	for i in 5:
+		await get_tree().process_frame
+	_check(TransitionManager._encounter == null, "Space closes the encounter screen")
+	_check(
+		hud._action_menu.selected_id() == &"menu",
+		"the duo lands where MENU is the action on offer (%s)" % hud._action_menu.selected_id()
+	)
+	_check(
+		is_instance_valid(scene) and TransitionManager._fade.modulate.a == 0.0,
+		"and the same key does not go on to leave the scenario"
+	)
 
 
 ## Distances are walked, not measured as the crow flies: a pillar stands at (2, 0, 3).

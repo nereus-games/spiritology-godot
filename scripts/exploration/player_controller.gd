@@ -8,6 +8,7 @@ class_name PlayerController
 extends Node3D
 
 const AfflictionState := preload("res://scripts/exploration/mechanisms/affliction_state.gd")
+const Gateway := preload("res://scripts/exploration/mechanisms/gateway.gd")
 
 @export var move_duration := 0.18
 ## How fast the body catches up to the target angle, in degrees per second. High values keep
@@ -124,6 +125,14 @@ func try_move(local_dir: Vector3) -> void:
 		return
 	var target := tile + delta
 
+	# A teleport gate: going through it while it is open sends the duo to its arrival tile. Open
+	# or closed, it never lets you walk across to the other side.
+	var gate := Gateway.teleport_gate_between(_dungeon, tile, target)
+	if gate != null:
+		if gate.admits_from(tile):
+			await _go_through_gate(gate, target)
+		return
+
 	# A closed gateway on the edge being crossed: nothing gets through — no stairs, no fall, no
 	# encounter.
 	if _dungeon.is_edge_blocked(tile, target):
@@ -167,6 +176,26 @@ func try_move(local_dir: Vector3) -> void:
 	# A step eats into the stealth states: invisibility and not-chased.
 	_tick_hidden_on_move()
 	# The reached tile's mechanisms first, such as traps, then the turn advances.
+	_dungeon.notify_entered(tile, self)
+	_dungeon.advance_turn()
+
+
+## Goes through an open teleport gate: a step INTO it, towards `toward`, then the arrival —
+## the tile's mechanisms and the turn, as after any step, unless the duo lands on a rival, which
+## starts an encounter instead.
+func _go_through_gate(gate: Node, toward: Vector3i) -> void:
+	_busy = true
+	var tween := create_tween()
+	var into := _dungeon.tile_to_world(tile).lerp(_dungeon.tile_to_world(toward), 0.5)
+	tween.tween_property(self, "global_position", into, move_duration)
+	await tween.finished
+	_busy = false
+	var met: bool = gate.send_through(self)
+	# Back onto a tile centre: the arrival's, or the start's when the gate leads nowhere.
+	global_position = _dungeon.tile_to_world(tile)
+	if met:
+		return
+	_tick_hidden_on_move()
 	_dungeon.notify_entered(tile, self)
 	_dungeon.advance_turn()
 

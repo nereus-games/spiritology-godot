@@ -13,6 +13,7 @@ extends Node3D
 
 const AfflictionState := preload("res://scripts/exploration/mechanisms/affliction_state.gd")
 const RivalMember := preload("res://scripts/exploration/rival_member.gd")
+const Gateway := preload("res://scripts/exploration/mechanisms/gateway.gd")
 
 ## The individuals this silhouette stands for, as `rival_member.gd` instances. Set BEFORE the
 ## rival enters the tree. Left empty, the group is a single individual built from
@@ -181,8 +182,8 @@ func take_turn(player_tile: Vector3i) -> void:
 		delta = _random_dir()
 	var next := tile + delta
 
-	# A closed gateway stops the rival too — and contact through it.
-	if _dungeon.is_edge_blocked(tile, next):
+	# A teleport gate, a closed gateway or a safe area in the way: no step, and no contact.
+	if _stopped_before(next):
 		return
 
 	# Stairs ahead, approached along their axis: the rival takes them like the player does
@@ -217,6 +218,28 @@ func take_turn(player_tile: Vector3i) -> void:
 		# simple probability to fall".
 		if _dungeon.is_narrow_bridge(tile) and randf() < bridge_fall_chance:
 			fall_down(tile)
+
+
+## Whether the move to the neighbouring `next` stops short. A teleport gate spends the turn,
+## whether it sends the rival off or not. A closed gateway stops the rival too — and contact
+## through it. A safe area keeps rivals out, and with them any encounter started by walking into
+## it.
+func _stopped_before(next: Vector3i) -> bool:
+	if Gateway.teleport_gate_between(_dungeon, tile, next) != null:
+		_take_gate(next)
+		return true
+	return _dungeon.is_edge_blocked(tile, next) or not _dungeon.safe_areas.rival_may_enter(next)
+
+
+## Walks into the teleport gate towards `next`: an open one sends the rival away like the player,
+## a closed one stops it. Never into a safe area, though — that holds however a rival would get
+## there.
+func _take_gate(next: Vector3i) -> void:
+	var gate := Gateway.teleport_gate_between(_dungeon, tile, next)
+	if not gate.admits_from(tile) or not _dungeon.safe_areas.rival_may_enter(gate.arrival_tile):
+		return
+	if not gate.send_through(self):
+		_dungeon.notify_entered(tile, self)
 
 
 func _update_memory(player_tile: Vector3i) -> void:
@@ -349,6 +372,8 @@ func _open_drop_edge(toward: Vector3i) -> Vector3i:
 		var landing: Vector3i = _dungeon.fall_landing(n)
 		if landing == n:
 			continue  # solid wall, or a bottomless hole
+		if _dungeon.safe_areas.has(landing):
+			continue  # nobody drops into a safe area either
 		var score: int = absi(landing.x - toward.x) + absi(landing.z - toward.z)
 		if score < best_score:
 			best_score = score
@@ -392,7 +417,7 @@ func _nearest_level_link(direction: int) -> Node:
 		var to: Vector3i = m.level_link_to()
 		if from.y != tile.y or signi(to.y - from.y) != direction:
 			continue
-		if not _dungeon.is_floor(from):
+		if not _dungeon.is_floor(from) or _dungeon.safe_areas.has(to):
 			continue
 		var d: Vector3i = (from - tile).abs()
 		var dist: int = d.x + d.z

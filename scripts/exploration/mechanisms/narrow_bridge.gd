@@ -22,6 +22,11 @@ func blocks_walk() -> bool:
 	return false
 
 
+## A plank is a place to fall from: never inside a safe area.
+func is_hazard() -> bool:
+	return true
+
+
 func on_enter(who: Node) -> void:
 	if _engaged:
 		return

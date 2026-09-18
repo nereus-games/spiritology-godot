@@ -128,6 +128,8 @@ static func build(id: StringName, dm) -> Vector3i:
 			return _bridge_rival(dm)
 		&"stairs":
 			return _stairs(dm)
+		&"elevator_safeguards":
+			return _elevator_safeguards(dm)
 		&"abilities":
 			return _abilities(dm)
 		&"rivals":
@@ -425,6 +427,84 @@ static func _stairs(dm) -> Vector3i:
 	]
 	_place(dm, Elevator, Vector3i(6, 3, 5), {"path": winding})
 	return Vector3i(3, 0, 0)
+
+
+## The design doc's safeguards for areas reached by elevator ("Mechanisms / Elevators"): an
+## elevator stays where it was left, so a platform stranded at the far end — after a fall, say —
+## must never cut an area off for good. Three raised areas, one safeguard each:
+##
+##   WEST   linked elevators: a pair moving in opposite directions, so a platform always waits
+##          at the bottom — the alternative route;
+##   MIDDLE a one-way teleport gate set against the back wall, leading back down to the hall;
+##   EAST   a safe area: railed all round, with no hazard and no rival — you leave it the way you
+##          came in.
+##
+## Plus a TWO-SIDED teleport gate standing in the hall, a shortcut that cannot be taken in
+## reverse, and a rival to watch keep out of the safe area.
+##
+##   storey 2:  west x 0..3 · middle x 5..9 · east x 11..14, all z 7..10
+##   storey 0:  the hall, x 0..14, z 0..10, running UNDER all three
+static func _elevator_safeguards(dm) -> Vector3i:
+	_floor_rect_y(dm, 0, 0, 15, 11, 0)
+	_floor_rect_y(dm, 0, 7, 4, 4, 2)
+	_floor_rect_y(dm, 5, 7, 5, 4, 2)
+	_floor_rect_y(dm, 11, 7, 4, 4, 2)
+	# The ends of every elevator are floor on both storeys, so each platform rises straight
+	# through the ceiling above its hall tile, as in the "stairs" scenario.
+
+	# WEST: one platform at the bottom, its twin at the top. Stepping onto either sends them both
+	# the other way, so whichever end you are stranded at, a platform is waiting there.
+	var up: Array[Vector3i] = [Vector3i(1, 2, 8)]
+	var down: Array[Vector3i] = [Vector3i(2, 0, 8)]
+	var lower = _place(dm, Elevator, Vector3i(1, 0, 8), {"path": up})
+	var upper = _place(dm, Elevator, Vector3i(2, 2, 8), {"path": down})
+	lower.linked = [upper]
+	upper.linked = [lower]
+
+	# MIDDLE: a plain elevator, and a teleport gate on the back wall leading down to the hall.
+	var middle: Array[Vector3i] = [Vector3i(7, 2, 8)]
+	_place(dm, Elevator, Vector3i(7, 0, 8), {"path": middle})
+	_place(
+		dm,
+		Gateway,
+		Vector3i(7, 2, 10),
+		{
+			"kind": Gateway.Kind.TELEPORT,
+			"edge_dir": Vector3i(0, 0, 1),
+			"arrival_tile": Vector3i(7, 0, 3),
+		}
+	)
+
+	# EAST: the safe area. The back and the far side are walls; the two open sides are railed.
+	var east: Array[Vector3i] = [Vector3i(12, 2, 8)]
+	_place(dm, Elevator, Vector3i(12, 0, 8), {"path": east})
+	var safe: Array = []
+	for x in range(11, 15):
+		for z in range(7, 11):
+			safe.append(Vector3i(x, 2, z))
+	dm.safe_areas.mark(safe)
+	for z in range(7, 11):
+		_place(dm, Guardrail, Vector3i(11, 2, z), {"edge_dir": Vector3i(-1, 0, 0)})
+	for x in range(11, 15):
+		_place(dm, Guardrail, Vector3i(x, 2, 7), {"edge_dir": Vector3i(0, 0, -1)})
+
+	# The HALL's two-sided gate: from either side it leads to the far corner, and never across to
+	# the other side — walk round it for that. Out of step with the middle one.
+	_place(
+		dm,
+		Gateway,
+		Vector3i(3, 0, 3),
+		{
+			"kind": Gateway.Kind.TELEPORT,
+			"edge_dir": Vector3i(1, 0, 0),
+			"two_sided": true,
+			"arrival_tile": Vector3i(14, 0, 0),
+			"phase_offset": 1,
+		}
+	)
+
+	_spawn_rival(dm, &"ravbak", Vector3i(13, 0, 4))
+	return Vector3i(7, 0, 0)
 
 
 static func _abilities(dm) -> Vector3i:

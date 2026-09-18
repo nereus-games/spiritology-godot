@@ -70,13 +70,13 @@ func spawn_groups(count: int) -> Array:
 	return spawned
 
 
-## The spawn points a group may appear on right now: on the floor, unoccupied, and neither on
-## the player's tile nor next to it.
+## The spawn points a group may appear on right now: on the floor, unoccupied, outside any safe
+## area, and neither on the player's tile nor next to it.
 func free_spawn_points() -> Array[Vector3i]:
 	var out: Array[Vector3i] = []
 	var player: Vector3i = _dungeon.player_tile()
 	for point in config.spawn_points:
-		if not _dungeon.is_walkable(point):
+		if not _dungeon.is_walkable(point) or _dungeon.safe_areas.has(point):
 			continue
 		var d: Vector3i = (point - player).abs()
 		if point.y == player.y and d.x + d.z <= 1:

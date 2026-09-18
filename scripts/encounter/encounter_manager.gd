@@ -430,11 +430,12 @@ func _resolve_object(individual: EncounterIndividual, action: EncounterAction) -
 				)
 			)
 		GameEnums.ObjectEffect.FLEE_ENCOUNTER when not given:
-			# "allows to Run away from an encounter" — the whole side, like Run Away. Given to a
-			# rival it is only a gift, and falls through to the default below.
-			lines.append(_tr("LOG_OBJECT_FLEE_USED") % tr(obj.name_key()))
+			# "allows to Run away from an encounter" — for the character it is used on, like Run
+			# Away: the other one stays in. Given to a rival it is only a gift, and falls through
+			# to the default below.
+			lines.append(_tr("LOG_OBJECT_FLEE_USED") % [tr(obj.name_key()), target.display_name()])
 			_emit_turn(individual, action, lines)
-			_flee_side(individual)
+			withdraw(target, FLED)
 			return
 		_:
 			# NONE, CURE_POISON, DISGUISE, DIG, AVOID_PURSUIT do nothing IN AN ENCOUNTER.
@@ -463,11 +464,12 @@ func _resolve_steal(individual: EncounterIndividual, action: EncounterAction) ->
 	_emit_turn(individual, action, [_tr("LOG_STEAL") % target.display_name()])
 
 
-## Run Away, put in the menu by a talent (run_away_2, slick_merchant). The whole SIDE leaves,
-## which is what sets it apart from Ghosting — whose doc says the user flees "alone".
+## Run Away, put in the menu by a talent (run_away_2, slick_merchant). Only the character who
+## runs leaves: while its teammate is still in, the encounter goes on. It ends as a flight once
+## no character is left in it.
 ##
-## What happens next is exploration's business: the duo lands 3-5 tiles away, and the group
-## may be gone. The encounter only records who left.
+## What happens next is exploration's business: the duo lands 3-5 tiles away, and the rivals
+## still in the encounter stay where they were. The encounter only records who left.
 ##
 ## slick_merchant charges 10 ETH, through [method flee_cost].
 ## ## TODO: slick_merchant's QTE, which can make the attempt fail. There is no QTE system; until
@@ -478,8 +480,8 @@ func _resolve_flee(individual: EncounterIndividual, action: EncounterAction) -> 
 		_emit_turn(individual, action, [_tr("LOG_FLEE_NO_ETH") % cost])
 		return
 	individual.pay_eth(cost)
-	_emit_turn(individual, action, [_tr("LOG_FLEE_SIDE")])
-	_flee_side(individual)
+	_emit_turn(individual, action, [_tr("LOG_FLEE")])
+	withdraw(individual, FLED)
 
 
 ## What running away costs this individual in ETH — 0 unless one of its talents charges for
@@ -490,14 +492,6 @@ func flee_cost(individual: EncounterIndividual) -> int:
 		if t.owner == individual:
 			cost = maxi(cost, t.flee_eth_cost(self))
 	return cost
-
-
-## Everyone still standing on the individual's side leaves. The dissolved stay behind: they
-## are not going anywhere, and exploration reads their state from the encounter as it is.
-func _flee_side(individual: EncounterIndividual) -> void:
-	for f in allies_of(individual).duplicate():
-		if not f.is_dissolved():
-			withdraw(f, FLED)
 
 
 # --- Leaving before the end ---

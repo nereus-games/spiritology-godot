@@ -44,7 +44,7 @@ func fade_in() -> Signal:
 const ENCOUNTER_SCENE := "res://scenes/encounter/encounter.tscn"
 
 ## `rivals` is [method EncounterManager.rival_report], parallel to the `rival_ids` given to
-## [method open_encounter] — empty if the encounter was abandoned.
+## [method open_encounter].
 signal encounter_finished(result: StringName, rivals: Array)
 
 var _encounter: CanvasLayer

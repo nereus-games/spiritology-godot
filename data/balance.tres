@@ -20,5 +20,4 @@ meditate_damage_bonus = 0.36
 object_heal_den = 25
 flee_distance_min = 3
 flee_distance_max = 5
-flee_group_vanish_chance = 0.5
 rival_rest_turns = 3

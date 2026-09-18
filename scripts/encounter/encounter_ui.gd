@@ -15,15 +15,12 @@
 extends CanvasLayer
 
 ## `rivals` is [method EncounterManager.rival_report]: one entry per rival, in the order
-## [method begin] received them. Empty when the encounter was abandoned rather than finished.
+## [method begin] received them.
 signal finished(result: StringName, rivals: Array)
 
 ## Preloaded rather than named: see that script's header.
 const TimelineEntry := preload("res://scripts/ui/encounter_timeline_entry.gd")
 const MenuPanel := preload("res://scripts/ui/encounter_menu_panel.gd")
-
-## Where MENU goes for now, since the encounter pause screen does not exist.
-const SCENARIO_SELECT := "res://scenes/dev/scenario_select.tscn"
 
 ## Width of the docked log in the debug view.
 const DEBUG_LOG_WIDTH := 380.0
@@ -142,11 +139,12 @@ func begin(
 	_log_button.pressed.connect(_toggle_log)
 	_log_button.text = tr("UI_ENCOUNTER_LOG")
 	# MENU will open the encounter pause — Monstropaedia, Settings, Leave The Gloom. None of
-	# those screens exists, so for now it returns to the scenario picker. Deliberately not
-	# `disabled`: a disabled button is skipped by keyboard navigation and becomes
-	# unreachable by Tab.
+	# those screens exists, and the button is HIDDEN until they do. It used to jump straight to
+	# the scenario picker, but an encounter is only ever left for exploration; the picker is
+	# reached from there.
+	## TODO: wire the encounter pause screen, and show the button again.
 	_menu_button.text = tr("UI_ENCOUNTER_MENU")
-	_menu_button.pressed.connect(_on_menu_pressed)
+	_menu_button.visible = false
 
 	_apply_debug_view()
 	_build_rival_art(rf)
@@ -207,18 +205,6 @@ func _refresh_timeline() -> void:
 ## display of a rival's density and weakness depend on. The debug view lifts the veil.
 func _knows(individual: EncounterIndividual) -> bool:
 	return _debug_view or individual.is_player or GameSession.knows_species(individual.species_id())
-
-
-## Back to the scenario picker.
-##
-## The encounter is CLOSED first. Its overlay lives under `/root` rather than in the current
-## scene, so a plain scene change would leave it drawn on top of the new screen. Emitting
-## `finished` goes through [TransitionManager]'s normal teardown, after which changing the
-## scene takes exploration with it.
-## ## TODO: wire the real pause screen.
-func _on_menu_pressed() -> void:
-	finished.emit(&"menu", [])
-	TransitionManager.change_scene(SCENARIO_SELECT)
 
 
 func _toggle_log() -> void:
@@ -352,7 +338,7 @@ func _show_actions(individual: EncounterIndividual, manager: EncounterManager) -
 	)
 	# Actions a talent added; never available by default.
 	if kinds.has(EncounterAction.Kind.FLEE):
-		# Run Away takes no target, and takes the whole duo away. Greyed when a talent charges
+		# Run Away takes no target: the character leaves, its teammate stays. Greyed when a talent charges
 		# ETH for it that the character does not have (Slick Merchant).
 		_menu.add_bar_action(
 			tr("UI_ENCOUNTER_ACTION_FLEE"),
@@ -445,36 +431,71 @@ func _show_objects(individual: EncounterIndividual, manager: EncounterManager) -
 			continue  # an inventory slug with no ObjectData behind it; we do not invent one
 		var count: int = GameSession.inventory[id]
 		var object_id: StringName = id
-		_menu.add_option(
+		var btn := _menu.add_option(
 			"%s ×%d" % [tr(obj.name_key()), count],
 			func(): _on_object_chosen(individual, manager, object_id)
 		)
+		# What the object does follows the focus, as an ability's description does.
+		var desc := _object_description(obj)
+		btn.focus_entered.connect(func(): _menu.set_description(desc))
+		btn.mouse_entered.connect(func(): _menu.set_description(desc))
 	_menu.add_option(tr("UI_ENCOUNTER_BACK"), func(): _show_actions(individual, manager))
 	_menu.focus_first_option()
+
+
+## The object's description, or nothing when the design doc gives none — most objects have one.
+func _object_description(obj: ObjectData) -> String:
+	var key := obj.description_key()
+	var text := tr(key)
+	return "" if text == key else text
 
 
 func _on_object_chosen(
 	individual: EncounterIndividual, manager: EncounterManager, object_id: StringName
 ) -> void:
 	var obj: ObjectData = GameData.object(object_id)
-	var targets := (
-		manager.living_opponents(individual)
-		+ manager.allies_of(individual).filter(func(f): return not f.is_dissolved())
-	)
-	if targets.size() <= 1:
-		var action := EncounterAction.of_kind(EncounterAction.Kind.USE_OBJECT, targets)
-		action.object_id = object_id
-		_submit(action)
-		return
-	_show_targets(
-		tr(obj.name_key()),
-		targets,
-		func(t):
-			var a := EncounterAction.of_kind(EncounterAction.Kind.USE_OBJECT, [t])
-			a.object_id = object_id
-			return a,
-		func(): _show_objects(individual, manager)
-	)
+	_show_object_targets(individual, manager, obj)
+
+
+## Where the object goes. The doc's rule is "Use if target is player character, Give if target is
+## rival", and one list of names hid that choice: every option now says which it is. Characters
+## come first — using it is the common case — and the description under the list says what each
+## choice does.
+func _show_object_targets(
+	individual: EncounterIndividual, manager: EncounterManager, obj: ObjectData
+) -> void:
+	_menu.set_prompt(tr("UI_ENCOUNTER_USE_OR_GIVE") % tr(obj.name_key()))
+	_menu.begin_submenu()
+	var own_side: Array = [individual]
+	for f in manager.allies_of(individual):
+		if f != individual and not f.is_dissolved():
+			own_side.append(f)
+	var use_hint := _object_description(obj)
+	var give_hint := tr("UI_ENCOUNTER_GIVE_HINT")
+	for t in own_side + manager.living_opponents(individual):
+		var target: EncounterIndividual = t
+		var giving := target.is_player != individual.is_player
+		var verb := tr("UI_ENCOUNTER_GIVE_TO" if giving else "UI_ENCOUNTER_USE_ON")
+		var btn := _menu.add_option(
+			verb % _target_label(target),
+			func():
+				var a := EncounterAction.of_kind(EncounterAction.Kind.USE_OBJECT, [target])
+				a.object_id = obj.id
+				_submit(a)
+		)
+		var hint := give_hint if giving else use_hint
+		btn.focus_entered.connect(
+			func():
+				_highlight_target(target)
+				_menu.set_description(hint)
+		)
+		btn.mouse_entered.connect(
+			func():
+				_highlight_target(target)
+				_menu.set_description(hint)
+		)
+	_menu.add_option(tr("UI_ENCOUNTER_BACK"), func(): _show_objects(individual, manager))
+	_menu.focus_first_option()
 
 
 func _ability_label(ability: AbilityData) -> String:
@@ -511,13 +532,9 @@ func _show_targets(title: String, targets: Array, make_action: Callable, on_back
 	_menu.begin_submenu()
 	for t in targets:
 		var target: EncounterIndividual = t
-		# In the debug view, prefix the turn-order NUMBER. With no sprites yet the portraits
-		# are blank, and this is the only way to tell two targets of the same species apart
-		# ("draka, draka"). Dropped outside debug: the artwork will do the job.
-		var label := "%s — DEN %d/%d" % [target.display_name(), target.den, target.max_den]
-		if _debug_view:
-			label = "%d · %s" % [_turn_number(target), label]
-		var btn := _menu.add_option(label, func(): _submit(make_action.call(target)))
+		var btn := _menu.add_option(
+			_target_label(target), func(): _submit(make_action.call(target))
+		)
 		# A restrained version of the mockup's highlight, which also calls for a bouncing
 		# arrow and a slight zoom: the aimed-at rival's artwork brightens, and the turn
 		# order picks it out.
@@ -525,6 +542,17 @@ func _show_targets(title: String, targets: Array, make_action: Callable, on_back
 		btn.mouse_entered.connect(func(): _highlight_target(target))
 	_menu.add_option(tr("UI_ENCOUNTER_BACK"), on_back)
 	_menu.focus_first_option()
+
+
+## A target as the lists show it: its name and DEN. In the debug view, prefixed with its
+## turn-order NUMBER — with no sprites yet the portraits are blank, and this is the only way to
+## tell two targets of the same variety apart ("draka, draka"). Dropped outside debug: the
+## artwork will do the job.
+func _target_label(target: EncounterIndividual) -> String:
+	var label := "%s — DEN %d/%d" % [target.display_name(), target.den, target.max_den]
+	if _debug_view:
+		label = "%d · %s" % [_turn_number(target), label]
+	return label
 
 
 ## An individual's 1-based place in the turn order — the number the debug view shows.
@@ -565,7 +593,7 @@ func _on_turn_taken(
 	# One readable header per turn, with the effects indented under it. An ability like
 	# Opening up Closing produces several — damage, damage, flee — and this way they read
 	# as ONE action instead of a stack of identically prefixed lines.
-	_append("[b]%s[/b] — %s" % [individual.display_name(), _action_verb(action)])
+	_append("[b]%s[/b] — %s" % [individual.display_name(), _action_verb(individual, action)])
 	for l in lines:
 		_append("    [color=#b9b9c4]%s[/color]" % l)
 	# DEN, ETH, dissolutions and reordering may all have moved.
@@ -575,7 +603,7 @@ func _on_turn_taken(
 
 ## The action's translated name, for the log header. `action.label()` is now only used by
 ## the manager's own debug log, where a raw id is what you want.
-func _action_verb(action: EncounterAction) -> String:
+func _action_verb(individual: EncounterIndividual, action: EncounterAction) -> String:
 	match action.kind:
 		EncounterAction.Kind.ABILITY:
 			return tr(action.ability.name_key()) if action.ability else "?"
@@ -586,7 +614,12 @@ func _action_verb(action: EncounterAction) -> String:
 		EncounterAction.Kind.EXAMINE:
 			return tr("UI_ENCOUNTER_ACTION_EXAMINE")
 		EncounterAction.Kind.USE_OBJECT:
-			return tr("UI_ENCOUNTER_ACTION_OBJECT")
+			# Which of the two it was, since the log would otherwise only say "Objects".
+			var given: bool = (
+				not action.targets.is_empty()
+				and action.targets[0].is_player != individual.is_player
+			)
+			return tr("UI_ENCOUNTER_LOG_GIVE_OBJECT" if given else "UI_ENCOUNTER_LOG_USE_OBJECT")
 		EncounterAction.Kind.FLEE:
 			return tr("UI_ENCOUNTER_ACTION_FLEE")
 		EncounterAction.Kind.STEAL:
@@ -673,6 +706,11 @@ func _unhandled_input(event: InputEvent) -> void:
 		)
 	):
 		_awaiting_close = false
+		# Handled BEFORE emitting: `finished` wakes exploration up within this very event, and the
+		# key would carry on to it. Space is also `interact` there, which confirmed whatever the
+		# action menu had selected — after a flight, on a tile with nothing else, that was MENU,
+		# and the scenario was left. Escape would have toggled the mouse capture.
+		get_viewport().set_input_as_handled()
 		finished.emit(_result, _rival_report)
 
 

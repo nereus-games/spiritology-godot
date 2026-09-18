@@ -3,8 +3,8 @@
 ## version succeeds at all time and doesn't require any QTE."
 ##
 ## Expressed as a MENU mutation: Talk removed, Run Away (FLEE) added, permanently. Unlike
-## slick_merchant, with no condition, no cost and no QTE. Running away takes the whole duo out
-## of the encounter; see [method EncounterManager._resolve_flee].
+## slick_merchant, with no condition, no cost and no QTE. Running away takes this character out of
+## the encounter, and the teammate carries on; see [method EncounterManager._resolve_flee].
 extends "res://scripts/encounter/talents/talent_script.gd"
 
 

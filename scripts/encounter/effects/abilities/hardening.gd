@@ -7,4 +7,4 @@ extends AbilityScript
 func execute(ctx: EncounterContext) -> void:
 	var t = ctx.user
 	ctx.grant_immunity(t, [GameEnums.Energy.CRYSTAL])
-	ctx.modify_damage(t, 0.5)
+	ctx.scale_all_damage(t, 0.5)

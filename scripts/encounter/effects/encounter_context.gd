@@ -7,6 +7,10 @@
 ## Which is where the rules live: the per-condition damage modifiers, the weakness a
 ## position exposes, mitigation and immunity, redirection. Written once here rather than
 ## 111 times over there.
+##
+## Every timed effect set through here is anchored to the USER and lasts until its next turn,
+## unless the call says otherwise — `turns` for longer, `anchor` for the rare effect the doc
+## times on its target ("until THEIR next turn"). See [EncounterIndividual].
 class_name EncounterContext
 extends RefCounted
 
@@ -133,15 +137,12 @@ func recover_eth(target, amount: int) -> void:
 
 
 ## Swaps the target's exposed weakness for another, at random — never the same one.
-func change_weakness(target) -> void:
+func change_weakness(target, turns := EncounterIndividual.UNTIL_NEXT_TURN) -> void:
 	if target is EncounterIndividual:
-		target.override_weakness(
-			_random_energy_other_than(
-				target.active_weakness(
-					timeline.position_of(target) if timeline else GameEnums.TurnPosition.MIDDLE
-				)
-			)
-		)
+		var energy := _random_energy_other_than(weakness_of(target))
+		if not target.override_weakness(energy, _anchor(null), turns):
+			note(_tr("LOG_WEAKNESS_LOCKED") % _name(target))
+			return
 	note(_tr("LOG_WEAKNESS_CHANGED") % _name(target))
 
 
@@ -302,18 +303,25 @@ func base_damage() -> int:
 # --- Weakness ---
 
 
-func set_weakness(target, energy: GameEnums.Energy) -> void:
+func set_weakness(
+	target, energy: GameEnums.Energy, turns := EncounterIndividual.UNTIL_NEXT_TURN, anchor = null
+) -> void:
 	if target is EncounterIndividual:
-		target.override_weakness(energy)
+		if not target.override_weakness(energy, _anchor(anchor), turns):
+			note(_tr("LOG_WEAKNESS_LOCKED") % _name(target))
+			return
 	note(_tr("LOG_WEAKNESS_SET") % [_name(target), _energy_name(energy)])
 
 
-func remove_weakness(target) -> void:
-	set_weakness(target, GameEnums.Energy.NONE)
+func remove_weakness(target, turns := EncounterIndividual.UNTIL_NEXT_TURN) -> void:
+	set_weakness(target, GameEnums.Energy.NONE, turns)
 
 
 func reset_weakness(target) -> void:
 	if target is EncounterIndividual:
+		if target.weakness_locked:
+			note(_tr("LOG_WEAKNESS_LOCKED") % _name(target))
+			return
 		target.reset_weakness()
 	note(_tr("LOG_WEAKNESS_RESET") % _name(target))
 
@@ -321,21 +329,24 @@ func reset_weakness(target) -> void:
 ## Trades two individuals' exposed weaknesses (Dark Gambit, Dark Caroussel).
 func swap_weakness(a, b) -> void:
 	if a is EncounterIndividual and b is EncounterIndividual:
+		if a.weakness_locked or b.weakness_locked:
+			note(_tr("LOG_WEAKNESS_LOCKED") % _name(a if a.weakness_locked else b))
+			return
 		var wa := weakness_of(a)
 		var wb := weakness_of(b)
-		a.override_weakness(wb)
-		b.override_weakness(wa)
+		a.override_weakness(wb, _anchor(null))
+		b.override_weakness(wa, _anchor(null))
 	note(_tr("LOG_WEAKNESS_SWAPPED") % [_name(a), _name(b)])
 
 
 func lock_weakness(target) -> void:
 	if target is EncounterIndividual:
-		target.weakness_locked = true
+		target.lock_weakness(_anchor(null))
 
 
-func hide_weakness(target) -> void:
+func hide_weakness(target, turns := EncounterIndividual.UNTIL_NEXT_TURN) -> void:
 	if target is EncounterIndividual:
-		target.weakness_hidden = true
+		target.hide_weakness(_anchor(null), turns)
 	note(_tr("LOG_WEAKNESS_HIDDEN") % _name(target))
 
 
@@ -344,7 +355,8 @@ func hide_weakness(target) -> void:
 
 func grant_immunity(target, energies: Array) -> void:
 	if target is EncounterIndividual:
-		target.immune_energies.append_array(energies)
+		for e in energies:
+			target.add_immunity(e, _anchor(null))
 	var names: Array = []
 	for e in energies:
 		names.append(_energy_name(e))
@@ -354,15 +366,24 @@ func grant_immunity(target, energies: Array) -> void:
 ## Immune to everything EXCEPT this energy.
 func grant_immunity_except(target, energy: GameEnums.Energy) -> void:
 	if target is EncounterIndividual:
-		target.immune_all_except = energy
+		target.set_immune_all_except(energy, _anchor(null))
 	note(_tr("LOG_IMMUNITY_EXCEPT") % [_name(target), _energy_name(energy)])
 
 
 ## Multiplies what one energy does to the target this turn.
 func set_energy_damage_factor(target, energy: GameEnums.Energy, factor: float) -> void:
 	if target is EncounterIndividual:
-		target.energy_damage_factor[energy] = target.energy_damage_factor.get(energy, 1.0) * factor
+		target.scale_energy_damage(energy, factor, _anchor(null))
 	note(_tr("LOG_ENERGY_DAMAGE_FACTOR") % [_energy_name(energy), _name(target), factor])
+
+
+## Multiplies ALL damage the target takes until the user's next turn — every energy, and
+## none. [method modify_damage] is the one-hit version.
+func scale_all_damage(target, factor: float) -> void:
+	if target is EncounterIndividual:
+		for e in _ENERGY_KEYS:
+			target.scale_energy_damage(e, factor, _anchor(null))
+	note(_tr("LOG_ALL_DAMAGE_FACTOR") % [_name(target), factor])
 
 
 ## The last of the user's own side in the turn order.
@@ -376,23 +397,29 @@ func last_of_team_in_order():
 
 func lock_den(target) -> void:
 	if target is EncounterIndividual:
-		target.den_locked = true
+		target.lock_den(_anchor(null))
+
+
+## DEN can go neither down nor up (Isotropy).
+func freeze_den(target) -> void:
+	if target is EncounterIndividual:
+		target.freeze_den(_anchor(null))
 
 
 func lock_eth(target) -> void:
 	if target is EncounterIndividual:
-		target.eth_locked = true
+		target.lock_eth(_anchor(null))
 
 
 func grant_reflect(target) -> void:
 	if target is EncounterIndividual:
-		target.reflect_to_attacker = true
+		target.set_reflect(_anchor(null))
 	note(_tr("LOG_REFLECT") % _name(target))
 
 
 func grant_full_immunity(target) -> void:
 	if target is EncounterIndividual:
-		target.fully_immune = true
+		target.set_fully_immune(_anchor(null))
 	note(_tr("LOG_IMMUNITY_FULL") % _name(target))
 
 
@@ -487,6 +514,13 @@ func _random_energy_other_than(current: GameEnums.Energy) -> GameEnums.Energy:
 	]
 	pool.erase(current)
 	return pool[rng.randi_range(0, pool.size() - 1)] if rng else pool[0]
+
+
+## Whose next turn a timed effect waits for: the given anchor, or else the user.
+func _anchor(anchor) -> EncounterIndividual:
+	if anchor is EncounterIndividual:
+		return anchor
+	return user if user is EncounterIndividual else null
 
 
 func _name(target) -> String:

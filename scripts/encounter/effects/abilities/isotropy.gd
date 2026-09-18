@@ -7,4 +7,4 @@ extends AbilityScript
 func execute(ctx: EncounterContext) -> void:
 	ctx.set_weakness(ctx.user, ctx.weakness_of(ctx.user))  # freezes the current weakness
 	ctx.lock_weakness(ctx.user)
-	ctx.lock_den(ctx.user)
+	ctx.freeze_den(ctx.user)

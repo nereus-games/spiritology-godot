@@ -9,4 +9,5 @@ func execute(ctx: EncounterContext) -> void:
 	var t = ctx.primary()
 	if t:
 		ctx.drain_eth(t, ctx.dmg(&"small"))
-		ctx.set_weakness(t, ctx.energy())  # all 3 weaknesses become the ability's energy
+		# All 3 weaknesses become the ability's energy. Clearing it by Meditating is a TODO.
+		ctx.set_weakness(t, ctx.energy(), EncounterIndividual.FOR_ENCOUNTER)

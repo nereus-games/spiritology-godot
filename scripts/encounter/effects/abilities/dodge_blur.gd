@@ -6,5 +6,5 @@ extends AbilityScript
 
 func execute(ctx: EncounterContext) -> void:
 	ctx.deal_damage(ctx.user, ctx.dmg(&"mini"))
-	ctx.modify_damage(ctx.user, 0.5)
-	# TODO: every rival that uses Talk this turn takes small; mitigation for the whole turn.
+	ctx.scale_all_damage(ctx.user, 0.5)
+	# TODO: every rival that uses Talk this turn takes small.

@@ -44,6 +44,20 @@ class ScriptedAgent:
 		return queued.pop_front() if not queued.is_empty() else null
 
 
+## Plays scripted actions, then passes — and, every time it is asked, reports the moment through
+## `spy`, which is how a check looks at the state as each turn begins.
+class SpyAgent:
+	extends EncounterAgent
+	var queued: Array = []
+	var spy: Callable
+
+	func decide(individual: EncounterIndividual, manager: EncounterManager) -> EncounterAction:
+		spy.call(individual, manager)
+		if not queued.is_empty():
+			return queued.pop_front()
+		return EncounterAction.of_kind(EncounterAction.Kind.PASS, [individual])
+
+
 func _check(cond: bool, label: String) -> void:
 	if cond:
 		print("  OK   %s" % label)
@@ -65,6 +79,7 @@ func _run_all() -> void:
 	await _check_loop_invariants()
 	_check_unfinished_release()
 	await _check_departures()
+	await _check_effect_durations()
 	_check_talents()
 	print("")
 	if _fails.is_empty():
@@ -290,6 +305,48 @@ func _run_once(seed: int) -> Dictionary:
 	var out := {"result": res, "log": m.encounter_log, "rounds": m.round_number}
 	m.free()
 	return out
+
+
+# --------------------------------------------------------------------------
+# How long effects last
+# --------------------------------------------------------------------------
+
+
+## "Until its next turn" means the next turn of whoever caused it — not the end of the round.
+## Effort of Neutrality played SECOND in the order used to hand both weaknesses back as the
+## next round began, before either individual had acted again: the bug seen in game.
+func _check_effect_durations() -> void:
+	print("— effect durations —")
+	var m := _make_manager()
+	var p0: EncounterIndividual = m.players[0]
+	var p1: EncounterIndividual = m.players[1]
+	m.timeline.order = [p0, p1, m.rivals[0], m.rivals[1]]  # a known order, hence known positions
+	var seen := {}  # "round:species" -> the weaknesses of p0 and p1 as that turn began
+	var spy := func(f: EncounterIndividual, mgr: EncounterManager) -> void:
+		seen["%d:%s" % [mgr.round_number, f.species_id()]] = [
+			p0.active_weakness(mgr.timeline.position_of(p0)),
+			p1.active_weakness(mgr.timeline.position_of(p1)),
+		]
+	for f in m.timeline.order:
+		var agent := SpyAgent.new()
+		agent.spy = spy
+		m.set_agent(f, agent)
+	var neutrality: AbilityData = load(ABILITY_DIR + "effort_of_neutrality.tres")
+	(m.agent_for(p1) as SpyAgent).queued = [EncounterAction.use_ability(neutrality, [p1])]
+	await m.run(2)
+	var none := GameEnums.Energy.NONE
+	var p0_own := p0.species.weakness_for(GameEnums.TurnPosition.FIRST)
+	var p1_own := p1.species.weakness_for(GameEnums.TurnPosition.MIDDLE)
+	_check(p0_own != none and p1_own != none, "both test species expose a weakness of their own")
+	_check(
+		seen.get("2:%s" % p0.species_id()) == [none, none],
+		"no weakness for either teammate across the round boundary"
+	)
+	_check(
+		seen.get("2:%s" % p1.species_id(), [])[1] == p1_own,
+		"the user's own weakness back as its next turn begins"
+	)
+	m.free()
 
 
 # --------------------------------------------------------------------------

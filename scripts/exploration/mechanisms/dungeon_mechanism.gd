@@ -164,6 +164,13 @@ func blocks_sight() -> bool:
 	return blocks_walk()
 
 
+## Whether this mechanism can hurt the player or take them somewhere against their will — a
+## trap, a trapped chest, a die, a plank to fall from. What a SAFE AREA must not contain, per the
+## design doc's "Elevators"; see `safe_areas.gd`. No by default.
+func is_hazard() -> bool:
+	return false
+
+
 ## An actor, player or rival, has just entered the tile. Where traps, chests, teleporters and
 ## elevators fire.
 func on_enter(_who: Node) -> void:

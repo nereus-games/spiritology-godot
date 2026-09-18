@@ -281,6 +281,12 @@ msgstr "Escaliers, ascenseurs & chutes (5 étages)"
 msgid "SCENARIO_STAIRS_DESC"
 msgstr "Pyramide de cinq gradins. Un escalier bleu par palier (0→1→2→3→4), en quinconce vers le fond : c'est le chemin toujours praticable. Les plateformes orange sont des RACCOURCIS doublant ces escaliers — un ascenseur VERTICAL (1↔2) et un à trajet COMPLEXE (3↔4) qui sort au-dessus du vide et enchaîne des segments sur les trois axes. Un ascenseur reste où on l'a laissé : s'il est resté en haut, reprends l'escalier. Pour les chutes : à l'ouest chaque gradin surplombe le suivant (1 unité = aucun dégât) ; à l'est (dernière colonne) rien n'arrête avant le bas (1/2/3/4 unités = 0/10/15/20 DEN). En bas, tu peux marcher SOUS les gradins — et un PILIER y soutient un coin du gradin 1 : sa face haute est directement le sol du dessus, sans dalle ajoutée. Au sommet, les deux premières cases du bord est sont protégées par une RAMBARDE (basse : on voit le vide par-dessus, mais on ne le franchit pas) ; deux pas plus loin le même bord est ouvert, et fait tomber de 4 étages."
 
+msgid "SCENARIO_ELEVATOR_SAFEGUARDS_TITLE"
+msgstr "Garde-fous des ascenseurs (liés · porte de téléportation · zone sûre)"
+
+msgid "SCENARIO_ELEVATOR_SAFEGUARDS_DESC"
+msgstr "Un ascenseur reste où on l'a laissé : toute zone qu'il dessert doit avoir une issue si sa plateforme reste bloquée en haut. Trois zones surélevées, un garde-fou chacune. OUEST — ascenseurs LIÉS : deux plateformes orange, l'une en bas, l'autre en haut ; monter sur l'une envoie les deux en sens inverse. Monte, puis saute du bord (10 DEN) : une plateforme t'attend en bas. MILIEU — une PORTE DE TÉLÉPORTATION : le panneau violet sur le mur du fond. Elle s'allume un tour sur trois (fermée, fermée, ouverte) ; avance dedans quand elle brille et tu arrives dans le hall, sans porte pour repartir. Rien n'indique où elle mène. EST — une ZONE SÛRE (sol vert) : rambardes tout autour, aucun piège, et le rival ne t'y suit jamais — tu en ressors comme tu es entré, par l'ascenseur. Dans le hall, une porte de téléportation à double face : des deux côtés elle t'envoie au coin opposé, jamais de l'autre côté — contourne-la."
+
 msgid "SCENARIO_ABILITIES_TITLE"
 msgstr "Capacités & objets d'exploration"
 

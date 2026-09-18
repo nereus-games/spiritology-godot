@@ -6,5 +6,5 @@
 [resource]
 script = ExtResource("1_scen")
 id = &"rivals"
-order = 10
+order = 11
 dungeon = ExtResource("2_dungeon")

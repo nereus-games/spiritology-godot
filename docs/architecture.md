@@ -100,7 +100,15 @@ same way rivals do. The base is `mechanisms/dungeon_mechanism.gd`, and the hooks
 `blocks_walk()`, `on_enter(who)`, `on_turn(turn)`, `on_tile_actions(who)`,
 `on_adjacent_actions(who, facing)`, `reset_between_visits()`. Thirteen mechanisms exist on
 that base: traps, gates, chests, crumbly ground, litter, refresh crystals, the dieverting
-die, cracked walls, examinable decor, narrow bridges, stairs, lifts, guardrails.
+die, cracked walls, examinable decor, narrow bridges, stairs, lifts, guardrails. Gates come
+in four kinds, the fourth being the teleport gate, and lifts can be linked so that stepping
+onto one moves the others.
+
+**Safe areas** are not a mechanism but a declaration: level design marks tiles in
+`dungeon_manager.safe_areas` (`safe_areas.gd`), rivals never enter them, and
+`safe_areas.violations()` reports a hazard (`is_hazard()`), an unrailed ledge or a spawn point
+left inside one. With linked lifts and teleport gates they are the design doc's three
+safeguards for an area reached by lift.
 
 Two details that are easy to get wrong:
 

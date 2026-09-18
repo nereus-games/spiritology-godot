@@ -1,4 +1,4 @@
-## A dungeon gateway: automated, locked, or meditation.
+## A dungeon gateway: automated, locked, meditation, or teleport.
 ##
 ## Per the design doc ("Mechanisms / Gateways") these are SLIDING doors. A gateway therefore
 ## occupies NO tile: it sits on the EDGE between two neighbouring tiles — the anchor
@@ -7,7 +7,7 @@
 ## ([constant DungeonManager.EDGE_THICKNESS]) it leaves room to stand on either side, so it can
 ## be faced from both, and its actions (open, meditate) are available from both.
 ##
-## Three kinds:
+## Four kinds:
 ##  - AUTOMATED: opens and closes along a fixed pattern cycled every turn (3 turns by default:
 ##    closed, closed, open). The pattern can differ per gateway ([member phase_offset]).
 ##  - LOCKED: opens in exchange for objects, and stays open. An alternative to a dangerous route
@@ -19,6 +19,14 @@
 ##    "Consecutive", in the design doc's sense, means with nothing else done in between: the
 ##    streak drops as soon as a turn elapses while the player has left the tile they were
 ##    meditating from, or turned away from the gateway.
+##  - TELEPORT: cycles like an automated one, but is NOT a sliding door: it never leaves a
+##    passage between its two tiles, open or closed ([method blocks_walk] is always true). Going
+##    through it while it is open sends the individual, player or rival, to a fixed
+##    [member arrival_tile] elsewhere — see [method admits_from] and [method send_through].
+##    Either set against a wall and entered from the
+##    anchor tile only, or on the border between two floor tiles and entered from both
+##    ([member two_sided]), leading to the same arrival tile either way. The arrival tile has no
+##    gate of its own, so the trip is one way.
 ##
 ## No `class_name` (see dungeon_mechanism.gd): `extends` by path. The player actions — unlocking
 ## a locked gateway, meditating — are public methods, and reach the HUD's contextual menu
@@ -27,7 +35,7 @@ extends "res://scripts/exploration/mechanisms/dungeon_mechanism.gd"
 
 const ExplorationAction := preload("res://scripts/exploration/exploration_action.gd")
 
-enum Kind { AUTOMATED, LOCKED, MEDITATION }
+enum Kind { AUTOMATED, LOCKED, MEDITATION, TELEPORT }
 
 ## Dungeon tier, which sets what a locked gateway costs.
 enum CostTier { EARLY, LATE }
@@ -45,11 +53,19 @@ const LOCKED_COSTS := {
 ## `tile + edge_dir`. Always a unit horizontal direction (±X or ±Z).
 @export var edge_dir := Vector3i(0, 0, 1)
 
-## AUTOMATED: the cycled opening pattern, one boolean per turn. The design doc's default is
-## closed / closed / open.
+## AUTOMATED and TELEPORT: the cycled opening pattern, one boolean per turn. The design doc's
+## default is closed / closed / open, for both.
 @export var open_pattern: Array[bool] = [false, false, true]
-## AUTOMATED: phase offset, so two gateways need not be in sync.
+## AUTOMATED and TELEPORT: phase offset, so two gateways need not be in sync.
 @export var phase_offset := 0
+
+## TELEPORT: where going through sends you. An ordinary floor tile anywhere in the dungeon,
+## other floors included. Nothing tells the player where it is: they find out by going through.
+@export var arrival_tile := Vector3i.ZERO
+
+## TELEPORT: entered from both sides, rather than from the anchor [member tile] alone. False for
+## a gate set against a wall, whose [member edge_dir] then points at the wall.
+@export var two_sided := false
 
 ## LOCKED: cost tier, which fixes the AMOUNT demanded.
 @export var cost_tier: CostTier = CostTier.EARLY
@@ -81,19 +97,136 @@ func _unregister() -> void:
 
 
 func _on_registered() -> void:
-	# An automated gateway starts on the pattern's first value, offset included.
-	if kind == Kind.AUTOMATED and not open_pattern.is_empty():
+	# A cycling gateway starts on the pattern's first value, offset included.
+	if _cycles() and not open_pattern.is_empty():
 		_open = open_pattern[phase_offset % open_pattern.size()]
 
 
-## A closed gateway bars the edge it sits on. Consulted by
-## [method DungeonManager.is_edge_blocked].
+## Whether the gateway opens and closes on its own, turn after turn.
+func _cycles() -> bool:
+	return kind == Kind.AUTOMATED or kind == Kind.TELEPORT
+
+
+## A closed gateway bars the edge it sits on; a teleport gate bars it even open — it is a way
+## out, not a way through. Consulted by [method DungeonManager.is_edge_blocked].
 func blocks_walk() -> bool:
-	return not _open
+	return kind == Kind.TELEPORT or not _open
 
 
 func is_open() -> bool:
 	return _open
+
+
+func is_teleport() -> bool:
+	return kind == Kind.TELEPORT
+
+
+## Whether an individual standing on `from_tile` can go through this teleport gate right now:
+## it is open, and `from_tile` is a side it is entered from.
+func admits_from(from_tile: Vector3i) -> bool:
+	if kind != Kind.TELEPORT or not _open:
+		return false
+	return from_tile == tile or (two_sided and from_tile == tile + edge_dir)
+
+
+## The teleport gate on the edge between two neighbouring tiles of `dungeon`, or null. Static
+## so that the player and the rivals can ask without the [DungeonManager] growing a method.
+static func teleport_gate_between(dungeon, from_tile: Vector3i, to_tile: Vector3i) -> Node:
+	for m in dungeon.edge_mechanisms_between(from_tile, to_tile):
+		if m.has_method("is_teleport") and m.is_teleport():
+			return m
+	return null
+
+
+const NEIGHBOURS: Array[Vector3i] = [
+	Vector3i(1, 0, 0), Vector3i(-1, 0, 0), Vector3i(0, 0, 1), Vector3i(0, 0, -1)
+]
+
+
+## Sends `who` through this teleport gate, to [member arrival_tile]. Per the design doc the trip
+## happens even when the arrival tile is taken:
+##  - the player arriving on a rival, or a rival arriving on the player, starts an encounter;
+##  - a rival group arriving on another pushes the one already there aside
+##    (see [method _push_group]).
+## Returns true when an encounter was requested — the caller's move ends there, as it does when
+## walking into a rival. Otherwise the caller resolves the arrival as after any step: the tile's
+## mechanisms, then the turn. Does not check that the gate admits `who`: see [method admits_from].
+func send_through(who: Node) -> bool:
+	var from: Vector3i = who.tile
+	var arrival := arrival_tile
+	if _dungeon == null or not _dungeon.is_floor(arrival) or arrival == from:
+		return false
+	if _dungeon.is_player(who):
+		_dungeon.notify_level_change(who, from, arrival)  # watching rivals can follow
+		who.teleport_to(arrival)
+		var met: Node = _dungeon.occupant_at(arrival)
+		if met != null:
+			_dungeon.request_encounter(met, false)
+			return true
+		return false
+	var there: Node = _dungeon.occupant_at(arrival)
+	if there != null and there != who and not _push_group(there, {who: true}):
+		# Nowhere to push the group already there — not even onto a trap, over a ledge, or into a
+		# neighbouring group. Some rival has to go somewhere, and it is the newcomer.
+		push_warning("[Gateway] %s: nowhere to push a rival group aside." % arrival)
+		_dungeon.teleport_actor(who)
+		return false
+	if _dungeon.occupant_at(from) == who:
+		_dungeon.release(from)
+	_dungeon.reserve(arrival, who)
+	who.teleport_to(arrival)
+	if arrival == _dungeon.player_tile():
+		_dungeon.request_encounter(who, true)
+		return true
+	return false
+
+
+## Pushes the rival `group` off its tile onto a neighbouring one, to make room for a group
+## arriving through this gate. The design doc's order of preference: an ORDINARY free tile;
+## failing that, a trap, or a ledge with no railing to fall from; failing that, the group next to
+## it is pushed in turn and this one takes its place. Never onto the player, and never into a
+## safe area. `pushing` holds the groups already in the chain, so it cannot loop. Returns false
+## when the group could not be moved at all.
+func _push_group(group: Node, pushing: Dictionary) -> bool:
+	pushing[group] = true
+	var at: Vector3i = group.tile
+	var safe = _dungeon.safe_areas
+	var around: Array[Vector3i] = []
+	for d in NEIGHBOURS:
+		var n: Vector3i = at + d
+		if not _dungeon.is_edge_blocked(at, n) and n != _dungeon.player_tile() and not safe.has(n):
+			around.append(n)
+	# An ordinary free tile: floor, nobody on it, nothing on it.
+	for n in around:
+		if _dungeon.is_walkable(n) and _dungeon.mechanisms_at(n).is_empty():
+			_shove(group, n)
+			return true
+	# A free tile carrying a mechanism — a trap, typically — which fires on arrival.
+	for n in around:
+		if _dungeon.is_walkable(n):
+			_shove(group, n)
+			_dungeon.notify_entered(n, group)
+			return true
+	# A ledge: no floor there, but some further down. The group falls, and takes the damage.
+	for n in around:
+		var landing: Vector3i = _dungeon.fall_landing(n)
+		if not _dungeon.is_floor(n) and landing != n and not safe.has(landing):
+			if group.has_method("fall_down"):
+				group.fall_down(n)
+				return true
+	# The group next to it, pushed in turn.
+	for n in around:
+		var next_group: Node = _dungeon.occupant_at(n)
+		if next_group != null and not pushing.has(next_group) and _push_group(next_group, pushing):
+			_shove(group, n)
+			return true
+	return false
+
+
+func _shove(group: Node, to_tile: Vector3i) -> void:
+	_dungeon.release(group.tile)
+	_dungeon.reserve(to_tile, group)
+	group.teleport_to(to_tile)
 
 
 ## What is on offer when FACING the gateway, from either side: paying to open a locked one, or
@@ -123,8 +256,8 @@ func on_adjacent_actions(who: Node, facing: Vector3i) -> Array:
 
 
 func on_turn(turn: int) -> void:
-	# Only automated gateways cycle; LOCKED and MEDITATION ones stay open once opened.
-	if kind == Kind.AUTOMATED and not open_pattern.is_empty():
+	# Only automated and teleport gateways cycle; LOCKED and MEDITATION ones stay open once opened.
+	if _cycles() and not open_pattern.is_empty():
 		# A gateway lives between tiles, so it can never close ON the player — they are always on
 		# one side or the other — and the pattern applies as-is.
 		_open = open_pattern[(turn + phase_offset) % open_pattern.size()]
@@ -208,7 +341,7 @@ func meditate(from_tile := Vector3i.ZERO, facing := Vector3i.ZERO) -> bool:
 ## Rearming on entering a dungeon: automated gateways pick their pattern back up; locked and
 ## meditation ones stay open, since opening them is settled for the run.
 func reset_between_visits() -> void:
-	if kind == Kind.AUTOMATED:
+	if _cycles():
 		if not open_pattern.is_empty():
 			_open = open_pattern[phase_offset % open_pattern.size()]
 	elif kind == Kind.MEDITATION and not _open:
@@ -232,6 +365,8 @@ func _spawn_visual() -> void:
 			color = Color(0.7, 0.6, 0.2)  # gold, for paying
 		Kind.MEDITATION:
 			color = Color(0.4, 0.7, 0.6)  # blue-green, for meditating
+		Kind.TELEPORT:
+			color = TELEPORT_COLOR
 	# A thin panel sitting ON the edge: thin along the axis being crossed, wide along the other.
 	# The node's origin is at the anchor tile's centre, so shift it half a tile to the edge.
 	var thin := DungeonManager.EDGE_THICKNESS
@@ -241,6 +376,9 @@ func _spawn_visual() -> void:
 	else:
 		across.z = thin
 	var offset := Vector3(edge_dir.x, 0.0, edge_dir.z) * DungeonManager.TILE_SIZE * 0.5
+	if kind == Kind.TELEPORT and not two_sided:
+		# Against a wall: pulled back onto the open side, or half of it would sink into the wall.
+		offset -= Vector3(edge_dir.x, 0.0, edge_dir.z) * thin * 0.5
 	_add_marker_box(color, across, offset)
 	if kind == Kind.LOCKED or kind == Kind.MEDITATION:
 		_spawn_face_labels(offset, color)
@@ -277,10 +415,25 @@ func _spawn_face_labels(offset: Vector3, color: Color) -> void:
 	_update_gate_label()
 
 
+## Violet, and glowing while open: the one gate that never slides out of the way.
+const TELEPORT_COLOR := Color(0.55, 0.3, 0.85)
+
+
 ## Reflects the open/closed state: closed raises the panel, open slides it flush with the
-## floor.
+## floor. A teleport gate stays standing and lights up instead — open, it is still in the way.
 func _update_marker() -> void:
-	_flatten_marker(_open)
+	if kind != Kind.TELEPORT:
+		_flatten_marker(_open)
+		return
+	if _marker == null:
+		return
+	var mat := _marker.material_override as StandardMaterial3D
+	if mat == null:
+		return
+	mat.emission_enabled = _open
+	mat.emission = TELEPORT_COLOR
+	mat.emission_energy_multiplier = 1.5
+	mat.albedo_color = TELEPORT_COLOR if _open else TELEPORT_COLOR.darkened(0.5)
 
 
 ## What a closed gateway announces about itself: its price — the design doc wants it "easily

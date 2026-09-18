@@ -52,6 +52,11 @@ func has_been_dug() -> bool:
 ## Already dug this visit, so no Dig action left. This is also what the map reads to mark the
 ## tile, as the design doc asks: "an icon is shown on the dungeon map after it has been dug a
 ## first time".
+## Digging can spring a poison trap: never inside a safe area.
+func is_hazard() -> bool:
+	return true
+
+
 func is_spent() -> bool:
 	return _dug
 

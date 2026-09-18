@@ -128,6 +128,11 @@ func is_active() -> bool:
 
 
 ## A die that has rolled, or been destroyed, is spent.
+## Half its outcomes send the player elsewhere or cost DEN: never inside a safe area.
+func is_hazard() -> bool:
+	return true
+
+
 func is_spent() -> bool:
 	return not _active
 

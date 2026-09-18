@@ -1,0 +1,8 @@
+[gd_resource type="Resource" script_class="ScenarioData" format=3]
+
+[ext_resource type="Script" path="res://resources/scenario_data.gd" id="1_qty24"]
+
+[resource]
+script = ExtResource("1_qty24")
+id = &"elevator_safeguards"
+order = 9

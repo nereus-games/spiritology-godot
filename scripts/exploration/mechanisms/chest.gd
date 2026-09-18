@@ -57,6 +57,11 @@ func is_opened() -> bool:
 
 
 ## An opened chest has nothing left to give.
+## A trapped chest teleports whoever opens it: never inside a safe area. A plain one is loot.
+func is_hazard() -> bool:
+	return is_trap
+
+
 func is_spent() -> bool:
 	return _opened
 

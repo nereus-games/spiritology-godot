@@ -28,7 +28,7 @@ func on_talk_resolved(manager, speaker, target, _effective: bool) -> void:
 	if target.is_player != owner.is_player or target == owner:
 		return
 	target.recover_den(TEAMMATE_DEN)
-	target.override_weakness(GameEnums.Energy.NONE)  # stripped for the current turn
+	target.override_weakness(GameEnums.Energy.NONE, owner)  # until the owner's next turn
 	manager.note_talent(
 		_tr("LOG_TALENT_SERENE_WAVES") % [_label(), target.display_name(), TEAMMATE_DEN]
 	)

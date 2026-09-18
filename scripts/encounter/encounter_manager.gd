@@ -287,7 +287,11 @@ func run(max_rounds: int = 30) -> StringName:
 	for _r in max_rounds:
 		_begin_round()
 		for individual in timeline.order.duplicate():
-			if individual.is_dissolved() or individual.has_left():
+			if individual.has_left():
+				continue
+			# Before the skip below: a dissolved individual's effects still have to run out.
+			_start_turn_of(individual)
+			if individual.is_dissolved():
 				continue
 			await _take_turn(individual)
 			var res := _check_end()
@@ -333,8 +337,13 @@ func _begin_round() -> void:
 	round_number += 1
 	# One random energy for the whole round, shared by every Random/Variable ability.
 	_round_energy = _random_energy()
-	for f in timeline.order:
-		f.clear_turn_state()
+
+
+## `individual`'s turn begins: whatever effects it anchored count down one turn — see
+## [EncounterIndividual] on how long an effect lasts.
+func _start_turn_of(individual: EncounterIndividual) -> void:
+	for f in all_players + all_rivals:
+		f.on_turn_start(individual)
 
 
 func _take_turn(individual: EncounterIndividual) -> void:
@@ -508,6 +517,9 @@ func withdraw(individual: EncounterIndividual, reason: StringName) -> void:
 	players.erase(individual)
 	rivals.erase(individual)
 	timeline.remove(individual)
+	# It will have no next turn, so what was waiting for one ends now.
+	for f in all_players + all_rivals:
+		f.expire_anchored_to(individual)
 	departed.emit(individual, reason)
 
 
@@ -549,7 +561,6 @@ func rival_report() -> Array:
 ##
 ## The bonus applies to damage DEALT — a design decision, the doc does not say — and lands
 ## on the meditating individual's NEXT turn, the only moment it could strike anyway.
-## See EncounterIndividual.grant_next_turn_damage_bonus for why that is done in two steps.
 func _resolve_meditate(individual: EncounterIndividual, action: EncounterAction) -> void:
 	var before := individual.eth
 	var balance := BalanceData.current()

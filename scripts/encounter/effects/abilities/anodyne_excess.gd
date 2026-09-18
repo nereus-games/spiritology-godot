@@ -11,4 +11,4 @@ func execute(ctx: EncounterContext) -> void:
 	ctx.request_ui(&"hide_rival_stats", {"until": "encounter_end", "cancel_on": "meditate"})
 	for o in ctx.others():
 		if ctx.rng.randf() < WEAKNESS_CHANCE:
-			ctx.set_weakness(o, ctx.energy())
+			ctx.set_weakness(o, ctx.energy(), EncounterIndividual.FOR_ENCOUNTER)

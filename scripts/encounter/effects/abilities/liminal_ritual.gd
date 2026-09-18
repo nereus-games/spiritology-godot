@@ -13,4 +13,4 @@ func execute(ctx: EncounterContext) -> void:
 		return
 	for f in no_weakness:
 		ctx.recover_den(f, ctx.dmg(&"normal"))
-		ctx.set_weakness(f, ctx.energy())
+		ctx.set_weakness(f, ctx.energy(), EncounterIndividual.FOR_ENCOUNTER)

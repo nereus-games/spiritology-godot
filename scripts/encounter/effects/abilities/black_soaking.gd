@@ -5,5 +5,5 @@ extends AbilityScript
 
 
 func execute(ctx: EncounterContext) -> void:
-	ctx.change_weakness(ctx.user)  # a new weakness, picked automatically among 3
+	ctx.change_weakness(ctx.user, 2)  # picked automatically among 3; this turn and the next
 	ctx.grant_immunity(ctx.user, [GameEnums.Energy.ARCANE])

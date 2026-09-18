@@ -398,6 +398,12 @@ msgstr "la faiblesse de %s change."
 msgid "LOG_WEAKNESS_SET"
 msgstr "faiblesse de %s : %s."
 
+msgid "LOG_WEAKNESS_LOCKED"
+msgstr "la faiblesse de %s ne peut pas changer."
+
+msgid "LOG_ALL_DAMAGE_FACTOR"
+msgstr "tous les dégâts reçus par %s ×%.2f."
+
 msgid "LOG_WEAKNESS_RESET"
 msgstr "faiblesse de %s rétablie."
 

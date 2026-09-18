@@ -281,7 +281,10 @@ func _toggle_debug_view() -> void:
 
 func _on_choice_requested(individual: EncounterIndividual, manager: EncounterManager) -> void:
 	_acting_individual = individual
-	_refresh_timeline()  # the active individual's cell changes size
+	# The active individual's cell changes size, and effects that ran out as its turn began
+	# have to disappear from the strip.
+	_refresh_timeline()
+	_update_turn_label()  # a new round may have begun since the last turn was shown
 	_show_actions(individual, manager)
 
 

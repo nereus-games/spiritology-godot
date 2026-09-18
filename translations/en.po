@@ -393,6 +393,12 @@ msgstr "%s's weakness changes."
 msgid "LOG_WEAKNESS_SET"
 msgstr "weakness of %s: %s."
 
+msgid "LOG_WEAKNESS_LOCKED"
+msgstr "the weakness of %s cannot change."
+
+msgid "LOG_ALL_DAMAGE_FACTOR"
+msgstr "all damage taken by %s ×%.2f."
+
 msgid "LOG_WEAKNESS_RESET"
 msgstr "weakness of %s restored."
 

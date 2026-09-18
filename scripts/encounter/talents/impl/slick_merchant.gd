@@ -33,7 +33,7 @@ func on_talk_resolved(manager, speaker, target, _effective: bool) -> void:
 		return
 	var pos = manager.timeline.position_of(owner)
 	var my_weakness = owner.active_weakness(pos)
-	target.override_weakness(my_weakness)
+	target.override_weakness(my_weakness, owner)
 	manager.note_talent(
 		_tr("LOG_TALENT_SLICK_MERCHANT") % [_label(), target.display_name(), owner.display_name()]
 	)

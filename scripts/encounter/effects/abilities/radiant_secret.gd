@@ -6,4 +6,4 @@ extends AbilityScript
 
 func execute(ctx: EncounterContext) -> void:
 	for m in ctx.team():
-		ctx.set_weakness(m, GameEnums.Energy.HEAT)
+		ctx.set_weakness(m, GameEnums.Energy.HEAT, 1, m)  # until THEIR next turn

@@ -7,4 +7,4 @@ extends AbilityScript
 func execute(ctx: EncounterContext) -> void:
 	for f in ctx.all_individuals:
 		if not f.is_dissolved():
-			ctx.set_weakness(f, GameEnums.Energy.FLUID)
+			ctx.set_weakness(f, GameEnums.Energy.FLUID, 1, f)  # until THEIR next turn

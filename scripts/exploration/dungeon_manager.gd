@@ -524,8 +524,8 @@ func teleport_actor_to(who: Node, dest: Vector3i) -> Vector3i:
 # with it, and "the dungeon entry counts as an exit point". These tiles are declared by level
 # design — in dev, by the test scenario. Today they serve the mechanisms that send the player
 # back to them, such as dieverting.
-# ## TODO: leaving the dungeon proper — the interaction, returning to the world map, exiting
-# after the duo is devitalised — is still unwired. See `exploration.gd`.
+# ## TODO: leaving the dungeon proper — the exit interaction, and a world map to return to — is
+# still unwired. A devitalised duo does leave, for the scenario picker; see `exploration.gd`.
 
 var _entrance: Vector3i
 var _has_entrance := false

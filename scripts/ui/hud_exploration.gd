@@ -6,9 +6,10 @@
 ## [method DungeonManager.actions_for] from the player's tile and facing. Navigation:
 ## `cycle_action` (Tab) cycles, `cycle_action_reverse` (Shift+Tab) cycles back, `interact`
 ## (Space/Enter) confirms. It updates live from [GameSession]'s DEN/ETH signals.
-## TODO, from the design doc's "User Interface": the mini-map (element 1), the stack of known
-## exploration abilities (element 4) with its USE/CANCEL submenu, and the final layout (DEN/ETH
-## bottom-centre, round icons).
+## The mini-map (element 1) is `exploration_minimap.gd`.
+## TODO, from the design doc's "User Interface": the stack of known exploration abilities
+## (element 4) with its USE/CANCEL submenu, and the final layout (DEN/ETH bottom-centre, round
+## icons).
 extends CanvasLayer
 
 const ExplorationActionMenu := preload("res://scripts/ui/exploration_action_menu.gd")

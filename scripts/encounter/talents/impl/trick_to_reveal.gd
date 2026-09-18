@@ -17,8 +17,9 @@ extends "res://scripts/encounter/talents/talent_script.gd"
 func on_encounter_end(manager, result: StringName) -> void:
 	if result == &"defeat":
 		return
-	# TODO: if the last dialogue was effective, reveal an unrevealed chest or trap on the map —
-	# once the dungeon framework exists.
+	# TODO: if the last dialogue was effective, reveal an unrevealed chest or trap on the map.
+	# The dungeon side is ready ([method Trap.reveal], [method Chest.reveal]); what is missing is
+	# a way for an encounter talent to reach the dungeon it was entered from.
 	manager.note_talent(_tr("LOG_TALENT_TRICK_TO_REVEAL") % _label())
 
 

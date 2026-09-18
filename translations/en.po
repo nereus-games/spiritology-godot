@@ -202,7 +202,7 @@ msgid "LOG_EXPL_NO_CRACKED_WALL"
 msgstr "no cracked wall ahead"
 
 msgid "LOG_EXPL_SCOUT"
-msgstr "keeping watch — revealing rival groups TODO"
+msgstr "keeping watch"
 
 # %d = turns left, %d = the DEN lost each turn.
 msgid "UI_STATUS_POISON"

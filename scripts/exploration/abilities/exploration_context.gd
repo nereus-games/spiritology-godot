@@ -89,8 +89,8 @@ func cross_faced_cracked_wall() -> bool:
 
 
 ## Scouting (static camouflage): the player holds still to watch the wandering rival groups.
-## ## TODO: reveal 2 to 4 groups one at a time and offer to take them on. This needs a
-## rival-group spawn system, which does not exist. Placeholder: goes hidden for the watch.
+## ## TODO: reveal 2 to 4 groups one at a time and offer to take them on. The groups exist
+## (`rival_spawner.gd`); the reveal and the choice do not. Placeholder: goes hidden for the watch.
 func scout_groups() -> void:
 	hide_from_rivals(3)
 	_note("LOG_EXPL_SCOUT")

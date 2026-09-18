@@ -206,7 +206,7 @@ msgid "LOG_EXPL_NO_CRACKED_WALL"
 msgstr "aucun mur fissuré en face"
 
 msgid "LOG_EXPL_SCOUT"
-msgstr "guet — révélation de groupes de rivaux TODO"
+msgstr "aux aguets"
 
 # %d = turns left, %d = the DEN lost each turn.
 msgid "UI_STATUS_POISON"

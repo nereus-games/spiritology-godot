@@ -16,9 +16,8 @@ const RivalMember := preload("res://scripts/exploration/rival_member.gd")
 const START := Vector3i(3, 0, 0)
 const NEXT_TO_START := Vector3i(3, 0, 1)
 
-## Runs of a flight, to see the group both vanish and stay. With a 50 % chance, all of them
-## coming out the same way would take a 1 in 2^39 fluke.
-const FLIGHTS := 40
+## Runs of a flight: the landing tile is drawn at random, so one run proves little.
+const FLIGHTS := 20
 
 var _fails: Array[String] = []
 
@@ -268,8 +267,7 @@ func _check_flight(ctx: Dictionary) -> void:
 	var scene = ctx.scene
 	var player = ctx.player
 	var balance := BalanceData.current()
-	var vanished := 0
-	var stayed := 0
+	var left_behind: Array = []
 	var off_range: Array = []
 	for i in FLIGHTS:
 		player.teleport_to(START)
@@ -281,14 +279,13 @@ func _check_flight(ctx: Dictionary) -> void:
 		if walked < balance.flee_distance_min or walked > balance.flee_distance_max:
 			off_range.append("%s (%d steps)" % [player.tile, walked])
 		await get_tree().process_frame
-		if is_instance_valid(g):
-			stayed += 1
-			if not g.is_resting() or g.den != 33:
-				off_range.append("a group left behind is not resting with its DEN")
-			g.remove_from_dungeon()
-			await get_tree().process_frame
-		else:
-			vanished += 1
+		if not is_instance_valid(g):
+			left_behind.append("the group is gone")
+			continue
+		if g.tile != NEXT_TO_START or not g.is_resting() or g.den != 33:
+			left_behind.append("%s, resting=%s, DEN %d" % [g.tile, g.is_resting(), g.den])
+		g.remove_from_dungeon()
+		await get_tree().process_frame
 	_check(
 		off_range.is_empty(),
 		(
@@ -301,8 +298,11 @@ func _check_flight(ctx: Dictionary) -> void:
 		)
 	)
 	_check(
-		vanished > 0 and stayed > 0,
-		"the group is sometimes gone, sometimes not (%d gone, %d stayed)" % [vanished, stayed]
+		left_behind.is_empty(),
+		(
+			"the rivals stay on their tile, resting, with the damage they took%s"
+			% ("" if left_behind.is_empty() else " — " + "; ".join(left_behind.slice(0, 3)))
+		)
 	)
 	player.teleport_to(START)
 

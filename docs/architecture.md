@@ -127,14 +127,16 @@ dissolved members are gone, the others keep the DEN and ETH they came out with.
 
 An encounter no longer ends only when a side is dissolved. An individual can **leave**:
 `EncounterManager.withdraw` takes it out of its side and of the turn order, so no targeting
-rule, talent or ability has to know about departures. Run Away and a smoke bomb take a whole
-side away; Ghosting and Opening up Closing only their user. `pacify` is the way out the
+rule, talent or ability has to know about departures. Whatever the way out — Run Away, a
+smoke bomb, Ghosting, Opening up Closing — one individual leaves, and its side carries on
+without it. `pacify` is the way out the
 dialogue system will use — nothing calls it in play yet, the debug view's F2 does. The
 outcomes follow: `victory` (every rival dissolved, the only one the FDE counter rewards),
 `defeat`, `fled`, `pacified`, `rivals_fled`, `timeout`.
 
-When the duo has fled, it lands 3 to 5 walkable steps away and the group is gone half the
-time. A group still on the map after any encounter rests a few turns, or it would open the
+When the duo has fled, it lands 3 to 5 walkable steps away, and the rivals still in the
+encounter stay on their tile. (A "50 % chance the rival disappears" was dropped: it looked
+exactly like the whole group being devitalised.) A group still on the map after any encounter rests a few turns, or it would open the
 next one straight away. The figures are in `data/balance.tres`.
 
 Decisions taken where the design doc is silent, to revisit when it speaks:

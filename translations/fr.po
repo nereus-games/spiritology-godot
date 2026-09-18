@@ -312,7 +312,7 @@ msgid "SCENARIO_RIVALS_TITLE"
 msgstr "Groupes de rivaux : apparitions, fuite, retour"
 
 msgid "SCENARIO_RIVALS_DESC"
-msgstr "Un rival seul attend près de l'entrée, deux groupes apparaissent sur des points d'apparition à ton arrivée, puis un autre tous les 12 tours. Un groupe est tiré au hasard 70 % du temps (1 à 3 parmi ravbak, kalilk, skorpis, fliritus), sinon c'est une meute de trois ravbak ou un skorpis seul. En rencontre, utilise une bombe fumigène pour fuir : tu atterris à 3 à 5 pas, et le groupe a disparu une fois sur deux. En vue de debug, F2 apaise les rivaux. Quelle que soit l'issue, un groupe resté sur la carte garde les dégâts subis, et se repose quelques tours."
+msgstr "Un rival seul attend près de l'entrée, deux groupes apparaissent sur des points d'apparition à ton arrivée, puis un autre tous les 12 tours. Un groupe est tiré au hasard 70 % du temps (1 à 3 parmi ravbak, kalilk, skorpis, fliritus), sinon c'est une meute de trois ravbak ou un skorpis seul. En rencontre, utilise une bombe fumigène pour fuir : tu atterris à 3 à 5 pas, et le groupe est toujours là où il était. Si un seul personnage fuit, l'autre continue. En vue de debug, F2 apaise les rivaux. Quelle que soit l'issue, un groupe resté sur la carte garde les dégâts subis, et se repose quelques tours."
 
 msgid "DUNGEON_DEV_RIVALS_NAME"
 msgstr "Salle de test des rivaux"
@@ -540,9 +540,9 @@ msgstr "utilise %s sur %s : DEN %d -> %d."
 msgid "LOG_OBJECT_HEAL_GIVEN"
 msgstr "donne %s à %s : DEN %d -> %d."
 
-# %s = the object. Fleeing belongs to exploration, which does not handle it yet.
+# %s = the object, then the character it sends running.
 msgid "LOG_OBJECT_FLEE_USED"
-msgstr "utilise %s pour prendre la fuite."
+msgstr "utilise %s : %s prend la fuite."
 
 # The objects whose effect belongs to exploration, or to nothing at all.
 msgid "LOG_OBJECT_USED"
@@ -557,9 +557,10 @@ msgstr "n'a personne à voler."
 msgid "LOG_STEAL"
 msgstr "tente de voler %s [objet volé / Coal Vetch à venir]."
 
-# Run Away: the whole side leaves. In LOG_FLEE_NO_ETH, %d = the ETH a talent charges for it.
-msgid "LOG_FLEE_SIDE"
-msgstr "prend la fuite, et son camp quitte la rencontre."
+# Run Away: the character leaves, its teammate stays. In LOG_FLEE_NO_ETH, %d = the ETH a
+# talent charges for it.
+msgid "LOG_FLEE"
+msgstr "prend la fuite et quitte la rencontre."
 
 msgid "LOG_FLEE_NO_ETH"
 msgstr "ne peut pas fuir : il faut %d ETH."

@@ -110,9 +110,12 @@ func _on_encounter_finished(result: StringName, rivals: Array) -> void:
 	GameSession.resolve_party_wipe()
 
 
-## The duo ran away: it lands 3 to 5 walkable steps from where the encounter took place, and
-## the group it ran from is gone half the time — the design doc's rule for fleeing. A group
-## that is still there rests, like after any other encounter.
+## The duo ran away: it lands 3 to 5 walkable steps from where the encounter took place. The
+## rivals still in the encounter stay on the group's tile, and rest like after any other
+## encounter.
+##
+## The design doc was once read as adding "a 50 % chance the rival disappears"; that was dropped
+## (2026-09-18) — a group vanishing looked exactly like every rival in it being devitalised.
 func _run_away(group: Node) -> void:
 	var balance := BalanceData.current()
 	var player := get_node_or_null("Player")
@@ -120,11 +123,7 @@ func _run_away(group: Node) -> void:
 		var dest := flight_destination(player.tile)
 		if dest != player.tile:
 			player.teleport_to(dest)
-	if group == null:
-		return
-	if randf() < balance.flee_group_vanish_chance:
-		group.remove_from_dungeon()
-	else:
+	if group != null:
 		group.rest(balance.rival_rest_turns)
 
 

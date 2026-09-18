@@ -308,7 +308,7 @@ msgid "SCENARIO_RIVALS_TITLE"
 msgstr "Rival groups: spawns, flight, the way back"
 
 msgid "SCENARIO_RIVALS_DESC"
-msgstr "A lone rival waits near the entrance, two groups appear on spawn points as you arrive, and another one every 12 turns. A group is drawn at random 70 % of the time (1 to 3 of ravbak, kalilk, skorpis, fliritus), otherwise it is a pack of three ravbak or a lone skorpis. In an encounter, use a smoke bomb to run away: you land 3 to 5 steps off, and the group is gone half the time. In the debug view, F2 pacifies the rivals. Whatever the outcome, a group still on the map keeps the damage it took, and rests a few turns."
+msgstr "A lone rival waits near the entrance, two groups appear on spawn points as you arrive, and another one every 12 turns. A group is drawn at random 70 % of the time (1 to 3 of ravbak, kalilk, skorpis, fliritus), otherwise it is a pack of three ravbak or a lone skorpis. In an encounter, use a smoke bomb to run away: you land 3 to 5 steps off, with the group still where it was. If only one character runs, the other carries on. In the debug view, F2 pacifies the rivals. Whatever the outcome, a group still on the map keeps the damage it took, and rests a few turns."
 
 msgid "DUNGEON_DEV_RIVALS_NAME"
 msgstr "Rival test room"
@@ -535,9 +535,9 @@ msgstr "uses %s on %s: DEN %d -> %d."
 msgid "LOG_OBJECT_HEAL_GIVEN"
 msgstr "gives %s to %s: DEN %d -> %d."
 
-# %s = the object. Fleeing belongs to exploration, which does not handle it yet.
+# %s = the object, then the character it sends running.
 msgid "LOG_OBJECT_FLEE_USED"
-msgstr "uses %s to run away."
+msgstr "uses %s: %s runs away."
 
 # The objects whose effect belongs to exploration, or to nothing at all.
 msgid "LOG_OBJECT_USED"
@@ -552,9 +552,10 @@ msgstr "has nobody to steal from."
 msgid "LOG_STEAL"
 msgstr "tries to steal from %s [stolen object / Coal Vetch to come]."
 
-# Run Away: the whole side leaves. In LOG_FLEE_NO_ETH, %d = the ETH a talent charges for it.
-msgid "LOG_FLEE_SIDE"
-msgstr "runs away, and their side leaves the encounter."
+# Run Away: the character leaves, its teammate stays. In LOG_FLEE_NO_ETH, %d = the ETH a
+# talent charges for it.
+msgid "LOG_FLEE"
+msgstr "runs away and leaves the encounter."
 
 msgid "LOG_FLEE_NO_ETH"
 msgstr "cannot run away: it takes %d ETH."

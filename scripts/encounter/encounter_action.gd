@@ -14,7 +14,7 @@
 ##     first turn or below 10 % DEN, for 10 ETH, and behind a QTE that can fail;
 ##   - an ability RUNS it directly, bypassing the menu — [method EncounterContext.flee],
 ##     called by `ghosting` and `opening_up_closing`.
-## The menu action takes the whole side away; an ability, only the individual it names.
+## Either way, only one individual leaves: its side carries on without it.
 class_name EncounterAction
 extends RefCounted
 

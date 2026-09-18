@@ -338,7 +338,7 @@ func _show_actions(individual: EncounterIndividual, manager: EncounterManager) -
 	)
 	# Actions a talent added; never available by default.
 	if kinds.has(EncounterAction.Kind.FLEE):
-		# Run Away takes no target, and takes the whole duo away. Greyed when a talent charges
+		# Run Away takes no target: the character leaves, its teammate stays. Greyed when a talent charges
 		# ETH for it that the character does not have (Slick Merchant).
 		_menu.add_bar_action(
 			tr("UI_ENCOUNTER_ACTION_FLEE"),

@@ -63,8 +63,11 @@ jobs:
           python-version: "3.12"
 
       # The charset-normalizer extra avoids depending on libmagic being present.
+      # The version is pinned: unpinned, pip occasionally walks back through every
+      # release looking for one that satisfies the day's environment, reaches the
+      # versions that predate the extra and fails with ResolutionImpossible.
       - name: Install REUSE
-        run: pip install --quiet "reuse[charset-normalizer]"
+        run: pip install --quiet "reuse[charset-normalizer]==6.2.0"
 
       - name: reuse lint
         run: reuse lint

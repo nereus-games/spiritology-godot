@@ -48,7 +48,8 @@ clauses cluster around four missing pieces; building one closes several abilitie
   declared or resolved. Victimism and Dodge Blur (punish a rival that Talks), Unavailability
   (drain whoever targets the user), Unfocused Complaint (only if the target Meditates), Business
   Card (DEN when a rival Talks to the user), Effort of Neutrality (only if the ally's action
-  deals no damage), Homeostasis (ETH at the moment of damage). *~7 abilities.*
+  deals no damage), Homeostasis (ETH at the moment of damage), Tactical Retreat (Arcane damage
+  taken becomes ETH — approximated today by immunity). *~8 abilities.*
 - **An encounter history** — who did what to whom, turn by turn, and how often each ability was
   used. Halo Effect, Glorification, Moral Elevation, Catatonia, Self-Disclosure,
   Retroflection. *~6 abilities.*
@@ -56,11 +57,15 @@ clauses cluster around four missing pieces; building one closes several abilitie
   Secret, Hyping Up, Misty Secret, One's Ethos, Business Card. Needs rival action selection to
   take a per-encounter weight. *~5 abilities.*
 - **Next-turn modifiers on the individual** — the next ability is free, the next Talk yields as
-  much as an Examine, the damage steps up a tier. Self-Forgiveness, Active Listening, Priming.
+  much as an Examine, the damage steps up a tier. Self-Forgiveness, Active Listening, Priming,
+  and Catatonia's Examine/Meditate boost (which also needs the history).
   Timed effects now last until their author's next turn, which is most of the plumbing.
 
 The rest are one-offs with no shared prerequisite: Shuffle (trade ETH by position), Deflection
 (global doubling on weakness), Hardening (Talk info penalty), Self-Denial (per-turn drain).
+**Altruism** is the cheapest of them: it pays for its healing by destroying one of the player's
+objects, and `GameSession.remove_object` and the encounter's inventory list both exist — only
+the choice of object at use time is missing. (`altruism.gd`)
 
 **Eight abilities implement nothing** and fall back on generic per-tag effects: their first line
 is `# @unimplemented` (`grep -rl '@unimplemented' scripts/encounter/effects/abilities/`). Each
@@ -105,8 +110,8 @@ unblock.
   faults (`safe_areas.violations()`), but only a check calls it. Becomes urgent with the first
   real dungeon. (`dungeon_manager.gd`, `stairs.gd`, `exploration.gd`, `player_controller.gd` —
   tagged `TODO(dungeon checker)`)
-- **Rivals carrying objects.** Examine should "reveal objects they carry", Steal has nothing to
-  take, and Altruism has nothing to destroy. (`encounter_manager.gd`, `altruism.gd`)
+- **Rivals carrying objects.** Examine should "reveal objects they carry", and Steal has nothing
+  to take. (`encounter_manager.gd`, `steal.gd`)
 - **Encyclopaedia detail.** IFP are awarded and tallied, from encounters and from exploration
   alike; what is missing is the *amount* an Examine yields (so Reconnaissance Glide's +10 %
   multiplies a number with no consequence), info fragments (Examine Weakness), Forlorn variants

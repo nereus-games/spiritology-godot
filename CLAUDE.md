@@ -17,7 +17,7 @@ Requires **Godot 4.7**, and the binary is not on the PATH on the author's machin
 
 ```bash
 godot --path .                 # runs the game — a scenario picker, then a dungeon
-./tools/run_checks.sh          # 9 headless regression checks (~25 s)
+./tools/run_checks.sh          # 10 headless regression checks (~25 s)
 ./tools/parse_check.sh         # parses every GDScript file (~45 s)
 ```
 

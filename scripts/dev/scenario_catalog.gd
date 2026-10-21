@@ -219,6 +219,8 @@ static func _traps(dm) -> Vector3i:
 	_place(dm, Trap, Vector3i(1, 0, 2), {"kind": Trap.Kind.POISON, "revealed": true})
 	_place(dm, Trap, Vector3i(1, 0, 4), {"kind": Trap.Kind.TELEPORT, "revealed": true})
 	_place(dm, Trap, Vector3i(1, 0, 6), {"kind": Trap.Kind.DISARRAY, "revealed": true})
+	# One left HIDDEN, for the reveal phase to find (see reveal_phase_check.gd).
+	_place(dm, Trap, Vector3i(1, 0, 8), {"kind": Trap.Kind.POISON})
 	return Vector3i(1, 0, 0)
 
 

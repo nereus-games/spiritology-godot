@@ -20,10 +20,6 @@ Each is explicit in the doc, has no prerequisite, and is wrong in play right now
 - **Rivals see through walls.** The doc says "the line of sight is blocked by walls"; `_can_see`
   ignores them. The fix is described in place: walk the tiles, stop at the first opaque edge.
   (`rival_behavior.gd`, `_can_see`)
-- **The turn has no reveal phase.** The doc's exploration turn is player → reveal of
-  mechanisms → rivals → mechanism activation; the second phase is missing, so a trap only comes
-  to light by springing and `Trap.reveal()` has no caller. This is also exactly what Reveal
-  Traps' first clause needs. (`dungeon_manager.gd`, `advance_turn`; `reveal_traps.gd`)
 - **Meditate is not an exploration action.** The doc lists it among the actions always
   available; today it exists only as a meditation gateway's contextual action, and recovers no
   ETH. The three steps are written out in place. (`exploration_extra_actions.gd`)

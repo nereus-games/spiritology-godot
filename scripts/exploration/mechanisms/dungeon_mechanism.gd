@@ -171,6 +171,12 @@ func is_hazard() -> bool:
 	return false
 
 
+## Whether this is a trap the reveal phase may bring to light ([method Trap.reveal]). No by
+## default; a trapped chest is NOT one, its trap is disguised by the design doc.
+func is_floor_trap() -> bool:
+	return false
+
+
 ## An actor, player or rival, has just entered the tile. Where traps, chests, teleporters and
 ## elevators fire.
 func on_enter(_who: Node) -> void:

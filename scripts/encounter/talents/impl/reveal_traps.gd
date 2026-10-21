@@ -8,7 +8,6 @@
 ## carry this script:
 ##  - the CHEST clause is implemented in `mechanisms/chest.gd`: teleport or stay, with loot either
 ##    way;
-##  - the TRAP clause is not: the 3 nearest traps are still not revealed on entering a floor.
-##    The minimap already draws a trap once [member Trap.revealed]; nothing calls
-##    [method Trap.reveal] (see the missing reveal phase in [method DungeonManager.advance_turn]).
+##  - the TRAP clause is implemented in `exploration.gd`, which on entering a level asks the dungeon's
+##    reveal phase ([method DungeonManager.request_trap_reveal]) for the 3 closest unrevealed traps.
 extends "res://scripts/encounter/talents/talent_script.gd"

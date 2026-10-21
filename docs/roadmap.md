@@ -84,6 +84,12 @@ can be picked up alone, after the hooks above if it needs one.
 Larger pieces, each of which a handful of markers wait on. Roughly in order of how much they
 unblock.
 
+- **Splitting `dungeon_manager.gd`.** It sits at the 60 public methods `gdlintrc` allows, a
+  ceiling set there to block any worsening. It is not a `TODO`, but it is the first thing to
+  do: every open change that adds a public method to it — the reveal phase and the rival
+  spawning rules, today — fails the lint job until it is split (or the ceiling is raised on
+  purpose).
+
 - **Leaving a dungeon, and navigating between scenes.** A devitalised duo now leaves the
   dungeon, but for the scenario picker, standing in for a world map that does not exist; the
   exit interaction is still unwired, and a secondary exit should unlock a bonus dungeon. The

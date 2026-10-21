@@ -739,13 +739,13 @@ msgid "ABILITY_EMOTIONAL_BLACKMAIL_NAME"
 msgstr "Emotional Blackmail"
 
 msgid "ABILITY_FAKE_NEWS_DESC"
-msgstr ""
+msgstr "Misleading information. Disinformation or defamation. Often used as a smokescreen. Easily spread by gossip."
 
 msgid "ABILITY_FAKE_NEWS_NAME"
 msgstr "Fake News"
 
 msgid "ABILITY_FLOW_STATE_DESC"
-msgstr ""
+msgstr "A state of total concentration. Mental absorption in an autotelic activity. Made possible by a balance between skills and challenge, and by clear goals and feedback. A feeling of mastery and serenity, free of any concern for oneself."
 
 msgid "ABILITY_FLOW_STATE_NAME"
 msgstr "Flow State"
@@ -754,13 +754,13 @@ msgid "ABILITY_FOG_MANTEL_NAME"
 msgstr "Fog Mantel"
 
 msgid "ABILITY_GASLIGHTING_DESC"
-msgstr ""
+msgstr "Information distorted or presented in a different light. Destabilises a rival's perception of reality. Minimising or denying the other's need, possibly to avoid facing guilt at being unable to meet it."
 
 msgid "ABILITY_GASLIGHTING_NAME"
 msgstr "Gaslighting"
 
 msgid "ABILITY_GHOSTING_DESC"
-msgstr ""
+msgstr "The manipulator suddenly disappears. From a distance, ignores the other person's messages to make them doubt. A narcissistic manipulator's method."
 
 msgid "ABILITY_GHOSTING_NAME"
 msgstr "Ghosting"
@@ -838,7 +838,7 @@ msgid "ABILITY_OILY_RESIDUE_NAME"
 msgstr "Oily Residue"
 
 msgid "ABILITY_ONE_S_ETHOS_DESC"
-msgstr ""
+msgstr "A speech by which one gives an image of oneself. Tells the other who one is, to silence false rumours or criticism about oneself, to establish a position in a conversation against a rival and to win the respect or trust of the rest of the group."
 
 msgid "ABILITY_ONE_S_ETHOS_NAME"
 msgstr "One’s Ethos"

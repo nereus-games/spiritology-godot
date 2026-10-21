@@ -41,13 +41,6 @@ Each is explicit in the doc, has no prerequisite, and is wrong in play right now
 - **Examining decor at a high PSY should spawn rivals.** The doc now gives the figures: above
   PSY 20, a 45 % chance of one or more groups nearby but never on the player's tile, composed
   by the normal spawning rules. (`examinable_decor.gd`)
-- **Some text does not reach the player in their language.** This breaks the project's own rule
-  (every displayed line in both `.po` files) rather than the doc, and carries no `TODO`. Five
-  ability descriptions are empty in `en.po` — Fake News, Flow State, Gaslighting, Ghosting,
-  One's Ethos — though `fr.po` has them. Fifteen `fr.po` entries are still flagged `#, fuzzy`,
-  left over from the old generator; Godot skips fuzzy entries, so French players see English
-  there. They include every object description, which the encounter's Use / Give menu now
-  shows, and seven talent names. `msgfmt --statistics translations/*.po` lists both.
 
 ## 2. Encounter hooks that unlock abilities in bulk
 

@@ -308,8 +308,9 @@ func _check_flight(ctx: Dictionary) -> void:
 
 
 ## The key that closes the encounter screen must stop there. Exploration wakes up within the same
-## event, and Space is its `interact` too: after a flight, on a tile offering nothing but MENU,
-## the key went on to confirm it and the scenario was left for the picker.
+## event, and Space is its `interact` too: after a flight, with MENU selected, the key went on to
+## confirm it and the scenario was left for the picker. MENU is selected explicitly: Meditate, which
+## is always on offer, now comes first.
 func _check_closing_key(ctx: Dictionary) -> void:
 	print("[closing the encounter screen]")
 	var scene = ctx.scene
@@ -317,6 +318,7 @@ func _check_closing_key(ctx: Dictionary) -> void:
 	var hud = scene.get_node("HudExploration")
 	get_tree().current_scene = scene  # what TransitionManager pauses and wakes up
 	player.teleport_to(START)
+	hud._action_menu.cycle(-1)  # MENU is the last entry
 	TransitionManager.open_encounter([&"draka", &"kalilk"], [&"kalilk"], {}, [])
 	var ui = TransitionManager._encounter
 	await get_tree().process_frame
@@ -341,7 +343,7 @@ func _check_closing_key(ctx: Dictionary) -> void:
 	_check(TransitionManager._encounter == null, "Space closes the encounter screen")
 	_check(
 		hud._action_menu.selected_id() == &"menu",
-		"the duo lands where MENU is the action on offer (%s)" % hud._action_menu.selected_id()
+		"MENU is still the selected action (%s)" % hud._action_menu.selected_id()
 	)
 	_check(
 		is_instance_valid(scene) and TransitionManager._fade.modulate.a == 0.0,

@@ -24,9 +24,6 @@ Each is explicit in the doc, has no prerequisite, and is wrong in play right now
   mechanisms → rivals → mechanism activation; the second phase is missing, so a trap only comes
   to light by springing and `Trap.reveal()` has no caller. This is also exactly what Reveal
   Traps' first clause needs. (`dungeon_manager.gd`, `advance_turn`; `reveal_traps.gd`)
-- **A known chest looks like an unknown one.** The minimap hides a trap until it is revealed but
-  draws every chest regardless, so `Chest.revealed` — and Trick to Reveal's chest clause — has
-  no visible effect. (`chest.gd`)
 - **Rival spawning ignores half of what the doc now says.** "Rival Spawning" was rewritten in
   September; `rival_spawner.gd` still draws species uniformly, has no cap, and skips a spawn
   that finds no free point. The doc wants: species weighted by dungeon rarity (common, normal,
@@ -78,8 +75,8 @@ can be picked up alone, after the hooks above if it needs one.
   (`affliction_state.gd`)
 - **Trick to Reveal cannot reach the dungeon.** Both ends exist; an encounter talent has no
   handle on the dungeon it was entered from. Revealing a trap would show on the map the moment
-  that handle exists; revealing a chest stays invisible until the `shows_on_map` override in
-  section 1 is done. (`trick_to_reveal.gd`)
+  that handle exists, a chest as well as a trap: both gate `shows_on_map` on `revealed`.
+  (`trick_to_reveal.gd`)
 - **Static Camouflage** should reveal 2 to 4 wandering groups one at a time and offer to take one
   on. Groups exist and spawn by each dungeon's rules; the reveal and the choice do not. The doc
   now adds that it does not stack with a costume, and that Forlorn shapes are likelier under it

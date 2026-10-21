@@ -42,9 +42,8 @@ const REVEAL_TRAPS := &"reveal_traps"
 ## The chest is known to the player, by having been stepped on or revealed by "Trick to
 ## Reveal". Does NOT imply knowing whether it is trapped — the design doc makes these DISGUISED
 ## traps.
-## ## TODO: nothing reads this flag. The minimap draws every chest, known or not, whereas a
-## trap stays off it until [member Trap.revealed] — so "Trick to Reveal" revealing a chest
-## changes nothing on screen. Overriding `shows_on_map` would settle it.
+## The minimap reads it ([method shows_on_map]): an unknown chest stays off the map, like an
+## unknown trap, so "Trick to Reveal" revealing a chest does change what is on screen.
 @export var revealed := false
 
 var _opened := false
@@ -74,6 +73,12 @@ func is_pending() -> bool:
 ## Reveals the chest on the map without opening it (the "Trick to Reveal" talent).
 func reveal() -> void:
 	revealed = true
+
+
+## A chest only shows on the map once it is KNOWN, as a trap does: revealed by a talent, or
+## stepped on by the player (which also leaves an opened chest on the map, dimmed).
+func shows_on_map() -> bool:
+	return revealed
 
 
 func on_enter(who: Node) -> void:

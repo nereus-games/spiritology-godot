@@ -24,9 +24,6 @@ Each is explicit in the doc, has no prerequisite, and is wrong in play right now
   mechanisms → rivals → mechanism activation; the second phase is missing, so a trap only comes
   to light by springing and `Trap.reveal()` has no caller. This is also exactly what Reveal
   Traps' first clause needs. (`dungeon_manager.gd`, `advance_turn`; `reveal_traps.gd`)
-- **Meditate is not an exploration action.** The doc lists it among the actions always
-  available; today it exists only as a meditation gateway's contextual action, and recovers no
-  ETH. The three steps are written out in place. (`exploration_extra_actions.gd`)
 - **A known chest looks like an unknown one.** The minimap hides a trap until it is revealed but
   draws every chest regardless, so `Chest.revealed` — and Trick to Reveal's chest clause — has
   no visible effect. (`chest.gd`)

@@ -903,7 +903,6 @@ msgstr "Abnégation"
 msgid "ABILITY_SELF_DISCLOSURE_NAME"
 msgstr "Révélation de soi"
 
-#, fuzzy
 msgid "ABILITY_SELF_FORGIVENESS_DESC"
 msgstr "se libérer des jugements moralisateurs envers soi-même"
 
@@ -922,9 +921,8 @@ msgstr "Mélange"
 msgid "ABILITY_SNEAK_ATTACK_NAME"
 msgstr "Coup sournois"
 
-#, fuzzy
 msgid "ABILITY_SOCIAL_CAPITAL_NAME"
-msgstr "Social Capital"
+msgstr "Capital social"
 
 msgid "ABILITY_SPIRIT_SEARCHING_NAME"
 msgstr "Remise en question"
@@ -977,44 +975,38 @@ msgstr "Avertissement"
 msgid "ABILITY_WORRISOME_SONG_NAME"
 msgstr "Chanson anxiogène"
 
-#, fuzzy
 msgid "OBJECT_NOTICE_DESC"
 msgstr "aucun effet"
 
 msgid "OBJECT_NOTICE_NAME"
 msgstr "annonce"
 
-#, fuzzy
 msgid "OBJECT_RUNE_STONE_DESC"
-msgstr "rend Y DEN à une cible"
+msgstr "redonne Y DEN à une cible"
 
 msgid "OBJECT_RUNE_STONE_NAME"
 msgstr "pierre runique"
 
-#, fuzzy
 msgid "OBJECT_SMOKE_BOMB_DESC"
 msgstr "permet de fuir une rencontre"
 
 msgid "OBJECT_SMOKE_BOMB_NAME"
 msgstr "bombe fumée"
 
-#, fuzzy
 msgid "OBJECT_SPADE_DESC"
 msgstr "utilisable sur les sols friables"
 
 msgid "OBJECT_SPADE_NAME"
 msgstr "pelle"
 
-#, fuzzy
 msgid "OBJECT_TEA_DROP_DESC"
-msgstr "soigne le poison du mécanisme"
+msgstr "soigne l’empoisonnement causé par un mécanisme"
 
 msgid "OBJECT_TEA_DROP_NAME"
 msgstr "goutte de thé"
 
-#, fuzzy
 msgid "OBJECT_TORMENT_VEIL_DESC"
-msgstr "les rivaux ne poursuivent plus et n’engagent plus de rencontre"
+msgstr "les rivaux ne poursuivent plus ni n’engagent de rencontre"
 
 msgid "OBJECT_TORMENT_VEIL_NAME"
 msgstr "voile de tourmente"
@@ -1127,28 +1119,23 @@ msgstr "yilir"
 msgid "SPECIES_ZUK_NAME"
 msgstr "zuk"
 
-#, fuzzy
 msgid "TALENT_EXAMINE_WEAKNESS_NAME"
-msgstr "Examine Weakness"
+msgstr "Examiner la faiblesse"
 
 msgid "TALENT_RECONNAISSANCE_GLIDE_NAME"
 msgstr "Incursion surélevée"
 
-#, fuzzy
 msgid "TALENT_RESTORE_NAME"
-msgstr "Restore"
+msgstr "Restauration"
 
-#, fuzzy
 msgid "TALENT_REUSE_NAME"
-msgstr "Reuse"
+msgstr "Réutilisation"
 
-#, fuzzy
 msgid "TALENT_REVEAL_TRAPS_NAME"
-msgstr "Reveal Traps"
+msgstr "Révéler les pièges"
 
-#, fuzzy
 msgid "TALENT_RUN_AWAY_2_NAME"
-msgstr "Run Away 2"
+msgstr "Fuite 2"
 
 msgid "TALENT_SERENE_WAVES_NAME"
 msgstr "Ondes sereines"
@@ -1156,11 +1143,9 @@ msgstr "Ondes sereines"
 msgid "TALENT_SLICK_MERCHANT_NAME"
 msgstr "Savant Commerçant"
 
-#, fuzzy
 msgid "TALENT_STEAL_NAME"
-msgstr "Steal"
+msgstr "Vol"
 
-#, fuzzy
 msgid "TALENT_TRICK_TO_REVEAL_NAME"
-msgstr "Trick to Reveal"
+msgstr "Ruse révélatrice"
 

@@ -30,13 +30,6 @@ Each is explicit in the doc, has no prerequisite, and is wrong in play right now
 - **A known chest looks like an unknown one.** The minimap hides a trap until it is revealed but
   draws every chest regardless, so `Chest.revealed` — and Trick to Reveal's chest clause — has
   no visible effect. (`chest.gd`)
-- **Some text does not reach the player in their language.** This breaks the project's own rule
-  (every displayed line in both `.po` files) rather than the doc, and carries no `TODO`. Five
-  ability descriptions are empty in `en.po` — Fake News, Flow State, Gaslighting, Ghosting,
-  One's Ethos — though `fr.po` has them. Fifteen `fr.po` entries are still flagged `#, fuzzy`,
-  left over from the old generator; Godot skips fuzzy entries, so French players see English
-  there. They include every object description, which the encounter's Use / Give menu now
-  shows, and seven talent names. `msgfmt --statistics translations/*.po` lists both.
 
 ## 2. Encounter hooks that unlock abilities in bulk
 

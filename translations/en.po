@@ -157,6 +157,10 @@ msgstr "back to the entrance, and the objects lost stay behind in a chest"
 msgid "UI_DIEVERTING_ENTRANCE_ETH"
 msgstr "back to the entrance, and the duo loses ether"
 
+# Examinable decor read at a high PSY: rivals have appeared close by.
+msgid "UI_DECOR_RIVALS"
+msgstr "Something stirs nearby."
+
 msgid "UI_DIEVERTING_RIVALS"
 msgstr "rivals spring up all around"
 

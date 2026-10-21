@@ -243,6 +243,15 @@ func _check_balance() -> void:
 		)
 	if b.rival_rest_turns < 0:
 		bad.append("rival_rest_turns = %d (must be >= 0)" % b.rival_rest_turns)
+	# A species must keep a chance of being drawn, and the decor figures must make sense.
+	for field in ["spawn_weight_common", "spawn_weight_normal"]:
+		if int(b.get(field)) < 1:
+			bad.append("%s = %s (must be >= 1)" % [field, b.get(field)])
+	for field in ["wave_psy_threshold", "wave_psy_extra_groups", "decor_psy_threshold"]:
+		if int(b.get(field)) < 0:
+			bad.append("%s = %s (must be >= 0)" % [field, b.get(field)])
+	if b.decor_spawn_groups_max < 1 or b.decor_spawn_radius < 1:
+		bad.append("decor_spawn_groups_max / decor_spawn_radius must be >= 1")
 	_check_empty(bad, "the balance values stay playable")
 
 
@@ -260,6 +269,14 @@ func _check_rival_spawns() -> void:
 	var bad: Array = []
 	for id in _dungeons:
 		var dg: DungeonConfig = _dungeons[id]
+		if dg.rival_limit < 0:
+			bad.append("%s.rival_limit = %d (0 or more)" % [id, dg.rival_limit])
+		for sid in dg.common_species + dg.rare_species:
+			if not dg.possible_species.has(sid):
+				bad.append("%s: %s is ranked by rarity but not in possible_species" % [id, sid])
+		for sid in dg.common_species:
+			if dg.rare_species.has(sid):
+				bad.append("%s: %s is both common and rare" % [id, sid])
 		if dg.random_composition_chance < 0.5 or dg.random_composition_chance > 1.0:
 			bad.append(
 				"%s.random_composition_chance = %s (0.5 to 1)" % [id, dg.random_composition_chance]

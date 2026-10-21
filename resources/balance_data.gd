@@ -51,6 +51,27 @@ extends Resource
 ## [method RivalBehavior.rest].
 @export var rival_rest_turns: int = 3
 
+## Rival spawning, where the doc leaves the figure open. A species is drawn with a weight by
+## its rarity in the dungeon: rare 1, normal [member spawn_weight_normal], common
+## [member spawn_weight_common]. The doc proposes 3 and 2 for common and normal, unanswered.
+@export var spawn_weight_common: int = 3
+@export var spawn_weight_normal: int = 2
+
+## Spawn waves "should grow wider first" at a high PSY: above [member wave_psy_threshold], each
+## wave brings [member wave_psy_extra_groups] more groups. The doc does not say how high is
+## high; the figure borrows the decor's.
+@export var wave_psy_threshold: int = 20
+@export var wave_psy_extra_groups: int = 1
+
+## Examining decor above [member decor_psy_threshold] PSY has a [member decor_spawn_chance]
+## chance (the doc: PSY 20, 45 %) of bringing 1 to [member decor_spawn_groups_max] groups within
+## [member decor_spawn_radius] tiles. The doc says "one or more" and "nearby": the last two
+## figures are placeholders.
+@export var decor_psy_threshold: int = 20
+@export_range(0.0, 1.0) var decor_spawn_chance: float = 0.45
+@export var decor_spawn_groups_max: int = 2
+@export var decor_spawn_radius: int = 4
+
 const PATH := "res://data/balance.tres"
 
 static var _current: BalanceData

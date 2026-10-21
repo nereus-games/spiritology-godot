@@ -86,6 +86,11 @@ var safe_areas = SafeAreas.new(self)
 ## for a room built by hand with no such rules, as most test scenarios are.
 var config: DungeonConfig
 
+## The four tiles next to one, on the same floor.
+const NEIGHBOURS: Array[Vector3i] = [
+	Vector3i(1, 0, 0), Vector3i(-1, 0, 0), Vector3i(0, 0, 1), Vector3i(0, 0, -1)
+]
+
 # Walkable tiles (floor). tile:Vector3i -> true.
 var _floor: Dictionary = {}
 # Occupancy: tile:Vector3i -> Node (a rival). The player does NOT occupy a tile — stepping
@@ -323,6 +328,56 @@ func free_tile_near(tile: Vector3i) -> Vector3i:
 		if is_walkable(n) and occupant_at(n) == null:
 			return n
 	return tile
+
+
+## Pushes the rival `group` off its tile onto a neighbouring one, to make room for a group
+## arriving through a teleport gate or spawning on its tile. The design doc's order of
+## preference: an ORDINARY free tile; failing that, a trap, or a ledge with no railing to fall
+## from; failing that, the group next to it is pushed in turn and this one takes its place. Never
+## onto the player, and never into a safe area. `pushing` holds the groups already in the chain, so it cannot loop. Returns false
+## when the group could not be moved at all.
+func push_group_aside(group: Node, pushing: Dictionary = {}) -> bool:
+	pushing[group] = true
+	var at: Vector3i = group.tile
+	var safe = safe_areas
+	var around: Array[Vector3i] = []
+	for d in NEIGHBOURS:
+		var n: Vector3i = at + d
+		if not is_edge_blocked(at, n) and n != player_tile() and not safe.has(n):
+			around.append(n)
+	# An ordinary free tile: floor, nobody on it, nothing on it.
+	for n in around:
+		if is_walkable(n) and mechanisms_at(n).is_empty():
+			_shove(group, n)
+			return true
+	# A free tile carrying a mechanism — a trap, typically — which fires on arrival.
+	for n in around:
+		if is_walkable(n):
+			_shove(group, n)
+			notify_entered(n, group)
+			return true
+	# A ledge: no floor there, but some further down. The group falls, and takes the damage.
+	for n in around:
+		var landing: Vector3i = fall_landing(n)
+		if not is_floor(n) and landing != n and not safe.has(landing):
+			if group.has_method("fall_down"):
+				group.fall_down(n)
+				return true
+	# The group next to it, pushed in turn.
+	for n in around:
+		var next_group: Node = occupant_at(n)
+		if next_group == null or pushing.has(next_group):
+			continue
+		if push_group_aside(next_group, pushing):
+			_shove(group, n)
+			return true
+	return false
+
+
+func _shove(group: Node, to_tile: Vector3i) -> void:
+	release(group.tile)
+	reserve(to_tile, group)
+	group.teleport_to(to_tile)
 
 
 ## How many steps it takes to walk to every tile reachable from `from` in at most `max_steps`,

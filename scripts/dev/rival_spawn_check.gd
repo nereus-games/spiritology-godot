@@ -281,7 +281,8 @@ func _check_spawn_points(ctx: Dictionary) -> void:
 		spawned.size() == config.spawn_points.size() and tiles.size() == spawned.size(),
 		"asked for more groups than points: one per point (%d)" % spawned.size()
 	)
-	_check(spawner.spawn_groups(1).is_empty(), "every point taken: nothing more appears")
+	# What happens then (the occupant is pushed aside) is spawn_rules_check.gd's business.
+	_check(spawner.free_spawn_points().is_empty(), "every point taken: none is free")
 	await _clear_rivals(dm)
 
 

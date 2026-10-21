@@ -160,6 +160,10 @@ msgstr "retour à l'entrée, et les objets perdus restent dans un coffre"
 msgid "UI_DIEVERTING_ENTRANCE_ETH"
 msgstr "retour à l'entrée, et le duo perd de l'éther"
 
+# Examinable decor read at a high PSY: rivals have appeared close by.
+msgid "UI_DECOR_RIVALS"
+msgstr "Quelque chose remue tout près."
+
 msgid "UI_DIEVERTING_RIVALS"
 msgstr "des rivaux surgissent tout autour"
 

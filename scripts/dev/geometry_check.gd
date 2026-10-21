@@ -424,16 +424,35 @@ func _check_gates(dm, player) -> void:
 	var mz := Vector3i(1, 0, 9)
 	var toward := Vector3i(0, 0, 1)
 	_check(dm.is_edge_opaque(mz, mz + toward), "closed gateway: opaque edge")
+	_check_rival_sight(dm, mz, mz + toward)
 	var ids := _action_ids(dm.actions_for(mz, toward, player))
 	_check(ids == [&"meditate"], "behind a closed gateway: no decor action (%s)" % [ids])
 	_check_meditation_streak(dm, player)
 	# Open gateway: the heap is visible again, and so actionable.
 	_check(not dm.is_edge_opaque(mz, mz + toward), "open gateway: transparent edge")
+	_check_rival_sight(dm, mz, mz + toward)
 	var after := _action_ids(dm.actions_for(mz, toward, player))
 	_check(
 		&"examine" in after or &"recycle" in after,
 		"open gateway: the decor actions behind it come back (%s)" % [after]
 	)
+
+
+## A rival's line of sight stops at an opaque edge: across a closed gateway it sees nothing, and
+## it sees again once the gateway is open. Called in both states; the edge decides which applies.
+func _check_rival_sight(dm, from_tile: Vector3i, to_tile: Vector3i) -> void:
+	var rival = RIVAL_SCENE.instantiate()
+	rival.position = dm.tile_to_world(from_tile)
+	dm.add_child(rival)
+	var opaque: bool = dm.is_edge_opaque(from_tile, to_tile)
+	var sees: bool = rival._can_see(to_tile)
+	_check(
+		sees != opaque,
+		"rival sight %s: edge %s, sees = %s" % [from_tile, "opaque" if opaque else "clear", sees]
+	)
+	# Unobstructed sight still works: the tile next to the rival on the open side.
+	_check(rival._can_see(from_tile), "rival sees its own tile")
+	rival.queue_free()
 
 
 ## A locked gateway shows its price on EACH face, at eye height, while it is closed — and has

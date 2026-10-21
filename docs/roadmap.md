@@ -17,9 +17,6 @@ on Notion?
 
 Each is explicit in the doc, has no prerequisite, and is wrong in play right now.
 
-- **Rivals see through walls.** The doc says "the line of sight is blocked by walls"; `_can_see`
-  ignores them. The fix is described in place: walk the tiles, stop at the first opaque edge.
-  (`rival_behavior.gd`, `_can_see`)
 - **The turn has no reveal phase.** The doc's exploration turn is player → reveal of
   mechanisms → rivals → mechanism activation; the second phase is missing, so a trap only comes
   to light by springing and `Trap.reveal()` has no caller. This is also exactly what Reveal

@@ -253,14 +253,9 @@ func _update_memory(player_tile: Vector3i) -> void:
 		_has_target = false
 
 
-## Naive sight: Manhattan range, with NO occlusion.
-##
-## ## TODO: the design doc is now explicit — "the line of sight is blocked by walls" (the
-## characters are small, eyes at [constant DungeonManager.EYE_HEIGHT] = 60 cm). A rival
-## therefore sees through walls today, which no longer matches. What it would take: walk the
-## tiles between rival and player and cut the line at the first opaque edge
-## ([method DungeonManager.is_edge_opaque]) or non-walkable tile. Revisit with real dungeons,
-## where occlusion actually matters.
+## Whether the rival sees `player_tile`: within Manhattan range, on the same floor, and with
+## nothing opaque in between (see [method _line_clear]). The design doc: "the line of sight is
+## blocked by walls".
 func _can_see(player_tile: Vector3i) -> bool:
 	# The player is hidden (fog mantel, torment veil, a costume): undetectable.
 	if _dungeon != null and _dungeon.rivals_ignore_player():
@@ -268,7 +263,42 @@ func _can_see(player_tile: Vector3i) -> bool:
 	if player_tile.y != tile.y:
 		return false
 	var d: Vector3i = (player_tile - tile).abs()
-	return d.x + d.z <= vision_range
+	if d.x + d.z > vision_range:
+		return false
+	return _line_clear(player_tile)
+
+
+## Walks the tiles from the rival to `to_tile`, one axis-aligned step at a time along the straight
+## line between them, and stops at the first obstacle: an opaque edge (a closed gateway,
+## [method DungeonManager.is_edge_opaque]) or a tile that is not floor (a wall). Without a
+## dungeon there is nothing to block the view.
+func _line_clear(to_tile: Vector3i) -> bool:
+	if _dungeon == null:
+		return true
+	var dx := to_tile.x - tile.x
+	var dz := to_tile.z - tile.z
+	var nx := absi(dx)
+	var nz := absi(dz)
+	var step_x := Vector3i(signi(dx), 0, 0)
+	var step_z := Vector3i(0, 0, signi(dz))
+	var current := tile
+	var ix := 0
+	var iz := 0
+	while ix < nx or iz < nz:
+		var next := current
+		# Whichever axis is further behind the ideal line steps next.
+		if iz >= nz or (ix < nx and (0.5 + ix) * nz < (0.5 + iz) * nx):
+			next += step_x
+			ix += 1
+		else:
+			next += step_z
+			iz += 1
+		if _dungeon.is_edge_opaque(current, next):
+			return false
+		if next != to_tile and not _dungeon.is_floor(next):
+			return false
+		current = next
+	return true
 
 
 func _chase_dir(target: Vector3i) -> Vector3i:

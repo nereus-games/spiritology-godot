@@ -127,11 +127,13 @@ func _check_loot_chest() -> void:
 	_check(
 		not chest.is_opened() and not chest.revealed, "to start with: neither opened nor revealed"
 	)
+	_check(not chest.shows_on_map(), "an unknown chest is absent from the map")
 	chest.reveal()
 	_check(
 		chest.revealed and not chest.is_opened(),
 		"reveal() reveals without opening (the Trick to Reveal talent)"
 	)
+	_check(chest.shows_on_map(), "a revealed chest is present on the map")
 	ctx.player.teleport_to(LOOT_TILE)
 	chest.on_enter(ctx.player)
 	var got := _inventory_total()
@@ -141,6 +143,7 @@ func _check_loot_chest() -> void:
 		"loot within [%d, %d] (got %d)" % [chest.loot_min, chest.loot_max, got]
 	)
 	_check(_messages.size() == 1, 'the loot is announced: "%s"' % ["".join(_messages)])
+	_check(chest.shows_on_map(), "an opened chest stays on the map")
 	_check(_is_greyed(chest), "an emptied chest is greyed out: no longer actionable, so not active")
 	chest.on_enter(ctx.player)
 	_check(_inventory_total() == got, "a chest does not reopen; it opens once only")

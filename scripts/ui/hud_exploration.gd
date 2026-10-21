@@ -209,8 +209,8 @@ func _process(_delta: float) -> void:
 func _refresh_actions() -> void:
 	if _extra_actions == null:
 		_extra_actions = ExplorationExtraActions.new(ExplorationContext.new(_dungeon, _player))
-	var actions := _dungeon.actions_for(_player.tile, _player.facing_delta(), _player)
-	actions.append_array(_extra_actions.build())
+	var contextual := _dungeon.actions_for(_player.tile, _player.facing_delta(), _player)
+	var actions: Array = _extra_actions.combine(contextual)
 	# The MENU button is always there. DEV: it goes back to the scenario selection.
 	actions.append(
 		ExplorationAction.new(&"menu", "UI_ACTION_MENU", Callable(self, "_open_scenario_select"))

@@ -180,6 +180,10 @@ msgstr "Let the chest teleport you"
 msgid "UI_ACTION_CHEST_DECLINE"
 msgstr "Stay put"
 
+# The Meditate action, always on offer in exploration (also counts towards a meditation gateway).
+msgid "UI_ACTION_MEDITATE"
+msgstr "Meditate"
+
 # --- Exploration: the effect log and the status banner --------------------------------
 # What an exploration ability or an object did, recorded by ExplorationContext, and the
 # lasting afflictions the HUD shows top-left. "tiles" is the exploration unit throughout.
@@ -194,6 +198,9 @@ msgstr "poison cured"
 
 msgid "LOG_EXPL_DUO_HEALED"
 msgstr "duo healed for %d DEN"
+
+msgid "LOG_EXPL_DUO_ETH_RECOVERED"
+msgstr "duo recovered %d ETH"
 
 msgid "LOG_EXPL_CRACKED_WALL_CROSSED"
 msgstr "cracked wall crossed"

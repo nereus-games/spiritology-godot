@@ -24,12 +24,23 @@ Each is explicit in the doc, has no prerequisite, and is wrong in play right now
   mechanisms → rivals → mechanism activation; the second phase is missing, so a trap only comes
   to light by springing and `Trap.reveal()` has no caller. This is also exactly what Reveal
   Traps' first clause needs. (`dungeon_manager.gd`, `advance_turn`; `reveal_traps.gd`)
-- **Meditate is not an exploration action.** The doc lists it among the actions always
-  available; today it exists only as a meditation gateway's contextual action, and recovers no
-  ETH. The three steps are written out in place. (`exploration_extra_actions.gd`)
 - **A known chest looks like an unknown one.** The minimap hides a trap until it is revealed but
   draws every chest regardless, so `Chest.revealed` — and Trick to Reveal's chest clause — has
   no visible effect. (`chest.gd`)
+- **Rival spawning ignores half of what the doc now says.** "Rival Spawning" was rewritten in
+  September; `rival_spawner.gd` still draws species uniformly, has no cap, and skips a spawn
+  that finds no free point. The doc wants: species weighted by dungeon rarity (common, normal,
+  rare — the multipliers are still open, see section 5); a **spawn limit**, the maximum number
+  of rivals at a time, past which nothing spawns; when every spawn point is occupied, the new
+  group appears on one anyway and pushes the occupant to an adjacent tile (the same rule as a
+  Teleport Gate's arrival, and never a point the player stands on or next to); preset
+  compositions between 0 and 50 % of spawns; and about 1 % of spawned rivals Forlorn, with the
+  doc's table of bonuses (which needs the Forlorn individual of section 4). Spawn waves at high
+  PSY should grow wider first, and the interval shrink only if that proves too little.
+  (`rival_spawner.gd`, `dungeon_config.gd`)
+- **Examining decor at a high PSY should spawn rivals.** The doc now gives the figures: above
+  PSY 20, a 45 % chance of one or more groups nearby but never on the player's tile, composed
+  by the normal spawning rules. (`examinable_decor.gd`)
 
 ## 2. Encounter hooks that unlock abilities in bulk
 
@@ -70,8 +81,9 @@ can be picked up alone, after the hooks above if it needs one.
   that handle exists; revealing a chest stays invisible until the `shows_on_map` override in
   section 1 is done. (`trick_to_reveal.gd`)
 - **Static Camouflage** should reveal 2 to 4 wandering groups one at a time and offer to take one
-  on. Groups exist and spawn by each dungeon's rules; the reveal and the choice do not.
-  (`static_camouflage.gd`, `exploration_context.gd`)
+  on. Groups exist and spawn by each dungeon's rules; the reveal and the choice do not. The doc
+  now adds that it does not stack with a costume, and that Forlorn shapes are likelier under it
+  than by default. (`static_camouflage.gd`, `exploration_context.gd`)
 
 ## 4. Systems not started
 
@@ -80,12 +92,15 @@ unblock.
 
 - **Leaving a dungeon, and navigating between scenes.** A devitalised duo now leaves the
   dungeon, but for the scenario picker, standing in for a world map that does not exist; the
-  exit interaction is still unwired. The title screen, the pause screen (the encounter's Menu
+  exit interaction is still unwired, and a secondary exit should unlock a bonus dungeon. The
+  title screen, the pause screen (the encounter's Menu
   button is hidden until it exists) and boot's hand-off belong to the same piece.
   (`exploration.gd`, `dungeon_manager.gd`, `encounter_ui.gd`, `boot.gd`)
 - **Dungeon state between visits.** `GameSession.dungeon_states` is saved and loaded but never
   written: every entry is a first entry, so groups, examined decor and opened chests all reset.
-  (`exploration.gd`, `examinable_decor.gd`)
+  The doc ("Exit + Reentry") wants rivals that had not disappeared to stay where they were,
+  initial spawns not to happen again, and periodic spawns to resume. (`exploration.gd`,
+  `examinable_decor.gd`)
 - **Dialogue.** Whether a Talk is "effective" is decided by a proxy — the species'
   `talker_chance`, which really describes how likely the *rival* is to open a conversation. The
   doc conditions Talk's rewards on an effective dialogue without giving the rule, and its drafts
@@ -107,8 +122,20 @@ unblock.
   `examine_weakness.gd`, `game_session.gd`)
 - **The exploration HUD's final form** — the stack of known abilities with its USE/CANCEL
   submenu, and the doc's layout. (`hud_exploration.gd`)
-- **The Coal Vetch**, a faction that can appear mid-encounter after repeated Examines. No
-  implementation at all. (`encounter_manager.gd`)
+- **The Coal Vetch**, a faction with two entrances, neither implemented. In an encounter, an
+  agent can appear after repeated Examines (`encounter_manager.gd`). In a dungeon, if the player
+  stays too long, agents arrive at hand-placed arrival points on hand-set timestamps and take
+  the shortest path to the player; some dungeons hold a corruptible agent who delays the others
+  for a price that rises each time.
+- **PSY's consequences.** Only the IFP bands and the narrow bridge read the PSY score today. The
+  doc's ladder is otherwise unbuilt. Above 10: rivals talk 10 % less, and fleeing no longer
+  makes the rival go away (the player lands 2 to 3 tiles off, facing it). Above 20: more risk of
+  losing damaged fragments, and temporary oddities such as swapped icons (after event 3). Above
+  30: rival density hidden in encounters, one more wrong fragment each time, wider spawn waves.
+  Above 40: the teammate may refuse an action, poison forbids Meditate, map, encyclopaedia,
+  objects and team, rivals skip their cooldown turn, and dungeons stay dark. (`game_session.gd`)
+- **Dark dungeons** ("In the Dark"): sight limited to one tile, rivals heard but not seen,
+  Meditate revealing them for 2 moves, and NPC quests that light an area. No implementation.
 - **A QTE**, which Slick Merchant's Run Away should hide behind; until then it always succeeds.
   (`encounter_manager.gd`)
 - **Save migration** between versions. Only matters once a save format has shipped.
@@ -125,7 +152,10 @@ pages the doc has not given yet.
 - Trap poison damage and duration, still letters (`trap.gd`).
 - The dieverting's rival count and distance, "specifics TBD" (`dieverting.gd`).
 - The generic ETH loss amount (`eth_loss_effect.gd`).
-- The PSY threshold above which examining decor can spawn rivals (`examinable_decor.gd`).
+- The multipliers for common and normal species against rare ones in spawning (proposed 3 and
+  2, not yet answered), and the Forlorn bonuses still marked X, Y or TBD (`rival_spawner.gd`).
+- The costume object, which has to be rethought: raising encounter odds and avoiding a second
+  species fits neither spawning nor pursuit (commented 2026-10-21).
 - Species pages for *néarog* and *mazir*, listed in the doc's pools but absent from `data/`
   (`litter.gd`, `examinable_decor.gd`).
 
@@ -134,8 +164,8 @@ Two decisions were taken in code, and the doc has to catch up — or say otherwi
 - **Fleeing** takes out only the character who runs, and the rivals stay on their tile; the
   "50 % chance the rival disappears" was dropped on 2026-09-18, because from the map it looked
   exactly like the whole group being devitalised (`exploration.gd`, `_run_away`).
-- **A linked elevator moves empty**, leaving whoever stands on it behind. The doc does not say
-  (`elevator.gd`, `linked`).
+- **A linked elevator moves empty**, leaving whoever stands on it behind. The doc now describes
+  linked elevators, but not who rides them (`elevator.gd`, `linked`).
 
 One is waiting on play rather than on the doc: **how long a level-wide pursuit lasts**
 (`rival_behavior.gd`, `level_pursuit_turns`) has never been tried in game, and goes into the

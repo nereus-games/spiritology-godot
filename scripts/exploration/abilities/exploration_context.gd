@@ -72,6 +72,13 @@ func heal_duo(amount: int) -> void:
 	_note("LOG_EXPL_DUO_HEALED", amount)
 
 
+## Gives `amount` ETH back to both characters of the duo (Meditate).
+func recover_duo_eth(amount: int) -> void:
+	GameSession.recover_eth(GameSession.PartySlot.MAIN, amount)
+	GameSession.recover_eth(GameSession.PartySlot.TEAMMATE, amount)
+	_note("LOG_EXPL_DUO_ETH_RECOVERED", amount)
+
+
 ## Crosses the cracked wall on the tile being faced, if there is one (cranny crossing). Returns
 ## true when the crossing happened.
 func cross_faced_cracked_wall() -> bool:

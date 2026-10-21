@@ -1,6 +1,6 @@
-## Supplies the exploration actions NOT tied to a tile: the duo's exploration abilities and its
-## usable objects. Appended to the HUD's action menu alongside the mechanism actions
-## ([method DungeonManager.actions_for]).
+## Supplies the exploration actions NOT tied to a tile: Meditate, the duo's exploration abilities
+## and its usable objects. Merged into the HUD's action menu with the mechanism actions
+## ([method DungeonManager.actions_for]) by [method combine].
 ##
 ## Instantiated — and kept — by the HUD with a persistent [ExplorationContext]: the actions'
 ## [Callable]s point at this instance, which therefore has to stay alive as long as the menu
@@ -14,6 +14,9 @@ const ExplorationAction := preload("res://scripts/exploration/exploration_action
 const Catalog := preload("res://scripts/exploration/abilities/exploration_ability_catalog.gd")
 const Objects := preload("res://scripts/exploration/exploration_objects.gd")
 
+## Id of the Meditate action, shared with the meditation gateway's contextual one.
+const MEDITATE_ID := &"meditate"
+
 var _ctx
 
 
@@ -21,18 +24,33 @@ func _init(ctx) -> void:
 	_ctx = ctx
 
 
-## Builds the action list: unused exploration abilities plus usable objects.
-##
-## ## TODO: the MEDITATE action is missing here. The design doc lists it among the actions ALWAYS
-## available in exploration — "Meditate – the duo recovers X ETH; can activate Meditation Gates"
-## — whereas today it only exists as a meditation gateway's CONTEXTUAL action
-## ([code]gateway.on_adjacent_actions[/code]), and gives back no ETH at all. What it takes:
-## (1) add it to this list; (2) have it recover X ETH for the duo (the doc gives no number; the
-## encounter uses 12, see [member BalanceData.meditate_eth]); (3) make the gateway version a side
-## effect of that same action when facing a gateway — otherwise two "meditate" entries will sit
-## in the menu side by side.
-func build() -> Array:
+## Merges the contextual actions of the tile being faced with the ones offered everywhere: returns
+## `contextual` without any meditation gateway entry, followed by [method build]. The gateway's own
+## Meditate is not a second menu entry but a side effect of the generic one, so it is stripped here
+## and handed to [method build].
+func combine(contextual: Array) -> Array:
 	var actions: Array = []
+	var gateway_meditation = null
+	for action in contextual:
+		if action.id == MEDITATE_ID:
+			gateway_meditation = action
+		else:
+			actions.append(action)
+	actions.append_array(build(gateway_meditation))
+	return actions
+
+
+## Builds the action list: Meditate, always on offer, then the unused exploration abilities and the
+## usable objects. `gateway_meditation` is the facing meditation gateway's own Meditate action, if
+## there is one: choosing Meditate then also counts towards opening that gateway.
+func build(gateway_meditation = null) -> Array:
+	var actions: Array = [
+		ExplorationAction.new(
+			MEDITATE_ID,
+			"UI_ACTION_MEDITATE",
+			Callable(self, "_run_meditate").bind(gateway_meditation)
+		)
+	]
 	# Known exploration abilities, not yet used this visit.
 	for id in Catalog.known_for_duo():
 		if GameSession.is_exploration_ability_used(id):
@@ -57,6 +75,14 @@ func build() -> Array:
 func _ability_label_key(id: StringName) -> String:
 	var ab: AbilityData = GameData.ability(id)
 	return ab.name_key() if ab != null else String(id)
+
+
+## Meditate: the duo recovers [member BalanceData.meditate_eth] ETH each and, when facing a
+## meditation gateway, the meditation counts towards opening it.
+func _run_meditate(gateway_meditation) -> void:
+	_ctx.recover_duo_eth(BalanceData.current().meditate_eth)
+	if gateway_meditation != null and gateway_meditation.callable.is_valid():
+		gateway_meditation.callable.call()
 
 
 func _run_ability(id: StringName) -> void:

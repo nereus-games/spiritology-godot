@@ -52,10 +52,11 @@ func _check_floor() -> void:
 	var dm = _field(3, 3)
 	_check(dm.is_floor(Vector3i(1, 0, 1)), "a laid tile is floor")
 	_check(not dm.is_floor(Vector3i(3, 0, 0)), "a tile outside is not")
-	_check(dm.floor_tiles().size() == 9, "the floor holds nine tiles")
-	dm.set_floor_tiles([Vector3i(5, 0, 5)])
+	_check(dm.layout.floor_tiles().size() == 9, "the floor holds nine tiles")
+	dm.layout.set_floor_tiles([Vector3i(5, 0, 5)])
 	_check(
-		dm.floor_tiles().size() == 1 and dm.is_floor(Vector3i(5, 0, 5)), "set replaces the floor"
+		dm.layout.floor_tiles().size() == 1 and dm.is_floor(Vector3i(5, 0, 5)),
+		"set replaces the floor"
 	)
 	_check(not dm.is_floor(Vector3i(1, 0, 1)), "...and drops the old tiles")
 	dm.queue_free()
@@ -65,51 +66,72 @@ func _check_holes_and_pits() -> void:
 	print("[holes and pits]")
 	var dm = _field(3, 3)
 	var far := Vector3i(8, 0, 8)
-	_check(not dm.is_hole(far) and not dm.is_bottomless(far), "an ordinary tile is no hole")
-	dm.mark_hole(far)
-	_check(dm.is_hole(far), "a marked hole is a hole")
-	_check(dm.is_bottomless(far), "a hole with nothing below it is bottomless")
-	_check(dm.fall_landing(far) == far, "...and its fall lands nowhere")
-	dm.add_floor(Vector3i(8, -2, 8))
-	_check(dm.fall_landing(far) == Vector3i(8, -2, 8), "a floor below catches the fall")
-	_check(not dm.is_bottomless(far), "...so the hole is no longer bottomless")
-	_check(dm.fall_landing(Vector3i(8, 5, 8)) == Vector3i(8, -2, 8), "a fall passes through air")
-	_check(dm.fall_landing(Vector3i(8, 30, 8)) == Vector3i(8, 30, 8), "a fall has a limited reach")
-	dm.add_floor(far)
-	_check(not dm.is_bottomless(far), "a hole with floor on it is not bottomless")
+	_check(
+		not dm.layout.is_hole(far) and not dm.layout.is_bottomless(far),
+		"an ordinary tile is no hole"
+	)
+	dm.layout.mark_hole(far)
+	_check(dm.layout.is_hole(far), "a marked hole is a hole")
+	_check(dm.layout.is_bottomless(far), "a hole with nothing below it is bottomless")
+	_check(dm.layout.fall_landing(far) == far, "...and its fall lands nowhere")
+	dm.layout.add_floor(Vector3i(8, -2, 8))
+	_check(dm.layout.fall_landing(far) == Vector3i(8, -2, 8), "a floor below catches the fall")
+	_check(not dm.layout.is_bottomless(far), "...so the hole is no longer bottomless")
+	_check(
+		dm.layout.fall_landing(Vector3i(8, 5, 8)) == Vector3i(8, -2, 8), "a fall passes through air"
+	)
+	_check(
+		dm.layout.fall_landing(Vector3i(8, 30, 8)) == Vector3i(8, 30, 8),
+		"a fall has a limited reach"
+	)
+	dm.layout.add_floor(far)
+	_check(not dm.layout.is_bottomless(far), "a hole with floor on it is not bottomless")
 	var pit := Vector3i(1, 0, 1)
-	_check(dm.pit_tiles().is_empty(), "no pit until one is marked")
-	dm.mark_pit(pit)
-	_check(dm.pit_tiles().has(pit) and dm.pit_tiles().size() == 1, "a marked pit is listed")
+	_check(dm.layout.pit_tiles().is_empty(), "no pit until one is marked")
+	dm.layout.mark_pit(pit)
+	_check(
+		dm.layout.pit_tiles().has(pit) and dm.layout.pit_tiles().size() == 1,
+		"a marked pit is listed"
+	)
 	dm.queue_free()
 
 
 func _check_derived_walls() -> void:
 	print("[derived walls]")
 	var dm = _field(2, 2)
-	var walls: Dictionary = dm.derive_wall_tiles()
+	var walls: Dictionary = dm.layout.derive_wall_tiles()
 	_check(walls.size() == 8, "a 2x2 room is walled by its eight orthogonal neighbours")
 	_check(walls.has(Vector3i(-1, 0, 0)) and walls.has(Vector3i(2, 0, 1)), "...on every side")
 	_check(not walls.has(Vector3i(-1, 0, -1)), "...but not on its corners")
-	_check(dm.wall_tiles().is_empty() and not dm.is_wall(Vector3i(-1, 0, 0)), "none before render")
-	dm.render_grid()
-	_check(dm.wall_tiles().size() == 8, "render_grid remembers the walls")
 	_check(
-		dm.is_wall(Vector3i(-1, 0, 0)) and not dm.is_wall(Vector3i(0, 0, 0)), "is_wall reads them"
+		dm.layout.wall_tiles().is_empty() and not dm.layout.is_wall(Vector3i(-1, 0, 0)),
+		"none before render"
+	)
+	dm.render_grid()
+	_check(dm.layout.wall_tiles().size() == 8, "render_grid remembers the walls")
+	_check(
+		dm.layout.is_wall(Vector3i(-1, 0, 0)) and not dm.layout.is_wall(Vector3i(0, 0, 0)),
+		"is_wall reads them"
 	)
 
-	dm.mark_hole(Vector3i(-1, 0, 0))
-	_check(not dm.derive_wall_tiles().has(Vector3i(-1, 0, 0)), "a hole is never walled off")
-	dm.mark_pit(Vector3i(2, 0, 0))
-	_check(not dm.derive_wall_tiles().has(Vector3i(2, 0, 0)), "a pit is never walled off")
-	dm.add_floor(Vector3i(0, -1, 2))
-	_check(not dm.derive_wall_tiles().has(Vector3i(0, 0, 2)), "a lip with floor below stays open")
+	dm.layout.mark_hole(Vector3i(-1, 0, 0))
+	_check(not dm.layout.derive_wall_tiles().has(Vector3i(-1, 0, 0)), "a hole is never walled off")
+	dm.layout.mark_pit(Vector3i(2, 0, 0))
+	_check(not dm.layout.derive_wall_tiles().has(Vector3i(2, 0, 0)), "a pit is never walled off")
+	dm.layout.add_floor(Vector3i(0, -1, 2))
+	_check(
+		not dm.layout.derive_wall_tiles().has(Vector3i(0, 0, 2)),
+		"a lip with floor below stays open"
+	)
 	var mech := Node.new()
 	dm.register_mechanism(Vector3i(0, 0, -1), mech)
-	_check(not dm.derive_wall_tiles().has(Vector3i(0, 0, -1)), "a mechanism's tile is not walled")
+	_check(
+		not dm.layout.derive_wall_tiles().has(Vector3i(0, 0, -1)),
+		"a mechanism's tile is not walled"
+	)
 	dm.unregister_mechanism(Vector3i(0, 0, -1), mech)
 	mech.free()
-	_check(dm.derive_wall_tiles().has(Vector3i(0, 0, -1)), "...until the mechanism leaves")
+	_check(dm.layout.derive_wall_tiles().has(Vector3i(0, 0, -1)), "...until the mechanism leaves")
 	dm.queue_free()
 	await get_tree().process_frame
 
@@ -117,28 +139,35 @@ func _check_derived_walls() -> void:
 func _check_entrance_and_exits() -> void:
 	print("[entrance and exits]")
 	var dm = _field(3, 3)
-	_check(not dm.has_entrance() and not dm.has_exit(), "none declared at first")
-	_check(dm.entrance_tile() == Vector3i.ZERO and dm.random_exit() == Vector3i.ZERO, "zero then")
-	_check(dm.exit_tiles().is_empty(), "no exit tiles")
-	dm.set_entrance(Vector3i(0, 0, 2))
+	_check(not dm.layout.has_entrance() and not dm.layout.has_exit(), "none declared at first")
 	_check(
-		dm.has_entrance() and dm.entrance_tile() == Vector3i(0, 0, 2), "the entrance is declared"
+		dm.layout.entrance_tile() == Vector3i.ZERO and dm.layout.random_exit() == Vector3i.ZERO,
+		"zero then"
 	)
-	_check(dm.has_exit() and dm.exit_tiles() == [Vector3i(0, 0, 2)], "...and counts as an exit")
-	dm.add_exit(Vector3i(0, 0, 2))
-	_check(dm.exit_tiles().size() == 1, "an exit is never listed twice")
-	dm.add_exit(Vector3i(2, 0, 0))
-	_check(dm.exit_tiles().size() == 2, "a second exit is added")
+	_check(dm.layout.exit_tiles().is_empty(), "no exit tiles")
+	dm.layout.set_entrance(Vector3i(0, 0, 2))
+	_check(
+		dm.layout.has_entrance() and dm.layout.entrance_tile() == Vector3i(0, 0, 2),
+		"the entrance is declared"
+	)
+	_check(
+		dm.layout.has_exit() and dm.layout.exit_tiles() == [Vector3i(0, 0, 2)],
+		"...and counts as an exit"
+	)
+	dm.layout.add_exit(Vector3i(0, 0, 2))
+	_check(dm.layout.exit_tiles().size() == 1, "an exit is never listed twice")
+	dm.layout.add_exit(Vector3i(2, 0, 0))
+	_check(dm.layout.exit_tiles().size() == 2, "a second exit is added")
 	var seen := {}
 	for i in 60:
-		seen[dm.random_exit()] = true
+		seen[dm.layout.random_exit()] = true
 	_check(
 		seen.size() == 2 and seen.has(Vector3i(0, 0, 2)) and seen.has(Vector3i(2, 0, 0)),
 		"random_exit draws among them"
 	)
-	var copy: Array = dm.exit_tiles()
+	var copy: Array = dm.layout.exit_tiles()
 	copy.clear()
-	_check(dm.exit_tiles().size() == 2, "exit_tiles hands out a copy")
+	_check(dm.layout.exit_tiles().size() == 2, "exit_tiles hands out a copy")
 	dm.queue_free()
 
 

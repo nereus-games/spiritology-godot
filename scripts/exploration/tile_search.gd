@@ -73,7 +73,7 @@ func walking_distances(from: Vector3i, max_steps: int) -> Dictionary:
 ## `avoid_safe` — where a random teleport may drop a rival. Returns `exclude` when there is none.
 func random_floor_tile(exclude: Vector3i, avoid_safe := false) -> Vector3i:
 	var candidates: Array = []
-	for c in _dungeon.floor_tiles():
+	for c in _dungeon.layout.floor_tiles():
 		if (
 			c != exclude
 			and _dungeon.is_walkable(c)

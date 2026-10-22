@@ -20,7 +20,7 @@ static func field(host: Node, width: int, depth: int) -> DungeonManager:
 	host.add_child(dm)
 	for x in width:
 		for z in depth:
-			dm.add_floor(Vector3i(x, 0, z))
+			dm.layout.add_floor(Vector3i(x, 0, z))
 	return dm
 
 

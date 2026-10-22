@@ -366,7 +366,7 @@ func _pursue_level() -> bool:
 		# the player back.
 		var brink := _open_drop_edge(_level_target)
 		if brink != tile:
-			var landing: Vector3i = _dungeon.fall_landing(brink)
+			var landing: Vector3i = _dungeon.layout.fall_landing(brink)
 			# Only jump if it actually gets closer — do not overshoot the target floor.
 			if landing.y >= _level_target.y:
 				if randf() >= fall_pursuit_chance(tile.y - landing.y):
@@ -399,7 +399,7 @@ func _open_drop_edge(toward: Vector3i) -> Vector3i:
 		var n: Vector3i = tile + d
 		if _dungeon.is_edge_blocked(tile, n) or _dungeon.is_floor(n):
 			continue
-		var landing: Vector3i = _dungeon.fall_landing(n)
+		var landing: Vector3i = _dungeon.layout.fall_landing(n)
 		if landing == n:
 			continue  # solid wall, or a bottomless hole
 		if _dungeon.safe_areas.has(landing):
@@ -482,11 +482,11 @@ func _use_level_link(link) -> bool:
 ## A fall from `from_tile`, chosen or not: lands on the floor below and takes the damage.
 ## Returns false when the rival is devitalised by it, and therefore dissolved.
 func fall_down(from_tile: Vector3i) -> bool:
-	var landing: Vector3i = _dungeon.fall_landing(from_tile)
+	var landing: Vector3i = _dungeon.layout.fall_landing(from_tile)
 	if landing == from_tile:
 		# A bottomless hole (a level-design mistake): the rival vanishes into it, the way the duo
 		# would be devitalised. Otherwise nothing below means no fall is possible.
-		if _dungeon.is_bottomless(from_tile):
+		if _dungeon.layout.is_bottomless(from_tile):
 			queue_free()
 			return false
 		return true
@@ -608,7 +608,7 @@ func remove_from_dungeon() -> void:
 ## Two rivals meet on a plank: both fall, per the design doc — the occupant onto the tile
 ## below, the newcomer onto one adjacent to it.
 func _collide_with_rival(tile: Vector3i, other: Node) -> void:
-	var landing: Vector3i = _dungeon.fall_landing(tile)
+	var landing: Vector3i = _dungeon.layout.fall_landing(tile)
 	if landing == tile:
 		return  # nothing empty under this plank: nobody falls
 	var levels: int = tile.y - landing.y

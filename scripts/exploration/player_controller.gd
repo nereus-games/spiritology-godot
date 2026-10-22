@@ -153,11 +153,11 @@ func try_move(local_dir: Vector3) -> void:
 	if not _dungeon.is_floor(target):
 		# No floor here: a fall if there is floor further down (the lip of a drop), a wall if
 		# not.
-		var landing := _dungeon.fall_landing(target)
+		var landing := _dungeon.layout.fall_landing(target)
 		if landing == target:
 			# Nothing below means a wall — unless level design left an outright hole, in which
 			# case the fall is bottomless, and fatal.
-			if _dungeon.is_bottomless(target):
+			if _dungeon.layout.is_bottomless(target):
 				await fall_forever(target)
 			return
 		await fall_to(landing, target.y - landing.y)

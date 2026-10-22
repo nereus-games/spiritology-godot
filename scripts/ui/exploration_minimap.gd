@@ -47,7 +47,7 @@ func _draw() -> void:
 	draw_rect(Rect2(Vector2.ZERO, size), BG_COLOR)
 	if _dungeon == null:
 		return
-	var floors: Array = _dungeon._floor.keys()
+	var floors: Array = _dungeon.layout.floor_tiles().keys()
 	if floors.is_empty():
 		return
 	# Grid bounds over floors AND walls, or the outline would be drawn outside the frame.
@@ -55,7 +55,7 @@ func _draw() -> void:
 	var minz: int = floors[0].z
 	var maxx: int = minx
 	var maxz: int = minz
-	for c in floors + _dungeon.wall_tiles().keys():
+	for c in floors + _dungeon.layout.wall_tiles().keys():
 		minx = mini(minx, c.x)
 		minz = mini(minz, c.z)
 		maxx = maxi(maxx, c.x)
@@ -81,7 +81,7 @@ func _draw() -> void:
 			)
 	# Walls on the current storey, over the floors: a wall may carry the storey above's floor, and
 	# on this storey what you should see is a wall.
-	for w in _dungeon.wall_tiles():
+	for w in _dungeon.layout.wall_tiles():
 		if w.y == level:
 			draw_rect(
 				Rect2(_tile_px(w, origin, maxx, maxz), Vector2(TILE_PX - 1.0, TILE_PX - 1.0)),

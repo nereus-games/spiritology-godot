@@ -144,7 +144,7 @@ func _check_guardrails(dm) -> void:
 		"protected edge: crossing refused in both directions"
 	)
 	_check(
-		dm.fall_landing(railed + edge) != railed + edge,
+		dm.layout.fall_landing(railed + edge) != railed + edge,
 		"the drop is still there behind the guardrail (it fills nothing in)"
 	)
 	_check(
@@ -152,7 +152,7 @@ func _check_guardrails(dm) -> void:
 		"two tiles further, the same edge is open"
 	)
 	_check(
-		dm.fall_landing(open_edge + edge) == Vector3i(7, 0, 6),
+		dm.layout.fall_landing(open_edge + edge) == Vector3i(7, 0, 6),
 		"and it drops you all the way down (4 units)"
 	)
 	_check_rival_stopped_by_rail(dm)
@@ -188,18 +188,18 @@ func _check_rival_stopped_by_rail(dm) -> void:
 ## count is checked: non-pit floors with no wall below, plus the bottom of the pits that overhang
 ## nothing.
 func _check_no_double_ground(dm, slabs: int) -> void:
-	var walls: Dictionary = dm.derive_wall_tiles()
+	var walls: Dictionary = dm.layout.derive_wall_tiles()
 	var expected := 0
 	var on_walls := 0
-	for c in dm._floor:
-		if dm._pit.has(c):
+	for c in dm.layout.floor_tiles():
+		if dm.layout.pit_tiles().has(c):
 			continue
 		if walls.has(c + Vector3i.DOWN):
 			on_walls += 1
 		else:
 			expected += 1
-	for c in dm._pit:
-		if dm.fall_landing(c) == c:
+	for c in dm.layout.pit_tiles():
+		if dm.layout.fall_landing(c) == c:
 			expected += 1
 	_check(
 		slabs == expected,
@@ -367,10 +367,10 @@ func _check_rival_sprite_box(dm) -> void:
 func _check_bottomless(dm, player) -> void:
 	var hole := Vector3i(3, 0, -1)  # in front of the start: normally a perimeter wall
 	var plain := Vector3i(2, 0, -1)  # same row, left as it is
-	_check(not dm.is_bottomless(plain), "a merely absent tile is a wall, and no fall")
-	dm.mark_hole(hole)
-	_check(dm.is_bottomless(hole), "an outright hole is a bottomless fall")
-	_check(not dm.derive_wall_tiles().has(hole), "an outright hole is not plugged by a wall")
+	_check(not dm.layout.is_bottomless(plain), "a merely absent tile is a wall, and no fall")
+	dm.layout.mark_hole(hole)
+	_check(dm.layout.is_bottomless(hole), "an outright hole is a bottomless fall")
+	_check(not dm.layout.derive_wall_tiles().has(hole), "an outright hole is not plugged by a wall")
 	var wiped := [false]
 	GameSession.party_wiped.connect(func() -> void: wiped[0] = true, CONNECT_ONE_SHOT)
 	await player.fall_forever(hole)
@@ -514,7 +514,7 @@ func _check_bridge(dm) -> void:
 	var landed := 0
 	var depth := 0
 	for c in planks:
-		var landing: Vector3i = dm.fall_landing(c)
+		var landing: Vector3i = dm.layout.fall_landing(c)
 		if landing != c and landing.y < c.y:
 			landed += 1
 			depth = maxi(depth, c.y - landing.y)
@@ -650,7 +650,7 @@ func _check_stairs(dm, player) -> void:
 	# that wall carries the floor of the tile above, with no extra slab.
 	var pillar := Vector3i(1, 0, 8)
 	var carried := pillar + Vector3i.UP
-	var walls: Dictionary = dm.derive_wall_tiles()
+	var walls: Dictionary = dm.layout.derive_wall_tiles()
 	_check(walls.has(pillar), "removed tile rendered as a wall block (the pillar)")
 	_check(not dm.is_floor(pillar) and dm.is_floor(carried), "walkable floor resting on the pillar")
 	_check(
@@ -700,14 +700,14 @@ func _check_stairs(dm, player) -> void:
 	# All four heights have to be reachable: on the EAST column (x = 6) nothing stops a fall before
 	# storey 0, so stepping off tier y should fall y units.
 	for y in range(1, 5):
-		var landing: Vector3i = dm.fall_landing(Vector3i(7, y, 8))
+		var landing: Vector3i = dm.layout.fall_landing(Vector3i(7, y, 8))
 		_check(
 			landing == Vector3i(7, 0, 8),
 			"stepping off tier %d on the east side is a %d-unit fall (%s)" % [y, y, landing]
 		)
 	# On the WEST side each tier overhangs the next: a single unit, and so no damage.
 	_check(
-		dm.fall_landing(Vector3i(1, 2, 8)) == Vector3i(1, 1, 8),
+		dm.layout.fall_landing(Vector3i(1, 2, 8)) == Vector3i(1, 1, 8),
 		"stepping off a tier on the west side is a 1-unit fall, painless"
 	)
 

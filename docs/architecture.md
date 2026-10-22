@@ -209,6 +209,25 @@ entry, N more every T turns, each composed at random X % of the time and picked 
 compositions otherwise, plus fixed groups on their own tiles. `rival_spawner.gd` applies them.
 "First entry" is every entry for now, since no dungeon state survives a visit.
 
+## The encyclopaedia screens
+
+A grid of icons, one per species, and a read-only page behind each (`scripts/ui/encyclopaedia_*`,
+scene `scenes/ui/encyclopaedia.tscn`). The split follows the rest of the project: the rules live
+in a script with no node, `encyclopaedia_grid_logic.gd` — wrapping off one side of the grid,
+the selector never resting on an undiscovered species (it goes to the closest one, ties toward
+down then right), the start position, and the icon state for a page's IFP — and
+`encyclopaedia_grid_check` drives it headless. The views only draw.
+
+The page view reads one thing, `encyclopaedia_page_source.gd`, never `SpeciesData` or
+`GameSession` directly. That is the seam for the fragment model: `unlocked_abilities()` (none
+today, deliberately not derived from IFP) and `completion_percent()` (the IFP today) are what it
+replaces, and `icon_state()` is where "full colour needs the correct assembly" will land.
+`encyclopaedia_recent.gd`, started from the boot scene, remembers the last species to gain
+information, where the selector starts. Until the title and pause screens exist the screen is
+reached from the dev scenario picker, which also offers a deterministic sample of progress
+(`scripts/dev/encyclopaedia_sample.gd`). `encyclopaedia_shot.tscn` writes a PNG of the grid or a
+page.
+
 ## How the project tests itself
 
 There is no test framework. Each check is a Godot scene under `scenes/dev/` whose script

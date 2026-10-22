@@ -103,6 +103,15 @@ unblock.
   bonuses), info fragments (Examine Weakness), Forlorn variants on the individual, and Forlorn
   pages with their own percentage. (`encounter_manager.gd`, `examine_weakness.gd`,
   `game_session.gd`)
+- **The encyclopaedia's screens.** The grid and the read-only page view are built (see
+  [architecture.md](architecture.md), *The encyclopaedia screens*), reachable only from the dev
+  scenario picker. What is left: the fragment model and the assembly desk, which decide which
+  abilities are unlocked and what the completion is (`encyclopaedia_page_source.gd` has the two
+  seams, `encyclopaedia_grid_logic.gd`'s `icon_state` the third); the Forlorn tab, a placeholder
+  until the Forlorn individual exists; real icons and the pages' remaining sections (personality,
+  environment, routine, the illustration carousel); the order of the pages, which is by
+  identifier meanwhile; and a way in from the real menus, which do not exist. The selector's
+  starting species is remembered by `encyclopaedia_recent.gd`, not saved with the session.
 - **Forlorn rivals at spawn.** About 1 % of spawned rivals should be Forlorn. The rest of
   "Rival Spawning" is built: species weighted by dungeon rarity, the spawn limit, a new group
   pushing the occupant of a taken spawn point aside, preset compositions in 0 to 50 % of

@@ -1248,3 +1248,67 @@ msgstr "Steal"
 msgid "TALENT_TRICK_TO_REVEAL_NAME"
 msgstr "Trick to Reveal"
 
+
+# --- The encyclopaedia ----------------------------------------------------------------
+# %d = the completion of a page, in percent (written %% in the format).
+msgid "UI_ENCYCLOPAEDIA_TITLE"
+msgstr "Encyclopaedia"
+
+msgid "UI_ENCYCLOPAEDIA_EMPTY"
+msgstr "Nothing is entered in the encyclopaedia yet."
+
+msgid "UI_ENCYCLOPAEDIA_COMPLETION"
+msgstr "Completion: %d %%"
+
+msgid "UI_ENCYCLOPAEDIA_HINT_GRID"
+msgstr "Arrows: move the selector · Accept: open the page · Cancel: back"
+
+msgid "UI_ENCYCLOPAEDIA_HINT_PAGE"
+msgstr "Left / Right: switch tab · Cancel: back to the grid"
+
+msgid "UI_ENCYCLOPAEDIA_TAB_PAGE"
+msgstr "Page"
+
+msgid "UI_ENCYCLOPAEDIA_TAB_FORLORN"
+msgstr "Forlorn"
+
+msgid "UI_ENCYCLOPAEDIA_FORLORN_PENDING"
+msgstr "The Forlorn variant's page is not available yet."
+
+# %s = a spiricosm (TERM_SPIRICOSM_*).
+msgid "UI_ENCYCLOPAEDIA_SPIRICOSM"
+msgstr "Spiricosm: %s"
+
+msgid "UI_ENCYCLOPAEDIA_WEAKNESSES"
+msgstr "WEAKNESSES"
+
+msgid "UI_ENCYCLOPAEDIA_TALENT"
+msgstr "TALENT"
+
+msgid "UI_ENCYCLOPAEDIA_ABILITIES"
+msgstr "ABILITIES"
+
+# %d = the number of fragments to arrange correctly to reveal the ability.
+msgid "UI_ENCYCLOPAEDIA_ABILITY_LOCKED"
+msgstr "Revealed with %d fragments correctly arranged"
+
+msgid "UI_ENCYCLOPAEDIA_LOOT"
+msgstr "POTENTIAL LOOT"
+
+msgid "UI_ENCYCLOPAEDIA_LOOT_NONE"
+msgstr "None known"
+
+msgid "TERM_SPIRICOSM_GLOOM"
+msgstr "Gloom"
+
+msgid "TERM_SPIRICOSM_FIERY"
+msgstr "Fiery"
+
+msgid "TERM_SPIRICOSM_WONDERFUL"
+msgstr "Wonderful"
+
+msgid "UI_DEV_ENCYCLOPAEDIA"
+msgstr "Encyclopaedia"
+
+msgid "UI_DEV_ENCYCLOPAEDIA_SAMPLE"
+msgstr "Encyclopaedia (sample progress)"

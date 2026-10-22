@@ -7,6 +7,9 @@ extends Control
 
 const ScenarioCatalog := preload("res://scripts/dev/scenario_catalog.gd")
 const EXPLORATION := "res://scenes/exploration/exploration.tscn"
+## The encyclopaedia, until a menu exists to reach it from.
+const ENCYCLOPAEDIA := "res://scenes/ui/encyclopaedia.tscn"
+const EncyclopaediaSample := preload("res://scripts/dev/encyclopaedia_sample.gd")
 
 
 func _ready() -> void:
@@ -32,6 +35,7 @@ func _ready() -> void:
 
 	box.add_child(_build_duo_row())
 	box.add_child(_build_rival_den_row())
+	box.add_child(_build_encyclopaedia_row())
 
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -178,6 +182,27 @@ func _build_rival_den_row() -> Control:
 	slider.value = start
 	ScenarioCatalog.rival_den_override = start
 	value_label.text = _den_label(start)
+	return row
+
+
+## DEV: two buttons into the encyclopaedia — with the session's own progress, and with a
+## deterministic sample that overwrites it (every icon state shows).
+func _build_encyclopaedia_row() -> Control:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	var plain := Button.new()
+	plain.text = tr("UI_DEV_ENCYCLOPAEDIA")
+	plain.pressed.connect(func() -> void: TransitionManager.change_scene(ENCYCLOPAEDIA))
+	row.add_child(plain)
+	var sample := Button.new()
+	sample.text = tr("UI_DEV_ENCYCLOPAEDIA_SAMPLE")
+	sample.pressed.connect(
+		func() -> void:
+			EncyclopaediaSample.fill()
+			TransitionManager.change_scene(ENCYCLOPAEDIA)
+	)
+	row.add_child(sample)
 	return row
 
 

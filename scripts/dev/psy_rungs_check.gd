@@ -134,7 +134,7 @@ func _check_exploration() -> void:
 
 func _check_encounter() -> void:
 	print("[The encounter screen]")
-	GameSession.encyclopaedia_ifp[&"ravbak"] = 10
+	GameSession.add_ifp(&"ravbak", 10)
 	GameSession.psy_score = 0
 	var ui := ENCOUNTER.instantiate()
 	get_tree().root.add_child(ui)
@@ -175,6 +175,7 @@ func _check_encounter() -> void:
 	_check(ui._description.text == warning, "Meditate refused with a warning at PSY 41")
 	_check(_bar_button(ui, "UI_ENCOUNTER_ACTION_MEDITATE") == meditate, "no turn was spent")
 	GameSession.inventory.erase(&"check_object")
+	GameSession.encyclopaedia = GameSession.EncyclopaediaModel.new()
 	ui.queue_free()
 
 

@@ -231,7 +231,11 @@ func _check_balance() -> void:
 		if int(b.get(field)) < 0:
 			bad.append("%s = %s (must be >= 0)" % [field, b.get(field)])
 	for field in [
-		"modifier_per_condition", "meditate_damage_bonus", "action_weight_bonus", "ethos_talk_bonus"
+		"modifier_per_condition",
+		"meditate_damage_bonus",
+		"examine_bonus_step",
+		"action_weight_bonus",
+		"ethos_talk_bonus"
 	]:
 		if float(b.get(field)) < 0.0:
 			bad.append("%s = %s (must be >= 0)" % [field, b.get(field)])

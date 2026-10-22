@@ -18,6 +18,7 @@ modifier_per_condition = 0.36
 meditate_eth = 12
 meditate_damage_bonus = 0.36
 object_heal_den = 25
+examine_bonus_step = 0.1
 action_weight_bonus = 0.36
 ethos_talk_bonus = 0.05
 flee_distance_min = 3

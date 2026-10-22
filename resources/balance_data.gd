@@ -41,6 +41,12 @@ extends Resource
 ## 0, which is to say for as long as the doc writes "Y DEN" instead of a number.
 @export var object_heal_den: int = 25
 
+## What one point of "info bonus" is worth on an Examine: its IFP are multiplied by
+## `1 + points * examine_bonus_step`. The doc writes the bonuses as "more info" without a figure
+## (Halo Effect, Priming, Catatonia), so the step is a placeholder; the one figure it does give,
+## Reconnaissance Glide's 10 %, is the value used here.
+@export var examine_bonus_step: float = 0.10
+
 ## Rivals choosing an action "more often" (Radiant Secret, Hyping Up, Misty Secret, Business
 ## Card): a probability added to the chance of Talking, Meditating or using an object on a turn.
 ## The doc gives no figure, so the step the game already applies per condition stands in, as for

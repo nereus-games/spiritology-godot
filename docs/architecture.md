@@ -99,7 +99,7 @@ after each turn, `EncounterContext.deal_damage` the second; what a reaction does
 through `EncounterManager.reaction_noted`, and a reaction's own damage does not set off further
 reactions.
 
-Four more pieces let the other abilities say what the doc says:
+More pieces let the other abilities say what the doc says:
 
 - **A history.** `EncounterManager.history` (`encounter_history.gd`, handed to every context as
   `ctx.history`) records each resolved round-turn — who, what, whom, the damage, the weakness
@@ -113,7 +113,13 @@ Four more pieces let the other abilities say what the doc says:
   when a weight applies, so an encounter without weights replays exactly as before.
 - **Next-turn modifiers.** A free ability, a Talk that yields as much as an Examine, damage that
   steps up a tier, a Talk that yields less, a Meditate that is stronger (Catatonia). `ifp_earned` carries a fifth argument,
-  `yield_factor`, which `GameSession.award_ifp` applies.
+  `yield_factor`, which `GameSession.award_ifp` applies with `scale_amount`: up when the factor is
+  above 1, down below.
+- **The yield of an Examine.** `EncounterManager.examine_factor` is the factor on an Examine's IFP:
+  the examiner's info bonus points (`EncounterIndividual.examine_bonus_points`, timed like the
+  other modifiers; Priming, Catatonia), plus the points an ability puts on one Examine (Halo
+  Effect, through `ctx.examines`, carried out by the manager when the effect is over), turned into
+  a factor by `examine_yield.gd` and multiplied by its talents' `modify_examine_info`.
 
 `EncounterContext` sits at `gdlintrc`'s ceiling on public methods, so these are static helpers
 in `effects/` (`action_weights.gd`, `next_turn_modifiers.gd`, `one_off_rules.gd`) rather than

@@ -162,7 +162,7 @@ func _said(heard: Array, who: EncounterIndividual, id: StringName, line: String)
 
 
 func _examine_bonus_line(amount: int, who: EncounterIndividual) -> String:
-	return String(TranslationServer.translate("LOG_EXAMINE_BONUS")) % [amount, who.display_name()]
+	return String(TranslationServer.translate("LOG_EXAMINE_BOOST")) % [amount, who.display_name()]
 
 
 ## The energy the individual is exposing at its place in the order.
@@ -252,11 +252,17 @@ func _halo(early: bool, r0_plays: Callable, r0_changes: bool) -> Dictionary:
 					f.override_weakness(_other_energy(_positional(mgr, f)), f)
 	)
 	var heard := _listen(m)
+	var examined: Array = []
+	m.ifp_earned.connect(
+		func(_species, action, _forlorn, _effective, factor):
+			if action == GameEnums.IfpAction.EXAMINE_RIVAL:
+				examined.append(factor)
+	)
 	var eths := {}
 	await m.run(1 if early else 2)
 	for f in [p0, p1, r0, r1]:
 		eths[f] = f.eth
-	var out := {"m": m, "heard": heard, "eth": eths, "cost": halo.eth_cost()}
+	var out := {"m": m, "heard": heard, "eth": eths, "cost": halo.eth_cost(), "examined": examined}
 	return out
 
 
@@ -275,6 +281,11 @@ func _check_halo_effect() -> void:
 		"[both] same weakness and same action: a bonus per criterion"
 	)
 	_check(r["eth"][r0] == 20 + _small(), "[both] the individual picked recovers ETH")
+	var step := BalanceData.current().examine_bonus_step
+	_check(
+		r["examined"].size() == 1 and is_equal_approx(r["examined"][0], 1.0 + 4 * step),
+		"[both] the Examine of the rival yields its IFP times the bonus (%s)" % [r["examined"]]
+	)
 	_check(r["eth"][p0] == 20 - r["cost"] + _small(), "[both] ...and so does the user")
 	_check(
 		r["eth"][p1] == 20,
@@ -289,6 +300,15 @@ func _check_halo_effect() -> void:
 	_check(
 		_said(r["heard"], m.players[0], halo, _examine_bonus_line(2, r0)),
 		"[weakness] same weakness only: one criterion"
+	)
+	_check(
+		(
+			r["examined"].size() == 1
+			and is_equal_approx(
+				r["examined"][0], 1.0 + 2 * BalanceData.current().examine_bonus_step
+			)
+		),
+		"[weakness] ...and a smaller factor on the IFP (%s)" % [r["examined"]]
 	)
 	_check(
 		r["eth"][r0] == 20 + BalanceData.current().meditate_eth + _small(),

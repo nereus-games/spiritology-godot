@@ -5,12 +5,15 @@
 ##
 ## The tier step is a modifier on the teammates, the user excepted ("teammates" is
 ## [method EncounterContext.allies]) and applied to the base damage of whatever they deal.
-## TODO: "they get more info" — Examine has no info figure to raise beyond the talents' 1.0
-## factor, and the doc gives no amount; wire it where Recon Glide acts in
-## [method EncounterManager._resolve_examine] once it does.
+## "They get more info" raises the IFP of the teammates' Examines until the user's next turn, by
+## `EXAMINE_BONUS_POINTS` points of info bonus (`examine_yield.gd`); the doc gives no figure.
 extends AbilityScript
 
 const NextTurnModifiers := preload("res://scripts/encounter/effects/next_turn_modifiers.gd")
+const ExamineYield := preload("res://scripts/encounter/effects/examine_yield.gd")
+
+## Placeholder: "more info", with no amount in the doc.
+const EXAMINE_BONUS_POINTS := 2
 
 
 func execute(ctx: EncounterContext) -> void:
@@ -20,3 +23,4 @@ func execute(ctx: EncounterContext) -> void:
 		ctx.set_weakness(t, ctx.energy())
 	for ally in ctx.allies():
 		NextTurnModifiers.step_up_damage(ctx, ally)
+		ExamineYield.boost(ctx, ally, EXAMINE_BONUS_POINTS)

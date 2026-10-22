@@ -13,11 +13,13 @@
 ## the per-condition damage step (`modifier_per_condition`, a placeholder: the doc gives no
 ## figure). Unused, the boost is gone by the turn after.
 ##
-## TODO: the Examine's own yield. Only the info bonus is granted, and it is merely logged:
-## nothing consumes it, because an Examine yields no amount yet (roadmap, section 4).
+## The Examine clause is built on the info bonus (`examine_yield.gd`): the user's next Examine
+## yields that many points of bonus more, `EXAMINE_BONUS_PER_STEP` per step. Two turns of its own,
+## like the Meditate boost: gone the turn after if it never Examined.
 extends AbilityScript
 
 const NextTurnModifiers := preload("res://scripts/encounter/effects/next_turn_modifiers.gd")
+const ExamineYield := preload("res://scripts/encounter/effects/examine_yield.gd")
 
 ## Placeholder: the doc gives no figure. The bonus this ability granted before it looked at the
 ## damage, now granted once per step.
@@ -26,7 +28,7 @@ const EXAMINE_BONUS_PER_STEP := 2
 
 func execute(ctx: EncounterContext) -> void:
 	var steps := _steps(ctx)
-	ctx.grant_examine_bonus(ctx.user, EXAMINE_BONUS_PER_STEP * steps)
+	ExamineYield.boost(ctx, ctx.user, EXAMINE_BONUS_PER_STEP * steps, 2)
 	NextTurnModifiers.boost_next_meditate(ctx, ctx.user, steps)
 
 

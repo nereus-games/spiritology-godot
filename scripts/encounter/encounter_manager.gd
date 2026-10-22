@@ -71,6 +71,7 @@ const PACIFIED := &"pacified"
 const TalentCatalog := preload("res://scripts/encounter/talents/talent_catalog.gd")
 const EncounterEvent := preload("res://scripts/encounter/encounter_event.gd")
 const EncounterHistory := preload("res://scripts/encounter/encounter_history.gd")
+const ExamineYield := preload("res://scripts/encounter/effects/examine_yield.gd")
 
 ## The individuals still IN the encounter, dissolved ones included. One who leaves is taken out
 ## of these lists and out of the turn order, so that no targeting rule, no talent and no
@@ -661,22 +662,50 @@ func _resolve_examine(individual: EncounterIndividual, action: EncounterAction) 
 	if target == null:
 		_emit_turn(individual, action, [_tr("LOG_EXAMINE_NO_TARGET")])
 		return
+	# The yield is the table's amount times the info factor: the bonuses on the examiner
+	# (Priming, Catatonia) and its talents (Recon Glide's 10 %). GameSession rounds it.
+	var info := examine_factor(individual, target)
 	ifp_earned.emit(
-		target.species_id(), GameEnums.IfpAction.EXAMINE_RIVAL, _is_forlorn(target), true, 1.0
+		target.species_id(), GameEnums.IfpAction.EXAMINE_RIVAL, _is_forlorn(target), true, info
 	)
-	# Recon Glide (ravbak) raises the bearer's Examine yield by 10 %. How much information
-	# an Examine yields is not modelled at all, so we start from 1.0 and log the factor:
-	# observable, but with nothing yet to act on.
-	var info := 1.0
-	for t in _talents:
-		if t.owner == individual:
-			info = t.modify_examine_info(self, target, info)
 	# TODO: "reveals objects they carry" — rivals carry none, and the examined rival's
 	# Talk/Challenge reaction is unwritten.
 	# TODO: Coal Vetch — two Examines on the same rival, or one ability, should give some
 	# chance of an agent appearing mid-encounter. No such system exists.
 	var suffix := _tr("LOG_EXAMINE_INFO_FACTOR") % info if not is_equal_approx(info, 1.0) else ""
 	_emit_turn(individual, action, [_tr("LOG_EXAMINE") % [target.display_name(), suffix]])
+
+
+## The factor on the IFP of an Examine of `target` by `individual`: its info bonus points, plus
+## `extra_points` an ability puts on this one Examine (Halo Effect), as
+## [method ExamineYield.factor_for] values them, times what each of its talents makes of it
+## (Reconnaissance Glide).
+func examine_factor(
+	individual: EncounterIndividual, target: EncounterIndividual, extra_points := 0
+) -> float:
+	var info := ExamineYield.factor_for(individual.examine_bonus_points + extra_points)
+	for t in _talents:
+		if t.owner == individual:
+			info = t.modify_examine_info(self, target, info)
+	return info
+
+
+## The Examines an ability made of other individuals (Halo Effect). Only a player character's
+## Examine of a rival earns IFP.
+func _carry_out_examines(individual: EncounterIndividual, ctx: EncounterContext) -> void:
+	if not individual.is_player:
+		return
+	for entry in ctx.examines:
+		var target: EncounterIndividual = entry[0]
+		if not rivals.has(target) or target.is_dissolved():
+			continue
+		ifp_earned.emit(
+			target.species_id(),
+			GameEnums.IfpAction.EXAMINE_RIVAL,
+			_is_forlorn(target),
+			true,
+			examine_factor(individual, target, entry[1])
+		)
 
 
 # --- Next-turn modifiers ---
@@ -739,6 +768,7 @@ func _resolve_ability(individual: EncounterIndividual, action: EncounterAction) 
 		ctx.note(_tr("LOG_ABILITY_FREE"))
 	EffectCatalog.script_for(ability).execute(ctx)
 	_action_damage = ctx.damage_dealt
+	_carry_out_examines(individual, ctx)
 	individual.mark_used(ability)
 	# Reuse (jézal) can hand a single-use ability back.
 	if ability.single_use:

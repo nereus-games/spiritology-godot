@@ -85,8 +85,9 @@ func on_weakness_touched(_manager, _attacker, _defender, _ability) -> void:
 	pass
 
 
-## Adjusts what the bearer's Examine yields (Recon Glide: +10 %). How much an Examine
-## yields is not modelled, so this multiplies a number with no consequence yet.
+## Adjusts what the bearer's Examine yields (Recon Glide: +10 %). `base` is the factor so far,
+## the info bonus points already converted; return it times the talent's own. The result is
+## the IFP `yield_factor` (see [method EncounterManager.examine_factor]).
 func modify_examine_info(_manager, _target, base: float) -> float:
 	return base
 

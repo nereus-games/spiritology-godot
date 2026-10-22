@@ -10,9 +10,13 @@
 ## a weakness. The user cannot pick itself; it picks at random among those that qualify, and when
 ## none does, nothing happens at all, ETH included.
 ##
-## TODO: the Examine itself. The info bonus is logged and nothing consumes it yet, and neither the
-## IFP of an Examine nor its yield can be granted from an effect: that is the manager's Examine.
+## The Examine is a real one (see `examine_yield.gd`): when a player character uses this on a
+## rival, the rival's species yields the Examine's IFP times the bonus, `BONUS_PER_CRITERION`
+## points per criterion met, on top of any bonus the user already carries and its talents'. Picking
+## a teammate, or being a rival, earns no IFP; the ETH is recovered all the same.
 extends AbilityScript
+
+const ExamineYield := preload("res://scripts/encounter/effects/examine_yield.gd")
 
 ## Placeholder: the doc gives no figure. It is the bonus this ability granted before it counted
 ## criteria, now granted once per criterion met.
@@ -28,7 +32,7 @@ func execute(ctx: EncounterContext) -> void:
 	if t == null:
 		ctx.note(String(TranslationServer.translate("LOG_HISTORY_NOBODY_REPEATS")))
 		return
-	ctx.grant_examine_bonus(t, BONUS_PER_CRITERION * _criteria_met(ctx, t))
+	ExamineYield.examine(ctx, t, BONUS_PER_CRITERION * _criteria_met(ctx, t))
 	ctx.recover_eth(ctx.user, ctx.dmg(&"small"))
 	ctx.recover_eth(t, ctx.dmg(&"small"))
 

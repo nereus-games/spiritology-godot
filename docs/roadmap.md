@@ -26,14 +26,16 @@ The four pieces this page used to list are built, and with them most of the abil
 waited on them (see [architecture.md](architecture.md), *The encounter loop*): **reactions**
 (an ability watches what others do or suffer until its user's next turn), an **encounter
 history**, **weighted rival choices**, and **next-turn modifiers**; the one-offs — Shuffle,
-Deflection, Self-Denial, Tactical Retreat — are done too. About 12 markers are left in the
-encounter abilities, across 11 of the 111 scripts, and they no longer share a missing piece of
-engine. They wait on:
+Deflection, Self-Denial, Tactical Retreat — are done too. About 8 markers are left in the
+encounter abilities, across 7 of the 111 scripts, and they no longer share a missing piece of
+engine. The amount an Examine yields is built too (`examine_yield.gd`, see *The encounter loop*):
+Halo Effect, Priming and Catatonia now raise it, as Reconnaissance Glide does. What remains waits on:
 
-- **The amount an Examine yields**, so that "more info" has something to raise: Halo Effect's
-  Examine and its info bonus, Priming's "they get more info", Catatonia's Examine clause (its
-  Meditate clauses are built). The bonuses are computed and logged, and nothing consumes them.
-  See *Encyclopaedia detail* in section 4.
+- **The other "Examine bonus" abilities**: Absorption Guard, Steep In, Shadow Work and the generic
+  effect only log a bonus (`EncounterContext.grant_examine_bonus`, a stub), and Bystander Effect's
+  "far more information out of Talk and Examine" is logged too. Each says what it should do
+  ("the user Examines it"); converting one is a line, `ExamineYield.examine` or
+  `ExamineYield.boost`, once its figure is chosen.
 - **Rivals carrying objects**: Misty Secret's weight on using objects is recorded and inert;
   Altruism has nothing to destroy, and the encounter engine rightly knows no inventory (section 4).
 - **A decision on Deflection**: its docstring adds "requires that the user has not used the same
@@ -100,21 +102,20 @@ unblock.
 - **Encyclopaedia detail.** The *model* is built (see architecture.md): pages and Forlorn pages
   with their own percentage, fragments (3 IFP: one true, one parasitic), the 99 % cap, the
   assembly API, the 15 / 30 / Forlorn-15 ability thresholds, the starting duo, and persistence.
-  What is missing: the *puzzle* and its screens (nothing calls `set_arranged_fragments`,
+  The amount an Examine yields follows the info bonuses (Reconnaissance Glide, Halo Effect,
+  Priming, Catatonia; `examine_bonus_step` in `data/balance.tres`, a placeholder). What is
+  missing: the *puzzle* and its screens (nothing calls `set_arranged_fragments`,
   `destroy_fragments`, `remove_parasitic_fragments` or `mark_page_assembled` yet, nor shows the
-  `encyclopaedia_*` signals); the *amount* an Examine yields (so Reconnaissance Glide's +10 %
-  multiplies a number with no consequence, as do Halo Effect's, Catatonia's and Priming's
-  bonuses); info fragments granted by Examine Weakness; and Forlorn variants on the individual.
-  (`encounter_manager.gd`, `examine_weakness.gd`, `encyclopaedia_model.gd`)
-- **The encyclopaedia's screens.** The grid and the read-only page view are built (see
-  [architecture.md](architecture.md), *The encyclopaedia screens*), reachable only from the dev
-  scenario picker. What is left: wiring the fragment model (`GameSession.encyclopaedia`) into the two seams of
-  `encyclopaedia_page_source.gd` (unlocked abilities, completion) and into `icon_state` in
-  `encyclopaedia_grid_logic.gd`; the assembly screen; the Forlorn tab, a placeholder
-  until the Forlorn individual exists; real icons and the pages' remaining sections (personality,
-  environment, routine, the illustration carousel); the order of the pages, which is by
-  identifier meanwhile; and a way in from the real menus, which do not exist. The selector's
-  starting species is remembered by `encyclopaedia_recent.gd`, not saved with the session.
+  `encyclopaedia_*` signals); info fragments granted by Examine Weakness; and Forlorn variants
+  on the individual. (`encounter_manager.gd`, `examine_weakness.gd`, `encyclopaedia_model.gd`)
+- **The encyclopaedia's screens.** The grid and the read-only page view are built and read the
+  fragment model (see [architecture.md](architecture.md), *The encyclopaedia screens*), reachable
+  only from the dev scenario picker. What is left: the assembly screen on top of the desk; the
+  Forlorn tab, a placeholder until the Forlorn individual exists; real icons and the pages'
+  remaining sections (personality, environment, routine, the illustration carousel); the order
+  of the pages, which is by identifier meanwhile; and a way in from the real menus, which do
+  not exist. The selector's starting species is remembered by `encyclopaedia_recent.gd`, not
+  saved with the session.
 - **Forlorn rivals at spawn.** About 1 % of spawned rivals should be Forlorn. The rest of
   "Rival Spawning" is built: species weighted by dungeon rarity, the spawn limit, a new group
   pushing the occupant of a taken spawn point aside, preset compositions in 0 to 50 % of
@@ -162,6 +163,9 @@ pages the doc has not given yet.
   rival's chance to Talk or Meditate rises by `action_weight_bonus` (0.36, the per-condition
   step borrowed); One's Ethos has its 5 % (`ethos_talk_bonus`). Hardening's Talk penalty is
   `hardening_talk_penalty`, 0.36 likewise. All in `data/balance.tres`.
+- The worth of "more info": one point of info bonus is +10 % of an Examine's IFP
+  (`examine_bonus_step`; the 10 % is Reconnaissance Glide's figure, borrowed). Halo Effect gives 2
+  points per criterion, Catatonia 2 per step, Priming 2 (all placeholders in their scripts).
 - Catatonia's step: each step it earns makes the next Meditate recover and leave a damage bonus
   larger by the per-condition step (`modifier_per_condition`, 0.36, borrowed).
 - Self-Disclosure's unit (one "small" tier per ability used, split equally among the living) and
@@ -180,6 +184,11 @@ pages the doc has not given yet.
   (`litter.gd`, `examinable_decor.gd`).
 
 Decisions taken in code, where the doc has to catch up — or say otherwise:
+
+- **Info bonuses** add up as points, then multiply with talents (Reconnaissance Glide), and the IFP
+  of an Examine are rounded **up** when the factor is above 1 (a penalty rounds down), so that a
+  bonus always gives at least one point more. Only a player character's Examine of a rival earns
+  IFP, whoever an ability "Examines".
 
 - **"Origin"** (Business Card, One's Ethos) is read as the species' Spiricosm, and **"X % more
   often"** as percentage points added to the chance of the action that turn: rivals never Talk

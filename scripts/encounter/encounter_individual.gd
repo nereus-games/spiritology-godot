@@ -281,6 +281,11 @@ var talk_info_factor := 1.0
 ## How many steps stronger its next Meditate is (Catatonia): more ETH, a larger damage bonus.
 ## Spent by [method consume_meditate_boost].
 var meditate_boost_steps := 0
+## Info bonus on the Examines it makes while the bonus lasts (Priming, Catatonia, Bystander
+## Effect...): each point raises the IFP of an Examine by `examine_bonus_step`. Not spent by an
+## Examine, since the window is one turn of its own at most. Read by
+## [method EncounterManager.examine_factor].
+var examine_bonus_points := 0
 
 
 ## Makes the NEXT ability free. Two turns of its own, like [method grant_next_turn_damage_bonus]:
@@ -327,6 +332,15 @@ func consume_meditate_boost() -> int:
 	return steps
 
 
+## Adds `points` of info bonus to its Examines until `anchor`'s next turn, or for `turns` of it.
+## Points add up; they run out together, as the damage tier steps do.
+func grant_examine_bonus_points(
+	points: int, anchor: EncounterIndividual = null, turns := UNTIL_NEXT_TURN
+) -> void:
+	examine_bonus_points += points
+	_arm("next_turn:examine_bonus", anchor, turns)
+
+
 ## Damage dealt goes `steps` tiers up until `anchor`'s next turn.
 func step_up_damage_tier(
 	steps: int, anchor: EncounterIndividual = null, turns := UNTIL_NEXT_TURN
@@ -355,6 +369,8 @@ func _expire_next_turn(key: String) -> void:
 			talk_info_factor = 1.0
 		"meditate_boost":
 			meditate_boost_steps = 0
+		"examine_bonus":
+			examine_bonus_points = 0
 
 
 ## Starts watching with `ability`: whatever it reacts to, until `anchor`'s next turn begins.

@@ -309,12 +309,28 @@ func ifp_amount(
 	return by_tier[psy_tier()]
 
 
+## Scales a whole number of IFP by a factor, and says how it is rounded: AWAY from the original
+## amount. A factor below 1 (Hardening's Talk penalty) rounds down, a factor above 1 (every
+## "more info" bonus on an Examine) rounds up, so that neither ever vanishes on a small table
+## amount: +10 % on 6 IFP is 7, not 6, and a penalty on 1 or 2 IFP bites. A product within a
+## millionth of a whole number counts as that number, so that float noise (10 * 1.1 is
+## 11.000000000000002) never costs a point. Pure.
+func scale_amount(amount: int, factor: float) -> int:
+	if is_equal_approx(factor, 1.0):
+		return amount
+	var scaled := amount * factor
+	if factor > 1.0:
+		return ceili(scaled - 0.000001)
+	return floori(scaled + 0.000001)
+
+
 ## Awards the IFP for an action, and returns what was actually added.
 ##
 ## The single entry point, because it is where the doc's three restrictions live:
 ##   - an ineffective Talk earns nothing;
 ##   - Forlorn falls back to the ordinary row while the main page is incomplete;
-##   - `yield_factor` scales the table's amount (see [signal EncounterManager.ifp_earned]);
+##   - `yield_factor` scales the table's amount, rounded as [method scale_amount] says (see
+##     [signal EncounterManager.ifp_earned]);
 ##   - examining decor is capped per species at [constant EXAMINE_DECOR_CAP], truncated on
 ##     the way to the cap and 0 once reached.
 ##   - a Forlorn rival's points (once the main page is complete) go to the species' FORLORN
@@ -336,10 +352,7 @@ func award_ifp(
 	var main_page_complete := encyclopaedia.is_complete(species_id)
 	var forlorn_page := is_forlorn and main_page_complete
 	var amount := ifp_amount(action, is_forlorn, main_page_complete)
-	# A next-turn modifier on the encounter side (Hardening's Talk penalty). Rounded DOWN: the
-	# table holds whole points, and a penalty that rounded back up would never bite at 1 or 2.
-	if not is_equal_approx(yield_factor, 1.0):
-		amount = floori(amount * yield_factor)
+	amount = scale_amount(amount, yield_factor)
 	# A page at 99 % takes nothing more.
 	amount = mini(amount, encyclopaedia.room(species_id, forlorn_page))
 	# Per-species ceiling on what examining decor can ever yield.

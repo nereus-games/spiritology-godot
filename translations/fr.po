@@ -1252,3 +1252,67 @@ msgstr "Vol"
 msgid "TALENT_TRICK_TO_REVEAL_NAME"
 msgstr "Ruse révélatrice"
 
+
+# --- The encyclopaedia ----------------------------------------------------------------
+# %d = the completion of a page, in percent (written %% in the format).
+msgid "UI_ENCYCLOPAEDIA_TITLE"
+msgstr "Encyclopédie"
+
+msgid "UI_ENCYCLOPAEDIA_EMPTY"
+msgstr "Rien n'est encore consigné dans l'encyclopédie."
+
+msgid "UI_ENCYCLOPAEDIA_COMPLETION"
+msgstr "Complétion : %d %%"
+
+msgid "UI_ENCYCLOPAEDIA_HINT_GRID"
+msgstr "Flèches : déplacer le sélecteur · Valider : ouvrir la page · Annuler : retour"
+
+msgid "UI_ENCYCLOPAEDIA_HINT_PAGE"
+msgstr "Gauche / Droite : changer d'onglet · Annuler : retour à la grille"
+
+msgid "UI_ENCYCLOPAEDIA_TAB_PAGE"
+msgstr "Page"
+
+msgid "UI_ENCYCLOPAEDIA_TAB_FORLORN"
+msgstr "Esseulé"
+
+msgid "UI_ENCYCLOPAEDIA_FORLORN_PENDING"
+msgstr "La page de la variété Esseulé n'est pas encore disponible."
+
+# %s = a spiricosm (TERM_SPIRICOSM_*).
+msgid "UI_ENCYCLOPAEDIA_SPIRICOSM"
+msgstr "Spiricosme : %s"
+
+msgid "UI_ENCYCLOPAEDIA_WEAKNESSES"
+msgstr "FAIBLESSES"
+
+msgid "UI_ENCYCLOPAEDIA_TALENT"
+msgstr "TALENT"
+
+msgid "UI_ENCYCLOPAEDIA_ABILITIES"
+msgstr "CAPACITÉS"
+
+# %d = the number of fragments to arrange correctly to reveal the ability.
+msgid "UI_ENCYCLOPAEDIA_ABILITY_LOCKED"
+msgstr "Révélée avec %d fragments correctement assemblés"
+
+msgid "UI_ENCYCLOPAEDIA_LOOT"
+msgstr "BUTIN POSSIBLE"
+
+msgid "UI_ENCYCLOPAEDIA_LOOT_NONE"
+msgstr "Aucun connu"
+
+msgid "TERM_SPIRICOSM_GLOOM"
+msgstr "Terne"
+
+msgid "TERM_SPIRICOSM_FIERY"
+msgstr "Ardent"
+
+msgid "TERM_SPIRICOSM_WONDERFUL"
+msgstr "Merveilleux"
+
+msgid "UI_DEV_ENCYCLOPAEDIA"
+msgstr "Encyclopédie"
+
+msgid "UI_DEV_ENCYCLOPAEDIA_SAMPLE"
+msgstr "Encyclopédie (progression d'exemple)"

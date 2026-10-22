@@ -7,10 +7,13 @@ extends Node
 ## The test-scenario selection screen: the entry point while there is no title screen. It picks
 ## which exploration scenario to launch. Temporary.
 const PLAY_SCENE := "res://scenes/dev/scenario_select.tscn"
+const EncyclopaediaRecent := preload("res://scripts/ui/encyclopaedia_recent.gd")
 
 
 func _ready() -> void:
 	_init_locale()
+	# The encyclopaedia's selector starts on the last species it gained information on.
+	EncyclopaediaRecent.watch()
 	var has_save := SaveSystem.has_save()
 	print("[Boot] locale=%s, save=%s" % [TranslationServer.get_locale(), has_save])
 	# TODO: move on to title_screen.tscn once the title screen exists. For now, F5 lands in the

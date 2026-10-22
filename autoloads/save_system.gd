@@ -17,7 +17,8 @@ func save_game() -> Error:
 		"player_name": GameSession.player_name,
 		"psy_score": GameSession.psy_score,
 		"fde_count": GameSession.fde_count,
-		"encyclopaedia_ifp": _stringify_keys(GameSession.encyclopaedia_ifp),
+		# Pages, fragments and revealed abilities, main and Forlorn.
+		"encyclopaedia": GameSession.encyclopaedia.to_dict(),
 		# IFP earned per species by examining decor and ground, capped at 15.
 		"exploration_examine_ifp": _stringify_keys(GameSession.exploration_examine_ifp),
 		"dungeon_states": GameSession.dungeon_states,
@@ -61,7 +62,16 @@ func load_game() -> bool:
 	GameSession.player_name = data.get("player_name", "")
 	GameSession.psy_score = int(data.get("psy_score", 0))
 	GameSession.fde_count = int(data.get("fde_count", 0))
-	GameSession.encyclopaedia_ifp = _intify_values(data.get("encyclopaedia_ifp", {}))
+	# After the two characters above, whose setters grant the starting fragments: a saved page
+	# replaces that grant rather than adding to it.
+	if data.has("encyclopaedia"):
+		GameSession.encyclopaedia.from_dict(data["encyclopaedia"])
+	else:
+		# A save from before pages existed: species -> IFP only.
+		GameSession.encyclopaedia.from_legacy_ifp(data.get("encyclopaedia_ifp", {}))
+		GameSession.encyclopaedia.grant_starting_duo(
+			GameSession.main_character, GameSession.teammate
+		)
 	# Tolerant of a missing key, so that older saves still load.
 	GameSession.exploration_examine_ifp = _intify_values(data.get("exploration_examine_ifp", {}))
 	GameSession.dungeon_states = data.get("dungeon_states", {})

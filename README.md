@@ -22,8 +22,9 @@ This is a work in progress, and the parts that do not work yet are worth stating
 
 - **Encounters** — the loop is complete and covered by regression checks: turn order,
   position-dependent weaknesses, damage modifiers, the 111 abilities and the 10 talents.
-  **8 of the 111 abilities** are not implemented (their scripts carry `# @unimplemented`
-  and fall back to generic per-tag effects, which is a scaffold, not the real mechanic).
+  **5 of the 111 abilities** are not implemented (their scripts carry `# @unimplemented`
+  and fall back to generic per-tag effects, which is a scaffold, not the real mechanic): the
+  design doc does not define their mechanic yet.
 - **Exploration** — dungeon geometry, traps, chests, gates, stairs, lifts, narrow bridges,
   crumbly ground and rival AI all run, with headless checks for each.
 - **Talents** — all 10 are wired into the loop. Several are limited by systems that do not

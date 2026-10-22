@@ -1,4 +1,3 @@
-# @unimplemented
 ## Static Camouflage — Exploration · from — · — · cost — · damage —
 ##
 ## MECHANIC (from the design doc):
@@ -16,10 +15,13 @@
 ##   subsequent group is shown after encountering said group.
 ##   Each of these groups has X % chances (Y % if this ability is used while next to or on
 ##   litter) of including unknown species and variations (rare colours, Forlorn shape).
+##
+## An exploration ability: it is never used inside an encounter, so this script has nothing to
+## run. The mechanic lives in `scripts/exploration/abilities/impl/static_camouflage.gd` and
+## `scripts/exploration/scouting.gd`: it shows 2 to 4 groups of the map one at a time and offers
+## to take each on. The unknown-species and Forlorn chances wait on the Forlorn individual.
 extends AbilityScript
 
 
-func execute(ctx: EncounterContext) -> void:
-	# TODO: implement the mechanic above, then drop the leading "@unimplemented". Until then the
-	# generic effects derived from the tags apply — that is scaffolding, not the real mechanic.
-	super.execute(ctx)
+func execute(_ctx: EncounterContext) -> void:
+	pass

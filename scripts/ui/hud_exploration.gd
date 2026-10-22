@@ -209,6 +209,10 @@ func _process(_delta: float) -> void:
 func _refresh_actions() -> void:
 	if _extra_actions == null:
 		_extra_actions = ExplorationExtraActions.new(ExplorationContext.new(_dungeon, _player))
+	# Static Camouflage's watch: its choice is all there is, abilities and objects included.
+	if _dungeon.scouting.active:
+		_action_menu.set_actions(_dungeon.scouting.actions())
+		return
 	var contextual := _dungeon.actions_for(_player.tile, _player.facing_delta(), _player)
 	var actions: Array = _extra_actions.combine(contextual)
 	# The MENU button is always there. DEV: it goes back to the scenario selection.
@@ -239,6 +243,8 @@ func _update_status() -> void:
 		parts.append(tr("UI_STATUS_POISON") % [aff.poison_turns, aff.poison_per_turn])
 	if aff.has_disarray():
 		parts.append(tr("UI_STATUS_DISARRAY") % aff.remaining_disarray())
+	if _dungeon != null and _dungeon.scouting.active:
+		parts.append(_dungeon.scouting.description())
 	_status_label.text = "\n".join(parts)
 
 

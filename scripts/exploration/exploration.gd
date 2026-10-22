@@ -7,6 +7,7 @@
 extends Node3D
 
 const ScenarioCatalog := preload("res://scripts/dev/scenario_catalog.gd")
+const Trap := preload("res://scripts/exploration/mechanisms/trap.gd")
 const RivalSpawner := preload("res://scripts/exploration/rival_spawner.gd")
 
 ## How many traps Reveal Traps shows on entering a level.
@@ -134,9 +135,10 @@ func _on_encounter_finished(result: StringName, rivals: Array) -> void:
 ## encounter.
 ##
 ## Above the first PSY rung ([method GameSession.psy_above]) the duo lands closer, only
-## [member BalanceData.psy_flee_distance_min] to _max steps off, on a tile with nothing on it,
-## turned to face the group; and the group is [member BalanceData.psy_flee_talk_malus] less
-## likely to Talk from then on. The group stays either way.
+## [member BalanceData.psy_flee_distance_min] to _max steps off, on a tile with no trap and no
+## rival on it, turned to face the group; and the group is
+## [member BalanceData.psy_flee_talk_malus] less likely to Talk while PSY stays above that rung.
+## The group stays either way.
 ##
 ## The design doc was once read as adding "a 50 % chance the rival disappears"; that was dropped
 ## (2026-09-18) — a group vanishing looked exactly like every rival in it being devitalised.
@@ -170,7 +172,8 @@ func _run_away(group: Node) -> void:
 ## reachable tile; `from` itself when there is none.
 ##
 ## `strict` (above the first PSY rung) turns the preference into a rule: only a tile with no
-## mechanism on it and nobody on it will do, and the farthest such tile when none is in range.
+## trap and nobody on it will do (stairs, chests and decor are fine), and the farthest such tile
+## when none is in range. Walkability comes from the search itself, so a hole is never picked.
 func flight_destination(
 	from: Vector3i, min_steps := -1, max_steps := -1, strict := false
 ) -> Vector3i:
@@ -185,10 +188,7 @@ func flight_destination(
 	var farthest := from
 	for t in steps:
 		var tile: Vector3i = t
-		var free: bool = (
-			_dungeon.mechanisms_at(tile).is_empty() and _dungeon.occupant_at(tile) == null
-		)
-		if strict and not free:
+		if strict and (_dungeon.occupant_at(tile) != null or _has_trap(tile)):
 			continue
 		if steps[tile] > steps[farthest]:
 			farthest = tile
@@ -202,6 +202,13 @@ func flight_destination(
 	if not in_range.is_empty():
 		return in_range[randi() % in_range.size()]
 	return farthest
+
+
+func _has_trap(tile: Vector3i) -> bool:
+	for m in _dungeon.mechanisms_at(tile):
+		if m is Trap:
+			return true
+	return false
 
 
 func _next_to_rival(tile: Vector3i) -> bool:

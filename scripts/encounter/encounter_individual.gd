@@ -36,7 +36,8 @@ var ability_ids: Array[StringName] = []
 var next_damage_factor := 1.0
 
 ## The share taken off the chance that a Talk aimed at this individual works, 0 to 1. Carried in
-## from the map for a rival the duo fled above the first PSY rung; see
+## from the map for a rival the duo fled above the first PSY rung, and ignored once PSY is back
+## at or under it; see
 ## [method EncounterManager._resolve_talk].
 var talk_chance_malus := 0.0
 ## When set, the next damage taken goes to this individual instead (Victimism).

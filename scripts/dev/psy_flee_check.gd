@@ -9,6 +9,7 @@ extends Node
 const ScenarioCatalog := preload("res://scripts/dev/scenario_catalog.gd")
 const EXPLORATION := preload("res://scenes/exploration/exploration.tscn")
 const RIVAL_SCENE := preload("res://scenes/exploration/rival/rival.tscn")
+const Trap := preload("res://scripts/exploration/mechanisms/trap.gd")
 const RivalMember := preload("res://scripts/exploration/rival_member.gd")
 
 ## The "movement" scenario: an open 7 x 9 room with pillars, entered at (3, 0, 0).
@@ -76,6 +77,13 @@ func _flee(scene, player, dm, psy: int) -> Node:
 	return g
 
 
+func _has_trap(dm, tile: Vector3i) -> bool:
+	for m in dm.mechanisms_at(tile):
+		if m is Trap:
+			return true
+	return false
+
+
 func _check_flight() -> void:
 	print("[fleeing, by PSY]")
 	ScenarioCatalog.selected_id = &"movement"
@@ -96,7 +104,7 @@ func _check_flight() -> void:
 		var walked: int = steps.get(player.tile, -1)
 		if walked < balance.psy_flee_distance_min or walked > reach:
 			off_range.append("%s (%d steps)" % [player.tile, walked])
-		if not dm.mechanisms_at(player.tile).is_empty() or dm.occupant_at(player.tile) != null:
+		if dm.occupant_at(player.tile) != null or _has_trap(dm, player.tile):
 			not_free.append(str(player.tile))
 		# The heading must point along the larger gap to the group.
 		var gap: Vector3i = g.tile - player.tile
@@ -104,7 +112,9 @@ func _check_flight() -> void:
 		if absi(gap.x) > absi(gap.z):
 			want = Vector3i(signi(gap.x), 0, 0)
 		if player.facing_delta() != want:
-			not_facing.append("%s facing %s, wanted %s" % [player.tile, player.facing_delta(), want])
+			not_facing.append(
+				"%s facing %s, wanted %s" % [player.tile, player.facing_delta(), want]
+			)
 		if not is_instance_valid(g) or g.tile != NEXT_TO_START:
 			group_issues.append("the group moved or is gone")
 		elif absf(g.members[0].talk_malus - balance.psy_flee_talk_malus) > 0.0001:
@@ -117,9 +127,12 @@ func _check_flight() -> void:
 			g.remove_from_dungeon()
 		await get_tree().process_frame
 	_check(off_range.is_empty(), "above rung 1 the duo lands 2 to 3 steps off %s" % [off_range])
-	_check(not_free.is_empty(), "...on a tile with no mechanism and nobody on it %s" % [not_free])
+	_check(not_free.is_empty(), "...on a tile with no trap and nobody on it %s" % [not_free])
 	_check(not_facing.is_empty(), "...facing the group %s" % [not_facing.slice(0, 3)])
-	_check(group_issues.is_empty(), "...the group stays put and talks less %s" % [group_issues.slice(0, 3)])
+	_check(
+		group_issues.is_empty(),
+		"...the group stays put and talks less %s" % [group_issues.slice(0, 3)]
+	)
 
 	# At the rung itself (strictly above is needed) nothing of this applies.
 	var near: Array = []
@@ -134,7 +147,9 @@ func _check_flight() -> void:
 			malus.append("malus")
 		g.remove_from_dungeon()
 		await get_tree().process_frame
-	_check(near.is_empty(), "at PSY %d the flight is the usual 3 to 5 %s" % [balance.psy_rung_1, near])
+	_check(
+		near.is_empty(), "at PSY %d the flight is the usual 3 to 5 %s" % [balance.psy_rung_1, near]
+	)
 	_check(malus.is_empty(), "...and the group's Talk chance is untouched")
 	GameSession.psy_score = 0
 	scene.queue_free()
@@ -161,10 +176,17 @@ func _talk(chance: float, malus: float, seed: int) -> bool:
 
 func _check_talk_malus() -> void:
 	print("[the Talk chance]")
+	GameSession.psy_score = BalanceData.current().psy_rung_1 + 1
 	var plain: bool = await _talk(1.0, 0.0, 20261022)
 	var whole: bool = await _talk(1.0, 1.0, 20261022)
 	_check(plain, "a sure Talk works with no malus")
 	_check(not whole, "...and fails once the whole chance is taken off")
+
+	# The malus only counts while PSY is above the first rung.
+	GameSession.psy_score = BalanceData.current().psy_rung_1
+	var calmed: bool = await _talk(1.0, 1.0, 20261022)
+	_check(calmed, "...but is ignored once PSY is back at the rung")
+	GameSession.psy_score = BalanceData.current().psy_rung_1 + 1
 
 	# 10 % less is relative: from a 50 % chance, 45 %.
 	var seen := 0
@@ -174,4 +196,8 @@ func _check_talk_malus() -> void:
 		if ok:
 			seen += 1
 	var rate := float(seen) / float(trials)
-	_check(rate > 0.37 and rate < 0.53, "a 50 %% Talk with a 10 %% malus works about 45 %% (%.2f)" % rate)
+	GameSession.psy_score = 0
+	_check(
+		rate > 0.37 and rate < 0.53,
+		"a 50 %% Talk with a 10 %% malus works about 45 %% (%.2f)" % rate
+	)

@@ -60,10 +60,11 @@ extends Resource
 @export var psy_flee_distance_min: int = 2
 @export var psy_flee_distance_max: int = 3
 
-## Above the first PSY rung, a group the duo fled from is "10 % less" likely to Talk from then
-## on: the share taken off its Talk chance (the species' talker_chance, a proxy; see
-## [method EncounterManager._resolve_talk]), as a fraction. Placeholder reading: relative, not
-## 10 points, and it does not stack when the duo flees the same group twice.
+## A group the duo fled from above the first PSY rung is "10 % less" likely to Talk: the share
+## taken off its Talk chance (the species' talker_chance, a proxy; see
+## [method EncounterManager._resolve_talk]), as a fraction. Relative, not 10 points, and it does
+## not stack when the duo flees the same group twice. It only counts while the PSY score is still
+## above the first rung when the Talk happens.
 @export var psy_flee_talk_malus: float = 0.1
 
 ## Turns a group still on the map stays put after an encounter, so that it does not open the

@@ -15,7 +15,8 @@ var den: int
 var max_eth: int
 var eth: int
 ## The share taken off its Talk chance, 0 to 1: set when the duo flees its group above the first
-## PSY rung, and kept for good. It rides into every later encounter in [method encounter_state].
+## PSY rung. It rides into every later encounter in [method encounter_state], but only counts
+## while PSY is above that rung when a Talk happens.
 var talk_malus := 0.0
 
 

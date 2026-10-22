@@ -35,10 +35,14 @@ const PATTERN: Array[int] = [
 
 ## Replaces the session's encyclopaedia progress with the sample.
 static func fill() -> void:
-	GameSession.encyclopaedia_ifp.clear()
+	GameSession.encyclopaedia.clear()
 	var list: Array = GameData.all_species()
 	list.sort_custom(func(a: SpeciesData, b: SpeciesData) -> bool: return str(a.id) < str(b.id))
 	for i in list.size():
 		var ifp: int = PATTERN[i % PATTERN.size()]
 		if ifp > 0:
-			GameSession.encyclopaedia_ifp[list[i].id] = ifp
+			var id: StringName = list[i].id
+			GameSession.encyclopaedia.add_ifp(id, mini(ifp, 99))
+			if ifp >= 100:
+				GameSession.encyclopaedia.set_arranged(id, false, 33)
+				GameSession.encyclopaedia.mark_assembled(id)

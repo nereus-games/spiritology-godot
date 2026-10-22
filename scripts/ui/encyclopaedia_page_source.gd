@@ -1,8 +1,7 @@
 ## What an encyclopaedia page says about a species, gathered in one place.
 ##
 ## The page view reads ONLY this script, never [SpeciesData] or [GameSession] directly, so that
-## the fragment model (which decides which abilities are unlocked and what the completion is)
-## can replace the two seams below without the view noticing.
+## the fragment model can change what feeds the two functions below without the view noticing.
 ##
 ## No `class_name` (the CLI class-cache trap): referenced by `preload`.
 extends RefCounted
@@ -33,7 +32,7 @@ static func build(species_id: StringName) -> Dictionary:
 		)
 	return {
 		"species": sp,
-		"ifp": int(GameSession.encyclopaedia_ifp.get(species_id, 0)),
+		"ifp": GameSession.page_ifp(species_id),
 		"completion": completion_percent(species_id),
 		"weaknesses":
 		[
@@ -49,17 +48,17 @@ static func build(species_id: StringName) -> Dictionary:
 
 ## The page's completion, in percent.
 ##
-## SEAM: 1 IFP is 1 % of a page, so today it is the IFP. With fragments it becomes the share of
-## the page correctly assembled (the last percent coming from the full assembly).
+## 1 IFP is 1 % of a page, and the model holds the last percent back until the page is fully
+## assembled, so this is the model's percentage.
 static func completion_percent(species_id: StringName) -> int:
-	return clampi(int(GameSession.encyclopaedia_ifp.get(species_id, 0)), 0, 100)
+	return clampi(GameSession.page_ifp(species_id), 0, 100)
 
 
-## The encyclopaedia abilities of the species that are revealed and usable.
-##
-## SEAM: nothing records which fragments are correctly arranged yet, so none is. The doc has the
-## first ability at 15 correct fragments, the second at 30, and each player character starting
-## with 15 of its own species' — all of it belongs to the fragment model, and to nowhere else.
-## This is deliberately NOT derived from the IFP: the IFP is not the arranged fragments.
-static func unlocked_abilities(_species_id: StringName) -> Array[StringName]:
-	return []
+## The encyclopaedia abilities of the species that are revealed, as the fragment model has it.
+static func unlocked_abilities(species_id: StringName) -> Array[StringName]:
+	var revealed := GameSession.unlocked_abilities(species_id)
+	var result: Array[StringName] = []
+	for ability_id in GameData.species(species_id).encyclopaedia_abilities:
+		if ability_id in revealed:
+			result.append(ability_id)
+	return result

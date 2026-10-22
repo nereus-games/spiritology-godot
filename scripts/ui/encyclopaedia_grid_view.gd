@@ -105,7 +105,7 @@ func _build() -> void:
 		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		icon.texture = Art.icon(sp.id)
-		Art.apply_state(icon, GridLogic.icon_state(GameSession.encyclopaedia_ifp.get(sp.id, 0)))
+		Art.apply_state(icon, GridLogic.icon_state(GameSession.page_ifp(sp.id)))
 		cell.add_child(icon)
 		_icons.append(icon)
 
@@ -128,9 +128,7 @@ func _refresh_selection() -> void:
 		return
 	var sp: SpeciesData = _species[_selected]
 	_name_label.text = tr(sp.name_key())
-	_completion_label.text = (
-		tr("UI_ENCYCLOPAEDIA_COMPLETION") % GameSession.encyclopaedia_ifp.get(sp.id, 0)
-	)
+	_completion_label.text = (tr("UI_ENCYCLOPAEDIA_COMPLETION") % GameSession.page_ifp(sp.id))
 
 
 func _on_cell_input(event: InputEvent, index: int) -> void:

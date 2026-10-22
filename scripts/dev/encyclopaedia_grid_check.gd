@@ -148,20 +148,26 @@ func _check_start() -> void:
 
 func _check_feed() -> void:
 	print("[the page source, on the sample progress]")
-	var saved: Dictionary = GameSession.encyclopaedia_ifp.duplicate()
+	var saved: Dictionary = GameSession.encyclopaedia.to_dict()
 	Sample.fill()
 	var species: Array = GameData.all_species()
 	_check(species.size() >= 30, "the data has its species (%d)" % species.size())
 	var states := {}
 	for sp in species:
-		states[Logic.icon_state(GameSession.encyclopaedia_ifp.get(sp.id, 0))] = true
+		states[Logic.icon_state(GameSession.page_ifp(sp.id))] = true
 	_check(states.size() == 4, "the sample shows every icon state")
 	var any_id: StringName = species[0].id
 	var info := Source.build(any_id)
 	_check(info.weaknesses.size() == 3, "a page has three weaknesses")
-	_check(info.completion == int(GameSession.encyclopaedia_ifp.get(any_id, 0)), "completion")
-	var none_unlocked := true
+	_check(info.completion == GameSession.page_ifp(any_id), "completion")
+	var with_two: SpeciesData = null
 	for sp in species:
-		none_unlocked = none_unlocked and Source.unlocked_abilities(sp.id).is_empty()
-	_check(none_unlocked, "no ability is unlocked while no fragment model exists")
-	GameSession.encyclopaedia_ifp = saved
+		if with_two == null and sp.encyclopaedia_abilities.size() >= 2:
+			with_two = sp
+	GameSession.encyclopaedia.clear()
+	GameSession.encyclopaedia.add_ifp(with_two.id, 45)
+	_check(Source.unlocked_abilities(with_two.id).is_empty(), "no fragment arranged: no ability")
+	GameSession.encyclopaedia.set_arranged(with_two.id, false, 15)
+	var unlocked := Source.unlocked_abilities(with_two.id)
+	_check(unlocked == [with_two.encyclopaedia_abilities[0]], "15 arranged: the first ability only")
+	GameSession.encyclopaedia.from_dict(saved)

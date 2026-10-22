@@ -97,17 +97,20 @@ unblock.
 - **Rivals carrying objects.** Examine should "reveal objects they carry", Steal has nothing to
   take, Altruism has nothing to destroy, and Misty Secret's weight on using objects acts on no
   one. (`encounter_manager.gd`, `altruism.gd`, `misty_secret.gd`)
-- **Encyclopaedia detail.** IFP are awarded and tallied, from encounters and from exploration
-  alike; what is missing is the *amount* an Examine yields (so Reconnaissance Glide's +10 %
+- **Encyclopaedia detail.** The *model* is built (see architecture.md): pages and Forlorn pages
+  with their own percentage, fragments (3 IFP: one true, one parasitic), the 99 % cap, the
+  assembly API, the 15 / 30 / Forlorn-15 ability thresholds, the starting duo, and persistence.
+  What is missing: the *puzzle* and its screens (nothing calls `set_arranged_fragments`,
+  `destroy_fragments`, `remove_parasitic_fragments` or `mark_page_assembled` yet, nor shows the
+  `encyclopaedia_*` signals); the *amount* an Examine yields (so Reconnaissance Glide's +10 %
   multiplies a number with no consequence, as do Halo Effect's, Catatonia's and Priming's
-  bonuses), info fragments (Examine Weakness), Forlorn variants on the individual, and Forlorn
-  pages with their own percentage. (`encounter_manager.gd`, `examine_weakness.gd`,
-  `game_session.gd`)
+  bonuses); info fragments granted by Examine Weakness; and Forlorn variants on the individual.
+  (`encounter_manager.gd`, `examine_weakness.gd`, `encyclopaedia_model.gd`)
 - **The encyclopaedia's screens.** The grid and the read-only page view are built (see
   [architecture.md](architecture.md), *The encyclopaedia screens*), reachable only from the dev
-  scenario picker. What is left: the fragment model and the assembly desk, which decide which
-  abilities are unlocked and what the completion is (`encyclopaedia_page_source.gd` has the two
-  seams, `encyclopaedia_grid_logic.gd`'s `icon_state` the third); the Forlorn tab, a placeholder
+  scenario picker. What is left: wiring the fragment model (`GameSession.encyclopaedia`) into the two seams of
+  `encyclopaedia_page_source.gd` (unlocked abilities, completion) and into `icon_state` in
+  `encyclopaedia_grid_logic.gd`; the assembly screen; the Forlorn tab, a placeholder
   until the Forlorn individual exists; real icons and the pages' remaining sections (personality,
   environment, routine, the illustration carousel); the order of the pages, which is by
   identifier meanwhile; and a way in from the real menus, which do not exist. The selector's

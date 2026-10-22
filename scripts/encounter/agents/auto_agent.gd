@@ -13,6 +13,9 @@ extends EncounterAgent
 
 
 func decide(individual: EncounterIndividual, manager: EncounterManager) -> EncounterAction:
+	var weighted := _weighted_action(individual, manager)
+	if weighted != null:
+		return weighted
 	var ability := _choose_ability(individual, manager)
 	if ability == null:
 		# Nothing playable left — all spent, or all too expensive. Meditate costs nothing,
@@ -34,3 +37,36 @@ func _choose_ability(individual: EncounterIndividual, manager: EncounterManager)
 		if a.base_damage > 0:
 			return a
 	return fallback
+
+
+## The action an ability made likelier (Hyping Up, Misty Secret, One's Ethos...), or null when
+## the turn goes on as usual. Draws once from the encounter's rng, and only when some weight
+## applies to an action that can be played: an individual with no weight consumes no random
+## number, which keeps every earlier replay as it was. A weight is a probability added to the
+## chance of that action; together they stop at 1. The remainder is the usual choice.
+##
+## Using an object is weighted but never played: rivals carry no objects yet (TODO).
+func _weighted_action(
+	individual: EncounterIndividual, manager: EncounterManager
+) -> EncounterAction:
+	if individual.action_weights.is_empty():
+		return null
+	var talk_targets: Array = manager.talk_targets(individual)
+	var talk := 0.0
+	if (
+		manager.menu_kinds(individual).has(EncounterAction.Kind.TALK)
+		and not talk_targets.is_empty()
+	):
+		talk = individual.action_bonus(EncounterAction.Kind.TALK)
+	var meditate := individual.action_bonus(EncounterAction.Kind.MEDITATE)
+	if talk <= 0.0 and meditate <= 0.0:
+		return null
+	var draw := manager.rng.randf()
+	if draw < minf(talk, 1.0):
+		var target = individual.weight_focus(EncounterAction.Kind.TALK, talk_targets)
+		if target == null:
+			target = talk_targets[0]
+		return EncounterAction.of_kind(EncounterAction.Kind.TALK, [target])
+	if draw < minf(talk + meditate, 1.0):
+		return EncounterAction.of_kind(EncounterAction.Kind.MEDITATE, [individual])
+	return null

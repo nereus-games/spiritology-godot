@@ -500,6 +500,16 @@ msgstr "%s gagne %d action(s) [à venir]."
 msgid "LOG_FORCED_TO_TALK"
 msgstr "%s est forcé de Parler [à venir]."
 
+# %s = the individual made likelier to pick that base action.
+msgid "LOG_WEIGHT_TALK"
+msgstr "%s va Parler plus souvent."
+
+msgid "LOG_WEIGHT_MEDITATE"
+msgstr "%s va Méditer plus souvent."
+
+msgid "LOG_WEIGHT_OBJECT"
+msgstr "%s va utiliser des objets plus souvent."
+
 # %d = the bonus, %s = who is examined.
 msgid "LOG_EXAMINE_BONUS"
 msgstr "bonus d'Examen +%d sur %s [à venir]."

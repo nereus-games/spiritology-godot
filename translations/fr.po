@@ -180,6 +180,10 @@ msgstr "des objets s'ajoutent à l'inventaire"
 msgid "UI_CHEST_LOOT"
 msgstr "Dans le coffre : %s"
 
+# Posted when the reveal phase brings traps to light. %d = how many.
+msgid "UI_TRAPS_REVEALED"
+msgstr "%d piège(s) révélé(s)"
+
 # The choice the Reveal Traps talent offers when a trapped chest tries to teleport.
 msgid "UI_ACTION_CHEST_TELEPORT"
 msgstr "Se laisser téléporter"

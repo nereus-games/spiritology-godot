@@ -17,10 +17,6 @@ on Notion?
 
 Each is explicit in the doc, has no prerequisite, and is wrong in play right now.
 
-- **The turn has no reveal phase.** The doc's exploration turn is player → reveal of
-  mechanisms → rivals → mechanism activation; the second phase is missing, so a trap only comes
-  to light by springing and `Trap.reveal()` has no caller. This is also exactly what Reveal
-  Traps' first clause needs. (`dungeon_manager.gd`, `advance_turn`; `reveal_traps.gd`)
 - **About 1 % of spawned rivals should be Forlorn.** The rest of "Rival Spawning" is built:
   species weighted by dungeon rarity, the spawn limit, a new group pushing the occupant of a
   taken spawn point aside, preset compositions in 0 to 50 % of spawns, waves wider at a high

@@ -84,6 +84,19 @@ extends Resource
 ## (1 - hardening_talk_penalty) of the IFP it would. Between 0 (no penalty) and 1 (nothing).
 @export_range(0.0, 1.0) var hardening_talk_penalty: float = 0.36
 
+## Page assembly ("Page Assembly / Fragment Manipulation"). The doc writes the chance of
+## destroying an already damaged fragment as "X %", and says the stain spreads "slowly",
+## with a comment asking for a surface per minute: all three are placeholders for play-testing.
+## Chance, in 0..1, that a fragment which was ALREADY damaged is destroyed by another incorrect
+## assembly.
+@export_range(0.0, 1.0) var puzzle_destroy_chance: float = 0.25
+## Stain growth per second of handling, as a fraction of the fragment's area (0.02 reaches the
+## cap after about 40 s of manipulation).
+@export_range(0.0, 1.0) var puzzle_stain_rate: float = 0.02
+## The stain stops at this fraction of the fragment: "almost the whole fragment, until only the
+## edges are visible". Strictly below 1, or the edges would vanish too.
+@export_range(0.0, 0.99) var puzzle_stain_max: float = 0.85
+
 const PATH := "res://data/balance.tres"
 
 static var _current: BalanceData

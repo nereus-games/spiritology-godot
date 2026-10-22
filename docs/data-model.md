@@ -197,6 +197,8 @@ cost would *give* ETH back), never a particular balance.
 | `wave_psy_threshold` / `_extra_groups` | 20 / +1 | waves "grow wider" at a high PSY, unquantified |
 | `decor_psy_threshold` / `decor_spawn_chance` | 20 / 45 % | the figures the doc gives |
 | `decor_spawn_groups_max` / `decor_spawn_radius` | 2 / 4 | "one or more groups nearby" |
+| `puzzle_destroy_chance` | 25 % | "X % risk of being destroyed", for an already damaged fragment |
+| `puzzle_stain_rate` / `puzzle_stain_max` | 0.02 per s / 0.85 | "slowly spreads to almost the whole fragment"; a comment asks for a surface per minute |
 
 `ObjectData.magnitude` stays `0`, meaning "not stated by Notion"; consumers fall back to
 the balance value above.

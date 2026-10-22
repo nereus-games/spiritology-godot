@@ -256,6 +256,13 @@ func _check_balance() -> void:
 			bad.append("%s = %s (must be >= 0)" % [field, b.get(field)])
 	if b.decor_spawn_groups_max < 1 or b.decor_spawn_radius < 1:
 		bad.append("decor_spawn_groups_max / decor_spawn_radius must be >= 1")
+	# Page assembly: chances stay probabilities, and the stain must leave the edges visible.
+	if not (0.0 <= b.puzzle_destroy_chance and b.puzzle_destroy_chance <= 1.0):
+		bad.append("puzzle_destroy_chance = %s (must be 0..1)" % b.puzzle_destroy_chance)
+	if b.puzzle_stain_rate < 0.0:
+		bad.append("puzzle_stain_rate = %s (must be >= 0)" % b.puzzle_stain_rate)
+	if not (0.0 <= b.puzzle_stain_max and b.puzzle_stain_max < 1.0):
+		bad.append("puzzle_stain_max = %s (must be 0..<1)" % b.puzzle_stain_max)
 	_check_empty(bad, "the balance values stay playable")
 
 

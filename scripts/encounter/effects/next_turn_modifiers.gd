@@ -26,6 +26,14 @@ static func make_next_talk_count_as_examine(ctx: EncounterContext, target) -> vo
 	ctx.note(_tr("LOG_NEXT_TALK_AS_EXAMINE") % _name(target))
 
 
+## The target's next Meditate is `steps` steps stronger — see
+## [method EncounterManager._resolve_meditate] for what a step is worth.
+static func boost_next_meditate(ctx: EncounterContext, target, steps: int) -> void:
+	if target is EncounterIndividual:
+		target.grant_meditate_boost(steps)
+	ctx.note(_tr("LOG_NEXT_MEDITATE_BOOSTED") % [_name(target), steps])
+
+
 ## What the target deals goes up one damage tier until the user's next turn.
 static func step_up_damage(ctx: EncounterContext, target) -> void:
 	if target is EncounterIndividual:

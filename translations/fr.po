@@ -566,6 +566,10 @@ msgstr "la condition de cette capacité n'est pas remplie."
 msgid "LOG_NEXT_TALK_AS_EXAMINE"
 msgstr "le prochain Parler de %s rapporte autant d'IFP qu'un Examen."
 
+# %s = qui, %d = de combien de paliers.
+msgid "LOG_NEXT_MEDITATE_BOOSTED"
+msgstr "la prochaine Méditation de %s est renforcée de %d palier(s)."
+
 # %s = who, %s = the fragments below, comma-separated.
 msgid "LOG_RESTRICTED"
 msgstr "%s ne peut plus faire que : %s [à venir]."

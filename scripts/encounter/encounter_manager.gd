@@ -603,13 +603,13 @@ func rival_report() -> Array:
 func _resolve_meditate(individual: EncounterIndividual, action: EncounterAction) -> void:
 	var before := individual.eth
 	var balance := BalanceData.current()
-	individual.recover_eth(balance.meditate_eth)
-	individual.grant_next_turn_damage_bonus(balance.meditate_damage_bonus)
+	# Catatonia: each step it left adds the per-condition step to both the ETH and the bonus.
+	var boost := 1.0 + individual.consume_meditate_boost() * balance.modifier_per_condition
+	var damage_bonus: float = balance.meditate_damage_bonus * boost
+	individual.recover_eth(ceili(balance.meditate_eth * boost))
+	individual.grant_next_turn_damage_bonus(damage_bonus)
 	var lines: Array = [
-		(
-			_tr("LOG_MEDITATE")
-			% [before, individual.eth, roundi(balance.meditate_damage_bonus * 100.0)]
-		)
+		_tr("LOG_MEDITATE") % [before, individual.eth, roundi(damage_bonus * 100.0)]
 	]
 	lines.append_array(_shake_off_recurring(individual))
 	_emit_turn(individual, action, lines)

@@ -112,7 +112,7 @@ Four more pieces let the other abilities say what the doc says:
   rival Talks or Meditates, on the usual timers; `AutoAgent` draws from the encounter's rng only
   when a weight applies, so an encounter without weights replays exactly as before.
 - **Next-turn modifiers.** A free ability, a Talk that yields as much as an Examine, damage that
-  steps up a tier, a Talk that yields less. `ifp_earned` carries a fifth argument,
+  steps up a tier, a Talk that yields less, a Meditate that is stronger (Catatonia). `ifp_earned` carries a fifth argument,
   `yield_factor`, which `GameSession.award_ifp` applies.
 
 `EncounterContext` sits at `gdlintrc`'s ceiling on public methods, so these are static helpers

@@ -31,12 +31,9 @@ encounter abilities, across 11 of the 111 scripts, and they no longer share a mi
 engine. They wait on:
 
 - **The amount an Examine yields**, so that "more info" has something to raise: Halo Effect's
-  Examine and its info bonus, Priming's "they get more info", Catatonia's Examine clause. The
-  bonuses are computed and logged, and nothing consumes them. See *Encyclopaedia detail* in
-  section 4.
-- **Catatonia's Meditate clauses** (more ETH, more damage). Unlike the above, these are no longer
-  blocked: the next-turn modifiers and `grant_next_turn_damage_bonus` give them somewhere to
-  land. **The next thing worth doing in this section.**
+  Examine and its info bonus, Priming's "they get more info", Catatonia's Examine clause (its
+  Meditate clauses are built). The bonuses are computed and logged, and nothing consumes them.
+  See *Encyclopaedia detail* in section 4.
 - **Rivals carrying objects**: Misty Secret's weight on using objects is recorded and inert;
   Altruism has nothing to destroy, and the encounter engine rightly knows no inventory (section 4).
 - **A decision on Deflection**: its docstring adds "requires that the user has not used the same
@@ -153,6 +150,8 @@ pages the doc has not given yet.
   rival's chance to Talk or Meditate rises by `action_weight_bonus` (0.36, the per-condition
   step borrowed); One's Ethos has its 5 % (`ethos_talk_bonus`). Hardening's Talk penalty is
   `hardening_talk_penalty`, 0.36 likewise. All in `data/balance.tres`.
+- Catatonia's step: each step it earns makes the next Meditate recover and leave a damage bonus
+  larger by the per-condition step (`modifier_per_condition`, 0.36, borrowed).
 - Self-Disclosure's unit (one "small" tier per ability used, split equally among the living) and
   Tactical Retreat's rate (1 DEN avoided for 1 ETH).
 - The multipliers for common and normal species against rare ones in spawning (proposed 3 and

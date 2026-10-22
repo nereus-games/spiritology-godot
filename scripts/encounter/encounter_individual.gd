@@ -272,6 +272,9 @@ var talk_as_examine := false
 var damage_tier_steps := 0
 ## Multiplier on the IFP its Talk yields (Hardening's penalty). 1.0 means no change.
 var talk_info_factor := 1.0
+## How many steps stronger its next Meditate is (Catatonia): more ETH, a larger damage bonus.
+## Spent by [method consume_meditate_boost].
+var meditate_boost_steps := 0
 
 
 ## Makes the NEXT ability free. Two turns of its own, like [method grant_next_turn_damage_bonus]:
@@ -303,6 +306,21 @@ func consume_talk_as_examine() -> bool:
 	return true
 
 
+## Makes the NEXT Meditate `steps` steps stronger. Two turns of its own, as above: gone the turn
+## after if it never Meditated.
+func grant_meditate_boost(steps: int) -> void:
+	meditate_boost_steps = steps
+	_arm("next_turn:meditate_boost", self, 2)
+
+
+## Spends the boost and says how many steps it was; 0 if none was pending.
+func consume_meditate_boost() -> int:
+	var steps := meditate_boost_steps
+	if steps > 0:
+		_expire("next_turn:meditate_boost")
+	return steps
+
+
 ## Damage dealt goes `steps` tiers up until `anchor`'s next turn.
 func step_up_damage_tier(
 	steps: int, anchor: EncounterIndividual = null, turns := UNTIL_NEXT_TURN
@@ -329,6 +347,8 @@ func _expire_next_turn(key: String) -> void:
 			damage_tier_steps = 0
 		"talk_info":
 			talk_info_factor = 1.0
+		"meditate_boost":
+			meditate_boost_steps = 0
 
 
 ## Starts watching with `ability`: whatever it reacts to, until `anchor`'s next turn begins.

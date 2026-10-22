@@ -244,6 +244,16 @@ func set_arranged_fragments(species_id: StringName, forlorn_page: bool, count: i
 		encyclopaedia_page_changed.emit(species_id, forlorn_page)
 
 
+## The assembly desk's layout of a page, as it parked it: opaque, empty if there is none.
+func puzzle_state(species_id: StringName, forlorn_page: bool = false) -> Dictionary:
+	return encyclopaedia.puzzle_state(species_id, forlorn_page)
+
+
+## Parks the assembly desk's layout on a page, saved with it. Emits nothing: no screen shows it.
+func set_puzzle_state(species_id: StringName, forlorn_page: bool, state: Dictionary) -> void:
+	encyclopaedia.set_puzzle_state(species_id, forlorn_page, state)
+
+
 ## The puzzle destroyed true fragments: the page loses 3 IFP each. Returns how many. The puzzle
 ## then reports the new arranged count through [method set_arranged_fragments].
 func destroy_fragments(species_id: StringName, forlorn_page: bool, count: int = 1) -> int:

@@ -104,14 +104,13 @@ unblock.
   assembly API, the 15 / 30 / Forlorn-15 ability thresholds, the starting duo, and persistence.
   The amount an Examine yields follows the info bonuses (Reconnaissance Glide, Halo Effect,
   Priming, Catatonia; `examine_bonus_step` in `data/balance.tres`, a placeholder). What is
-  missing: the *puzzle* and its screens (nothing calls `set_arranged_fragments`,
-  `destroy_fragments`, `remove_parasitic_fragments` or `mark_page_assembled` yet, nor shows the
-  `encyclopaedia_*` signals); info fragments granted by Examine Weakness; and Forlorn variants
+  missing: the `encyclopaedia_*` signals are shown nowhere yet; info fragments granted by Examine Weakness; and Forlorn variants
   on the individual. (`encounter_manager.gd`, `examine_weakness.gd`, `encyclopaedia_model.gd`)
 - **The encyclopaedia's screens.** The grid and the read-only page view are built and read the
   fragment model (see [architecture.md](architecture.md), *The encyclopaedia screens*), reachable
-  only from the dev scenario picker. What is left: the assembly screen on top of the desk; the
-  Forlorn tab, a placeholder until the Forlorn individual exists; real icons and the pages'
+  only from the dev scenario picker. The assembly screen is built too (*The assembly screen*), reached from a page's
+  Accept. What is left: sounds for it (a hook only), art for the fragments, its controls page
+  in the doc (TBD there); the Forlorn tab, a placeholder until the Forlorn individual exists; real icons and the pages'
   remaining sections (personality, environment, routine, the illustration carousel); the order
   of the pages, which is by identifier meanwhile; and a way in from the real menus, which do
   not exist. The selector's starting species is remembered by `encyclopaedia_recent.gd`, not
@@ -239,6 +238,21 @@ The encyclopaedia, built on 2026-10-22 from the "Encyclopaedia" page, which leav
   puts back whatever the player moved. A group is a set of bonds, so destroying a member leaves
   the others standing, and completion counts correct fragments bonded to at least one other,
   destroyed ones included in the total.
+- **The assembly screen.** The manipulation area is 48 x 28 tiles (the whole page, 3 x 11 fragments,
+  fits lying on its side, 44 x 12); the new fragment area is a panel on the right whose fragments
+  shrink to fit. A fragment taken from it enters the desk on the free tile nearest the middle, at
+  least 2 tiles from any other (so nothing snaps on arrival), and that is its first move. The stain
+  grows only while a move or turn is being made (a key held, or the glide running), not while a
+  fragment is merely held. Parasites are drawn like true fragments, from another picture of the
+  same style, so only the picture betrays them. Only a HOLE is announced; a mismatch just damages,
+  and a destroyed fragment is announced. A new desk starts with the page's arranged fragments
+  (the starting duo's 15 or 30) already bonded, lying on their side. A saved layout is dropped
+  for a fresh desk when it holds more fragments than the model counts, or fewer arranged; new IFP
+  add fragments to the new area (lowest free page cell first, parasites numbered after the old).
+  Selecting is separate from moving: Accept picks up (the grid shows), arrows move, Accept or
+  Cancel puts down; Backspace sends a lone fragment back. A refused move shakes the fragment.
+  Fragments in the new area are in a fixed shuffled order. Key repeat: 0.28 s then every 0.1 s.
+  The Forlorn tab cannot open the desk yet.
 - **The screens.** Pages are ordered by species identifier in a grid (6 x 6 for 36 species);
   the doc gives no order.
 

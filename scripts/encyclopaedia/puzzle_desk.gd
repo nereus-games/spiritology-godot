@@ -168,6 +168,57 @@ func completion() -> float:
 
 
 # --------------------------------------------------------------------------
+# Saving and restoring
+# --------------------------------------------------------------------------
+
+
+## Every bond once, as [a, b] pairs, in the order the fragments were added. With each fragment's
+## state, this is all a view needs to keep to put the desk back as it was.
+func bond_pairs() -> Array:
+	var pairs := []
+	var order := _fragments.keys()
+	for a in order:
+		for b in _bonds.get(a, {}):
+			if order.find(a) < order.find(b):
+				pairs.append([a, b])
+	return pairs
+
+
+## Puts a fragment's state back, as saved. Not a request: nothing snaps and nothing is checked.
+func restore_fragment(
+	id: Variant,
+	area: Fragment.Area,
+	tile: Vector2i,
+	quarter_turns: int,
+	is_damaged: bool,
+	dirt: float
+) -> void:
+	var f: Fragment = _fragments[id]
+	f.area = area
+	f.position = tile
+	f.rotation = posmod(quarter_turns, 4)
+	f.damaged = is_damaged
+	f.stain = clampf(dirt, 0.0, balance.puzzle_stain_max)
+
+
+## Bonds two fragments that are on the desk, as saved. Not a request: nothing is checked.
+func restore_bond(a: Variant, b: Variant) -> void:
+	if not _fragments.has(a) or not _fragments.has(b):
+		return
+	for pair in [[a, b], [b, a]]:
+		if not _bonds.has(pair[0]):
+			_bonds[pair[0]] = {}
+		_bonds[pair[0]][pair[1]] = true
+
+
+## Records that the page has a correct fragment `id` which is not on the desk (it was destroyed,
+## and its IFP are still to be obtained again). The page counts as complete only with all of
+## them present, so a desk rebuilt from a save must know them.
+func know_correct(id: Variant) -> void:
+	_known_correct[id] = true
+
+
+# --------------------------------------------------------------------------
 # Requests
 # --------------------------------------------------------------------------
 

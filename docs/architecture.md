@@ -276,6 +276,35 @@ along the side below 2 tiles, and brings the group flush and aligned; a request 
 one snap; "pushed back" restores the position (and rotation, and area) from before the request;
 a HOLE is a target that is out of the desk, over a third fragment, or enclosing an empty cell.
 
+## The assembly screen
+
+`scenes/ui/encyclopaedia_assembly.tscn` is the view over the desk and over `GameSession`'s model. It
+is a scene of its own, not tied to the encyclopaedia screen: set `species_id` (and `forlorn`),
+instance it over anything, and it emits `closed`. The encyclopaedia screen opens it with Accept on a
+page that has fragments. Same split as everywhere:
+
+- `encyclopaedia_assembly_logic.gd` — the decisions, headless: opening a page (the saved layout, or
+  a fresh desk, reconciled with the model's counts), selection and the grid, where a fragment from
+  the new fragment area enters the desk, the cursor (hopping by direction, cycling), the report to
+  the session (`report_to`: destroyed, vanished parasites, arranged count, completion, in that
+  order), the layout saved in `puzzle_state`, tiles to pixels, the new area's slot layout.
+  `encyclopaedia_assembly_check` drives it, the real `GameSession` included.
+- `encyclopaedia_assembly_screen.gd` — layout, input (with key repeat), tweens, notices.
+- `encyclopaedia_assembly_fragment.gd` and `encyclopaedia_assembly_art.gd` — a fragment's drawing:
+  procedural placeholder, outline from the side profiles, stain, cracks, no asset and no text.
+- `scenes/dev/encyclopaedia_assembly_shot.tscn` — PNGs of the initial, manipulating, damaged and
+  completed states, seeded.
+
+Fragment ids: the 33 true ones are 0 to 32 (page cell = `id % 3, id / 3`), parasites are numbered
+from 100 and never reused. Sides come from a seed kept in the state. Sounds are a hook only
+(`sound_requested`). Controls are input actions: the built-in `ui_*` for moving and picking up, and
+`assembly_rotate_left`, `assembly_rotate_right`, `assembly_stash` in `project.godot`.
+
+`puzzle_state` holds `version`, `seed`, `opens`, `next_parasite`, `complete`, each fragment's
+`id`, `area`, `x`, `y`, `rot`, `damaged`, `stain`, and the bonds. `GameSession.puzzle_state()` and
+`set_puzzle_state()` are its accessors. The desk gained `bond_pairs`, `restore_fragment`,
+`restore_bond` and `know_correct` for this; its rules did not change.
+
 ## The encyclopaedia: a model with no screen
 
 `scripts/encyclopaedia/encyclopaedia_model.gd` holds the state, preloaded by `GameSession`

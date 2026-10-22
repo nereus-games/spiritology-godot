@@ -302,8 +302,12 @@ func _check_halo_effect() -> void:
 		"[weakness] same weakness only: one criterion"
 	)
 	_check(
-		r["examined"].size() == 1
-		and is_equal_approx(r["examined"][0], 1.0 + 2 * BalanceData.current().examine_bonus_step),
+		(
+			r["examined"].size() == 1
+			and is_equal_approx(
+				r["examined"][0], 1.0 + 2 * BalanceData.current().examine_bonus_step
+			)
+		),
 		"[weakness] ...and a smaller factor on the IFP (%s)" % [r["examined"]]
 	)
 	_check(

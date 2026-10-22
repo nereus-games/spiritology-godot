@@ -87,7 +87,10 @@ func _check_nearest() -> void:
 	_check(Logic.nearest_discovered(3, g, 1) == 0, "closest to the top middle")
 	_check(Logic.nearest_discovered(3, g, 7) == 8, "closest to the bottom middle")
 	_check(Logic.nearest_discovered(3, _grid(["...", "...", "..."]), 4) == -1, "nothing discovered")
-	_check(Logic.nearest_discovered(3, _grid(["x..", "...", "..."]), 4, 0) == 0, "the excluded cell, when alone in its reach")
+	_check(
+		Logic.nearest_discovered(3, _grid(["x..", "...", "..."]), 4, 0) == 0,
+		"the excluded cell, when alone in its reach"
+	)
 	# Moving right from a lone discovered cell, with another further away: it moves on.
 	var far := _grid(["x...", "....", "...x"])
 	_check(Logic.move(4, far, 0, Vector2i.RIGHT) == 11, "pushed against a gap, it goes to the next")

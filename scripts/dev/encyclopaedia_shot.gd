@@ -1,6 +1,8 @@
 ## Screenshot of the encyclopaedia screen, from the command line.
 ##
-## Run with: Godot --path . res://scenes/dev/encyclopaedia_shot.tscn -- <out.png> [grid|page|forlorn] [species]
+## Run with:
+##   Godot --path . res://scenes/dev/encyclopaedia_shot.tscn --
+##     <out.png> [grid|page|forlorn] [species]
 ##   `grid` (default) shows the grid with the selector on `species`; `page` opens that species'
 ##   page, `forlorn` its second tab. The progress is the dev sample, so every icon state shows.
 ## No --headless: a rendering context is needed, so a window opens briefly.

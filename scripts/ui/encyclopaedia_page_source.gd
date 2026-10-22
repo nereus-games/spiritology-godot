@@ -21,12 +21,15 @@ static func build(species_id: StringName) -> Dictionary:
 	var abilities: Array = []
 	for i in sp.encyclopaedia_abilities.size():
 		var ability_id: StringName = sp.encyclopaedia_abilities[i]
-		abilities.append(
-			{
-				"id": ability_id,
-				"unlocked": ability_id in unlocked,
-				"fragments": FRAGMENTS_FOR_ABILITY[mini(i, FRAGMENTS_FOR_ABILITY.size() - 1)],
-			}
+		(
+			abilities
+			. append(
+				{
+					"id": ability_id,
+					"unlocked": ability_id in unlocked,
+					"fragments": FRAGMENTS_FOR_ABILITY[mini(i, FRAGMENTS_FOR_ABILITY.size() - 1)],
+				}
+			)
 		)
 	return {
 		"species": sp,

@@ -6,7 +6,30 @@ extends RefCounted
 
 ## IFP handed out down the list of species (by identifier), repeating.
 const PATTERN: Array[int] = [
-	100, 0, 60, 20, 0, 0, 99, 45, 0, 5, 0, 80, 0, 0, 30, 0, 0, 44, 70, 0, 1, 0, 0, 100,
+	100,
+	0,
+	60,
+	20,
+	0,
+	0,
+	99,
+	45,
+	0,
+	5,
+	0,
+	80,
+	0,
+	0,
+	30,
+	0,
+	0,
+	44,
+	70,
+	0,
+	1,
+	0,
+	0,
+	100,
 ]
 
 

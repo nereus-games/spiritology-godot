@@ -128,8 +128,8 @@ func _refresh_selection() -> void:
 		return
 	var sp: SpeciesData = _species[_selected]
 	_name_label.text = tr(sp.name_key())
-	_completion_label.text = tr("UI_ENCYCLOPAEDIA_COMPLETION") % GameSession.encyclopaedia_ifp.get(
-		sp.id, 0
+	_completion_label.text = (
+		tr("UI_ENCYCLOPAEDIA_COMPLETION") % GameSession.encyclopaedia_ifp.get(sp.id, 0)
 	)
 
 

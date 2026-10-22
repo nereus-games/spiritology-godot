@@ -181,6 +181,7 @@ func ifp_amount(
 ## The single entry point, because it is where the doc's three restrictions live:
 ##   - an ineffective Talk earns nothing;
 ##   - Forlorn falls back to the ordinary row while the main page is incomplete;
+##   - `yield_factor` scales the table's amount (see [signal EncounterManager.ifp_earned]);
 ##   - examining decor is capped per species at [constant EXAMINE_DECOR_CAP], truncated on
 ##     the way to the cap and 0 once reached.
 ## ## TODO: give Forlorn pages their own percentage. Today their points are added to the
@@ -191,13 +192,18 @@ func award_ifp(
 	species_id: StringName,
 	action: GameEnums.IfpAction,
 	is_forlorn: bool = false,
-	dialogue_effective: bool = true
+	dialogue_effective: bool = true,
+	yield_factor: float = 1.0
 ) -> int:
 	# An ineffective Talk earns nothing.
 	if action == GameEnums.IfpAction.TALK_RIVAL and not dialogue_effective:
 		return 0
 	var main_page_complete: bool = int(encyclopaedia_ifp.get(species_id, 0)) >= 100
 	var amount := ifp_amount(action, is_forlorn, main_page_complete)
+	# A next-turn modifier on the encounter side (Hardening's Talk penalty). Rounded DOWN: the
+	# table holds whole points, and a penalty that rounded back up would never bite at 1 or 2.
+	if not is_equal_approx(yield_factor, 1.0):
+		amount = floori(amount * yield_factor)
 	# Per-species ceiling on what examining decor can ever yield.
 	if action == GameEnums.IfpAction.EXAMINE_DECOR:
 		var already: int = exploration_examine_ifp.get(species_id, 0)

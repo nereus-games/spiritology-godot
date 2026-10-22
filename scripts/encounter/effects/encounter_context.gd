@@ -72,6 +72,7 @@ func note(line: String) -> void:
 func deal_damage(target, base_amount: int) -> void:
 	if base_amount <= 0:
 		return
+	base_amount = _stepped_up(base_amount)
 	var victim = target
 	if victim is EncounterIndividual and victim.redirect_to != null:
 		victim = victim.redirect_to
@@ -630,3 +631,15 @@ func _energy_name(e: GameEnums.Energy) -> String:
 ## in one language. See the LOG_* block in `translations/en.po`.
 func _tr(key: String) -> String:
 	return String(TranslationServer.translate(key))
+
+
+# --- Next-turn modifiers ---
+
+
+## The base damage after the user's tier steps (Priming). Applies to anything the user deals.
+func _stepped_up(base_amount: int) -> int:
+	if not (user is EncounterIndividual):
+		return base_amount
+	for i in user.damage_tier_steps:
+		base_amount = BalanceData.current().step_up_damage(base_amount)
+	return base_amount

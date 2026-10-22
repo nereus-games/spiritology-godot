@@ -233,6 +233,8 @@ func _check_balance() -> void:
 	for field in ["modifier_per_condition", "meditate_damage_bonus"]:
 		if float(b.get(field)) < 0.0:
 			bad.append("%s = %s (must be >= 0)" % [field, b.get(field)])
+	if not (0.0 <= b.hardening_talk_penalty and b.hardening_talk_penalty <= 1.0):
+		bad.append("hardening_talk_penalty = %s (must be 0..1)" % b.hardening_talk_penalty)
 	# Running away must actually move the duo.
 	if b.flee_distance_min < 1 or b.flee_distance_max < b.flee_distance_min:
 		bad.append(

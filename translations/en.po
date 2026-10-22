@@ -614,6 +614,9 @@ msgstr "anything but its last 2 abilities"
 msgid "LOG_NO_ACTION"
 msgstr "%s has no action it can take."
 
+msgid "LOG_TEAMMATE_REFUSES"
+msgstr "refuses to act."
+
 msgid "LOG_PASS"
 msgstr "passes its turn."
 

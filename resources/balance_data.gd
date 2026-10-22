@@ -87,6 +87,10 @@ extends Resource
 @export var psy_rung_3: int = 30
 @export var psy_rung_4: int = 40
 
+## Above rung 4 the teammate refuses an action: always the first of the first encounter of a
+## dungeon visit, then this chance each time it is asked to act. The doc says "1 in 5".
+@export_range(0.0, 1.0) var psy_teammate_refusal_chance: float = 0.2
+
 ## Hardening: "info penalty on Talk". The doc gives no figure; the penalty reuses the step the
 ## game already applies per condition, so a hardened individual's Talk yields
 ## (1 - hardening_talk_penalty) of the IFP it would. Between 0 (no penalty) and 1 (nothing).

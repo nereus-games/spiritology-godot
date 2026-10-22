@@ -35,4 +35,5 @@ psy_rung_1 = 10
 psy_rung_2 = 20
 psy_rung_3 = 30
 psy_rung_4 = 40
+psy_teammate_refusal_chance = 0.2
 hardening_talk_penalty = 0.36

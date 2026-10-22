@@ -122,9 +122,12 @@ unblock.
   player lands 2 to 3 tiles off, facing it). Above 20: more risk of losing damaged fragments, and
   temporary oddities such as swapped icons (after event 3). Above 30: rival density hidden in
   encounters, one more wrong fragment each time (the wider spawn waves are built, at a
-  placeholder threshold of 20; see section 5). Above 40: the teammate may refuse an action,
-  poison forbids Meditate, map, encyclopaedia, objects and team, rivals skip their cooldown
-  turn, and dungeons stay dark. (`game_session.gd`)
+  placeholder threshold of 20; see section 5). Above 40: poison forbids Meditate, map,
+  encyclopaedia, objects and team, rivals skip their cooldown turn, and dungeons stay dark.
+  Built: above 40 the teammate refuses the first action of a dungeon visit's first encounter,
+  then each action with a 1 in 5 chance (`psy_teammate_refusal_chance`, drawn from the
+  encounter's seeded rng; `GameSession.first_encounter_pending` is per visit and not saved).
+  (`game_session.gd`)
 - **Dark dungeons** ("In the Dark"): sight limited to one tile, rivals heard but not seen,
   Meditate revealing them for 2 moves, and NPC quests that light an area. No implementation.
 - **A QTE**, which Slick Merchant's Run Away should hide behind; until then it always succeeds.

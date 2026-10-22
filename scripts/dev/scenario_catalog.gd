@@ -149,6 +149,7 @@ static func build(id: StringName, dm) -> Vector3i:
 static func _reset_session() -> void:
 	GameSession.inventory.clear()
 	GameSession.used_exploration_abilities.clear()
+	GameSession.begin_dungeon_visit()
 	AbilityCatalog.dev_granted = []
 	GameSession.set_den(GameSession.PartySlot.MAIN, GameSession.MAX_DEN)
 	GameSession.set_den(GameSession.PartySlot.TEAMMATE, GameSession.MAX_DEN)

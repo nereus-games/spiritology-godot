@@ -43,6 +43,7 @@ func _ready() -> void:
 	# tracking of once-per-visit exploration abilities.
 	GameSession.restore_party_eth()
 	GameSession.reset_exploration_abilities()
+	GameSession.begin_dungeon_visit()
 	# DEV: builds the chosen test scenario (populating the grid and the session) and places the
 	# player. Done LAST so that the state the scenario sets — objects, abilities marked as used —
 	# is not wiped by the dungeon-entry logic above.

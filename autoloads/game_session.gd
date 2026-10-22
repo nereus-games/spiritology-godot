@@ -129,6 +129,12 @@ var dungeon_states: Dictionary = {}
 ## Cleared on entering a dungeon.
 var used_exploration_abilities: Dictionary = {}
 
+## Has no encounter begun yet in this dungeon visit? Set on entering a dungeon and spent by the
+## first encounter ([method take_first_encounter]). Like [member used_exploration_abilities],
+## it is per visit and so is not worth saving. At a high PSY the teammate refuses the first
+## action of that encounter.
+var first_encounter_pending := true
+
 ## Inventory: object slug -> quantity. Objects stack, so they are counted rather than
 ## duplicated, and an entry reaching 0 is erased. No object is needed to finish the game.
 var inventory: Dictionary = {}
@@ -416,6 +422,18 @@ func reset_exploration_abilities() -> void:
 	used_exploration_abilities.clear()
 
 
+## Entering a dungeon: the next encounter is the first of the visit.
+func begin_dungeon_visit() -> void:
+	first_encounter_pending = true
+
+
+## Called as an encounter begins. True for the first one of the dungeon visit, and only once.
+func take_first_encounter() -> bool:
+	var first := first_encounter_pending
+	first_encounter_pending = false
+	return first
+
+
 ## Wipes the session for a new game.
 func reset() -> void:
 	main_character = &""
@@ -427,6 +445,7 @@ func reset() -> void:
 	exploration_examine_ifp.clear()
 	dungeon_states.clear()
 	used_exploration_abilities.clear()
+	first_encounter_pending = true
 	inventory.clear()
 	party_den = {
 		PartySlot.MAIN: MAX_DEN,

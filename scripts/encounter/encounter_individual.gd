@@ -115,9 +115,15 @@ func _init(p_species: SpeciesData, p_is_player: bool) -> void:
 		_populate_abilities()
 
 
-## Native abilities, plus the also-used ones, plus whatever the encyclopaedia unlocked.
+## Native abilities, plus whatever the encyclopaedia unlocked.
 ## Filtering to ENCOUNTER type happens later, when the manager offers a choice.
+##
+## A player character only has the abilities the player has revealed in the encyclopaedia (see
+## [method GameSession.usable_abilities]); a rival has all of its species'.
 func _populate_abilities() -> void:
+	if is_player:
+		ability_ids.append_array(GameSession.usable_abilities(species.id))
+		return
 	var seen := {}
 	for list in [
 		species.origin_abilities, species.also_used_abilities, species.encyclopaedia_abilities

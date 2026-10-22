@@ -2,28 +2,23 @@
 ## the map a chest or trap that hadn't been revealed yet."
 ##
 ## The TRIGGER is in the encounter — ending on an effective dialogue — but the EFFECT is a
-## reveal on the exploration MAP. The targets now exist ([method Trap.reveal] and
-## [method Chest.reveal], with their `revealed` flag), and the minimap DOES draw mechanisms
-## ([method DungeonMechanism.shows_on_map]): revealing a TRAP or a CHEST would therefore
-## show, since [method Trap.shows_on_map] and [method Chest.shows_on_map] both gate on
-## `revealed`. What is missing either way is a link back from the encounter to the dungeon it
-## was entered from. So [method on_encounter_end] is overridden to record the intent: a logged
-## STUB.
+## reveal on the exploration MAP. The encounter reaches the map through one narrow handle,
+## [member EncounterManager.map_reveal], that whoever opened the encounter hands over; here it
+## is [method DungeonManager.reveal_nearest_hidden] (the closest hidden chest or trap, see
+## there). The manager never sees the dungeon.
 ##
-## A known limit: "an effective dialogue at the end" means tracking whether the LAST Talk of the
-## encounter was effective. The manager does not keep that history yet; to be wired with the
-## dialogue system (Talk's effectiveness is itself a proxy, see
-## EncounterManager._resolve_talk).
+## "An effective dialogue at the end" is read as: the LAST Talk resolved in the encounter was
+## effective ([member EncounterManager.last_talk_effective]). Talk's effectiveness is itself a
+## proxy, see EncounterManager._resolve_talk. A defeat reveals nothing, and neither does an
+## encounter with no Talk at all.
 extends "res://scripts/encounter/talents/talent_script.gd"
 
 
 func on_encounter_end(manager, result: StringName) -> void:
-	if result == &"defeat":
+	if result == &"defeat" or not manager.last_talk_effective:
 		return
-	# TODO: if the last dialogue was effective, reveal an unrevealed chest or trap on the map.
-	# The dungeon side is ready ([method Trap.reveal], [method Chest.reveal]); what is missing is
-	# a way for an encounter talent to reach the dungeon it was entered from.
-	manager.note_talent(_tr("LOG_TALENT_TRICK_TO_REVEAL") % _label())
+	if manager.reveal_on_map():
+		manager.note_talent(_tr("LOG_TALENT_TRICK_TO_REVEAL") % _label())
 
 
 func _label() -> String:

@@ -82,6 +82,24 @@ msgstr "Objets"
 msgid "UI_ENCOUNTER_ACTION_MEDITATE"
 msgstr "Méditer"
 
+# Static Camouflage: the choice offered at each group shown.
+msgid "UI_ACTION_SCOUT_ENGAGE"
+msgstr "Affronter ce groupe"
+
+msgid "UI_ACTION_SCOUT_WAIT"
+msgstr "Continuer d'attendre"
+
+# %d = place of the group in the watch, %d = how many will be shown, %s = its makeup.
+msgid "UI_SCOUT_GROUP"
+msgstr "Groupe %d sur %d : %s"
+
+# %d = how many individuals, %s = their species.
+msgid "UI_SCOUT_MEMBER"
+msgstr "%d x %s"
+
+msgid "UI_SCOUT_NONE_LEFT"
+msgstr "Il semble qu'aucun autre groupe ne rôde par ici."
+
 # "…" action: pass the turn when nothing else is available. Nothing to translate.
 msgid "UI_ENCOUNTER_ACTION_PASS"
 msgstr "…"
@@ -183,6 +201,13 @@ msgstr "Dans le coffre : %s"
 # Posted when the reveal phase brings traps to light. %d = how many.
 msgid "UI_TRAPS_REVEALED"
 msgstr "%d piège(s) révélé(s)"
+
+# Posted when Trick to Reveal brings one hidden trap, or one hidden chest, onto the map.
+msgid "UI_TRAP_REVEALED"
+msgstr "Un piège a été révélé sur la carte"
+
+msgid "UI_CHEST_REVEALED"
+msgstr "Un coffre a été révélé sur la carte"
 
 # The choice the Reveal Traps talent offers when a trapped chest tries to teleport.
 msgid "UI_ACTION_CHEST_TELEPORT"
@@ -419,6 +444,12 @@ msgstr "%s récupère %d DEN."
 msgid "LOG_ETH_RECOVERED"
 msgstr "%s récupère %d ETH."
 
+msgid "LOG_DAMAGE_TO_ETH_ARMED"
+msgstr "%s transforme les dégâts en ETH (%s)."
+
+msgid "LOG_DAMAGE_TO_ETH"
+msgstr "%s transforme %d dégâts en ETH."
+
 msgid "LOG_NEXT_DAMAGE_FACTOR"
 msgstr "prochains dégâts sur %s ×%.2f."
 
@@ -446,8 +477,14 @@ msgstr "la faiblesse de %s ne peut pas changer."
 msgid "LOG_ALL_DAMAGE_FACTOR"
 msgstr "tous les dégâts reçus par %s ×%.2f."
 
+msgid "LOG_WEAKNESS_DAMAGE_AMPLIFIED"
+msgstr "les dégâts qui touchent une faiblesse ×%.2f pour tout le monde."
+
 msgid "LOG_WEAKNESS_RESET"
 msgstr "faiblesse de %s rétablie."
+
+msgid "LOG_RECURRING_SHAKEN_OFF"
+msgstr "%s se défait de %s."
 
 msgid "LOG_WEAKNESS_SWAPPED"
 msgstr "%s et %s échangent leur faiblesse."
@@ -468,6 +505,9 @@ msgstr "%s devient totalement immunisé."
 # Turn order. SHUFFLED has no placeholder: it is the whole order that moves.
 msgid "LOG_TURN_ORDER_SHUFFLED"
 msgstr "l'ordre du tour est bouleversé."
+
+msgid "LOG_ETH_TRADED"
+msgstr "l'ETH change de mains selon les nouvelles positions."
 
 msgid "LOG_MOVED_LAST"
 msgstr "%s passera en dernier au prochain tour."
@@ -656,7 +696,7 @@ msgid "LOG_TALENT_SERENE_WAVES"
 msgstr "%s revitalise %s (+%d DEN, faiblesse retirée)."
 
 msgid "LOG_TALENT_TRICK_TO_REVEAL"
-msgstr "%s : une révélation de carte pourrait suivre ce dialogue [à venir]."
+msgstr "%s : quelque chose a été révélé sur la carte."
 msgid "ABILITY_ABSORPTION_GUARD_NAME"
 msgstr "Garde d’absorption"
 

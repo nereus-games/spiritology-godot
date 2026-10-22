@@ -41,6 +41,22 @@ func is_usable(_ctx: EncounterContext) -> bool:
 	return true
 
 
+## Override for an ability that RECURS: one whose [method execute] calls
+## [method EncounterContext.recur_each_turn] on its target. This runs at the start of each of the
+## bearer's turns, for as long as the effect lasts. `ctx` is the ability's own context, its user
+## being whoever applied it and its only target the bearer. Like a reaction, it cannot set off
+## reactions through the damage it deals.
+func recur(_ctx: EncounterContext) -> void:
+	pass
+
+
+## Override for a recurring ability that the bearer can shake off by Meditating: undo whatever
+## else the ability left on it (through `ctx`, as in [method recur]) and return true. Returning
+## false, as the default does, leaves the effect running.
+func on_meditated(_ctx: EncounterContext) -> bool:
+	return false
+
+
 ## Override with the ability's real mechanic.
 func execute(ctx: EncounterContext) -> void:
 	for effect in EffectCatalog.tag_effects(ctx.ability.tags):

@@ -63,6 +63,10 @@ var _agent := UiAgent.new()
 ## [GameSession] when the encounter ends.
 var _player_slots: Array = []
 
+## [bridges] Set by whoever opens the encounter, BEFORE [method begin]: reveals one hidden thing
+## on the map behind it. Handed on to [member EncounterManager.map_reveal].
+var map_reveal: Callable = Callable()
+
 
 func _ready() -> void:
 	_menu = MenuPanel.new(_prompt, _description, _action_bar, _options)
@@ -128,6 +132,7 @@ func begin(
 	_manager.object_consumed.connect(_on_object_consumed)
 	# The manager knows no autoloads, so it is handed a way to resolve object slugs.
 	_manager.object_provider = func(id: StringName) -> ObjectData: return GameData.object(id)
+	_manager.map_reveal = map_reveal  # [bridges]
 	# A negative `seed` means an ordinary encounter, with the turn order drawn at random.
 	# Fixing it makes the whole encounter reproducible, which is what the screenshot scene
 	# needs for one version to be comparable with the next.

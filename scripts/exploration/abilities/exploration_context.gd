@@ -95,9 +95,11 @@ func cross_faced_cracked_wall() -> bool:
 	return false
 
 
-## Scouting (static camouflage): the player holds still to watch the wandering rival groups.
-## ## TODO: reveal 2 to 4 groups one at a time and offer to take them on. The groups exist
-## (`rival_spawner.gd`); the reveal and the choice do not. Placeholder: goes hidden for the watch.
+## Scouting (static camouflage): the player holds still to watch the wandering rival groups, 2 to
+## 4 of them one at a time, and chooses whether to take one on. See [Scouting]; the HUD offers
+## the choice. The unknown-species rolls are a TODO there.
 func scout_groups() -> void:
-	hide_from_rivals(3)
+	if dungeon == null:
+		return
+	dungeon.scouting.begin(dungeon.rivals(), rng, player)
 	_note("LOG_EXPL_SCOUT")

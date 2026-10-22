@@ -92,9 +92,12 @@ func deal_damage(target, base_amount: int) -> void:
 				amount
 				* victim.next_damage_factor
 				* victim.energy_damage_factor.get(_effective_energy(), 1.0)
+				* _weakness_amplification(victim)
 			)
 		)
 		victim.next_damage_factor = 1.0
+		if _converted_to_eth(victim, amount):
+			return
 		_hurt(victim, user, amount)
 		damage_dealt += amount
 		if user is EncounterIndividual and amount > 0:
@@ -177,6 +180,27 @@ func _reaction_context(owner, reacting: AbilityData, actor) -> EncounterContext:
 	c.in_reaction = true
 	c.history = history
 	return c
+
+
+# --- One-offs: Deflection and Tactical Retreat bite here; see one_off_rules.gd for the rest ---
+
+
+## What the victim's weakness does to this energy's damage: its factor if they match, else 1.
+func _weakness_amplification(victim) -> float:
+	var energy := _effective_energy()
+	if energy == GameEnums.Energy.NONE or not (victim is EncounterIndividual):
+		return 1.0
+	return victim.weakness_damage_factor if energy == weakness_of(victim) else 1.0
+
+
+## Whether `amount` of damage was turned into ETH rather than taken. One DEN avoided is one ETH
+## gained, the doc giving no rate.
+func _converted_to_eth(victim, amount: int) -> bool:
+	if not (victim is EncounterIndividual) or not victim.converts_to_eth(_effective_energy()):
+		return false
+	victim.recover_eth(amount)
+	note(_tr("LOG_DAMAGE_TO_ETH") % [_name(victim), amount])
+	return true
 
 
 # --- Other mutations ---

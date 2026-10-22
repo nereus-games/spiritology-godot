@@ -64,11 +64,13 @@ func request_move_first(individual) -> void:
 	_pending = o
 
 
-## Requests a reshuffle — Shuffle, Tumult.
-func request_shuffle(rng: RandomNumberGenerator) -> void:
+## Requests a reshuffle — Shuffle, Tumult. Returns the order asked for, which only takes
+## effect at the end of the turn, and not at all if a later request replaces it.
+func request_shuffle(rng: RandomNumberGenerator) -> Array:
 	var shuffled := order.duplicate()
 	_shuffle(shuffled, rng)
 	_pending = shuffled
+	return shuffled.duplicate()
 
 
 ## Applies whatever reordering is pending. True if the order actually changed.

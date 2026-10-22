@@ -70,14 +70,23 @@ func _play(arm: bool, first: bool, chance: float, seed: int = SEED) -> Array:
 		m.enable_refusal(players[1], first)
 	var line: String = m._tr("LOG_TEAMMATE_REFUSES")
 	var refusals: Array = []
-	m.turn_taken.connect(
-		func(who, _action, lines):
-			if who == players[1]:
-				refusals.append(line in lines)
-	)
+	m.turn_taken.connect(_note_turn.bind(players[1], line, refusals))
 	await m.run(ROUNDS)
 	m.free()
 	return refusals
+
+
+## Records, for each turn the teammate takes, whether the turn was a refusal.
+func _note_turn(
+	who: EncounterIndividual,
+	_action: EncounterAction,
+	lines: PackedStringArray,
+	teammate: EncounterIndividual,
+	refusal_line: String,
+	refusals: Array
+) -> void:
+	if who == teammate:
+		refusals.append(refusal_line in lines)
 
 
 func _count(flags: Array) -> int:
@@ -152,7 +161,9 @@ func _check_session() -> void:
 	_check(GameSession.psy_above(4), "PSY 41 is above rung 4")
 	GameSession.psy_score = saved
 	GameSession.begin_dungeon_visit()
-	_check(GameSession.take_first_encounter(), "entering a dungeon: the next encounter is the first")
+	_check(
+		GameSession.take_first_encounter(), "entering a dungeon: the next encounter is the first"
+	)
 	_check(not GameSession.take_first_encounter(), "and only the first")
 	GameSession.begin_dungeon_visit()
 	_check(GameSession.take_first_encounter(), "entering another dungeon resets it")

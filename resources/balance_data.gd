@@ -79,6 +79,14 @@ extends Resource
 @export var decor_spawn_groups_max: int = 2
 @export var decor_spawn_radius: int = 4
 
+## The doc's PSY ladder, "numbers need testing": a consequence applies once the score is
+## strictly above its rung. [method GameSession.psy_above] reads them, so that no effect
+## hardcodes a threshold.
+@export var psy_rung_1: int = 10
+@export var psy_rung_2: int = 20
+@export var psy_rung_3: int = 30
+@export var psy_rung_4: int = 40
+
 ## Hardening: "info penalty on Talk". The doc gives no figure; the penalty reuses the step the
 ## game already applies per condition, so a hardened individual's Talk yields
 ## (1 - hardening_talk_penalty) of the IFP it would. Between 0 (no penalty) and 1 (nothing).

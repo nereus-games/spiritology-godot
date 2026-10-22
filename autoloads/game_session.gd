@@ -143,6 +143,17 @@ func psy_tier() -> int:
 	return 2
 
 
+## Is the PSY score strictly above rung `rung` (1 to 4) of the doc's ladder? The rungs are
+## [member BalanceData.psy_rung_1] to `_4` (10, 20, 30, 40). Every PSY consequence asks this
+## rather than comparing the score itself.
+func psy_above(rung: int) -> bool:
+	var balance := BalanceData.current()
+	var thresholds := [
+		balance.psy_rung_1, balance.psy_rung_2, balance.psy_rung_3, balance.psy_rung_4
+	]
+	return psy_score > thresholds[clampi(rung, 1, 4) - 1]
+
+
 ## Has this species been entered in the encyclopaedia at all?
 ##
 ## Gates what the encounter UI may show: "rival's density and weakness aren't shown in

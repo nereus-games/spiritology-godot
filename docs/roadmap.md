@@ -17,10 +17,6 @@ on Notion?
 
 Each is explicit in the doc, has no prerequisite, and is wrong in play right now.
 
-- **The turn has no reveal phase.** The doc's exploration turn is player → reveal of
-  mechanisms → rivals → mechanism activation; the second phase is missing, so a trap only comes
-  to light by springing and `Trap.reveal()` has no caller. This is also exactly what Reveal
-  Traps' first clause needs. (`dungeon_manager.gd`, `advance_turn`; `reveal_traps.gd`)
 - **Rival spawning ignores half of what the doc now says.** "Rival Spawning" was rewritten in
   September; `rival_spawner.gd` still draws species uniformly, has no cap, and skips a spawn
   that finds no free point. The doc wants: species weighted by dungeon rarity (common, normal,

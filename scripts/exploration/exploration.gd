@@ -9,6 +9,9 @@ extends Node3D
 const ScenarioCatalog := preload("res://scripts/dev/scenario_catalog.gd")
 const RivalSpawner := preload("res://scripts/exploration/rival_spawner.gd")
 
+## How many traps Reveal Traps shows on entering a level.
+const REVEAL_TRAPS_COUNT := 3
+
 ## DEV: where a devitalised duo goes, standing in for the world map.
 const SCENARIO_SELECT := "res://scenes/dev/scenario_select.tscn"
 
@@ -56,6 +59,11 @@ func _ready() -> void:
 		# wall behind them. Turn them towards the dungeon, body and yaw target alike.
 		if player.has_method("set_start_yaw"):
 			player.set_start_yaw(PI)
+	# Reveal Traps (razél): "when entering a dungeon level, reveals the position of the 3 closest
+	# traps". Asked of the reveal phase, which is run at once so the map shows them from the start.
+	if GameSession.party_has_talent(&"reveal_traps"):
+		_dungeon.request_trap_reveal(REVEAL_TRAPS_COUNT, start)
+		_dungeon.run_reveal_phase()
 	# Rival groups appear last, once the player stands where they entered: no group may appear
 	# on them or next to them.
 	## TODO: "on first entry" — every entry is a first one for now, since nothing keeps a dungeon's

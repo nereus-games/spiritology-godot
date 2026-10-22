@@ -113,6 +113,9 @@ const PIT_DEPTH := 1.2
 var _player: Node3D
 var _rivals: Array[Node] = []
 
+# Trap reveals waiting for the next reveal phase: {count, from} each.
+var _reveal_requests: Array[Dictionary] = []
+
 
 func _ready() -> void:
 	add_to_group("dungeon")
@@ -226,19 +229,14 @@ func unregister_rival(rival: Node) -> void:
 	_rivals.erase(rival)
 
 
-## Advances one turn: notifies, makes every rival play, then ticks the mechanisms and lets
-## afflictions such as poison elapse. The single integration point of the turn model, called
-## by the player after a successful step.
-##
-## ## TODO: the design doc's turn order has FOUR phases — "player, then reveal of dungeon
-## mechanisms (traps), then other spirimonsters, then dungeon mechanisms activation". The
-## REVEAL phase is missing here, and belongs BEFORE the rivals play: today a trap only comes
-## to light by springing ([code]trap.on_enter[/code] sets `revealed`), and
-## [code]trap.reveal()[/code] has no call site at all. That phase is where the `reveal_traps`
-## talent (razél) and `trick_to_reveal` (érzélak) are meant to hook in.
+## Advances one turn, in the design doc's order: the player has acted; then the REVEAL of
+## dungeon mechanisms (traps) requested since the last turn; then every rival plays; then the
+## mechanisms activate (and afflictions such as poison elapse). The single integration point of
+## the turn model, called by the player after a successful step.
 func advance_turn() -> void:
 	turn_count += 1
 	turn_advanced.emit(turn_count)
+	run_reveal_phase()
 	var ptile := player_tile()
 	for rival in _rivals.duplicate():
 		if is_instance_valid(rival) and rival.has_method("take_turn"):
@@ -251,6 +249,54 @@ func advance_turn() -> void:
 					m.on_turn(turn_count)
 	# Per-actor lingering effects (poison), after the rivals have played.
 	_tick_actor_afflictions()
+
+
+## Asks for the `count` closest unrevealed traps to `from_tile` to be revealed in the next
+## reveal phase ([method run_reveal_phase]). The way talents and abilities reveal traps: they
+## ask, and the turn model decides when it happens.
+func request_trap_reveal(count: int, from_tile: Vector3i) -> void:
+	_reveal_requests.append({"count": count, "from": from_tile})
+
+
+## The reveal phase: resolves every pending [method request_trap_reveal], in order, and returns
+## the traps that came to light. Called by [method advance_turn] after the player and before the
+## rivals; also called directly on entering a level, so that what Reveal Traps shows is on the
+## map from the first step rather than from the second.
+func run_reveal_phase() -> Array:
+	var revealed: Array = []
+	var requests := _reveal_requests.duplicate()
+	_reveal_requests.clear()
+	for req in requests:
+		revealed.append_array(_reveal_nearest_traps(req.count, req.from))
+	if not revealed.is_empty():
+		post_message(tr("UI_TRAPS_REVEALED") % revealed.size())
+	return revealed
+
+
+## Reveals the `count` closest traps to `from_tile` that are not known yet, and returns them.
+## Closest in a straight line, floors included; ties go to the lower tile, which keeps the
+## choice deterministic.
+func _reveal_nearest_traps(count: int, from_tile: Vector3i) -> Array:
+	var candidates: Array = []
+	for tile in _mechanisms:
+		for m in _mechanisms[tile]:
+			if is_instance_valid(m) and m.is_floor_trap() and not m.revealed:
+				var d: Vector3i = tile - from_tile
+				candidates.append({"m": m, "tile": tile, "dist": d.x * d.x + d.y * d.y + d.z * d.z})
+	candidates.sort_custom(_closer)
+	var out: Array = []
+	for c in candidates.slice(0, maxi(count, 0)):
+		c.m.reveal()
+		out.append(c.m)
+	return out
+
+
+static func _closer(a: Dictionary, b: Dictionary) -> bool:
+	if a.dist != b.dist:
+		return a.dist < b.dist
+	var ta: Vector3i = a.tile
+	var tb: Vector3i = b.tile
+	return [ta.x, ta.y, ta.z] < [tb.x, tb.y, tb.z]
 
 
 ## Elapses the player's and the rivals' afflictions. Each actor applies its own effect

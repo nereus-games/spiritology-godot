@@ -42,7 +42,7 @@ func populate() -> Array:
 		var members := _members_of(group)
 		if members.is_empty():
 			continue
-		spawned.append(spawn_group(members, _dungeon.free_tile_near(group.tile)))
+		spawned.append(spawn_group(members, _dungeon.tile_search.free_tile_near(group.tile)))
 	spawned.append_array(spawn_groups(config.initial_spawns))
 	return spawned
 

@@ -251,19 +251,19 @@ func _apply(outcome: int, who: Node) -> void:
 func _teleport_to_entrance(who: Node) -> void:
 	if _dungeon == null:
 		return
-	if _dungeon.has_entrance():
-		_dungeon.teleport_actor_to(who, _dungeon.entrance_tile())
+	if _dungeon.layout.has_entrance():
+		_dungeon.teleport_actor_to(who, _dungeon.layout.entrance_tile())
 	else:
 		_dungeon.teleport_actor(who)
 
 
 ## Sends the player to an EXIT, drawn at random when there is more than one, per the design
-## doc. The entrance counts as one (see [method DungeonManager.set_entrance]).
+## doc. The entrance counts as one (see [method DungeonLayout.set_entrance]).
 func _teleport_to_exit(who: Node) -> void:
 	if _dungeon == null:
 		return
-	if _dungeon.has_exit():
-		_dungeon.teleport_actor_to(who, _dungeon.random_exit())
+	if _dungeon.layout.has_exit():
+		_dungeon.teleport_actor_to(who, _dungeon.layout.random_exit())
 	else:
 		_dungeon.teleport_actor(who)
 
@@ -305,7 +305,7 @@ func _spawn_rival_groups(who: Node) -> void:
 	if _dungeon == null or rival_pool.is_empty():
 		return
 	var origin: Vector3i = who.tile if "tile" in who else tile
-	var spots: Array[Vector3i] = _dungeon.free_tiles_near(origin, rival_spawn_radius)
+	var spots: Array[Vector3i] = _dungeon.tile_search.free_tiles_near(origin, rival_spawn_radius)
 	var n: int = mini(randi_range(1, rival_spawn_max), spots.size())
 	var spawner = RivalSpawner.new(_dungeon.config, _dungeon) if _dungeon.config != null else null
 	for i in range(n):

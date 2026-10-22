@@ -253,14 +253,9 @@ func _update_memory(player_tile: Vector3i) -> void:
 		_has_target = false
 
 
-## Naive sight: Manhattan range, with NO occlusion.
-##
-## ## TODO: the design doc is now explicit — "the line of sight is blocked by walls" (the
-## characters are small, eyes at [constant DungeonManager.EYE_HEIGHT] = 60 cm). A rival
-## therefore sees through walls today, which no longer matches. What it would take: walk the
-## tiles between rival and player and cut the line at the first opaque edge
-## ([method DungeonManager.is_edge_opaque]) or non-walkable tile. Revisit with real dungeons,
-## where occlusion actually matters.
+## Whether the rival sees `player_tile`: within Manhattan range, on the same floor, and with
+## nothing opaque in between (see [method _line_clear]). The design doc: "the line of sight is
+## blocked by walls".
 func _can_see(player_tile: Vector3i) -> bool:
 	# The player is hidden (fog mantel, torment veil, a costume): undetectable.
 	if _dungeon != null and _dungeon.rivals_ignore_player():
@@ -268,7 +263,42 @@ func _can_see(player_tile: Vector3i) -> bool:
 	if player_tile.y != tile.y:
 		return false
 	var d: Vector3i = (player_tile - tile).abs()
-	return d.x + d.z <= vision_range
+	if d.x + d.z > vision_range:
+		return false
+	return _line_clear(player_tile)
+
+
+## Walks the tiles from the rival to `to_tile`, one axis-aligned step at a time along the straight
+## line between them, and stops at the first obstacle: an opaque edge (a closed gateway,
+## [method DungeonManager.is_edge_opaque]) or a tile that is not floor (a wall). Without a
+## dungeon there is nothing to block the view.
+func _line_clear(to_tile: Vector3i) -> bool:
+	if _dungeon == null:
+		return true
+	var dx := to_tile.x - tile.x
+	var dz := to_tile.z - tile.z
+	var nx := absi(dx)
+	var nz := absi(dz)
+	var step_x := Vector3i(signi(dx), 0, 0)
+	var step_z := Vector3i(0, 0, signi(dz))
+	var current := tile
+	var ix := 0
+	var iz := 0
+	while ix < nx or iz < nz:
+		var next := current
+		# Whichever axis is further behind the ideal line steps next.
+		if iz >= nz or (ix < nx and (0.5 + ix) * nz < (0.5 + iz) * nx):
+			next += step_x
+			ix += 1
+		else:
+			next += step_z
+			iz += 1
+		if _dungeon.is_edge_opaque(current, next):
+			return false
+		if next != to_tile and not _dungeon.is_floor(next):
+			return false
+		current = next
+	return true
 
 
 func _chase_dir(target: Vector3i) -> Vector3i:
@@ -336,7 +366,7 @@ func _pursue_level() -> bool:
 		# the player back.
 		var brink := _open_drop_edge(_level_target)
 		if brink != tile:
-			var landing: Vector3i = _dungeon.fall_landing(brink)
+			var landing: Vector3i = _dungeon.layout.fall_landing(brink)
 			# Only jump if it actually gets closer — do not overshoot the target floor.
 			if landing.y >= _level_target.y:
 				if randf() >= fall_pursuit_chance(tile.y - landing.y):
@@ -369,7 +399,7 @@ func _open_drop_edge(toward: Vector3i) -> Vector3i:
 		var n: Vector3i = tile + d
 		if _dungeon.is_edge_blocked(tile, n) or _dungeon.is_floor(n):
 			continue
-		var landing: Vector3i = _dungeon.fall_landing(n)
+		var landing: Vector3i = _dungeon.layout.fall_landing(n)
 		if landing == n:
 			continue  # solid wall, or a bottomless hole
 		if _dungeon.safe_areas.has(landing):
@@ -452,11 +482,11 @@ func _use_level_link(link) -> bool:
 ## A fall from `from_tile`, chosen or not: lands on the floor below and takes the damage.
 ## Returns false when the rival is devitalised by it, and therefore dissolved.
 func fall_down(from_tile: Vector3i) -> bool:
-	var landing: Vector3i = _dungeon.fall_landing(from_tile)
+	var landing: Vector3i = _dungeon.layout.fall_landing(from_tile)
 	if landing == from_tile:
 		# A bottomless hole (a level-design mistake): the rival vanishes into it, the way the duo
 		# would be devitalised. Otherwise nothing below means no fall is possible.
-		if _dungeon.is_bottomless(from_tile):
+		if _dungeon.layout.is_bottomless(from_tile):
 			queue_free()
 			return false
 		return true
@@ -468,7 +498,7 @@ func fall_down(from_tile: Vector3i) -> bool:
 ## tile invariant holds across the whole grid, and a fall is no reason to bend it. Returns
 ## false when the fall devitalises it.
 func drop_to(target: Vector3i, levels: int) -> bool:
-	var dest: Vector3i = _dungeon.free_tile_near(target)
+	var dest: Vector3i = _dungeon.tile_search.free_tile_near(target)
 	_dungeon.release(tile)
 	_dungeon.reserve(dest, self)
 	tile = dest
@@ -578,13 +608,13 @@ func remove_from_dungeon() -> void:
 ## Two rivals meet on a plank: both fall, per the design doc — the occupant onto the tile
 ## below, the newcomer onto one adjacent to it.
 func _collide_with_rival(tile: Vector3i, other: Node) -> void:
-	var landing: Vector3i = _dungeon.fall_landing(tile)
+	var landing: Vector3i = _dungeon.layout.fall_landing(tile)
 	if landing == tile:
 		return  # nothing empty under this plank: nobody falls
 	var levels: int = tile.y - landing.y
 	if other.has_method("drop_to"):
 		other.drop_to(landing, levels)
-	drop_to(_dungeon.free_tile_near(landing), levels)
+	drop_to(_dungeon.tile_search.free_tile_near(landing), levels)
 
 
 ## End of turn: elapses poison. A rival has no DEN on the map, so the effect is only counted

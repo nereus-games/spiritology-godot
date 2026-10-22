@@ -8,6 +8,7 @@
 ## carry this script:
 ##  - the CHEST clause is implemented in `mechanisms/chest.gd`: teleport or stay, with loot either
 ##    way;
-##  - the TRAP clause is implemented in `exploration.gd`, which on entering a level asks the dungeon's
-##    reveal phase ([method DungeonManager.request_trap_reveal]) for the 3 closest unrevealed traps.
+##  - the TRAP clause is implemented in `exploration.gd`, which on entering a level asks the
+##    dungeon's reveal phase ([method DungeonManager.request_trap_reveal]) for the 3 closest
+##    unrevealed traps.
 extends "res://scripts/encounter/talents/talent_script.gd"

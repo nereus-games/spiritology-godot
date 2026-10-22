@@ -20,6 +20,8 @@ extends Node3D
 
 const DungeonRenderer := preload("res://scripts/exploration/dungeon_renderer.gd")
 const SafeAreas := preload("res://scripts/exploration/safe_areas.gd")
+const DungeonLayout := preload("res://scripts/exploration/dungeon_layout.gd")
+const TileSearch := preload("res://scripts/exploration/tile_search.gd")
 
 ## Tile size in world units (metres). A wall block is 1 m x 1 m x 1 m.
 const TILE_SIZE := 1.0
@@ -78,16 +80,21 @@ signal message_posted(text: String)
 
 var turn_count := 0
 
+## What level design lays down and the game does not change — floor, holes, pits, the walls
+## the grid implies, entrance and exits. A member for the same reason.
+var layout = DungeonLayout.new(self)
+
 ## The safe areas level design declared, and what keeps rivals out of them. A member rather than
 ## methods of this manager, which is big enough already.
 var safe_areas = SafeAreas.new(self)
+
+## Looking for tiles — a free one nearby, the ones within walking reach, a random one.
+var tile_search = TileSearch.new(self)
 
 ## The dungeon's level-design configuration — which rival groups appear, where and when. Null
 ## for a room built by hand with no such rules, as most test scenarios are.
 var config: DungeonConfig
 
-# Walkable tiles (floor). tile:Vector3i -> true.
-var _floor: Dictionary = {}
 # Occupancy: tile:Vector3i -> Node (a rival). The player does NOT occupy a tile — stepping
 # onto an occupied one starts an encounter instead.
 var _occupants: Dictionary = {}
@@ -96,24 +103,10 @@ var _occupants: Dictionary = {}
 # Registered by the mechanism nodes themselves at boot.
 var _mechanisms: Dictionary = {}
 
-# Tiles rendered as wall blocks, remembered by [method render_grid]. The mini-map draws them:
-# a room reads by its outline, not only by the absence of floor.
-var _walls: Dictionary = {}
-
 # EDGE mechanisms (gateways): on no tile at all, but on the boundary between two neighbouring
 # tiles. Canonical [method edge_key] -> Array of mechanisms.
 var _edge_mechanisms: Dictionary = {}
 
-# Tiles explicitly left EMPTY — a deliberate hole from the level design. Never rendered as a
-# wall, even with nothing holding them up. Entering one is a BOTTOMLESS fall, and fatal (see
-# [method is_bottomless]). A merely absent tile still becomes a wall: that is the normal case
-# around the outside of a room.
-var _hole: Dictionary = {}
-
-# Pit tiles (a floor set LOWER, a ravine): rendered as a lowered dark slab, never as a wall,
-# and with no normal slab when the tile is walkable too — that is the bridge plank laid over
-# it. Gives the "log over a drop" look.
-var _pit: Dictionary = {}
 ## How far (metres) a pit slab sits below the normal floor level.
 const PIT_DEPTH := 1.2
 
@@ -127,7 +120,7 @@ var _reveal_requests: Array[Dictionary] = []
 func _ready() -> void:
 	add_to_group("dungeon")
 	if demo_build:
-		build_demo_room(demo_width, demo_depth, demo_interior_walls)
+		_build_demo_room(demo_width, demo_depth, demo_interior_walls)
 
 
 # --------------------------------------------------------------------------
@@ -151,13 +144,13 @@ func tile_to_world(tile: Vector3i) -> Vector3:
 
 
 func is_floor(tile: Vector3i) -> bool:
-	return _floor.has(tile)
+	return layout.is_floor(tile)
 
 
 ## Says NOTHING about gateways, which block an edge rather than a tile — for an actual step,
 ## go through [method can_step].
 func is_walkable(tile: Vector3i) -> bool:
-	return _floor.has(tile) and not _occupants.has(tile) and not is_blocked_by_mechanism(tile)
+	return layout.is_floor(tile) and not _occupants.has(tile) and not is_blocked_by_mechanism(tile)
 
 
 ## Whether a step from `from_tile` to a neighbouring `to_tile` is possible: the destination is
@@ -179,7 +172,7 @@ func occupant_at(tile: Vector3i) -> Node:
 
 
 func reserve(tile: Vector3i, who: Node) -> bool:
-	if not _floor.has(tile) or _occupants.has(tile):
+	if not layout.is_floor(tile) or _occupants.has(tile):
 		return false
 	_occupants[tile] = who
 	return true
@@ -358,55 +351,6 @@ func is_narrow_bridge(tile: Vector3i) -> bool:
 	return false
 
 
-## The nearest free floor tile to `tile` (`tile` itself if it is free), for placing an actor
-## without breaking the one-occupant-per-tile invariant. Returns `tile` when nothing around is
-## free, and leaves the caller to decide what that means.
-func free_tile_near(tile: Vector3i) -> Vector3i:
-	if is_floor(tile) and occupant_at(tile) == null:
-		return tile
-	for d in [Vector3i(1, 0, 0), Vector3i(-1, 0, 0), Vector3i(0, 0, 1), Vector3i(0, 0, -1)]:
-		var n: Vector3i = tile + d
-		if is_walkable(n) and occupant_at(n) == null:
-			return n
-	return tile
-
-
-## How many steps it takes to walk to every tile reachable from `from` in at most `max_steps`,
-## as tile -> steps (`from` itself at 0). A walk, not a flight: it goes around walls, closed
-## gateways and occupied tiles, and stays on one floor — stairs and falls are not steps.
-func walking_distances(from: Vector3i, max_steps: int) -> Dictionary:
-	var steps := {from: 0}
-	var frontier: Array[Vector3i] = [from]
-	while not frontier.is_empty():
-		var current: Vector3i = frontier.pop_front()
-		var d: int = steps[current]
-		if d >= max_steps:
-			continue
-		for delta in [Vector3i(1, 0, 0), Vector3i(-1, 0, 0), Vector3i(0, 0, 1), Vector3i(0, 0, -1)]:
-			var n: Vector3i = current + delta
-			if steps.has(n) or not can_step(current, n):
-				continue
-			steps[n] = d + 1
-			frontier.append(n)
-	return steps
-
-
-## Free floor tiles AROUND `tile`, on the same floor, within `radius` tiles (Manhattan
-## distance), shuffled. `tile` itself is excluded. Lets actors be spawned "nearby" without
-## caring about the shape of the room.
-func free_tiles_near(tile: Vector3i, radius: int) -> Array[Vector3i]:
-	var found: Array[Vector3i] = []
-	for dx in range(-radius, radius + 1):
-		for dz in range(-radius, radius + 1):
-			if absi(dx) + absi(dz) > radius or (dx == 0 and dz == 0):
-				continue
-			var c := tile + Vector3i(dx, 0, dz)
-			if is_walkable(c) and occupant_at(c) == null:
-				found.append(c)
-	found.shuffle()
-	return found
-
-
 # --------------------------------------------------------------------------
 # Dungeon mechanisms (traps, gateways, special floors)
 # --------------------------------------------------------------------------
@@ -520,23 +464,11 @@ func actions_for(from_tile: Vector3i, facing: Vector3i, who: Node) -> Array:
 	return actions
 
 
-## A random walkable floor tile other than `exclude`, outside every safe area when
-## `avoid_safe` — where a random teleport may drop a rival. Returns `exclude` when there is none.
-func random_floor_tile(exclude: Vector3i, avoid_safe := false) -> Vector3i:
-	var candidates: Array = []
-	for c in _floor:
-		if c != exclude and is_walkable(c) and not (avoid_safe and safe_areas.has(c)):
-			candidates.append(c)
-	if candidates.is_empty():
-		return exclude
-	return candidates[randi() % candidates.size()]
-
-
 ## Teleports an actor to a random free floor tile — the teleport trap. Returns the tile it
 ## landed on, unchanged when no destination was free. A rival never lands in a safe area.
 func teleport_actor(who: Node) -> Vector3i:
 	var from: Vector3i = who.tile
-	return teleport_actor_to(who, random_floor_tile(from, not is_player(who)))
+	return teleport_actor_to(who, tile_search.random_floor_tile(from, not is_player(who)))
 
 
 ## Teleports an actor to a SPECIFIC tile — a dungeon entrance or exit, a dieverting. Falls
@@ -548,7 +480,7 @@ func teleport_actor_to(who: Node, dest: Vector3i) -> Vector3i:
 	var from: Vector3i = who.tile
 	if not is_floor(dest):
 		return from
-	dest = free_tile_near(dest)
+	dest = tile_search.free_tile_near(dest)
 	if dest == from:
 		return from
 	var occ := occupant_at(dest)
@@ -563,172 +495,20 @@ func teleport_actor_to(who: Node, dest: Vector3i) -> Vector3i:
 
 
 # --------------------------------------------------------------------------
-# Dungeon entrance & exits
-# --------------------------------------------------------------------------
-#
-# Per the design doc ("Dungeons"), you leave a dungeon by reaching an EXIT and interacting
-# with it, and "the dungeon entry counts as an exit point". These tiles are declared by level
-# design — in dev, by the test scenario. Today they serve the mechanisms that send the player
-# back to them, such as dieverting.
-# ## TODO: leaving the dungeon proper — the exit interaction, and a world map to return to — is
-# still unwired. A devitalised duo does leave, for the scenario picker; see `exploration.gd`.
-
-var _entrance: Vector3i
-var _has_entrance := false
-var _exits: Array[Vector3i] = []
-
-
-## Declares the entrance tile. It ALSO counts as an exit, per the design doc, so there is no
-## need to add it twice.
-func set_entrance(tile: Vector3i) -> void:
-	_entrance = tile
-	_has_entrance = true
-	add_exit(tile)
-
-
-func has_entrance() -> bool:
-	return _has_entrance
-
-
-## The dungeon's entrance tile — Vector3i.ZERO while none has been declared, so check
-## [method has_entrance] before using it.
-func entrance_tile() -> Vector3i:
-	return _entrance
-
-
-func add_exit(tile: Vector3i) -> void:
-	if tile not in _exits:
-		_exits.append(tile)
-
-
-func exit_tiles() -> Array[Vector3i]:
-	return _exits.duplicate()
-
-
-func has_exit() -> bool:
-	return not _exits.is_empty()
-
-
-## A random exit — the design doc says "at random if more than one". Returns Vector3i.ZERO
-## when none is declared, so check [method has_exit] first.
-func random_exit() -> Vector3i:
-	if _exits.is_empty():
-		return Vector3i.ZERO
-	return _exits[randi() % _exits.size()]
-
-
-# --------------------------------------------------------------------------
 # Building the grid
 # --------------------------------------------------------------------------
-
-
-func set_floor_tiles(tiles: Array) -> void:
-	_floor.clear()
-	for c in tiles:
-		_floor[c] = true
-
-
-func add_floor(tile: Vector3i) -> void:
-	_floor[tile] = true
-
-
-## Marks a tile as a pit: walkable, but [method render_grid] lays NEITHER a normal slab NOR a
-## wall there — the tile is held up only by whatever level design puts on it, a bridge plank.
-## With no real floor underneath, a dark slab is laid below so the gap does not read as a void;
-## otherwise the floor below serves as the bottom.
-func mark_pit(tile: Vector3i) -> void:
-	_pit[tile] = true
-
-
-## Marks a tile as an outright hole: no wall to plug it, and no bottom either.
-func mark_hole(tile: Vector3i) -> void:
-	_hole[tile] = true
-
-
-func is_hole(tile: Vector3i) -> bool:
-	return _hole.has(tile)
-
-
-## Whether entering this tile means a BOTTOMLESS fall. Such a fall should not exist — it would
-## be a level-design mistake — because the outside of a room is rendered as wall precisely
-## since nothing holds it up. If level design leaves one anyway, it is treated as what it is,
-## a floor too far down to survive: a fatal fall, rather than a silent block.
-func is_bottomless(tile: Vector3i) -> bool:
-	return _hole.has(tile) and not _floor.has(tile) and fall_landing(tile) == tile
-
-
-## Where a fall from `tile` lands: the first FLOOR tile below it. Returns `tile` unchanged
-## when there is none, which means no fall at all — a wall.
-func fall_landing(tile: Vector3i) -> Vector3i:
-	for level in range(tile.y - 1, tile.y - 12, -1):
-		var below := Vector3i(tile.x, level, tile.z)
-		if _floor.has(below):
-			return below
-	return tile
-
-
-## The logical grid's floor tiles (tile -> true). Read-only: this is the live dictionary.
-func floor_tiles() -> Dictionary:
-	return _floor
-
-
-## Tiles marked as pits (tile -> true). Read-only: this is the live dictionary.
-func pit_tiles() -> Dictionary:
-	return _pit
 
 
 ## Builds the visible geometry from the logical grid. The drawing itself lives in
 ## [DungeonRenderer]: this manager holds the MODEL, not the meshes.
 func render_grid() -> void:
-	# Remembered for the mini-map, which redraws them every frame.
-	_walls = derive_wall_tiles()
-	DungeonRenderer.render_grid(self, _walls)
-
-
-## Tiles rendered as wall blocks. Empty until [method render_grid] has run.
-func wall_tiles() -> Dictionary:
-	return _walls
-
-
-func is_wall(tile: Vector3i) -> bool:
-	return _walls.has(tile)
-
-
-## TODO (2026-09-02) — AUTHORING DEBT. Walls and holes are today DERIVED from the floor grid
-## alone: a wall is "nothing here, and nothing below", and an outright hole only exists if
-## someone calls [method mark_hole] — nobody does, outside the headless check. Two rules from
-## the design doc therefore rest on inference rather than declaration:
-##  - "a wall can serve as ground on the floor above it" (no slab above a wall);
-##  - "if an endless fall happens anyway, it devitalises" (the outright hole).
-## Once a dungeon authoring format exists, walls and holes will have to be DECLARED the way
-## floors are, and [method derive_wall_tiles] will be scaffolding for code-built test
-## scenarios only.
-##
-## Tiles rendered as wall blocks: non-floor tiles next to floor, carrying no mechanism and no
-## pit, with no floor below them — the lip of a drop stays open rather than being walled off.
-##
-## Public because it is a query on the MODEL ("where does the grid imply a wall?") rather than
-## a rendering matter: the geometry checks assert against it.
-func derive_wall_tiles() -> Dictionary:
-	var wall_tiles := {}
-	for c in _floor:
-		for d in [Vector3i(1, 0, 0), Vector3i(-1, 0, 0), Vector3i(0, 0, 1), Vector3i(0, 0, -1)]:
-			var n: Vector3i = c + d
-			if _hole.has(n):
-				continue  # a deliberate hole: on no account wall it off
-			if (
-				not _floor.has(n)
-				and not _mechanisms.has(n)
-				and not _pit.has(n)
-				and fall_landing(n) == n
-			):
-				wall_tiles[n] = true
-	return wall_tiles
+	# The layout remembers the walls for the mini-map, which redraws them every frame.
+	DungeonRenderer.render_grid(self, layout.remember_walls())
 
 
 ## Builds a demo room: a rectangular floor at level 0 with a few interior walls, and renders
 ## it. Scaffolding — real dungeons will be authored 3D scenes.
-func build_demo_room(width: int, depth: int, interior_walls: Array = []) -> void:
+func _build_demo_room(width: int, depth: int, interior_walls: Array = []) -> void:
 	var blocked := {}
 	for w in interior_walls:
 		blocked[w] = true
@@ -738,5 +518,5 @@ func build_demo_room(width: int, depth: int, interior_walls: Array = []) -> void
 			var c := Vector3i(x, 0, z)
 			if not blocked.has(c):
 				tiles.append(c)
-	set_floor_tiles(tiles)
+	layout.set_floor_tiles(tiles)
 	DungeonRenderer.build_demo_visuals(self, width, depth, blocked)

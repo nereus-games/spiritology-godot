@@ -50,7 +50,7 @@ func _ready() -> void:
 	# DEV: the player starts where they would enter the dungeon, which makes that tile the
 	# entrance — and, per the design doc, an exit too. Mechanisms that send them back there, like
 	# dieverting, then have a real destination instead of a random fallback.
-	_dungeon.set_entrance(start)
+	_dungeon.layout.set_entrance(start)
 	_dungeon.render_grid()  # builds the visible floor and walls from the logical grid
 	var player := get_node_or_null("Player")
 	if player != null and player.has_method("teleport_to"):
@@ -142,7 +142,7 @@ func _run_away(group: Node) -> void:
 ## reachable tile; `from` itself when there is none.
 func flight_destination(from: Vector3i) -> Vector3i:
 	var balance := BalanceData.current()
-	var steps: Dictionary = _dungeon.walking_distances(from, balance.flee_distance_max)
+	var steps: Dictionary = _dungeon.tile_search.walking_distances(from, balance.flee_distance_max)
 	var in_range: Array[Vector3i] = []
 	var quiet: Array[Vector3i] = []
 	var farthest := from
@@ -300,11 +300,11 @@ func _fall_off_bridge(player) -> void:
 	if (
 		_active_bridge != null
 		and _active_bridge.balance().progress >= 0.5
-		and _dungeon.fall_landing(ahead) != ahead
+		and _dungeon.layout.fall_landing(ahead) != ahead
 	):
 		from_tile = ahead
 	_finish_bridge(player)
-	var landing := _dungeon.fall_landing(from_tile)
+	var landing := _dungeon.layout.fall_landing(from_tile)
 	if landing == from_tile:
 		# Nothing below: the bridge spans no gap at all, which is incomplete level design. Catch
 		# yourself on the plank rather than vanishing.
@@ -327,7 +327,7 @@ func _on_bridge_collision(rival, tile: Vector3i) -> void:
 	var player := get_node_or_null("Player")
 	if player == null or not is_instance_valid(rival):
 		return
-	var landing := _dungeon.fall_landing(tile)
+	var landing := _dungeon.layout.fall_landing(tile)
 	if landing == tile:
 		return  # nothing empty under this plank: nobody falls
 	var levels := tile.y - landing.y

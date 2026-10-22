@@ -2,7 +2,8 @@
 ##
 ## From the design doc ("Mechanisms / Traps"). A trap springs when an actor — player OR rival —
 ## enters its tile, as long as it is armed. Once sprung it does not disappear: it stays VISIBLE
-## but disarmed. It can be revealed without being sprung (the `reveal_traps` talent, through the reveal phase).
+## but disarmed. It can be revealed without being sprung (the `reveal_traps` talent, through the
+## reveal phase).
 ## Effects STACK through [AfflictionState]. Two versions exist, depending on whether it rearms
 ## between dungeon visits ([member reactivates]).
 ##
@@ -61,7 +62,8 @@ func shows_on_map() -> bool:
 	return revealed
 
 
-## Reveals the trap's kind WITHOUT springing it (the `reveal_traps` talent, through the reveal phase).
+## Reveals the trap's kind WITHOUT springing it (the `reveal_traps` talent, through the reveal
+## phase).
 func reveal() -> void:
 	revealed = true
 

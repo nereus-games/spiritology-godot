@@ -53,6 +53,19 @@ extends Resource
 @export var flee_distance_min: int = 3
 @export var flee_distance_max: int = 5
 
+## Running away above the first PSY rung ([method GameSession.psy_above]): "fleeing no longer
+## makes the rival go away" and the duo lands only this many walkable steps off, facing the
+## rival. The doc says "2 to 3 tiles"; PLACEHOLDERS for the walkable-step reading, like the
+## figures above.
+@export var psy_flee_distance_min: int = 2
+@export var psy_flee_distance_max: int = 3
+
+## Above the first PSY rung, a group the duo fled from is "10 % less" likely to Talk from then
+## on: the share taken off its Talk chance (the species' talker_chance, a proxy; see
+## [method EncounterManager._resolve_talk]), as a fraction. Placeholder reading: relative, not
+## 10 points, and it does not stack when the duo flees the same group twice.
+@export var psy_flee_talk_malus: float = 0.1
+
 ## Turns a group still on the map stays put after an encounter, so that it does not open the
 ## next one straight away. The doc says nothing about it: a placeholder, see
 ## [method RivalBehavior.rest].

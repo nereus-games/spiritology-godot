@@ -15,6 +15,10 @@ const Gateway := preload("res://scripts/exploration/mechanisms/gateway.gd")
 ## free look glued to the mouse while 90-degree turns stay smooth. Ported from the prototype.
 @export var yaw_follow_speed := 720.0
 
+## The facing was set from outside ([method face_tile]), to `deg` degrees. [PlayerInputHandler]
+## keeps its own copy of the heading and takes this one over.
+signal facing_set(deg: float)
+
 var tile: Vector3i
 var _dungeon: DungeonManager
 var _busy := false
@@ -101,6 +105,23 @@ func set_start_yaw(rad: float) -> void:
 	rotation.y = rad
 	_target_yaw_deg = rad_to_deg(rad)
 	_move_yaw_deg = rad_to_deg(rad)
+
+
+## Turns the player, at once, to face the neighbouring-or-not tile `target`: the cardinal direction
+## of the larger gap, by the shortest way round. Free look is reset and the movement facing
+## follows, so that the player starts from a clean heading and can reorient from there. Nothing
+## happens when `target` is the player's own tile.
+func face_tile(target: Vector3i) -> void:
+	var gap := target - tile
+	if gap.x == 0 and gap.z == 0:
+		return
+	var dir := Vector2i(signi(gap.x), 0) if absi(gap.x) > absi(gap.z) else Vector2i(0, signi(gap.z))
+	# Facing -Z is yaw 0, and a yaw of `a` points at (-sin a, -cos a).
+	var wanted := rad_to_deg(atan2(-float(dir.x), -float(dir.y)))
+	var base := roundf(_target_yaw_deg / 90.0) * 90.0
+	var deg := base + wrapf(wanted - base + 180.0, 0.0, 360.0) - 180.0
+	set_start_yaw(deg_to_rad(deg))
+	facing_set.emit(deg)
 
 
 ## A turn has just completed, from the keyboard or from free look drifting past

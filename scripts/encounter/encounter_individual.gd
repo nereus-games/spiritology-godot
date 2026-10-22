@@ -34,6 +34,11 @@ var ability_ids: Array[StringName] = []
 ## Multiplier on the NEXT damage taken — mitigation, amplification, or 0 for immunity.
 ## Spent on the next hit.
 var next_damage_factor := 1.0
+
+## The share taken off the chance that a Talk aimed at this individual works, 0 to 1. Carried in
+## from the map for a rival the duo fled above the first PSY rung; see
+## [method EncounterManager._resolve_talk].
+var talk_chance_malus := 0.0
 ## When set, the next damage taken goes to this individual instead (Victimism).
 var redirect_to: EncounterIndividual = null
 

@@ -634,6 +634,9 @@ func _resolve_talk(individual: EncounterIndividual, action: EncounterAction) -> 
 	for t in _talents:
 		if speaker_team.has(t.owner):
 			chance = t.modify_talk_chance(self, individual, target, chance)
+	# The target was fled from above the first PSY rung: its chance is a share lower, whatever
+	# the talents did. Relative, and applied last.
+	chance *= 1.0 - clampf(target.talk_chance_malus, 0.0, 1.0)
 	var effective := rng.randf() < chance
 	last_talk_effective = effective  # [bridges]
 	var talk_yield := _talk_yield(individual, effective)

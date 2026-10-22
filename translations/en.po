@@ -549,6 +549,10 @@ msgstr "%s will use objects more often."
 msgid "LOG_EXAMINE_BONUS"
 msgstr "Examine bonus +%d on %s [to come]."
 
+# %d = info bonus points, %s = whose Examine (or who is examined).
+msgid "LOG_EXAMINE_BOOST"
+msgstr "Examine info bonus +%d on %s."
+
 # Halo Effect found no individual that repeats itself.
 msgid "LOG_HISTORY_NOBODY_REPEATS"
 msgstr "nobody is repeating itself."

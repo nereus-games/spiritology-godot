@@ -26,14 +26,16 @@ The four pieces this page used to list are built, and with them most of the abil
 waited on them (see [architecture.md](architecture.md), *The encounter loop*): **reactions**
 (an ability watches what others do or suffer until its user's next turn), an **encounter
 history**, **weighted rival choices**, and **next-turn modifiers**; the one-offs — Shuffle,
-Deflection, Self-Denial, Tactical Retreat — are done too. About 12 markers are left in the
-encounter abilities, across 11 of the 111 scripts, and they no longer share a missing piece of
-engine. They wait on:
+Deflection, Self-Denial, Tactical Retreat — are done too. About 8 markers are left in the
+encounter abilities, across 7 of the 111 scripts, and they no longer share a missing piece of
+engine. The amount an Examine yields is built too (`examine_yield.gd`, see *The encounter loop*):
+Halo Effect, Priming and Catatonia now raise it, as Reconnaissance Glide does. What remains waits on:
 
-- **The amount an Examine yields**, so that "more info" has something to raise: Halo Effect's
-  Examine and its info bonus, Priming's "they get more info", Catatonia's Examine clause (its
-  Meditate clauses are built). The bonuses are computed and logged, and nothing consumes them.
-  See *Encyclopaedia detail* in section 4.
+- **The other "Examine bonus" abilities**: Absorption Guard, Steep In, Shadow Work and the generic
+  effect only log a bonus (`EncounterContext.grant_examine_bonus`, a stub), and Bystander Effect's
+  "far more information out of Talk and Examine" is logged too. Each says what it should do
+  ("the user Examines it"); converting one is a line, `ExamineYield.examine` or
+  `ExamineYield.boost`, once its figure is chosen.
 - **Rivals carrying objects**: Misty Secret's weight on using objects is recorded and inert;
   Altruism has nothing to destroy, and the encounter engine rightly knows no inventory (section 4).
 - **A decision on Deflection**: its docstring adds "requires that the user has not used the same
@@ -98,10 +100,10 @@ unblock.
   take, Altruism has nothing to destroy, and Misty Secret's weight on using objects acts on no
   one. (`encounter_manager.gd`, `altruism.gd`, `misty_secret.gd`)
 - **Encyclopaedia detail.** IFP are awarded and tallied, from encounters and from exploration
-  alike; what is missing is the *amount* an Examine yields (so Reconnaissance Glide's +10 %
-  multiplies a number with no consequence, as do Halo Effect's, Catatonia's and Priming's
-  bonuses), info fragments (Examine Weakness), Forlorn variants on the individual, and Forlorn
-  pages with their own percentage. (`encounter_manager.gd`, `examine_weakness.gd`,
+  alike, and the amount an Examine yields now follows the info bonuses (Reconnaissance Glide,
+  Halo Effect, Priming, Catatonia; `examine_bonus_step` in `data/balance.tres`, a placeholder).
+  What is missing is info fragments (Examine Weakness), Forlorn variants on the individual, and
+  Forlorn pages with their own percentage. (`encounter_manager.gd`, `examine_weakness.gd`,
   `game_session.gd`)
 - **Forlorn rivals at spawn.** About 1 % of spawned rivals should be Forlorn. The rest of
   "Rival Spawning" is built: species weighted by dungeon rarity, the spawn limit, a new group
@@ -150,6 +152,9 @@ pages the doc has not given yet.
   rival's chance to Talk or Meditate rises by `action_weight_bonus` (0.36, the per-condition
   step borrowed); One's Ethos has its 5 % (`ethos_talk_bonus`). Hardening's Talk penalty is
   `hardening_talk_penalty`, 0.36 likewise. All in `data/balance.tres`.
+- The worth of "more info": one point of info bonus is +10 % of an Examine's IFP
+  (`examine_bonus_step`; the 10 % is Reconnaissance Glide's figure, borrowed). Halo Effect gives 2
+  points per criterion, Catatonia 2 per step, Priming 2 (all placeholders in their scripts).
 - Catatonia's step: each step it earns makes the next Meditate recover and leave a damage bonus
   larger by the per-condition step (`modifier_per_condition`, 0.36, borrowed).
 - Self-Disclosure's unit (one "small" tier per ability used, split equally among the living) and
@@ -168,6 +173,11 @@ pages the doc has not given yet.
   (`litter.gd`, `examinable_decor.gd`).
 
 Decisions taken in code, where the doc has to catch up — or say otherwise:
+
+- **Info bonuses** add up as points, then multiply with talents (Reconnaissance Glide), and the IFP
+  of an Examine are rounded **up** when the factor is above 1 (a penalty rounds down), so that a
+  bonus always gives at least one point more. Only a player character's Examine of a rival earns
+  IFP, whoever an ability "Examines".
 
 - **"Origin"** (Business Card, One's Ethos) is read as the species' Spiricosm, and **"X % more
   often"** as percentage points added to the chance of the action that turn: rivals never Talk

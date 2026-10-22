@@ -58,6 +58,10 @@ var damage_dealt := 0
 ## set off other reactions, which keeps one from chaining into another without end.
 var in_reaction := false
 
+## The Examines this effect makes of other individuals, one entry each: [the target, the info
+## bonus points]. The manager carries them out once the effect is over (see `examine_yield.gd`).
+var examines: Array = []
+
 ## What the reactions that fired while this effect ran said, one entry each: [the individual
 ## reacting, its ability, the lines]. The manager announces them once the turn's own lines are out.
 var reactions_noted: Array = []
@@ -269,6 +273,9 @@ func force_talk(target) -> void:
 	note(_tr("LOG_FORCED_TO_TALK") % _name(target))
 
 
+## A STUB, for the abilities that merely mention an Examine bonus (Absorption Guard, Steep In,
+## Bystander Effect, Shadow Work, the generic effect): it logs. The ones that act on it are
+## written with `examine_yield.gd` instead.
 func grant_examine_bonus(target, amount: int) -> void:
 	note(_tr("LOG_EXAMINE_BONUS") % [amount, _name(target)])
 

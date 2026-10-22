@@ -61,8 +61,16 @@ var _hidden_hud: Array[CanvasLayer] = []
 ## DESIGN settings, tuned per dungeon; the current values carry over what happened before —
 ## a fall, an earlier encounter.
 ## A missing or empty entry means the rival starts on its own defaults.
+##
+## `map_reveal` is the narrow handle on the dungeon the encounter was entered from: a Callable
+## that reveals one hidden thing on the map and returns whether it did. Trick to Reveal is its
+## only caller. Left invalid, nothing can be revealed.
 func open_encounter(
-	player_ids: Array, rival_ids: Array, completed: Dictionary = {}, rival_states: Array = []
+	player_ids: Array,
+	rival_ids: Array,
+	completed: Dictionary = {},
+	rival_states: Array = [],
+	map_reveal: Callable = Callable()
 ) -> void:
 	if _encounter != null:
 		return  # one is already open
@@ -74,6 +82,7 @@ func open_encounter(
 	_encounter = load(ENCOUNTER_SCENE).instantiate()
 	get_tree().root.add_child(_encounter)
 	_encounter.finished.connect(_on_encounter_finished.bind(exploration))
+	_encounter.map_reveal = map_reveal
 	_encounter.begin(player_ids, rival_ids, completed, rival_states)
 
 

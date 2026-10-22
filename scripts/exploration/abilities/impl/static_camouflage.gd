@@ -4,10 +4,9 @@
 ## are shown one at a time, and the player picks one to face or waits for the next; unknown
 ## species and variations are likelier near litter.
 ##
-## ## TODO: reveal 2 to 4 groups one at a time and offer to take one on. Groups exist and spawn
-## (`rival_spawner.gd`); what is missing is the reveal and the choice. Minimal version: puts the
-## player into a hidden scouting state (see
-## [method ExplorationContext.scout_groups]).
+## The reveal and the choice are [Scouting], started through
+## [method ExplorationContext.scout_groups]. Does not stack with a costume, and Forlorn shapes are
+## likelier under it: neither is built (see the TODO in [Scouting]).
 extends "res://scripts/exploration/abilities/exploration_ability.gd"
 
 

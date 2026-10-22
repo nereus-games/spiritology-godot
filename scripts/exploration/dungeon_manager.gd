@@ -20,6 +20,7 @@ extends Node3D
 
 const DungeonRenderer := preload("res://scripts/exploration/dungeon_renderer.gd")
 const SafeAreas := preload("res://scripts/exploration/safe_areas.gd")
+const Scouting := preload("res://scripts/exploration/scouting.gd")
 const DungeonLayout := preload("res://scripts/exploration/dungeon_layout.gd")
 const TileSearch := preload("res://scripts/exploration/tile_search.gd")
 
@@ -87,6 +88,9 @@ var layout = DungeonLayout.new(self)
 ## The safe areas level design declared, and what keeps rivals out of them. A member rather than
 ## methods of this manager, which is big enough already.
 var safe_areas = SafeAreas.new(self)
+
+## The watch of Static Camouflage: rival groups shown one at a time, and the choice to take one on.
+var scouting = Scouting.new(self)
 
 ## Looking for tiles — a free one nearby, the ones within walking reach, a random one.
 var tile_search = TileSearch.new(self)
@@ -291,6 +295,33 @@ func _reveal_nearest_traps(count: int, from_tile: Vector3i) -> Array:
 	return out
 
 
+## Reveals the ONE hidden chest or trap closest to `from_tile`, at once, and returns it (null when
+## nothing is hidden). What Trick to Reveal does at the end of an effective dialogue.
+##
+## The design doc says "a chest or trap that hadn't been revealed yet" and no more, so: the
+## closest one, chests and floor traps alike, as Reveal Traps picks its traps, ties to the lower
+## tile. An opened chest and a spent trap are not candidates: nothing is left to find there.
+## Immediate rather than queued for the reveal phase, because no player turn is passing: the
+## encounter is.
+func reveal_nearest_hidden(from_tile: Vector3i) -> Node:
+	var candidates: Array = []
+	for tile in _mechanisms:
+		for m in _mechanisms[tile]:
+			if not is_instance_valid(m) or not m.has_method("reveal") or not ("revealed" in m):
+				continue
+			if m.revealed or m.is_spent():
+				continue
+			var d: Vector3i = tile - from_tile
+			candidates.append({"m": m, "tile": tile, "dist": d.x * d.x + d.y * d.y + d.z * d.z})
+	if candidates.is_empty():
+		return null
+	candidates.sort_custom(_closer)
+	var found: Node = candidates[0].m
+	found.reveal()
+	post_message(tr("UI_TRAP_REVEALED" if found.is_floor_trap() else "UI_CHEST_REVEALED"))
+	return found
+
+
 static func _closer(a: Dictionary, b: Dictionary) -> bool:
 	if a.dist != b.dist:
 		return a.dist < b.dist
@@ -449,6 +480,9 @@ func notify_entered(tile: Vector3i, who: Node) -> void:
 ## those of the mechanisms sitting on the edge being looked at — a gateway can be opened or
 ## meditated at from either side. Consumed by the exploration action surface (the HUD).
 func actions_for(from_tile: Vector3i, facing: Vector3i, who: Node) -> Array:
+	# While Static Camouflage's watch lasts, the choice between its groups is all there is.
+	if scouting.active:
+		return scouting.actions()
 	var actions: Array = []
 	for m in mechanisms_at(from_tile):
 		actions.append_array(m.on_tile_actions(who))

@@ -44,6 +44,12 @@ const IFP_TABLE := {
 		false: [1, 2, 2],
 		true: [2, 3, 4],
 	},
+	# Examine Weakness: "a little info" is one fragment, i.e. EncyclopaediaModel.IFP_PER_FRAGMENT
+	# IFP at every PSY tier. The Forlorn row is the ordinary one.
+	GameEnums.IfpAction.WEAKNESS_INFO:
+	{
+		false: [3, 3, 3],
+	},
 }
 
 ## A player character's maximum DEN (Density), fixed for the whole game.

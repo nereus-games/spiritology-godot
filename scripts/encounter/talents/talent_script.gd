@@ -80,7 +80,7 @@ func wants_reuse(_manager, _user, _ability) -> bool:
 
 
 ## An exposed weakness was struck, by the bearer or against it. The reward is information,
-## and gathering information mid-encounter is not built — so this only logs.
+## and Examine Weakness gathers it (an info fragment on the other individual).
 func on_weakness_touched(_manager, _attacker, _defender, _ability) -> void:
 	pass
 

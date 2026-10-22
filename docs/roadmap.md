@@ -106,8 +106,8 @@ unblock.
   Priming, Catatonia; `examine_bonus_step` in `data/balance.tres`, a placeholder). What is
   missing: the *puzzle* and its screens (nothing calls `set_arranged_fragments`,
   `destroy_fragments`, `remove_parasitic_fragments` or `mark_page_assembled` yet, nor shows the
-  `encyclopaedia_*` signals); info fragments granted by Examine Weakness; and Forlorn variants
-  on the individual. (`encounter_manager.gd`, `examine_weakness.gd`, `encyclopaedia_model.gd`)
+  `encyclopaedia_*` signals); and Forlorn variants on the individual.
+  (`encounter_manager.gd`, `encyclopaedia_model.gd`)
 - **The encyclopaedia's screens.** The grid and the read-only page view are built and read the
   fragment model (see [architecture.md](architecture.md), *The encyclopaedia screens*), reachable
   only from the dev scenario picker. What is left: the assembly screen on top of the desk; the
@@ -230,6 +230,14 @@ The encyclopaedia, built on 2026-10-22 from the "Encyclopaedia" page, which leav
   Effect on a teammate, or used by a rival, earns none. Active Listening's Talk, which counts as
   an Examine, does not use the bonus. Known gap: two bonus sources on one individual share one
   expiry timer.
+- **Examine Weakness** (`examine_weakness.gd`, `GameSession.IFP_TABLE`). The doc says only "a
+  little info" on the other individual. Read as one info fragment, 3 IFP at every PSY tier
+  (`WEAKNESS_INFO`), announced through `ifp_earned` and so under the usual page rules (99 % cap,
+  a true and a parasitic fragment, Forlorn page once the main one is complete). It goes to a rival
+  only and only when the bearer is a player character, so a teammate as the other individual, or
+  a rival bearing the talent, earns nothing. Examine's info bonuses do not scale it, it does not
+  count as an Examine, and the weakness is not exposed on the encyclopaedia side. Each ability
+  that strikes an exposed weakness gives it once per such target.
 - **Abilities and the starting duo.** The data lists a species' encyclopaedia and Forlorn
   abilities among its origin abilities too, so a player character's list is the native ones
   minus the gated ones, plus those revealed; rivals keep all of them. A starting character's 15

@@ -730,7 +730,7 @@ msgid "LOG_TALENT_SLICK_MERCHANT"
 msgstr "%s : la faiblesse de %s prend celle de %s."
 
 msgid "LOG_TALENT_EXAMINE_WEAKNESS"
-msgstr "%s : info glanée sur %s (faiblesse touchée) [à venir]."
+msgstr "%s : info glanée sur %s (faiblesse touchée)."
 
 # %s = the talent, %s = the teammate healed, %d = the DEN given back.
 msgid "LOG_TALENT_SERENE_WAVES"

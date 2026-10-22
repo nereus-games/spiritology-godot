@@ -99,6 +99,26 @@ after each turn, `EncounterContext.deal_damage` the second; what a reaction does
 through `EncounterManager.reaction_noted`, and a reaction's own damage does not set off further
 reactions.
 
+Four more pieces let the other abilities say what the doc says:
+
+- **A history.** `EncounterManager.history` (`encounter_history.gd`, handed to every context as
+  `ctx.history`) records each resolved round-turn — who, what, whom, the damage, the weakness
+  exposed — each real DEN loss, and each recovery or object given to someone else. "Usable only
+  if…" abilities override `AbilityScript.is_usable(ctx)`; `EncounterManager.can_play` applies
+  it, so the menu greys them out and `AutoAgent` leaves them alone.
+- **Recurring effects.** `AbilityScript.recur(ctx)` runs at the start of each of its bearer's
+  turns, and `on_meditated(ctx)` lets the bearer shake it off by Meditating (Self-Denial).
+- **Weights on rival choices.** `EncounterIndividual.action_weights` raises the chance that a
+  rival Talks or Meditates, on the usual timers; `AutoAgent` draws from the encounter's rng only
+  when a weight applies, so an encounter without weights replays exactly as before.
+- **Next-turn modifiers.** A free ability, a Talk that yields as much as an Examine, damage that
+  steps up a tier, a Talk that yields less. `ifp_earned` carries a fifth argument,
+  `yield_factor`, which `GameSession.award_ifp` applies.
+
+`EncounterContext` sits at `gdlintrc`'s ceiling on public methods, so these are static helpers
+in `effects/` (`action_weights.gd`, `next_turn_modifiers.gd`, `one_off_rules.gd`) rather than
+methods of the context; the next addition of that kind should follow them.
+
 ## Exploration: a logical grid, and mechanisms that register themselves
 
 The dungeon is a **logical grid** and it is the source of truth — floor tiles, walls, holes,
@@ -155,6 +175,13 @@ one, which is what hand-built scenarios rely on.
 taken on the map — a fall — is still there. **Coming back**, the encounter hands exploration
 a report, one entry per member (`EncounterManager.rival_report`), and the group takes it:
 dissolved members are gone, the others keep the DEN and ETH they came out with.
+
+**The encounter reaches the dungeon through narrow handles, never a reference to it.**
+`EncounterManager.map_reveal` is a callable handed in the way `object_provider` is, set by
+`TransitionManager.open_encounter`; Trick to Reveal calls it after an effective dialogue, and
+exploration answers by revealing the closest hidden chest or trap. The other direction is
+Static Camouflage: `DungeonManager.scouting` (`scouting.gd`) shows 2 to 4 of the map's groups
+one at a time and swaps the exploration menu for "take this group on" / "keep waiting".
 
 An encounter no longer ends only when a side is dissolved. An individual can **leave**:
 `EncounterManager.withdraw` takes it out of its side and of the turn order, so no targeting

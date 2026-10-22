@@ -1,6 +1,6 @@
 # What isn't built yet
 
-The source carries about 80 `TODO` markers; `grep -rn TODO --include='*.gd' .` lists them.
+The source carries about 70 `TODO` markers; `grep -rn TODO --include='*.gd' .` lists them.
 Scattered through the code they read like neglect; grouped, they are an accurate map of what
 the game still needs, and most of them are not debt at all — they are one system waiting on
 another.
@@ -26,15 +26,12 @@ Each is explicit in the doc, has no prerequisite, and is wrong in play right now
 
 ## 2. Encounter hooks that unlock abilities in bulk
 
-About 44 of the markers sit in the encounter abilities, across 34 of the 111 scripts. Most
+About 34 of the markers sit in the encounter abilities, across 28 of the 111 scripts. Most
 implement their mechanic faithfully except for one clause the engine cannot express yet. Those
-clauses cluster around four missing pieces; building one closes several abilities at once.
-
-- **Reacting to what another individual does this turn** — a hook fired when an action is
-  declared or resolved. Victimism and Dodge Blur (punish a rival that Talks), Unavailability
-  (drain whoever targets the user), Unfocused Complaint (only if the target Meditates), Business
-  Card (DEN when a rival Talks to the user), Effort of Neutrality (only if the ally's action
-  deals no damage), Homeostasis (ETH at the moment of damage). *~7 abilities.*
+clauses cluster around three missing pieces; building one closes several abilities at once. A
+fourth is built: an ability can **react** to what another individual does or suffers until its
+user's next turn (see [architecture.md](architecture.md)), which settled Victimism, Dodge Blur,
+Unavailability, Unfocused Complaint, Effort of Neutrality, Homeostasis and half of Business Card.
 - **An encounter history** — who did what to whom, turn by turn, and how often each ability was
   used. Halo Effect, Glorification, Moral Elevation, Catatonia, Self-Disclosure,
   Retroflection. *~6 abilities.*

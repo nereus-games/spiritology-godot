@@ -20,6 +20,20 @@ func takes_user_away() -> bool:
 	return false
 
 
+## Override for an ability that REACTS: one whose [method execute] calls
+## [method EncounterContext.watch_reactions], and which is then asked about everything that
+## happens until its user's next turn.
+##
+## `ctx` is the ability's own context, its user being the one who used the ability and its
+## targets the individual who acted; `event` says what happened — see the event class's
+## questions. Nothing is required of it: most events do not concern the ability, and it simply
+## returns.
+##
+## A reaction cannot set off further reactions through the damage it deals.
+func react(_ctx: EncounterContext, _event) -> void:
+	pass
+
+
 ## Override with the ability's real mechanic.
 func execute(ctx: EncounterContext) -> void:
 	for effect in EffectCatalog.tag_effects(ctx.ability.tags):

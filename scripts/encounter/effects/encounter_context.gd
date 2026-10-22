@@ -14,6 +14,8 @@
 class_name EncounterContext
 extends RefCounted
 
+const EncounterEvent := preload("res://scripts/encounter/encounter_event.gd")
+
 
 ## Damage added per condition met — weakness struck, shared Spiricosm, completed page,
 ## same species. Conditions add up before being applied. Tuned in `data/balance.tres`.
@@ -46,6 +48,19 @@ var departures: Array = []
 ## What this effect did, in readable lines. Reaches the player through the encounter log.
 var log_lines: PackedStringArray = PackedStringArray()
 
+## The damage this effect dealt, after every modifier and whoever took it. Redirected damage
+## counts, the damage a reflection sends back does not. Read by the abilities that react to an
+## action having dealt none.
+var damage_dealt := 0
+
+## Whether this context belongs to a REACTION rather than to a turn. A reaction's damage does not
+## set off other reactions, which keeps one from chaining into another without end.
+var in_reaction := false
+
+## What the reactions that fired while this effect ran said, one entry each: [the individual
+## reacting, its ability, the lines]. The manager announces them once the turn's own lines are out.
+var reactions_noted: Array = []
+
 
 func note(line: String) -> void:
 	log_lines.append(line)
@@ -75,11 +90,14 @@ func deal_damage(target, base_amount: int) -> void:
 		)
 		victim.next_damage_factor = 1.0
 		victim.apply_damage(amount)
+		damage_dealt += amount
 		if user is EncounterIndividual and amount > 0:
 			victim.last_damager = user
 			if victim.reflect_to_attacker and user != victim:
 				user.apply_damage(amount)  # Reflux: as much goes back to the attacker
 	note(_tr("LOG_DAMAGE") % [amount, _name(victim)])
+	if victim is EncounterIndividual and amount > 0 and not in_reaction:
+		fire(EncounterEvent.damaged(victim, user if user is EncounterIndividual else null, amount))
 
 
 ## Conditions add up, then the user's own outgoing bonus if it meditated last turn, and
@@ -111,6 +129,44 @@ func _effective_energy() -> GameEnums.Energy:
 	if ability and ability.energy in [GameEnums.Energy.RANDOM, GameEnums.Energy.VARIABLE]:
 		return resolved_energy
 	return ability.energy if ability else GameEnums.Energy.NONE
+
+
+# --- Reactions ---
+
+
+## From now until the user's next turn, the ability is asked about what happens — see
+## [method AbilityScript.react].
+func watch_reactions() -> void:
+	if user is EncounterIndividual and ability != null:
+		user.watch(ability, _anchor(null))
+
+
+## Tells every individual that is watching, and notes what each did in [member reactions_noted].
+func fire(event) -> void:
+	for watcher in all_individuals:
+		if watcher.is_dissolved() or watcher.has_left() or watcher.reactions.is_empty():
+			continue
+		for reacting in watcher.reactions.values():
+			var sub := _reaction_context(watcher, reacting, event.actor)
+			EffectCatalog.script_for(reacting).react(sub, event)
+			if not sub.log_lines.is_empty():
+				reactions_noted.append([watcher, reacting, sub.log_lines])
+
+
+## The context a reaction runs in: the ability's own, with its owner as the user and the one who
+## acted as its target.
+func _reaction_context(owner, reacting: AbilityData, actor) -> EncounterContext:
+	var c := EncounterContext.new()
+	c.ability = reacting
+	c.user = owner
+	c.targets = [actor] if actor != null else []
+	c.all_individuals = all_individuals
+	c.timeline = timeline
+	c.rng = rng
+	c.completed_species = completed_species
+	c.resolved_energy = resolved_energy
+	c.in_reaction = true
+	return c
 
 
 # --- Other mutations ---
@@ -225,6 +281,16 @@ func opponents() -> Array:
 	return all_individuals.filter(
 		func(f): return f.is_player != _user_is_player() and not f.is_dissolved()
 	)
+
+
+## Whether `who` stands on the other side from the user.
+func is_opponent(who) -> bool:
+	return who is EncounterIndividual and who.is_player != _user_is_player()
+
+
+## Whether `who` is on the user's side, the user excepted.
+func is_ally(who) -> bool:
+	return who is EncounterIndividual and who != user and who.is_player == _user_is_player()
 
 
 ## Everyone else still standing, on either side.

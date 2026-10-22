@@ -90,6 +90,15 @@ talent REACTS to events scattered through the loop. Hence `TalentScript`'s set o
 encounter start and end, a resolved Talk, a single-use ability spent, the menu being built —
 of which each talent overrides only what concerns it.
 
+Some abilities react too, within a window. An ability such as Victimism ("any rival that Talks
+before the end of the turn takes damage") calls `ctx.watch_reactions()` from its `execute`, and
+until its user's next turn it is handed every `EncounterEvent` — an action resolved, with the
+damage it dealt, or an individual damaged — through its `react(ctx, event)`. The window is a
+timed effect like the others, so it ends on the same rule. The manager sends the first kind
+after each turn, `EncounterContext.deal_damage` the second; what a reaction does is announced
+through `EncounterManager.reaction_noted`, and a reaction's own damage does not set off further
+reactions.
+
 ## Exploration: a logical grid, and mechanisms that register themselves
 
 The dungeon is a **logical grid** and it is the source of truth — floor tiles, walls, holes,

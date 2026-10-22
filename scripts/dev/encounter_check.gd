@@ -339,8 +339,8 @@ func _check_effect_durations() -> void:
 	var p1_own := p1.species.weakness_for(GameEnums.TurnPosition.MIDDLE)
 	_check(p0_own != none and p1_own != none, "both test species expose a weakness of their own")
 	_check(
-		seen.get("2:%s" % p0.species_id()) == [none, none],
-		"no weakness for either teammate across the round boundary"
+		seen.get("2:%s" % p0.species_id()) == [p0_own, none],
+		"the user has none across the round boundary, a teammate that has not acted keeps its own"
 	)
 	_check(
 		seen.get("2:%s" % p1.species_id(), [])[1] == p1_own,

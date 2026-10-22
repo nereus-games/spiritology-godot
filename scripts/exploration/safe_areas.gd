@@ -69,7 +69,7 @@ func violations() -> Array[String]:
 			var n: Vector3i = c + d
 			if _dungeon.is_floor(n) or _dungeon.is_edge_blocked(c, n):
 				continue
-			if _dungeon.is_bottomless(n) or _dungeon.fall_landing(n) != n:
+			if _dungeon.layout.is_bottomless(n) or _dungeon.layout.fall_landing(n) != n:
 				faults.append("%s -> %s: ledge with no railing" % [c, n])
 	var config: DungeonConfig = _dungeon.config
 	if config != null:

@@ -89,7 +89,7 @@ unblock.
   exit interaction is still unwired, and a secondary exit should unlock a bonus dungeon. The
   title screen, the pause screen (the encounter's Menu
   button is hidden until it exists) and boot's hand-off belong to the same piece.
-  (`exploration.gd`, `dungeon_manager.gd`, `encounter_ui.gd`, `boot.gd`)
+  (`exploration.gd`, `dungeon_layout.gd`, `encounter_ui.gd`, `boot.gd`)
 - **Dungeon state between visits.** `GameSession.dungeon_states` is saved and loaded but never
   written: every entry is a first entry, so groups, examined decor and opened chests all reset.
   The doc ("Exit + Reentry") wants rivals that had not disappeared to stay where they were,
@@ -100,12 +100,14 @@ unblock.
   doc conditions Talk's rewards on an effective dialogue without giving the rule, and its drafts
   make it depend on objects given to the rival. Everything built on Talk is provisional,
   including pacifying a rival as a way out of an encounter. (`encounter_manager.gd`, Talk)
-- **A dungeon authoring format, and a validator.** Walls and holes are derived from the floor
-  grid instead of declared; the doc's level-design rules — stairs lead to floor with nothing
+- **A dungeon authoring format, and a validator.** An authored dungeon will fill
+  `dungeon_layout.gd`, which holds the floor, holes, pits, walls and exits and nothing that
+  happens on them, and the validator will check that object. Walls and holes are derived from
+  the floor grid instead of declared; the doc's level-design rules — stairs lead to floor with nothing
   directly above, a narrow bridge always spans a floor, no bottomless hole — are checked only
   on the dev scenario, and caught at runtime otherwise. Safe areas already report their own
   faults (`safe_areas.violations()`), but only a check calls it. Becomes urgent with the first
-  real dungeon. (`dungeon_manager.gd`, `stairs.gd`, `exploration.gd`, `player_controller.gd` —
+  real dungeon. (`dungeon_layout.gd`, `stairs.gd`, `exploration.gd`, `player_controller.gd` —
   tagged `TODO(dungeon checker)`)
 - **Rivals carrying objects.** Examine should "reveal objects they carry", Steal has nothing to
   take, and Altruism has nothing to destroy. (`encounter_manager.gd`, `altruism.gd`)

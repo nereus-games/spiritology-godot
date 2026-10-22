@@ -160,19 +160,19 @@ static func _reset_session() -> void:
 static func _floor_rect(dm, x0: int, z0: int, w: int, d: int) -> void:
 	for x in range(x0, x0 + w):
 		for z in range(z0, z0 + d):
-			dm.add_floor(Vector3i(x, 0, z))
+			dm.layout.add_floor(Vector3i(x, 0, z))
 
 
 static func _floor_line(dm, x: int, z0: int, length: int) -> void:
 	for z in range(z0, z0 + length):
-		dm.add_floor(Vector3i(x, 0, z))
+		dm.layout.add_floor(Vector3i(x, 0, z))
 
 
 ## A rectangular floor at a given STOREY (y).
 static func _floor_rect_y(dm, x0: int, z0: int, w: int, d: int, y: int) -> void:
 	for x in range(x0, x0 + w):
 		for z in range(z0, z0 + d):
-			dm.add_floor(Vector3i(x, y, z))
+			dm.layout.add_floor(Vector3i(x, y, z))
 
 
 ## Instantiates a mechanism, applies `props`, puts it on `tile` and adds it to the dungeon.
@@ -210,7 +210,7 @@ static func _movement(dm) -> Vector3i:
 		Vector3i(1, 0, 6),
 		Vector3i(5, 0, 6)
 	]:
-		dm._floor.erase(pillar)
+		dm.layout.remove_floor(pillar)
 	return Vector3i(3, 0, 0)
 
 
@@ -273,7 +273,7 @@ static func _chests(dm) -> Vector3i:
 	GameSession.add_object(&"spade", 1)  # enough to destroy ONE die
 	# An exit at the end of the corridor, to tell "sent back to the entrance" apart from "sent to
 	# an exit". The entrance itself is declared by `exploration.gd` on the starting tile.
-	dm.add_exit(Vector3i(1, 0, 8))
+	dm.layout.add_exit(Vector3i(1, 0, 8))
 	AbilityCatalog.dev_granted = [&"fog_mantel"]  # so the crystal has something to refresh
 	GameSession.mark_exploration_ability_used(&"fog_mantel")
 	return Vector3i(1, 0, 0)
@@ -317,24 +317,24 @@ static func _build_bridge_map(dm, disarray_trap: bool = true) -> Vector3i:
 	#
 	#   y = 2  platforms + bridge     y = 1  return ledge     y = 0  floor of the ravine
 	_floor_rect_y(dm, 0, 0, 3, 2, 2)  # starting platform, x 0..2, z 0..1
-	dm.add_floor(Vector3i(3, 2, 0))  # top landing of the second flight
-	dm.add_floor(Vector3i(1, 2, 7))  # arrival: ONE tile, walled on 3 sides by render_grid
+	dm.layout.add_floor(Vector3i(3, 2, 0))  # top landing of the second flight
+	dm.layout.add_floor(Vector3i(1, 2, 7))  # arrival: ONE tile, walled on 3 sides by render_grid
 	# (the bridge is the only way out, so the return trip
 	# starts on it without wasting disarray moves)
 	# The bridge: every tile carries the mechanism, engaged along whichever way you face. Walkable
 	# but marked a pit — only the plank holds it up, and the ravine opens below.
 	for z in range(2, 7):
 		var c := Vector3i(1, 2, z)
-		dm.add_floor(c)
-		dm.mark_pit(c)
+		dm.layout.add_floor(c)
+		dm.layout.mark_pit(c)
 		_spawn_plank(dm, c)
 		_place(dm, NarrowBridge, c)
 	# Floor of the ravine, 2 storeys down, catching a fall along the whole length of the bridge.
 	_floor_rect_y(dm, 0, 2, 4, 5, 0)  # x 0..3, z 2..6
-	dm._floor.erase(Vector3i(3, 0, 4))  # the first flight's shaft: you never land ON the stairs
+	dm.layout.remove_floor(Vector3i(3, 0, 4))  # the first flight's shaft: you never land ON the stairs
 	# The intermediate ledge linking the two flights.
-	dm.add_floor(Vector3i(3, 1, 2))
-	dm.add_floor(Vector3i(3, 1, 3))
+	dm.layout.add_floor(Vector3i(3, 1, 2))
+	dm.layout.add_floor(Vector3i(3, 1, 3))
 	# The climb back: floor to ledge, then ledge to the STARTING platform — falling does not win
 	# you the crossing. Each flight is one upward tile plus its downward tile above it.
 	_place(dm, Stairs, Vector3i(3, 0, 4), {"level_delta": 1, "face_dir": Vector3i(0, 0, -1)})
@@ -394,7 +394,7 @@ static func _stairs(dm) -> Vector3i:
 	# A PILLAR: one tile of storey 0 is removed under tier 1, so it becomes a wall block and ITS
 	# top face serves as the floor of the tile above (the design doc's "Walls + Decors": a wall can
 	# serve as ground on the floor above it, which avoids stacking wall plus slab).
-	dm._floor.erase(Vector3i(1, 0, 8))
+	dm.layout.remove_floor(Vector3i(1, 0, 8))
 
 	# GUARDRAILS: the top tier's east edge is protected only along its first two tiles. Two steps
 	# further the same edge is open, and costs a 4-unit fall — the two are a step apart, so they
@@ -409,8 +409,8 @@ static func _stairs(dm) -> Vector3i:
 	for flight in [Vector3i(1, 0, 4), Vector3i(2, 1, 6), Vector3i(3, 2, 8), Vector3i(4, 3, 10)]:
 		var up: Vector3i = flight
 		var down: Vector3i = up + Vector3i(0, 1, 0)
-		dm._floor.erase(up)  # a flight's tile is not walkable: you are carried past it
-		dm._floor.erase(down)
+		dm.layout.remove_floor(up)  # a flight's tile is not walkable: you are carried past it
+		dm.layout.remove_floor(down)
 		_place(dm, Stairs, up, {"level_delta": 1, "face_dir": Vector3i(0, 0, 1)})
 		_place(dm, Stairs, down, {"level_delta": -1, "face_dir": Vector3i(0, 0, -1)})
 
@@ -528,6 +528,6 @@ static func _abilities(dm) -> Vector3i:
 static func _rivals(dm) -> Vector3i:
 	_floor_rect(dm, 0, 0, 9, 13)
 	for pillar in [Vector3i(2, 0, 4), Vector3i(6, 0, 4), Vector3i(4, 0, 9)]:
-		dm._floor.erase(pillar)
+		dm.layout.remove_floor(pillar)
 	GameSession.add_object(&"smoke_bomb", 3)
 	return Vector3i(4, 0, 0)

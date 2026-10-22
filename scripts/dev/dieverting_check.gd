@@ -199,8 +199,8 @@ func _check_outcome(outcome: int) -> void:
 			print("[1. back to the entrance + objects lost]")
 			await die.submit(player, outcome)
 			_check(
-				player.tile == dm.entrance_tile(),
-				"the player is at the entrance %s (%s)" % [dm.entrance_tile(), player.tile]
+				player.tile == dm.layout.entrance_tile(),
+				"the player is at the entrance %s (%s)" % [dm.layout.entrance_tile(), player.tile]
 			)
 			_check(
 				_inventory_total() == before_objects - die.objects_lost,
@@ -219,7 +219,7 @@ func _check_outcome(outcome: int) -> void:
 			print("[2. back to the entrance + ETH lost]")
 			await die.submit(player, outcome)
 			_check(
-				player.tile == dm.entrance_tile(),
+				player.tile == dm.layout.entrance_tile(),
 				"the player is at the entrance (%s)" % player.tile
 			)
 			_check(
@@ -256,8 +256,8 @@ func _check_outcome(outcome: int) -> void:
 			print("[4. sent to an exit + objects lost + DEN lost]")
 			await die.submit(player, outcome)
 			_check(
-				player.tile in dm.exit_tiles(),
-				"the player is on an exit %s (%s)" % [dm.exit_tiles(), player.tile]
+				player.tile in dm.layout.exit_tiles(),
+				"the player is on an exit %s (%s)" % [dm.layout.exit_tiles(), player.tile]
 			)
 			_check(
 				_inventory_total() == before_objects - die.objects_lost,

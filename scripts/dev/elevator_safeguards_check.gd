@@ -176,7 +176,7 @@ func _check_wall_gate(dm, player) -> void:
 	if gate == null:
 		return
 	_check(dm.mechanisms_at(MIDDLE_GATE).is_empty(), "a teleport gate occupies no tile")
-	_check(dm.derive_wall_tiles().has(beyond), "it stands against a wall")
+	_check(dm.layout.derive_wall_tiles().has(beyond), "it stands against a wall")
 	var p: Array = gate.open_pattern
 	_check(
 		p.size() == 3 and not p[0] and not p[1] and p[2], "default pattern: closed, closed, open"
@@ -305,7 +305,7 @@ func _check_safe_area(dm, player) -> void:
 	rival.remove_from_dungeon()
 	await get_tree().process_frame
 	var edge := Vector3i(11, 2, 11)
-	dm.add_floor(edge)  # a tile beyond the back wall, just for this
+	dm.layout.add_floor(edge)  # a tile beyond the back wall, just for this
 	var guard := _spawn_rival(dm, edge)
 	await get_tree().process_frame
 	player.teleport_to(Vector3i(11, 2, 10))
@@ -313,12 +313,12 @@ func _check_safe_area(dm, player) -> void:
 	await guard.take_turn(player.tile)
 	_check(_encounters.is_empty(), "no encounter started from outside the safe area")
 	guard.remove_from_dungeon()
-	dm._floor.erase(edge)
+	dm.layout.remove_floor(edge)
 	await get_tree().process_frame
 
 	var landed_safe := false
 	for i in 200:
-		if dm.safe_areas.has(dm.random_floor_tile(EAST_LIFT, true)):
+		if dm.safe_areas.has(dm.tile_search.random_floor_tile(EAST_LIFT, true)):
 			landed_safe = true
 	_check(not landed_safe, "a teleport trap never drops a rival in the safe area")
 
@@ -346,7 +346,7 @@ func _field(tiles: Array) -> DungeonManager:
 	var dm := DungeonManager.new()
 	add_child(dm)
 	for t in tiles:
-		dm.add_floor(t)
+		dm.layout.add_floor(t)
 	return dm
 
 

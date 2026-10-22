@@ -238,6 +238,7 @@ func _check_talent_in_encounter() -> void:
 	_check(asked[0] == 0, "a defeat reveals nothing, whatever the last dialogue was")
 
 	# An ineffective one: nothing.
+	m.free()
 	m = _encounter(0.0)
 	_counting(m, asked)
 	(m.agent_for(m.players[0]) as Player).queued = [_talk(m.rivals[0])]
@@ -245,12 +246,14 @@ func _check_talent_in_encounter() -> void:
 	_check(not m.last_talk_effective and asked[0] == 0, "an ineffective dialogue reveals nothing")
 
 	# No dialogue at all: nothing.
+	m.free()
 	m = _encounter(1.0)
 	_counting(m, asked)
 	await m.run(1)
 	_check(asked[0] == 0, "no dialogue, no reveal")
 
 	# Effective first, ineffective last: it is the LAST one that counts.
+	m.free()
 	m = _encounter(1.0)
 	_counting(m, asked)
 	var player := m.agent_for(m.players[0]) as Player
@@ -263,15 +266,18 @@ func _check_talent_in_encounter() -> void:
 	_check(not m.last_talk_effective and asked[0] == 0, "only the last dialogue counts")
 
 	# Nothing handed over, or a map with nothing hidden: no crash, and the log claims no reveal.
+	m.free()
 	m = _encounter(1.0)
 	(m.agent_for(m.players[0]) as Player).queued = [_talk(m.rivals[0])]
 	await m.run(1)
 	_check(not _reveal_line(m), "without a map, the log claims no reveal")
+	m.free()
 	m = _encounter(1.0)
 	_counting(m, asked, false)
 	(m.agent_for(m.players[0]) as Player).queued = [_talk(m.rivals[0])]
 	await m.run(1)
 	_check(asked[0] == 1 and not _reveal_line(m), "a map with nothing hidden: no claim either")
+	m.free()
 
 
 ## The handle travels from the exploration scene through TransitionManager and the encounter

@@ -140,8 +140,10 @@ A `DungeonConfig` says how rival groups appear, and every figure is per dungeon:
 | `spawn_points` | S — the tiles a group may appear on |
 | `initial_spawns` | P — groups on first entry |
 | `spawns_per_wave` / `spawn_interval_turns` | N groups every T turns; T = 0, no waves |
-| `random_composition_chance` | X, from 0.5 to 1 — a group drawn at random, else a special one |
+| `random_composition_chance` | X, from 0.5 to 1 — a group drawn at random, else a special one (so presets are 0 to 50 % of spawns) |
 | `possible_species` | the varieties a random group is drawn from |
+| `common_species` / `rare_species` | subsets of `possible_species`; the others are normal. Weighted 3 : 2 : 1 by default |
+| `rival_limit` | the most groups on the map at once; 0, no limit |
 | `group_size_*`, `member_max_den_*`, `member_max_eth_*` | the random draw's bounds |
 | `special_compositions` | `RivalGroupData`, picked when not drawn at random |
 | `fixed_groups` | `RivalGroupData` with a `tile`: tutorials, bosses, once on entry |
@@ -191,6 +193,10 @@ cost would *give* ETH back), never a particular balance.
 | `object_heal_den` | 25 | "gives Y DEN to a target" |
 | `flee_distance_min` / `_max` | 3 / 5 | the doc's figures: "teleporting 3–5 tiles away" |
 | `rival_rest_turns` | 3 | nothing — a group's pause after an encounter is our own |
+| `spawn_weight_common` / `_normal` | 3 / 2 | a rare species weighs 1; the multipliers are proposed, unanswered |
+| `wave_psy_threshold` / `_extra_groups` | 20 / +1 | waves "grow wider" at a high PSY, unquantified |
+| `decor_psy_threshold` / `decor_spawn_chance` | 20 / 45 % | the figures the doc gives |
+| `decor_spawn_groups_max` / `decor_spawn_radius` | 2 / 4 | "one or more groups nearby" |
 
 `ObjectData.magnitude` stays `0`, meaning "not stated by Notion"; consumers fall back to
 the balance value above.

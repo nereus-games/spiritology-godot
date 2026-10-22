@@ -18,6 +18,12 @@ extends Resource
 ## ([method all_rival_species]).
 @export var possible_species: Array[StringName] = []
 
+## Of [member possible_species], those that are COMMON here and those that are RARE; the rest
+## are normal. A species is weighted by its rarity when a random group is drawn: see
+## [member BalanceData.spawn_weight_common] and [member BalanceData.spawn_weight_normal].
+@export var common_species: Array[StringName] = []
+@export var rare_species: Array[StringName] = []
+
 ## Scripted rivals and special factions present here, such as The Coal Vetch.
 @export var special_rivals: Array[StringName] = []
 
@@ -28,6 +34,10 @@ extends Resource
 
 ## S: the tiles where a rival group may appear. How many there are is the dungeon's S.
 @export var spawn_points: Array[Vector3i] = []
+
+## The spawn limit: the most rival groups on the map at once, past which nothing spawns. 0 means
+## no limit. The doc says "rivals"; counting groups rather than individuals is our reading.
+@export var rival_limit: int = 0
 
 ## P: groups that appear on first entering the dungeon.
 @export var initial_spawns: int = 0
@@ -40,7 +50,7 @@ extends Resource
 
 ## X: the chance a spawned group is composed at random, from [member possible_species] and the
 ## bounds below; otherwise it is one of [member special_compositions]. The design doc keeps it
-## between 50 % and 100 %.
+## between 50 % and 100 %, which is to say preset compositions in 0 to 50 % of spawns.
 @export_range(0.5, 1.0) var random_composition_chance: float = 1.0
 
 ## How many individuals a randomly composed group holds.

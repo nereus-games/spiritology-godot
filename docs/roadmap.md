@@ -17,20 +17,12 @@ on Notion?
 
 Each is explicit in the doc, has no prerequisite, and is wrong in play right now.
 
-- **Rival spawning ignores half of what the doc now says.** "Rival Spawning" was rewritten in
-  September; `rival_spawner.gd` still draws species uniformly, has no cap, and skips a spawn
-  that finds no free point. The doc wants: species weighted by dungeon rarity (common, normal,
-  rare — the multipliers are still open, see section 5); a **spawn limit**, the maximum number
-  of rivals at a time, past which nothing spawns; when every spawn point is occupied, the new
-  group appears on one anyway and pushes the occupant to an adjacent tile (the same rule as a
-  Teleport Gate's arrival, and never a point the player stands on or next to); preset
-  compositions between 0 and 50 % of spawns; and about 1 % of spawned rivals Forlorn, with the
-  doc's table of bonuses (which needs the Forlorn individual of section 4). Spawn waves at high
-  PSY should grow wider first, and the interval shrink only if that proves too little.
-  (`rival_spawner.gd`, `dungeon_config.gd`)
-- **Examining decor at a high PSY should spawn rivals.** The doc now gives the figures: above
-  PSY 20, a 45 % chance of one or more groups nearby but never on the player's tile, composed
-  by the normal spawning rules. (`examinable_decor.gd`)
+- **About 1 % of spawned rivals should be Forlorn.** The rest of "Rival Spawning" is built:
+  species weighted by dungeon rarity, the spawn limit, a new group pushing the occupant of a
+  taken spawn point aside, preset compositions in 0 to 50 % of spawns, waves wider at a high
+  PSY, and examined decor spawning rivals above PSY 20. What is left needs the Forlorn
+  individual of section 4: the roll, and the doc's table of bonuses. (`rival_spawner.gd`,
+  `TODO(forlorn)`)
 
 ## 2. Encounter hooks that unlock abilities in bulk
 
@@ -145,7 +137,13 @@ pages the doc has not given yet.
 - The dieverting's rival count and distance, "specifics TBD" (`dieverting.gd`).
 - The generic ETH loss amount (`eth_loss_effect.gd`).
 - The multipliers for common and normal species against rare ones in spawning (proposed 3 and
-  2, not yet answered), and the Forlorn bonuses still marked X, Y or TBD (`rival_spawner.gd`).
+  2, not yet answered; `spawn_weight_common` and `spawn_weight_normal` in `data/balance.tres`),
+  and the Forlorn bonuses still marked X, Y or TBD (`rival_spawner.gd`).
+- Spawning figures the doc leaves open, placeholders in `data/balance.tres`: what "high PSY"
+  means for wider waves and by how many groups (`wave_psy_*`; 20 and +1), how many groups and
+  how near "one or more groups nearby" is for examined decor (`decor_spawn_groups_max` and
+  `decor_spawn_radius`; 2 and 4), and whether the spawn limit counts rival groups or
+  individuals (groups, in `DungeonConfig.rival_limit`; no dungeon sets it yet).
 - The costume object, which has to be rethought: raising encounter odds and avoiding a second
   species fits neither spawning nor pursuit (commented 2026-10-21).
 - Species pages for *néarog* and *mazir*, listed in the doc's pools but absent from `data/`

@@ -10,6 +10,7 @@
 extends "res://scripts/exploration/mechanisms/dungeon_mechanism.gd"
 
 const ExplorationAction := preload("res://scripts/exploration/exploration_action.gd")
+const RivalSpawner := preload("res://scripts/exploration/rival_spawner.gd")
 
 enum DecorType { GOOEY_MARKS, POSTERS, SCRATCH_MARKS }
 
@@ -77,7 +78,7 @@ func on_adjacent_actions(who: Node, _facing: Vector3i) -> Array:
 
 
 ## Examine: hands out an encyclopaedia info about a spirimonster from this decor type's pool.
-func examine(_who: Node) -> void:
+func examine(who: Node) -> void:
 	if _examined:
 		return
 	_examined = true
@@ -87,9 +88,27 @@ func examine(_who: Node) -> void:
 	var pool: Array = POOLS[decor_type]
 	if not pool.is_empty():
 		GameSession.award_ifp(pool[randi() % pool.size()], GameEnums.IfpAction.EXAMINE_DECOR)
-	# ## TODO: at a high PSY, a chance to spawn one or more rivals nearby, but not on the
-	## player's tile. The design doc leaves the "how much?" threshold unquantified. Spawning
-	## itself exists — `rival_spawner.gd`, and the dieverting already does it.
+	_maybe_spawn_rivals(who)
+
+
+## Above [member BalanceData.decor_psy_threshold] PSY, a [member BalanceData.decor_spawn_chance]
+## chance (the doc: PSY 20, 45 %) of one or more groups nearby, never on the player's tile,
+## composed by the dungeon's normal spawning rules and held to its spawn limit. A room with no
+## such rules (no [DungeonConfig]) spawns nothing.
+func _maybe_spawn_rivals(who: Node) -> void:
+	var balance := BalanceData.current()
+	if _dungeon == null or _dungeon.config == null:
+		return
+	if GameSession.psy_score <= balance.decor_psy_threshold:
+		return
+	if randf() >= balance.decor_spawn_chance:
+		return
+	var origin: Vector3i = who.tile if who != null and "tile" in who else tile
+	var spawner = RivalSpawner.new(_dungeon.config, _dungeon)
+	var count := randi_range(1, balance.decor_spawn_groups_max)
+	var groups: Array = spawner.spawn_groups_near(origin, count, balance.decor_spawn_radius)
+	if not groups.is_empty():
+		_dungeon.post_message(tr("UI_DECOR_RIVALS"))
 
 
 ## Persistence between visits: unexamined decor keeps its place, examined decor disappears and

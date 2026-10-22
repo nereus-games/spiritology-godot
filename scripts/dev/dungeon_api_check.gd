@@ -34,6 +34,7 @@ func _run_all() -> void:
 	_check_walking_distances()
 	_check_random_floor_tile()
 	_check_teleporting()
+	_check_pushing_aside()
 	print("")
 	if _fails.is_empty():
 		print("ALL OK")
@@ -254,4 +255,27 @@ func _check_teleporting() -> void:
 	_check(landed == Vector3i(1, 0, 0), "an occupied destination falls back to a neighbour")
 	var back: Vector3i = dm.teleport_actor(other)
 	_check(back != Vector3i(1, 0, 0) and dm.is_floor(back), "a random teleport lands elsewhere")
+	dm.queue_free()
+
+
+func _check_pushing_aside() -> void:
+	print("[pushing a group aside]")
+	var dm = _field(3, 1)
+	var group := Fixture.actor(self, Vector3i(1, 0, 0))
+	dm.reserve(group.tile, group)
+	var player := Node3D.new()
+	add_child(player)
+	player.position = dm.tile_to_world(Vector3i(0, 0, 0))
+	dm.register_player(player)
+	dm.safe_areas.mark([Vector3i(2, 0, 0)])
+	_check(not dm.tile_search.push_group_aside(group), "boxed in by the player and a safe area")
+	_check(group.tile == Vector3i(1, 0, 0), "...it stays where it is")
+	dm.safe_areas = dm.safe_areas.get_script().new(dm)
+	_check(dm.tile_search.push_group_aside(group), "with the safe area gone it can move")
+	_check(
+		group.tile == Vector3i(2, 0, 0), "...to the only tile that is neither the player's nor safe"
+	)
+	_check(dm.occupant_at(Vector3i(2, 0, 0)) == group, "occupancy follows")
+	player.position = dm.tile_to_world(Vector3i(1, 0, 0))
+	_check(not dm.tile_search.push_group_aside(group), "never onto the player's tile")
 	dm.queue_free()

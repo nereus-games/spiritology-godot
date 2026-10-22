@@ -100,7 +100,8 @@ occupants, edges. Nothing is decided by raycasting. `DungeonManager` holds it, i
   and the exits. It is what a dungeon authoring format will fill, and what a validator will
   check;
 - the **tile searches** (`tile_search.gd`, `dungeon_manager.tile_search`) answer "a free tile
-  near here", "what can be reached on foot", "a random tile to teleport to";
+  near here", "what can be reached on foot", "a random tile to teleport to", and "make room
+  here" (`push_group_aside`, which moves rivals through the manager's own `release`/`reserve`);
 - the manager itself keeps what happens on the layout: who occupies which tile, the mechanisms
   registered on tiles and edges, and the turn.
 

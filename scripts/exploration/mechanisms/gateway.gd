@@ -138,16 +138,11 @@ static func teleport_gate_between(dungeon, from_tile: Vector3i, to_tile: Vector3
 	return null
 
 
-const NEIGHBOURS: Array[Vector3i] = [
-	Vector3i(1, 0, 0), Vector3i(-1, 0, 0), Vector3i(0, 0, 1), Vector3i(0, 0, -1)
-]
-
-
 ## Sends `who` through this teleport gate, to [member arrival_tile]. Per the design doc the trip
 ## happens even when the arrival tile is taken:
 ##  - the player arriving on a rival, or a rival arriving on the player, starts an encounter;
 ##  - a rival group arriving on another pushes the one already there aside
-##    (see [method _push_group]).
+##    (see [method TileSearch.push_group_aside]).
 ## Returns true when an encounter was requested — the caller's move ends there, as it does when
 ## walking into a rival. Otherwise the caller resolves the arrival as after any step: the tile's
 ## mechanisms, then the turn. Does not check that the gate admits `who`: see [method admits_from].
@@ -165,7 +160,11 @@ func send_through(who: Node) -> bool:
 			return true
 		return false
 	var there: Node = _dungeon.occupant_at(arrival)
-	if there != null and there != who and not _push_group(there, {who: true}):
+	if (
+		there != null
+		and there != who
+		and not _dungeon.tile_search.push_group_aside(there, {who: true})
+	):
 		# Nowhere to push the group already there — not even onto a trap, over a ledge, or into a
 		# neighbouring group. Some rival has to go somewhere, and it is the newcomer.
 		push_warning("[Gateway] %s: nowhere to push a rival group aside." % arrival)
@@ -179,54 +178,6 @@ func send_through(who: Node) -> bool:
 		_dungeon.request_encounter(who, true)
 		return true
 	return false
-
-
-## Pushes the rival `group` off its tile onto a neighbouring one, to make room for a group
-## arriving through this gate. The design doc's order of preference: an ORDINARY free tile;
-## failing that, a trap, or a ledge with no railing to fall from; failing that, the group next to
-## it is pushed in turn and this one takes its place. Never onto the player, and never into a
-## safe area. `pushing` holds the groups already in the chain, so it cannot loop. Returns false
-## when the group could not be moved at all.
-func _push_group(group: Node, pushing: Dictionary) -> bool:
-	pushing[group] = true
-	var at: Vector3i = group.tile
-	var safe = _dungeon.safe_areas
-	var around: Array[Vector3i] = []
-	for d in NEIGHBOURS:
-		var n: Vector3i = at + d
-		if not _dungeon.is_edge_blocked(at, n) and n != _dungeon.player_tile() and not safe.has(n):
-			around.append(n)
-	# An ordinary free tile: floor, nobody on it, nothing on it.
-	for n in around:
-		if _dungeon.is_walkable(n) and _dungeon.mechanisms_at(n).is_empty():
-			_shove(group, n)
-			return true
-	# A free tile carrying a mechanism — a trap, typically — which fires on arrival.
-	for n in around:
-		if _dungeon.is_walkable(n):
-			_shove(group, n)
-			_dungeon.notify_entered(n, group)
-			return true
-	# A ledge: no floor there, but some further down. The group falls, and takes the damage.
-	for n in around:
-		var landing: Vector3i = _dungeon.layout.fall_landing(n)
-		if not _dungeon.is_floor(n) and landing != n and not safe.has(landing):
-			if group.has_method("fall_down"):
-				group.fall_down(n)
-				return true
-	# The group next to it, pushed in turn.
-	for n in around:
-		var next_group: Node = _dungeon.occupant_at(n)
-		if next_group != null and not pushing.has(next_group) and _push_group(next_group, pushing):
-			_shove(group, n)
-			return true
-	return false
-
-
-func _shove(group: Node, to_tile: Vector3i) -> void:
-	_dungeon.release(group.tile)
-	_dungeon.reserve(to_tile, group)
-	group.teleport_to(to_tile)
 
 
 ## What is on offer when FACING the gateway, from either side: paying to open a locked one, or

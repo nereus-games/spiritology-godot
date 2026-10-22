@@ -148,6 +148,20 @@ func _fit_sprite() -> void:
 	sprite.position.y = tex_height * sprite.pixel_size * 0.5
 
 
+## Spends one turn of the action cooldown, and says whether the rival acts this turn. Above
+## rung 4 of the PSY ladder (PSY above 40) the rival is "more reactive": it has no cooldown
+## turn and acts every turn, whatever [member turns_between_actions] says.
+func _acts_this_turn() -> bool:
+	if GameSession.psy_above(4):
+		_cooldown = 0
+		return true
+	if _cooldown > 0:
+		_cooldown -= 1
+		return false
+	_cooldown = turns_between_actions - 1
+	return true
+
+
 ## Played by the DungeonManager every turn, with the player's current tile.
 func take_turn(player_tile: Vector3i) -> void:
 	if _busy or _dungeon == null:
@@ -155,10 +169,8 @@ func take_turn(player_tile: Vector3i) -> void:
 	if _rest > 0:
 		_rest -= 1
 		return
-	if _cooldown > 0:
-		_cooldown -= 1
+	if not _acts_this_turn():
 		return
-	_cooldown = turns_between_actions - 1
 
 	# Cross-floor chase. No cross-floor vision is needed: the rival SAW the player leave and
 	# remembers where it went.

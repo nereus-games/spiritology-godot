@@ -154,6 +154,14 @@ func psy_above(rung: int) -> bool:
 	return psy_score > thresholds[clampi(rung, 1, 4) - 1]
 
 
+## Does the PSY ladder forbid Meditate and objects right now? Rung 4 (PSY above 40) with the
+## player poisoned. `poisoned` is passed in because poison lives on the exploration actor, not
+## here. The map, encyclopaedia and team views are forbidden too by the doc.
+## TODO: gate those three once the views exist; they should ask this same function.
+func psy_forbids_while_poisoned(poisoned: bool) -> bool:
+	return poisoned and psy_above(4)
+
+
 ## Has this species been entered in the encyclopaedia at all?
 ##
 ## Gates what the encounter UI may show: "rival's density and weakness aren't shown in

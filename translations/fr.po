@@ -252,6 +252,10 @@ msgstr "aux aguets"
 msgid "UI_STATUS_POISON"
 msgstr "☠ Poison : %d tour(s) (-%d DEN)"
 
+# PSY above 40 while poisoned: shown when Meditate or an object is tried, in exploration and in encounters.
+msgid "UI_PSY_POISON_FORBIDS"
+msgstr "Le poison trouble votre esprit : impossible de méditer ou d'utiliser des objets."
+
 # %d = the moves still affected.
 msgid "UI_STATUS_DISARRAY"
 msgstr "✦ Désorienté : %d mouvement(s)"

@@ -505,6 +505,16 @@ msgstr "%s gains %d action(s) [to come]."
 msgid "LOG_FORCED_TO_TALK"
 msgstr "%s is forced to Talk [to come]."
 
+# %s = the individual made likelier to pick that base action.
+msgid "LOG_WEIGHT_TALK"
+msgstr "%s will Talk more often."
+
+msgid "LOG_WEIGHT_MEDITATE"
+msgstr "%s will Meditate more often."
+
+msgid "LOG_WEIGHT_OBJECT"
+msgstr "%s will use objects more often."
+
 # %d = the bonus, %s = who is examined.
 msgid "LOG_EXAMINE_BONUS"
 msgstr "Examine bonus +%d on %s [to come]."

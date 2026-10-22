@@ -68,6 +68,11 @@ var outgoing_damage_bonus := 0.0
 ## [method AbilityScript.react]. A resource per ability, never an individual, so no cycle forms.
 var reactions: Dictionary = {}
 
+## How much likelier this individual is to pick a base action when an AutoAgent plays it, as
+## entries of [kind, bonus, focus instance id or 0, serial]. See [method add_action_weight].
+## Never a reference to the focus itself, so that no cycle forms.
+var action_weights: Array = []
+
 ## Why this individual left the encounter before its end — [constant EncounterManager.FLED]
 ## or [constant EncounterManager.PACIFIED] — or &"" while it is still in it. Set by
 ## [method EncounterManager.withdraw], and only there.
@@ -82,6 +87,7 @@ var _weakness_energy := GameEnums.Energy.NONE  ## The weakness forced for now
 ## Timers of the timed state: key (see [method _expire]) -> [anchor instance id, turns left].
 ## An instance id rather than the anchor itself, so that no reference cycle can form.
 var _timers: Dictionary = {}
+var _weight_serial := 0  ## Names the timer of each action weight
 
 
 func _init(p_species: SpeciesData, p_is_player: bool) -> void:
@@ -243,6 +249,53 @@ func watch(
 	_arm("reaction:%s" % ability.id, anchor, turns)
 
 
+# --- Action weights: rivals Talking, Meditating or using objects "more often" ---
+
+
+## Makes this individual likelier to pick `kind` (TALK, MEDITATE or USE_OBJECT) by `bonus`, a
+## probability added on top of what it already has, until `anchor`'s next turn begins (or for the
+## whole encounter with [constant FOR_ENCOUNTER]). With a `focus`, the Talk it picks is aimed at
+## that individual when it can be (Business Card: "Talk to it more often"). Bonuses add up.
+func add_action_weight(
+	kind: int,
+	bonus: float,
+	anchor: EncounterIndividual = null,
+	turns := UNTIL_NEXT_TURN,
+	focus: EncounterIndividual = null
+) -> void:
+	_weight_serial += 1
+	var focus_id := focus.get_instance_id() if focus != null else 0
+	action_weights.append([kind, bonus, focus_id, _weight_serial])
+	_arm("weight:%d" % _weight_serial, anchor, turns)
+
+
+## The probability currently added to `kind`, all its weights together.
+func action_bonus(kind: int) -> float:
+	var total := 0.0
+	for w in action_weights:
+		if w[0] == kind:
+			total += w[1]
+	return total
+
+
+## Whom a Talk should be aimed at, if some weight asks for someone in particular among
+## `candidates`; null otherwise.
+func weight_focus(kind: int, candidates: Array):
+	for w in action_weights:
+		if w[0] == kind and w[2] != 0:
+			for c in candidates:
+				if c.get_instance_id() == w[2]:
+					return c
+	return null
+
+
+func _expire_action_weight(serial: int) -> void:
+	for i in range(action_weights.size()):
+		if action_weights[i][3] == serial:
+			action_weights.remove_at(i)
+			return
+
+
 ## A turn begins — `individual`'s. Everything anchored to it counts down one turn, and what
 ## runs out expires. The manager calls this on EVERY individual at the start of each turn,
 ## including the turns a dissolved individual skips, so that its effects still run out.
@@ -283,6 +336,9 @@ func _expire(key: String) -> void:
 		return
 	if key.begins_with("factor:"):
 		energy_damage_factor.erase(int(key.get_slice(":", 1)))
+		return
+	if key.begins_with("weight:"):
+		_expire_action_weight(int(key.get_slice(":", 1)))
 		return
 	if key.begins_with("reaction:"):
 		reactions.erase(StringName(key.get_slice(":", 1)))

@@ -130,6 +130,13 @@ func arranged_fragments(species_id: StringName, forlorn: bool = false) -> int:
 	return p.arranged if p != null else 0
 
 
+## What the puzzle parked on the page (see [member Page.puzzle_state]); a copy, empty if there is
+## none.
+func puzzle_state(species_id: StringName, forlorn: bool = false) -> Dictionary:
+	var p := page(species_id, forlorn)
+	return p.puzzle_state.duplicate(true) if p != null else {}
+
+
 ## IFP a page can still take before the 99 % cap: 0 for a page at the cap or assembled.
 func room(species_id: StringName, forlorn: bool = false) -> int:
 	return maxi(IFP_CAP - ifp(species_id, forlorn), 0)
@@ -211,6 +218,12 @@ func set_arranged(species_id: StringName, forlorn: bool, count: int) -> int:
 	var p := _page_for_write(species_id, forlorn)
 	p.arranged = clampi(count, 0, p.true_fragments())
 	return _refresh_tier(p, forlorn)
+
+
+## Parks the puzzle's layout on the page, to be saved with it and given back by [method
+## puzzle_state]. Opaque to the model; it must be JSON-safe (no Vector2i, no StringName keys).
+func set_puzzle_state(species_id: StringName, forlorn: bool, state: Dictionary) -> void:
+	_page_for_write(species_id, forlorn).puzzle_state = state.duplicate(true)
 
 
 ## Destroys true fragments (a damaged one hit again by a wrong assembly): the page loses 3 IFP

@@ -62,3 +62,12 @@ static func unlocked_abilities(species_id: StringName) -> Array[StringName]:
 		if ability_id in revealed:
 			result.append(ability_id)
 	return result
+
+
+## Whether the page has fragments to put on the assembly desk, true or parasitic: the page
+## offers the desk only then. The player is not told which are which, so neither is the view.
+static func can_assemble(species_id: StringName, forlorn: bool = false) -> bool:
+	return (
+		GameSession.true_fragments(species_id, forlorn) > 0
+		or GameSession.parasitic_fragments(species_id, forlorn) > 0
+	)

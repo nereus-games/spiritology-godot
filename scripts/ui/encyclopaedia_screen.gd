@@ -4,9 +4,10 @@
 ## yet. Run as a scene of its own, leaving it goes back to the picker; embedded in something else,
 ## it emits [signal closed] instead and the owner decides.
 ##
-## Controls: arrows move the selector (or switch tabs on a page), accept opens a page, cancel
-## goes back one level. The list of species is every [SpeciesData], by identifier, which is a
-## placeholder order: the doc does not say how pages are arranged.
+## Controls: arrows move the selector (or switch tabs on a page), accept opens a page (and, on a
+## page with fragments, the assembly desk), cancel goes back one level.
+## The list of species is every [SpeciesData], by identifier, which is a placeholder order:
+## the doc does not say how pages are arranged.
 ##
 ## No `class_name` (the CLI class-cache trap).
 extends Control
@@ -14,6 +15,8 @@ extends Control
 const GridView := preload("res://scripts/ui/encyclopaedia_grid_view.gd")
 const PageView := preload("res://scripts/ui/encyclopaedia_page_view.gd")
 const Recent := preload("res://scripts/ui/encyclopaedia_recent.gd")
+const Source := preload("res://scripts/ui/encyclopaedia_page_source.gd")
+const ASSEMBLY_SCENE := preload("res://scenes/ui/encyclopaedia_assembly.tscn")
 
 const RETURN_SCENE := "res://scenes/dev/scenario_select.tscn"
 
@@ -27,6 +30,7 @@ var _grid: Control
 var _page: Control
 var _body: Control
 var _hint: Label
+var _assembly: Control
 
 
 func _ready() -> void:
@@ -90,7 +94,35 @@ func _show_page(species_id: StringName) -> void:
 	_page.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_body.add_child(_page)
 	_page.setup(species_id)
-	_hint.text = tr("UI_ENCYCLOPAEDIA_HINT_PAGE")
+	_show_page_hint()
+
+
+## Whether the page on show has fragments to assemble. The Forlorn tab is a placeholder.
+func _can_assemble() -> bool:
+	return _page != null and not _page.forlorn_tab and Source.can_assemble(start_species)
+
+
+## Puts the assembly desk of the page on show over the screen. It is the same scene that anything
+## else can instance; here it is freed when it says it is closed, and the page is built again,
+## since its completion may have changed.
+func _open_assembly() -> void:
+	_assembly = ASSEMBLY_SCENE.instantiate()
+	_assembly.species_id = start_species
+	_assembly.closed.connect(_close_assembly)
+	add_child(_assembly)
+
+
+func _close_assembly() -> void:
+	_assembly.queue_free()
+	_assembly = null
+	_show_page(start_species)
+
+
+func _show_page_hint() -> void:
+	var key := (
+		"UI_ENCYCLOPAEDIA_HINT_PAGE_ASSEMBLE" if _can_assemble() else "UI_ENCYCLOPAEDIA_HINT_PAGE"
+	)
+	_hint.text = tr(key)
 
 
 func _clear_body() -> void:
@@ -108,6 +140,8 @@ func _close() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if _assembly != null:
+		return
 	if event.is_action_pressed("ui_cancel"):
 		if _page != null:
 			_show_grid()
@@ -116,6 +150,9 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif _page != null:
 		if event.is_action_pressed("ui_left") or event.is_action_pressed("ui_right"):
 			_page.set_forlorn_tab(not _page.forlorn_tab)
+			_show_page_hint()
+		elif event.is_action_pressed("ui_accept") and _can_assemble():
+			_open_assembly()
 		else:
 			return
 	elif _grid != null:

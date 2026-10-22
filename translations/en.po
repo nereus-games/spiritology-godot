@@ -1309,6 +1309,45 @@ msgstr "POTENTIAL LOOT"
 msgid "UI_ENCYCLOPAEDIA_LOOT_NONE"
 msgstr "None known"
 
+# --- The assembly desk -----------------------------------------------------------------
+# Opened from a page. %d / %d = fragments correctly arranged out of a page's total, then %d =
+# the page's completion in percent (written %% in the format).
+msgid "UI_ASSEMBLY_TITLE"
+msgstr "Assembly desk"
+
+msgid "UI_ASSEMBLY_NEW_AREA"
+msgstr "New fragments"
+
+msgid "UI_ASSEMBLY_SUMMARY"
+msgstr "Correctly arranged: %d / %d · Completion: %d %%"
+
+msgid "UI_ASSEMBLY_HINT_BROWSE"
+msgstr "Arrows: move the cursor · Tab: next fragment · Accept: pick up · Cancel: leave"
+
+msgid "UI_ASSEMBLY_HINT_HOLD"
+msgstr "Arrows: move · Q / E: turn · Backspace: back to the new fragments · Accept / Cancel: put down"
+
+msgid "UI_ASSEMBLY_NOTICE_HOLE"
+msgstr "These two fragments belong together, but something is in the way: there is no room to fit them."
+
+msgid "UI_ASSEMBLY_NOTICE_FULL"
+msgstr "There is no room left on the desk."
+
+msgid "UI_ASSEMBLY_NOTICE_DESTROYED"
+msgstr "A damaged fragment fell apart. Its information points have to be obtained again."
+
+msgid "UI_ASSEMBLY_NOTICE_COMPLETE"
+msgstr "Page assembled! The leftover parasitic fragments are gone and the others are mended."
+
+msgid "UI_ASSEMBLY_NOTICE_EMPTY"
+msgstr "There are no fragments to assemble yet."
+
+msgid "UI_ENCYCLOPAEDIA_ASSEMBLE"
+msgstr "Accept: assemble the page's fragments"
+
+msgid "UI_ENCYCLOPAEDIA_HINT_PAGE_ASSEMBLE"
+msgstr "Accept: assemble the fragments · Left / Right: switch tab · Cancel: back to the grid"
+
 msgid "TERM_SPIRICOSM_GLOOM"
 msgstr "Gloom"
 

@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://b0encyasmshot"]
+
+[ext_resource type="Script" path="res://scripts/dev/encyclopaedia_assembly_shot.gd" id="1"]
+
+[node name="EncyclopaediaAssemblyShot" type="Node"]
+script = ExtResource("1")

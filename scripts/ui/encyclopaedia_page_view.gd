@@ -1,8 +1,9 @@
 ## A species' page, read only: what the encyclopaedia already knows, from
 ## [code]encyclopaedia_page_source.gd[/code], in two tabs — the page and its Forlorn variant.
 ##
-## The fragment assembly desk is not here; neither is any text that the page source does not
-## give. The Forlorn tab is a placeholder until the Forlorn individual exists.
+## The fragment assembly desk is a screen of its own, opened from the encyclopaedia screen; this
+## view only says that it can be. No text here that the page source does not give.
+## The Forlorn tab is a placeholder until the Forlorn individual exists.
 ##
 ## No `class_name` (the CLI class-cache trap): the screen preloads this.
 extends VBoxContainer
@@ -81,6 +82,10 @@ func _build_page(info: Dictionary) -> Control:
 	left.add_child(name_label)
 	left.add_child(_dim_label(tr("UI_ENCYCLOPAEDIA_SPIRICOSM") % tr(_spiricosm_key(sp))))
 	left.add_child(_dim_label(tr("UI_ENCYCLOPAEDIA_COMPLETION") % info.completion))
+	if Source.can_assemble(sp.id):
+		var assemble := _dim_label(tr("UI_ENCYCLOPAEDIA_ASSEMBLE"))
+		assemble.add_theme_color_override("font_color", COLOR_TAB_ON)
+		left.add_child(assemble)
 
 	# Centre: the illustration.
 	var art := TextureRect.new()

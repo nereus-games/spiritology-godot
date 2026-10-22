@@ -1313,6 +1313,45 @@ msgstr "BUTIN POSSIBLE"
 msgid "UI_ENCYCLOPAEDIA_LOOT_NONE"
 msgstr "Aucun connu"
 
+# --- The assembly desk -----------------------------------------------------------------
+# Opened from a page. %d / %d = fragments correctly arranged out of a page's total, then %d =
+# the page's completion in percent (written %% in the format).
+msgid "UI_ASSEMBLY_TITLE"
+msgstr "Table d'assemblage"
+
+msgid "UI_ASSEMBLY_NEW_AREA"
+msgstr "Nouveaux fragments"
+
+msgid "UI_ASSEMBLY_SUMMARY"
+msgstr "Correctement assemblés : %d / %d · Complétion : %d %%"
+
+msgid "UI_ASSEMBLY_HINT_BROWSE"
+msgstr "Flèches : déplacer le curseur · Tab : fragment suivant · Valider : saisir · Annuler : quitter"
+
+msgid "UI_ASSEMBLY_HINT_HOLD"
+msgstr "Flèches : déplacer · Q / E : pivoter · Retour arrière : renvoyer aux nouveaux fragments · Valider / Annuler : poser"
+
+msgid "UI_ASSEMBLY_NOTICE_HOLE"
+msgstr "Ces deux fragments vont ensemble, mais quelque chose gêne : il n'y a pas la place de les emboîter."
+
+msgid "UI_ASSEMBLY_NOTICE_FULL"
+msgstr "Il n'y a plus de place sur la table."
+
+msgid "UI_ASSEMBLY_NOTICE_DESTROYED"
+msgstr "Un fragment abîmé s'est désagrégé. Ses IFP sont à obtenir de nouveau."
+
+msgid "UI_ASSEMBLY_NOTICE_COMPLETE"
+msgstr "Page assemblée ! Les fragments parasites restants ont disparu et les autres sont réparés."
+
+msgid "UI_ASSEMBLY_NOTICE_EMPTY"
+msgstr "Il n'y a pas encore de fragments à assembler."
+
+msgid "UI_ENCYCLOPAEDIA_ASSEMBLE"
+msgstr "Valider : assembler les fragments de la page"
+
+msgid "UI_ENCYCLOPAEDIA_HINT_PAGE_ASSEMBLE"
+msgstr "Valider : assembler les fragments · Gauche / Droite : changer d'onglet · Annuler : retour à la grille"
+
 msgid "TERM_SPIRICOSM_GLOOM"
 msgstr "Terne"
 

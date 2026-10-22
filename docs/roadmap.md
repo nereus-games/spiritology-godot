@@ -104,8 +104,8 @@ unblock.
   assembly API, the 15 / 30 / Forlorn-15 ability thresholds, the starting duo, and persistence.
   The amount an Examine yields follows the info bonuses (Reconnaissance Glide, Halo Effect,
   Priming, Catatonia; `examine_bonus_step` in `data/balance.tres`, a placeholder). What is
-  missing: the `encyclopaedia_*` signals are shown nowhere yet; info fragments granted by Examine Weakness; and Forlorn variants
-  on the individual. (`encounter_manager.gd`, `examine_weakness.gd`, `encyclopaedia_model.gd`)
+  missing: the `encyclopaedia_*` signals are shown nowhere yet; and Forlorn variants on the
+  individual. (`encounter_manager.gd`, `encyclopaedia_model.gd`)
 - **The encyclopaedia's screens.** The grid and the read-only page view are built and read the
   fragment model (see [architecture.md](architecture.md), *The encyclopaedia screens*), reachable
   only from the dev scenario picker. The assembly screen is built too (*The assembly screen*), reached from a page's
@@ -128,15 +128,27 @@ unblock.
   stays too long, agents arrive at hand-placed arrival points on hand-set timestamps and take
   the shortest path to the player; some dungeons hold a corruptible agent who delays the others
   for a price that rises each time.
-- **PSY's consequences.** Only the IFP bands, the narrow bridge, the width of spawn waves and the
-  rivals spawned by examined decor read the PSY score today. The doc's ladder is otherwise
-  unbuilt. Above 10: rivals talk 10 % less, and fleeing no longer makes the rival go away (the
-  player lands 2 to 3 tiles off, facing it). Above 20: more risk of losing damaged fragments, and
-  temporary oddities such as swapped icons (after event 3). Above 30: rival density hidden in
-  encounters, one more wrong fragment each time (the wider spawn waves are built, at a
-  placeholder threshold of 20; see section 5). Above 40: the teammate may refuse an action,
-  poison forbids Meditate, map, encyclopaedia, objects and team, rivals skip their cooldown
-  turn, and dungeons stay dark. (`game_session.gd`)
+- **PSY's consequences.** Built so far (`GameSession.psy_above`): the IFP bands, the narrow
+  bridge, the width of spawn waves, rivals spawned by examined decor, and parts of every rung
+  but the second.
+  Above 10: the group stays when the duo flees (it always does; the 50 % disappearance was
+  dropped), the duo lands 2 to 3 walkable steps off on a tile with no trap and no rival on it,
+  facing the group, and that group's Talk chance is 10 % lower while PSY stays above 10
+  (`psy_flee_*` in `balance.tres`; `RivalMember.talk_malus`, carried into the encounter by
+  `encounter_state`, applied last in `EncounterManager._resolve_talk`). The malus is a
+  placeholder reading: relative, not stacking, ignored whenever PSY is 10 or less at the time of
+  the Talk (the flag stays on the group), and aimed at a group, not at one rival.
+  Above 30: a rival's density is hidden in the encounter's turn order (Talk's IFP already drops
+  to its top-tier row). Above 40: rivals have no cooldown turn on the map, a poisoned player
+  cannot Meditate or use objects, in exploration or in encounters, with a warning
+  (`UI_PSY_POISON_FORBIDS`), and the teammate refuses the first action of a visit's first
+  encounter, then one action in five (`EncounterManager.enable_refusal`,
+  `psy_teammate_refusal_chance`).
+  Still unbuilt. Above 20: more risk of losing damaged fragments, and temporary oddities such as
+  swapped icons (after event 3). Above 30: one more wrong fragment each time (the wider spawn
+  waves are built, at a placeholder threshold of 20; see section 5). Above 40: poison also
+  forbids the map, encyclopaedia and team views (those views do not exist yet; TODO in
+  `GameSession.psy_forbids_while_poisoned`), and dungeons stay dark. (`game_session.gd`)
 - **Dark dungeons** ("In the Dark"): sight limited to one tile, rivals heard but not seen,
   Meditate revealing them for 2 moves, and NPC quests that light an area. No implementation.
 - **A QTE**, which Slick Merchant's Run Away should hide behind; until then it always succeeds.
@@ -217,6 +229,14 @@ The encyclopaedia, built on 2026-10-22 from the "Encyclopaedia" page, which leav
   Effect on a teammate, or used by a rival, earns none. Active Listening's Talk, which counts as
   an Examine, does not use the bonus. Known gap: two bonus sources on one individual share one
   expiry timer.
+- **Examine Weakness** (`examine_weakness.gd`, `GameSession.IFP_TABLE`). The doc says only "a
+  little info" on the other individual. Read as one info fragment, 3 IFP at every PSY tier
+  (`WEAKNESS_INFO`), announced through `ifp_earned` and so under the usual page rules (99 % cap,
+  a true and a parasitic fragment, Forlorn page once the main one is complete). It goes to a rival
+  only and only when the bearer is a player character, so a teammate as the other individual, or
+  a rival bearing the talent, earns nothing. Examine's info bonuses do not scale it, it does not
+  count as an Examine, and the weakness is not exposed on the encyclopaedia side. Each ability
+  that strikes an exposed weakness gives it once per such target.
 - **Abilities and the starting duo.** The data lists a species' encyclopaedia and Forlorn
   abilities among its origin abilities too, so a player character's list is the native ones
   minus the gated ones, plus those revealed; rivals keep all of them. A starting character's 15

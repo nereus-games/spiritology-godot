@@ -59,7 +59,17 @@ var _mouse_burst_turn := 0.0
 func _ready() -> void:
 	_controller = get_parent() as PlayerController
 	_rig = get_parent().get_node_or_null("CameraRig") as CameraRig
+	if _controller != null:
+		_controller.facing_set.connect(_on_facing_set)
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+
+
+## The player was turned from outside — after a flight, to face the rival. The new heading is the
+## base; free look starts from it.
+func _on_facing_set(deg: float) -> void:
+	_base_yaw = deg
+	_yaw_offset = 0.0
+	_recenter_pitch = true
 
 
 ## Mouse look, from relative deltas, plus toggling the cursor.

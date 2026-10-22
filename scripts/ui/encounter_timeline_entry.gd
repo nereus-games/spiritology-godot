@@ -112,6 +112,8 @@ func _make_pill(color: Color) -> Label:
 ## Fills the cell in. `known` means the species is in the encyclopaedia; `active` means it
 ## is this individual's turn.
 ##
+## `hide_den` blanks the DEN badge: see [method EncounterUI._hides_den].
+##
 ## `rank` is only set in the debug view, where it labels EVERY cell "2. ravbak". In game
 ## only the active cell carries a name, as in the mockup — but testing needs the whole
 ## order readable at a glance.
@@ -120,7 +122,8 @@ func setup(
 	known: bool,
 	active: bool,
 	weakness: GameEnums.Energy,
-	rank: int = 0
+	rank: int = 0,
+	hide_den: bool = false
 ) -> void:
 	var side := SIZE_ACTIVE if active else SIZE_IDLE
 	_portrait.custom_minimum_size = Vector2(side, side)
@@ -146,7 +149,8 @@ func setup(
 	# A player's numbers are always readable; a rival's depend on the encyclopaedia. The
 	# badges stay, empty, so that the cell does not shift when they appear.
 	var show_numbers := individual.is_player or known
-	_den_label.text = str(individual.den) if show_numbers else ""
+	# `hide_den` is PSY rung 3: a rival's density is no longer shown at all, even if known.
+	_den_label.text = str(individual.den) if show_numbers and not hide_den else ""
 	_eth_label.text = str(individual.eth) if show_numbers else ""
 
 	# `unknown` when the weakness is hidden (Anodyne Excess) OR the rival is not in the

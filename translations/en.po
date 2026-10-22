@@ -248,6 +248,10 @@ msgstr "keeping watch"
 msgid "UI_STATUS_POISON"
 msgstr "☠ Poison: %d turn(s) (-%d DEN)"
 
+# PSY above 40 while poisoned: shown when Meditate or an object is tried, in exploration and in encounters.
+msgid "UI_PSY_POISON_FORBIDS"
+msgstr "Poison clouds your mind: you cannot Meditate or use objects."
+
 # %d = the moves still affected.
 msgid "UI_STATUS_DISARRAY"
 msgstr "✦ Disarray: %d move(s)"
@@ -618,6 +622,9 @@ msgstr "anything but its last 2 abilities"
 msgid "LOG_NO_ACTION"
 msgstr "%s has no action it can take."
 
+msgid "LOG_TEAMMATE_REFUSES"
+msgstr "refuses to act."
+
 msgid "LOG_PASS"
 msgstr "passes its turn."
 
@@ -718,7 +725,7 @@ msgid "LOG_TALENT_SLICK_MERCHANT"
 msgstr "%s: %s's weakness takes on %s's."
 
 msgid "LOG_TALENT_EXAMINE_WEAKNESS"
-msgstr "%s: information gleaned on %s (weakness struck) [to come]."
+msgstr "%s: information gleaned on %s (weakness struck)."
 
 # %s = the talent, %s = the teammate healed, %d = the DEN given back.
 msgid "LOG_TALENT_SERENE_WAVES"

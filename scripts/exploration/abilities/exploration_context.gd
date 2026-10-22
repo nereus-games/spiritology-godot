@@ -56,6 +56,19 @@ func avoid_pursuit(moves: int, disguise_species: StringName = &"") -> void:
 	_note("LOG_EXPL_UNPURSUED", moves)
 
 
+## PSY rung 4: poison forbids Meditate and objects. True when that applies right now.
+func poison_forbids_actions() -> bool:
+	var aff = player.get("affliction") if player != null else null
+	return aff != null and GameSession.psy_forbids_while_poisoned(aff.has_poison())
+
+
+## Tells the player why the action was refused, on the HUD banner and in the log.
+func refuse_poisoned_action() -> void:
+	_note("UI_PSY_POISON_FORBIDS")
+	if dungeon != null:
+		dungeon.post_message(TranslationServer.translate("UI_PSY_POISON_FORBIDS"))
+
+
 ## Cures the player's poison outright (a tea drop, or an anti-poison ability).
 func cure_poison() -> void:
 	if player != null:

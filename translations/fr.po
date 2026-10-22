@@ -252,6 +252,10 @@ msgstr "aux aguets"
 msgid "UI_STATUS_POISON"
 msgstr "☠ Poison : %d tour(s) (-%d DEN)"
 
+# PSY above 40 while poisoned: shown when Meditate or an object is tried, in exploration and in encounters.
+msgid "UI_PSY_POISON_FORBIDS"
+msgstr "Le poison trouble votre esprit : impossible de méditer ou d'utiliser des objets."
+
 # %d = the moves still affected.
 msgid "UI_STATUS_DISARRAY"
 msgstr "✦ Désorienté : %d mouvement(s)"
@@ -623,6 +627,9 @@ msgstr "tout sauf ses 2 dernières capacités"
 msgid "LOG_NO_ACTION"
 msgstr "%s n'a aucune action possible."
 
+msgid "LOG_TEAMMATE_REFUSES"
+msgstr "refuse d'agir."
+
 msgid "LOG_PASS"
 msgstr "passe son tour."
 
@@ -723,7 +730,7 @@ msgid "LOG_TALENT_SLICK_MERCHANT"
 msgstr "%s : la faiblesse de %s prend celle de %s."
 
 msgid "LOG_TALENT_EXAMINE_WEAKNESS"
-msgstr "%s : info glanée sur %s (faiblesse touchée) [à venir]."
+msgstr "%s : info glanée sur %s (faiblesse touchée)."
 
 # %s = the talent, %s = the teammate healed, %d = the DEN given back.
 msgid "LOG_TALENT_SERENE_WAVES"

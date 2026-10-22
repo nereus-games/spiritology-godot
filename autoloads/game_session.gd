@@ -44,6 +44,12 @@ const IFP_TABLE := {
 		false: [1, 2, 2],
 		true: [2, 3, 4],
 	},
+	# Examine Weakness: "a little info" is one fragment, i.e. EncyclopaediaModel.IFP_PER_FRAGMENT
+	# IFP at every PSY tier. The Forlorn row is the ordinary one.
+	GameEnums.IfpAction.WEAKNESS_INFO:
+	{
+		false: [3, 3, 3],
+	},
 }
 
 ## A player character's maximum DEN (Density), fixed for the whole game.
@@ -153,6 +159,12 @@ var dungeon_states: Dictionary = {}
 ## Cleared on entering a dungeon.
 var used_exploration_abilities: Dictionary = {}
 
+## Has no encounter begun yet in this dungeon visit? Set on entering a dungeon and spent by the
+## first encounter ([method take_first_encounter]). Like [member used_exploration_abilities],
+## it is per visit and so is not worth saving. At a high PSY the teammate refuses the first
+## action of that encounter.
+var first_encounter_pending := true
+
 ## Inventory: object slug -> quantity. Objects stack, so they are counted rather than
 ## duplicated, and an entry reaching 0 is erased. No object is needed to finish the game.
 var inventory: Dictionary = {}
@@ -165,6 +177,25 @@ func psy_tier() -> int:
 	if psy_score <= PSY_HIGH:
 		return 1
 	return 2
+
+
+## Is the PSY score strictly above rung `rung` (1 to 4) of the doc's ladder? The rungs are
+## [member BalanceData.psy_rung_1] to `_4` (10, 20, 30, 40). Every PSY consequence asks this
+## rather than comparing the score itself.
+func psy_above(rung: int) -> bool:
+	var balance := BalanceData.current()
+	var thresholds := [
+		balance.psy_rung_1, balance.psy_rung_2, balance.psy_rung_3, balance.psy_rung_4
+	]
+	return psy_score > thresholds[clampi(rung, 1, 4) - 1]
+
+
+## Does the PSY ladder forbid Meditate and objects right now? Rung 4 (PSY above 40) with the
+## player poisoned. `poisoned` is passed in because poison lives on the exploration actor, not
+## here. The map, encyclopaedia and team views are forbidden too by the doc.
+## TODO: gate those three once the views exist; they should ask this same function.
+func psy_forbids_while_poisoned(poisoned: bool) -> bool:
+	return poisoned and psy_above(4)
 
 
 ## Has this species been entered in the encyclopaedia at all?
@@ -566,6 +597,18 @@ func reset_exploration_abilities() -> void:
 	used_exploration_abilities.clear()
 
 
+## Entering a dungeon: the next encounter is the first of the visit.
+func begin_dungeon_visit() -> void:
+	first_encounter_pending = true
+
+
+## Called as an encounter begins. True for the first one of the dungeon visit, and only once.
+func take_first_encounter() -> bool:
+	var first := first_encounter_pending
+	first_encounter_pending = false
+	return first
+
+
 ## Wipes the session for a new game.
 func reset() -> void:
 	main_character = &""
@@ -577,6 +620,7 @@ func reset() -> void:
 	exploration_examine_ifp.clear()
 	dungeon_states.clear()
 	used_exploration_abilities.clear()
+	first_encounter_pending = true
 	inventory.clear()
 	party_den = {
 		PartySlot.MAIN: MAX_DEN,

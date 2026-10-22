@@ -92,6 +92,7 @@ func begin(
 	rival_states: Array = [],
 	seed: int = -1
 ) -> void:
+	player_poisoned = _read_player_poison()
 	var pf: Array = []
 	for i in player_ids.size():
 		var f := EncounterManager.make_individual(StringName(player_ids[i]), true)
@@ -119,6 +120,7 @@ func begin(
 		if map_max_eth > 0:
 			f.max_eth = map_max_eth
 			f.eth = map_max_eth
+		f.talk_chance_malus = float(state.get("talk_malus", 0.0))
 		var map_den: int = int(state.get("den", 0))
 		if map_den > 0:
 			f.load_persistent_state(map_den, int(state.get("eth", f.eth)))
@@ -137,6 +139,10 @@ func begin(
 	# Fixing it makes the whole encounter reproducible, which is what the screenshot scene
 	# needs for one version to be comparable with the next.
 	_manager.setup(pf, rf, randi() if seed < 0 else seed, GameSession.completed_species())
+	# Spent whether or not PSY makes use of it: the first encounter of a visit happens once.
+	var first_encounter := GameSession.take_first_encounter()
+	if GameSession.psy_above(4) and pf.size() > 1:
+		_manager.enable_refusal(pf[1], first_encounter)
 	# AFTER setup(), which resets the agents. Only the duo becomes playable.
 	_agent.choice_requested.connect(_on_choice_requested)
 	for f in pf:
@@ -196,7 +202,8 @@ func _refresh_timeline() -> void:
 			_knows(individual),
 			individual == _acting_individual,
 			individual.active_weakness(position),
-			(i + 1) if _debug_view else 0
+			(i + 1) if _debug_view else 0,
+			_hides_den(individual)
 		)
 	# A dissolved rival fades, like its cell in the turn order; one that left is gone. Hidden
 	# through its alpha rather than `visible`, so the others do not slide along the row.
@@ -211,6 +218,33 @@ func _refresh_timeline() -> void:
 ## display of a rival's density and weakness depend on. The debug view lifts the veil.
 func _knows(individual: EncounterIndividual) -> bool:
 	return _debug_view or individual.is_player or GameSession.knows_species(individual.species_id())
+
+
+## PSY rung 3 (PSY above 30): a rival's density is no longer shown in encounters. The debug
+## view lifts it, like the encyclopaedia veil.
+func _hides_den(individual: EncounterIndividual) -> bool:
+	return not _debug_view and not individual.is_player and GameSession.psy_above(3)
+
+
+## PSY rung 4: is the player poisoned, read from the exploration actor the encounter opened
+## from. Set directly by tests, which have no exploration behind them.
+var player_poisoned := false
+
+
+func _read_player_poison() -> bool:
+	var pl := get_tree().get_first_node_in_group("player")
+	var aff = pl.get("affliction") if pl != null else null
+	return aff != null and aff.has_poison()
+
+
+## Shows the warning when a forbidden action is tried. Returns true if it was refused.
+func _refuse_if_poisoned() -> bool:
+	if not GameSession.psy_forbids_while_poisoned(player_poisoned):
+		return false
+	var warning := tr("UI_PSY_POISON_FORBIDS")
+	_menu.set_description(warning)
+	_append("[i]%s[/i]\n" % warning)
+	return true
 
 
 func _toggle_log() -> void:
@@ -301,7 +335,9 @@ func _show_actions(individual: EncounterIndividual, manager: EncounterManager) -
 	_menu.add_bar_action(
 		tr("UI_ENCOUNTER_ACTION_MEDITATE"),
 		true,
-		func(): _submit(EncounterAction.of_kind(EncounterAction.Kind.MEDITATE, [individual]))
+		func():
+			if not _refuse_if_poisoned():
+				_submit(EncounterAction.of_kind(EncounterAction.Kind.MEDITATE, [individual]))
 	)
 	if kinds.has(EncounterAction.Kind.ABILITY):
 		_menu.add_bar_action(
@@ -340,7 +376,9 @@ func _show_actions(individual: EncounterIndividual, manager: EncounterManager) -
 	_menu.add_bar_action(
 		tr("UI_ENCOUNTER_ACTION_OBJECT"),
 		not GameSession.inventory.is_empty(),
-		func(): _show_objects(individual, manager)
+		func():
+			if not _refuse_if_poisoned():
+				_show_objects(individual, manager)
 	)
 	# Actions a talent added; never available by default.
 	if kinds.has(EncounterAction.Kind.FLEE):

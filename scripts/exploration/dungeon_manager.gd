@@ -20,6 +20,7 @@ extends Node3D
 
 const DungeonRenderer := preload("res://scripts/exploration/dungeon_renderer.gd")
 const SafeAreas := preload("res://scripts/exploration/safe_areas.gd")
+const TileSearch := preload("res://scripts/exploration/tile_search.gd")
 
 ## Tile size in world units (metres). A wall block is 1 m x 1 m x 1 m.
 const TILE_SIZE := 1.0
@@ -81,6 +82,9 @@ var turn_count := 0
 ## The safe areas level design declared, and what keeps rivals out of them. A member rather than
 ## methods of this manager, which is big enough already.
 var safe_areas = SafeAreas.new(self)
+
+## Looking for tiles — a free one nearby, the ones within walking reach, a random one.
+var tile_search = TileSearch.new(self)
 
 ## The dungeon's level-design configuration — which rival groups appear, where and when. Null
 ## for a room built by hand with no such rules, as most test scenarios are.
@@ -312,55 +316,6 @@ func is_narrow_bridge(tile: Vector3i) -> bool:
 	return false
 
 
-## The nearest free floor tile to `tile` (`tile` itself if it is free), for placing an actor
-## without breaking the one-occupant-per-tile invariant. Returns `tile` when nothing around is
-## free, and leaves the caller to decide what that means.
-func free_tile_near(tile: Vector3i) -> Vector3i:
-	if is_floor(tile) and occupant_at(tile) == null:
-		return tile
-	for d in [Vector3i(1, 0, 0), Vector3i(-1, 0, 0), Vector3i(0, 0, 1), Vector3i(0, 0, -1)]:
-		var n: Vector3i = tile + d
-		if is_walkable(n) and occupant_at(n) == null:
-			return n
-	return tile
-
-
-## How many steps it takes to walk to every tile reachable from `from` in at most `max_steps`,
-## as tile -> steps (`from` itself at 0). A walk, not a flight: it goes around walls, closed
-## gateways and occupied tiles, and stays on one floor — stairs and falls are not steps.
-func walking_distances(from: Vector3i, max_steps: int) -> Dictionary:
-	var steps := {from: 0}
-	var frontier: Array[Vector3i] = [from]
-	while not frontier.is_empty():
-		var current: Vector3i = frontier.pop_front()
-		var d: int = steps[current]
-		if d >= max_steps:
-			continue
-		for delta in [Vector3i(1, 0, 0), Vector3i(-1, 0, 0), Vector3i(0, 0, 1), Vector3i(0, 0, -1)]:
-			var n: Vector3i = current + delta
-			if steps.has(n) or not can_step(current, n):
-				continue
-			steps[n] = d + 1
-			frontier.append(n)
-	return steps
-
-
-## Free floor tiles AROUND `tile`, on the same floor, within `radius` tiles (Manhattan
-## distance), shuffled. `tile` itself is excluded. Lets actors be spawned "nearby" without
-## caring about the shape of the room.
-func free_tiles_near(tile: Vector3i, radius: int) -> Array[Vector3i]:
-	var found: Array[Vector3i] = []
-	for dx in range(-radius, radius + 1):
-		for dz in range(-radius, radius + 1):
-			if absi(dx) + absi(dz) > radius or (dx == 0 and dz == 0):
-				continue
-			var c := tile + Vector3i(dx, 0, dz)
-			if is_walkable(c) and occupant_at(c) == null:
-				found.append(c)
-	found.shuffle()
-	return found
-
-
 # --------------------------------------------------------------------------
 # Dungeon mechanisms (traps, gateways, special floors)
 # --------------------------------------------------------------------------
@@ -474,23 +429,11 @@ func actions_for(from_tile: Vector3i, facing: Vector3i, who: Node) -> Array:
 	return actions
 
 
-## A random walkable floor tile other than `exclude`, outside every safe area when
-## `avoid_safe` — where a random teleport may drop a rival. Returns `exclude` when there is none.
-func random_floor_tile(exclude: Vector3i, avoid_safe := false) -> Vector3i:
-	var candidates: Array = []
-	for c in _floor:
-		if c != exclude and is_walkable(c) and not (avoid_safe and safe_areas.has(c)):
-			candidates.append(c)
-	if candidates.is_empty():
-		return exclude
-	return candidates[randi() % candidates.size()]
-
-
 ## Teleports an actor to a random free floor tile — the teleport trap. Returns the tile it
 ## landed on, unchanged when no destination was free. A rival never lands in a safe area.
 func teleport_actor(who: Node) -> Vector3i:
 	var from: Vector3i = who.tile
-	return teleport_actor_to(who, random_floor_tile(from, not is_player(who)))
+	return teleport_actor_to(who, tile_search.random_floor_tile(from, not is_player(who)))
 
 
 ## Teleports an actor to a SPECIFIC tile — a dungeon entrance or exit, a dieverting. Falls
@@ -502,7 +445,7 @@ func teleport_actor_to(who: Node, dest: Vector3i) -> Vector3i:
 	var from: Vector3i = who.tile
 	if not is_floor(dest):
 		return from
-	dest = free_tile_near(dest)
+	dest = tile_search.free_tile_near(dest)
 	if dest == from:
 		return from
 	var occ := occupant_at(dest)

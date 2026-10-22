@@ -146,33 +146,45 @@ func _check_free_tiles() -> void:
 	print("[free tiles]")
 	var dm = _field(3, 3)
 	var mid := Vector3i(1, 0, 1)
-	_check(dm.free_tile_near(mid) == mid, "a free tile is its own answer")
+	_check(dm.tile_search.free_tile_near(mid) == mid, "a free tile is its own answer")
 	var sitter := Fixture.actor(self, mid)
 	dm.reserve(mid, sitter)
-	var near: Vector3i = dm.free_tile_near(mid)
+	var near: Vector3i = dm.tile_search.free_tile_near(mid)
 	_check(
 		near != mid and absi(near.x - 1) + absi(near.z - 1) == 1,
 		"an occupied one gives a neighbour"
 	)
-	_check(dm.free_tile_near(Vector3i(9, 0, 9)) == Vector3i(9, 0, 9), "off the floor: unchanged")
-	var around: Array = dm.free_tiles_near(mid, 1)
+	_check(
+		dm.tile_search.free_tile_near(Vector3i(9, 0, 9)) == Vector3i(9, 0, 9),
+		"off the floor: unchanged"
+	)
+	var around: Array = dm.tile_search.free_tiles_near(mid, 1)
 	_check(around.size() == 4 and not around.has(mid), "radius 1 around the middle: four tiles")
-	_check(dm.free_tiles_near(Vector3i(0, 0, 0), 2).size() == 4, "radius 2 in a corner: four free")
+	_check(
+		dm.tile_search.free_tiles_near(Vector3i(0, 0, 0), 2).size() == 4,
+		"radius 2 in a corner: four free"
+	)
 	dm.reserve(Vector3i(1, 0, 0), Fixture.actor(self, Vector3i(1, 0, 0)))
-	_check(not dm.free_tiles_near(mid, 1).has(Vector3i(1, 0, 0)), "an occupied tile is not free")
-	_check(dm.free_tiles_near(mid, 0).is_empty(), "radius 0 leaves nothing")
+	_check(
+		not dm.tile_search.free_tiles_near(mid, 1).has(Vector3i(1, 0, 0)),
+		"an occupied tile is not free"
+	)
+	_check(dm.tile_search.free_tiles_near(mid, 0).is_empty(), "radius 0 leaves nothing")
 	dm.queue_free()
 
 
 func _check_walking_distances() -> void:
 	print("[walking distances]")
 	var dm = _field(4, 1)
-	var steps: Dictionary = dm.walking_distances(Vector3i(0, 0, 0), 2)
+	var steps: Dictionary = dm.tile_search.walking_distances(Vector3i(0, 0, 0), 2)
 	_check(steps.get(Vector3i(0, 0, 0)) == 0, "the origin is at zero")
 	_check(steps.get(Vector3i(2, 0, 0)) == 2, "two steps along")
 	_check(not steps.has(Vector3i(3, 0, 0)), "past the budget is out of reach")
 	dm.reserve(Vector3i(1, 0, 0), Fixture.actor(self, Vector3i(1, 0, 0)))
-	_check(dm.walking_distances(Vector3i(0, 0, 0), 3).size() == 1, "an occupied tile bars the way")
+	_check(
+		dm.tile_search.walking_distances(Vector3i(0, 0, 0), 3).size() == 1,
+		"an occupied tile bars the way"
+	)
 	dm.queue_free()
 
 
@@ -181,14 +193,15 @@ func _check_random_floor_tile() -> void:
 	var dm = _field(2, 1)
 	var a := Vector3i(0, 0, 0)
 	var b := Vector3i(1, 0, 0)
-	_check(dm.random_floor_tile(a) == b, "never the excluded tile")
+	_check(dm.tile_search.random_floor_tile(a) == b, "never the excluded tile")
 	dm.safe_areas.mark([b])
-	_check(dm.random_floor_tile(a) == b, "a safe area is fair game by default")
+	_check(dm.tile_search.random_floor_tile(a) == b, "a safe area is fair game by default")
 	_check(
-		dm.random_floor_tile(a, true) == a, "...but avoided on request, falling back to `exclude`"
+		dm.tile_search.random_floor_tile(a, true) == a,
+		"...but avoided on request, falling back to `exclude`"
 	)
 	dm.reserve(b, Fixture.actor(self, b))
-	_check(dm.random_floor_tile(a) == a, "an occupied tile is not a candidate")
+	_check(dm.tile_search.random_floor_tile(a) == a, "an occupied tile is not a candidate")
 	dm.queue_free()
 
 

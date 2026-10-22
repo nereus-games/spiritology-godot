@@ -498,7 +498,7 @@ func fall_down(from_tile: Vector3i) -> bool:
 ## tile invariant holds across the whole grid, and a fall is no reason to bend it. Returns
 ## false when the fall devitalises it.
 func drop_to(target: Vector3i, levels: int) -> bool:
-	var dest: Vector3i = _dungeon.free_tile_near(target)
+	var dest: Vector3i = _dungeon.tile_search.free_tile_near(target)
 	_dungeon.release(tile)
 	_dungeon.reserve(dest, self)
 	tile = dest
@@ -614,7 +614,7 @@ func _collide_with_rival(tile: Vector3i, other: Node) -> void:
 	var levels: int = tile.y - landing.y
 	if other.has_method("drop_to"):
 		other.drop_to(landing, levels)
-	drop_to(_dungeon.free_tile_near(landing), levels)
+	drop_to(_dungeon.tile_search.free_tile_near(landing), levels)
 
 
 ## End of turn: elapses poison. A rival has no DEN on the map, so the effect is only counted

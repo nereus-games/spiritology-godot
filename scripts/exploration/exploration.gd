@@ -134,7 +134,7 @@ func _run_away(group: Node) -> void:
 ## reachable tile; `from` itself when there is none.
 func flight_destination(from: Vector3i) -> Vector3i:
 	var balance := BalanceData.current()
-	var steps: Dictionary = _dungeon.walking_distances(from, balance.flee_distance_max)
+	var steps: Dictionary = _dungeon.tile_search.walking_distances(from, balance.flee_distance_max)
 	var in_range: Array[Vector3i] = []
 	var quiet: Array[Vector3i] = []
 	var farthest := from

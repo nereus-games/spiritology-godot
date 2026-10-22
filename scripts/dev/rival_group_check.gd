@@ -272,7 +272,7 @@ func _check_flight(ctx: Dictionary) -> void:
 	for i in FLIGHTS:
 		player.teleport_to(START)
 		var g = await _spawn_group(dm, NEXT_TO_START, [[&"ravbak", 60, 40]])
-		var steps: Dictionary = dm.walking_distances(START, balance.flee_distance_max)
+		var steps: Dictionary = dm.tile_search.walking_distances(START, balance.flee_distance_max)
 		scene._pending_rival = g
 		scene._on_encounter_finished(&"fled", [_report_entry(33, 20, &"stayed")])
 		var walked: int = steps.get(player.tile, -1)
@@ -380,7 +380,7 @@ func _check_leaving_the_dungeon(ctx: Dictionary) -> void:
 ## Distances are walked, not measured as the crow flies: a pillar stands at (2, 0, 3).
 func _check_walking_distances(ctx: Dictionary) -> void:
 	print("[walking distances]")
-	var steps: Dictionary = ctx.dm.walking_distances(Vector3i(2, 0, 2), 6)
+	var steps: Dictionary = ctx.dm.tile_search.walking_distances(Vector3i(2, 0, 2), 6)
 	_check(not steps.has(Vector3i(2, 0, 3)), "a pillar is not reachable")
 	_check(
 		steps.get(Vector3i(2, 0, 4), -1) == 4,

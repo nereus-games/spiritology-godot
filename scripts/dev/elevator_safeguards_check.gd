@@ -318,7 +318,7 @@ func _check_safe_area(dm, player) -> void:
 
 	var landed_safe := false
 	for i in 200:
-		if dm.safe_areas.has(dm.random_floor_tile(EAST_LIFT, true)):
+		if dm.safe_areas.has(dm.tile_search.random_floor_tile(EAST_LIFT, true)):
 			landed_safe = true
 	_check(not landed_safe, "a teleport trap never drops a rival in the safe area")
 

@@ -305,7 +305,7 @@ func _spawn_rival_groups(who: Node) -> void:
 	if _dungeon == null or rival_pool.is_empty():
 		return
 	var origin: Vector3i = who.tile if "tile" in who else tile
-	var spots: Array[Vector3i] = _dungeon.free_tiles_near(origin, rival_spawn_radius)
+	var spots: Array[Vector3i] = _dungeon.tile_search.free_tiles_near(origin, rival_spawn_radius)
 	var n: int = mini(randi_range(1, rival_spawn_max), spots.size())
 	var spawner = RivalSpawner.new(_dungeon.config, _dungeon) if _dungeon.config != null else null
 	for i in range(n):

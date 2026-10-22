@@ -82,6 +82,24 @@ msgstr "Objects"
 msgid "UI_ENCOUNTER_ACTION_MEDITATE"
 msgstr "Meditate"
 
+# Static Camouflage: the choice offered at each group shown.
+msgid "UI_ACTION_SCOUT_ENGAGE"
+msgstr "Take this group on"
+
+msgid "UI_ACTION_SCOUT_WAIT"
+msgstr "Keep waiting"
+
+# %d = place of the group in the watch, %d = how many will be shown, %s = its makeup.
+msgid "UI_SCOUT_GROUP"
+msgstr "Group %d of %d: %s"
+
+# %d = how many individuals, %s = their species.
+msgid "UI_SCOUT_MEMBER"
+msgstr "%d x %s"
+
+msgid "UI_SCOUT_NONE_LEFT"
+msgstr "It seems no other group is wandering here."
+
 # "…" action: pass the turn when nothing else is available. Nothing to translate.
 msgid "UI_ENCOUNTER_ACTION_PASS"
 msgstr "…"
@@ -180,6 +198,13 @@ msgstr "Found in the chest: %s"
 # Posted when the reveal phase brings traps to light. %d = how many.
 msgid "UI_TRAPS_REVEALED"
 msgstr "%d trap(s) revealed"
+
+# Posted when Trick to Reveal brings one hidden trap, or one hidden chest, onto the map.
+msgid "UI_TRAP_REVEALED"
+msgstr "A trap was revealed on the map"
+
+msgid "UI_CHEST_REVEALED"
+msgstr "A chest was revealed on the map"
 
 # The choice the Reveal Traps talent offers when a trapped chest tries to teleport.
 msgid "UI_ACTION_CHEST_TELEPORT"
@@ -633,7 +658,7 @@ msgid "LOG_TALENT_SERENE_WAVES"
 msgstr "%s revitalises %s (+%d DEN, weakness removed)."
 
 msgid "LOG_TALENT_TRICK_TO_REVEAL"
-msgstr "%s: a map reveal could follow this dialogue [to come]."
+msgstr "%s: something was revealed on the map."
 
 msgid "ABILITY_ABSORPTION_GUARD_NAME"
 msgstr "Absorption Guard"

@@ -92,7 +92,18 @@ func _on_encounter_requested(rival: Node, initiated_by_rival: bool) -> void:
 			% [ids, initiated_by_rival, states]
 		)
 	)
-	TransitionManager.open_encounter(_player_duo(), ids, {}, states)
+	TransitionManager.open_encounter(
+		_player_duo(), ids, {}, states, Callable(self, "_reveal_for_encounter")
+	)
+
+
+## What an encounter's talents can do to this map: reveal the hidden chest or trap closest to
+## the player. See [method DungeonManager.reveal_nearest_hidden].
+func _reveal_for_encounter() -> bool:
+	var player := get_node_or_null("Player")
+	if player == null:
+		return false
+	return _dungeon.reveal_nearest_hidden(player.tile) != null
 
 
 ## `rivals` is the encounter's report on each member of the group, in order.

@@ -44,6 +44,14 @@ signal object_consumed(object_id: StringName)
 ## needs no autoload.
 var object_provider: Callable = Callable()
 
+## [bridges] Reveals one hidden thing on the exploration map the encounter was entered from, and
+## returns whether it found anything. Injected like [member object_provider], for the same
+## reason: the manager must not reach the dungeon. Invalid in a harness without a map.
+var map_reveal: Callable = Callable()
+
+## [bridges] Whether the LAST Talk of the encounter was effective. False until one is resolved.
+var last_talk_effective := false
+
 const ABILITY_DIR := "res://data/abilities/"
 
 ## Why an individual left: it ran away (Run Away, a smoke bomb, Ghosting)...
@@ -156,6 +164,12 @@ func _load_talent(slug: StringName) -> TalentData:
 ## `TranslationServer.translate`. One name to grep for, across all three.
 func _tr(key: String) -> String:
 	return tr(key)
+
+
+## [bridges] Asks the map to reveal one hidden thing ([member map_reveal]). False when there is
+## no map or nothing was left to reveal.
+func reveal_on_map() -> bool:
+	return map_reveal.is_valid() and bool(map_reveal.call())
 
 
 ## A log line from a talent rather than from a turn. Prefixed so the two are told apart.
@@ -601,6 +615,7 @@ func _resolve_talk(individual: EncounterIndividual, action: EncounterAction) -> 
 		if speaker_team.has(t.owner):
 			chance = t.modify_talk_chance(self, individual, target, chance)
 	var effective := rng.randf() < chance
+	last_talk_effective = effective  # [bridges]
 	ifp_earned.emit(
 		target.species_id(), GameEnums.IfpAction.TALK_RIVAL, _is_forlorn(target), effective
 	)

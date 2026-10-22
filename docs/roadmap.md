@@ -84,18 +84,12 @@ can be picked up alone, after the hooks above if it needs one.
 Larger pieces, each of which a handful of markers wait on. Roughly in order of how much they
 unblock.
 
-- **Splitting `dungeon_manager.gd`.** It sits at the 60 public methods `gdlintrc` allows, a
-  ceiling set there to block any worsening. It is not a `TODO`, but it is the first thing to
-  do: every open change that adds a public method to it — the reveal phase and the rival
-  spawning rules, today — fails the lint job until it is split (or the ceiling is raised on
-  purpose).
-
 - **Leaving a dungeon, and navigating between scenes.** A devitalised duo now leaves the
   dungeon, but for the scenario picker, standing in for a world map that does not exist; the
   exit interaction is still unwired, and a secondary exit should unlock a bonus dungeon. The
   title screen, the pause screen (the encounter's Menu
   button is hidden until it exists) and boot's hand-off belong to the same piece.
-  (`exploration.gd`, `dungeon_manager.gd`, `encounter_ui.gd`, `boot.gd`)
+  (`exploration.gd`, `dungeon_layout.gd`, `encounter_ui.gd`, `boot.gd`)
 - **Dungeon state between visits.** `GameSession.dungeon_states` is saved and loaded but never
   written: every entry is a first entry, so groups, examined decor and opened chests all reset.
   The doc ("Exit + Reentry") wants rivals that had not disappeared to stay where they were,
@@ -106,12 +100,14 @@ unblock.
   doc conditions Talk's rewards on an effective dialogue without giving the rule, and its drafts
   make it depend on objects given to the rival. Everything built on Talk is provisional,
   including pacifying a rival as a way out of an encounter. (`encounter_manager.gd`, Talk)
-- **A dungeon authoring format, and a validator.** Walls and holes are derived from the floor
-  grid instead of declared; the doc's level-design rules — stairs lead to floor with nothing
+- **A dungeon authoring format, and a validator.** An authored dungeon will fill
+  `dungeon_layout.gd`, which holds the floor, holes, pits, walls and exits and nothing that
+  happens on them, and the validator will check that object. Walls and holes are derived from
+  the floor grid instead of declared; the doc's level-design rules — stairs lead to floor with nothing
   directly above, a narrow bridge always spans a floor, no bottomless hole — are checked only
   on the dev scenario, and caught at runtime otherwise. Safe areas already report their own
   faults (`safe_areas.violations()`), but only a check calls it. Becomes urgent with the first
-  real dungeon. (`dungeon_manager.gd`, `stairs.gd`, `exploration.gd`, `player_controller.gd` —
+  real dungeon. (`dungeon_layout.gd`, `stairs.gd`, `exploration.gd`, `player_controller.gd` —
   tagged `TODO(dungeon checker)`)
 - **Rivals carrying objects.** Examine should "reveal objects they carry", Steal has nothing to
   take, and Altruism has nothing to destroy. (`encounter_manager.gd`, `altruism.gd`)

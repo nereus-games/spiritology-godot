@@ -34,6 +34,13 @@ func react(_ctx: EncounterContext, _event) -> void:
 	pass
 
 
+## Override for an ability the doc makes usable only under a condition ("usable only if…").
+## `ctx` is the one the ability would run in, so the condition may ask the encounter history. The
+## menu greys the ability out, and [AutoAgent] leaves it alone, while this is false.
+func is_usable(_ctx: EncounterContext) -> bool:
+	return true
+
+
 ## Override with the ability's real mechanic.
 func execute(ctx: EncounterContext) -> void:
 	for effect in EffectCatalog.tag_effects(ctx.ability.tags):

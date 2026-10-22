@@ -484,6 +484,14 @@ msgstr "%s is forced to Talk [to come]."
 msgid "LOG_EXAMINE_BONUS"
 msgstr "Examine bonus +%d on %s [to come]."
 
+# Halo Effect found no individual that repeats itself.
+msgid "LOG_HISTORY_NOBODY_REPEATS"
+msgstr "nobody is repeating itself."
+
+# An ability the doc makes usable only under a condition was used without it.
+msgid "LOG_CONDITION_UNMET"
+msgstr "the condition for this ability is not met."
+
 # %s = who, %s = the fragments below, comma-separated.
 msgid "LOG_RESTRICTED"
 msgstr "%s may now only: %s [to come]."

@@ -489,6 +489,14 @@ msgstr "%s est forcé de Parler [à venir]."
 msgid "LOG_EXAMINE_BONUS"
 msgstr "bonus d'Examen +%d sur %s [à venir]."
 
+# Halo Effect found no individual that repeats itself.
+msgid "LOG_HISTORY_NOBODY_REPEATS"
+msgstr "personne ne se répète."
+
+# An ability the doc makes usable only under a condition was used without it.
+msgid "LOG_CONDITION_UNMET"
+msgstr "la condition de cette capacité n'est pas remplie."
+
 # %s = who, %s = the fragments below, comma-separated.
 msgid "LOG_RESTRICTED"
 msgstr "%s ne peut plus faire que : %s [à venir]."

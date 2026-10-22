@@ -243,6 +243,12 @@ func watch(
 	_arm("reaction:%s" % ability.id, anchor, turns)
 
 
+## Stops watching with `ability` at once, before its window would have run out.
+func unwatch(ability: AbilityData) -> void:
+	reactions.erase(ability.id)
+	_timers.erase("reaction:%s" % ability.id)
+
+
 ## A turn begins — `individual`'s. Everything anchored to it counts down one turn, and what
 ## runs out expires. The manager calls this on EVERY individual at the start of each turn,
 ## including the turns a dissolved individual skips, so that its effects still run out.

@@ -57,6 +57,7 @@ const PACIFIED := &"pacified"
 ## regenerates the global class cache and this game is launched from the command line.
 const TalentCatalog := preload("res://scripts/encounter/talents/talent_catalog.gd")
 const EncounterEvent := preload("res://scripts/encounter/encounter_event.gd")
+const EncounterHistory := preload("res://scripts/encounter/encounter_history.gd")
 
 ## The individuals still IN the encounter, dissolved ones included. One who leaves is taken out
 ## of these lists and out of the turn order, so that no targeting rule, no talent and no
@@ -97,6 +98,9 @@ var _round_energy := GameEnums.Energy.NONE
 ## The damage the action being resolved dealt, for the reactions that care whether it dealt any.
 var _action_damage := 0
 
+## Who did what to whom so far, turn by turn. Read by the abilities, through their context.
+var history := EncounterHistory.new()
+
 
 ## Prepares the encounter. Resets the agents, so set any [UiAgent] AFTER calling this.
 func setup(
@@ -116,6 +120,7 @@ func setup(
 	# weaknesses too. Drawn from the seeded rng above — different every encounter, and
 	# reproducible for a given seed.
 	timeline.setup(players + rivals, rng)
+	history = EncounterHistory.new()
 	_collect_talents()
 
 
@@ -202,7 +207,15 @@ func encounter_abilities(individual: EncounterIndividual) -> Array:
 ## What the individual can play right now. Drives the auto policy, and tells the menu when a
 ## turn is lost for want of anything to do.
 func usable_abilities(individual: EncounterIndividual) -> Array:
-	return encounter_abilities(individual).filter(func(a): return individual.can_use(a))
+	return encounter_abilities(individual).filter(func(a): return can_play(individual, a))
+
+
+## Playable right now: neither spent nor unaffordable, and the ability's own condition is met —
+## see [method AbilityScript.is_usable].
+func can_play(individual: EncounterIndividual, ability: AbilityData) -> bool:
+	if not individual.can_use(ability):
+		return false
+	return EffectCatalog.script_for(ability).is_usable(_make_context(individual, ability, []))
 
 
 ## Whether the ability is aimed at opponents. A SCAFFOLD built on the tags, standing in
@@ -342,6 +355,7 @@ func _begin_round() -> void:
 	# Exposed because the doc wants the current round shown permanently in the log,
 	# whatever the player has scrolled to.
 	round_number += 1
+	history.begin_round(round_number)
 	# One random energy for the whole round, shared by every Random/Variable ability.
 	_round_energy = _random_energy()
 
@@ -362,7 +376,9 @@ func _take_turn(individual: EncounterIndividual) -> void:
 		return
 	var dissolved_before := rivals.filter(func(f): return f.is_dissolved())
 	_action_damage = 0
+	var weakness_then := individual.active_weakness(timeline.position_of(individual))
 	_resolve_action(individual, action)
+	history.record_turn(individual, action, _action_damage, weakness_then)
 	_react_to_action(individual, action)
 	if individual.is_player:
 		_award_dissolutions(dissolved_before)
@@ -710,6 +726,7 @@ func _make_context(
 	ctx.rng = rng
 	ctx.completed_species = completed_species
 	ctx.resolved_energy = _round_energy
+	ctx.history = history
 	return ctx
 
 

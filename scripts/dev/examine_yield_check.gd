@@ -138,8 +138,8 @@ func _check_rounding() -> void:
 func _check_award() -> void:
 	print("[award_ifp]")
 	var species := &"examine_yield_test_species"
-	var saved: Dictionary = GameSession.encyclopaedia_ifp.duplicate()
-	GameSession.encyclopaedia_ifp.erase(species)
+	var saved: Dictionary = GameSession.encyclopaedia.to_dict()
+	GameSession.encyclopaedia.clear()
 	var plain := GameSession.ifp_amount(GameEnums.IfpAction.EXAMINE_RIVAL, false)
 	var got := GameSession.award_ifp(
 		species, GameEnums.IfpAction.EXAMINE_RIVAL, false, true, 1.0 + 4 * _step()
@@ -148,11 +148,8 @@ func _check_award() -> void:
 		got == GameSession.scale_amount(plain, 1.0 + 4 * _step()) and got > plain,
 		"an Examine with a bonus is worth more than the table's %d (%d)" % [plain, got]
 	)
-	_check(
-		int(GameSession.encyclopaedia_ifp.get(species, 0)) == got,
-		"...and the page receives what was awarded"
-	)
-	GameSession.encyclopaedia_ifp = saved
+	_check(GameSession.page_ifp(species) == got, "...and the page receives what was awarded")
+	GameSession.encyclopaedia.from_dict(saved)
 
 
 # --------------------------------------------------------------------------

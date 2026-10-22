@@ -5,8 +5,9 @@
 ## it emits [signal closed] instead and the owner decides.
 ##
 ## Controls: arrows move the selector (or switch tabs on a page), accept opens a page (and, on a
-## page with fragments, the assembly desk), cancel goes back one level. The list of species is every [SpeciesData], by identifier,
-## which is a placeholder order: the doc does not say how pages are arranged.
+## page with fragments, the assembly desk), cancel goes back one level.
+## The list of species is every [SpeciesData], by identifier, which is a placeholder order:
+## the doc does not say how pages are arranged.
 ##
 ## No `class_name` (the CLI class-cache trap).
 extends Control

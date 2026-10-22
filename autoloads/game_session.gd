@@ -254,9 +254,7 @@ func destroy_fragments(species_id: StringName, forlorn_page: bool, count: int = 
 
 
 ## Parasitic fragments disappeared after a wrong assembly. Returns how many.
-func remove_parasitic_fragments(
-	species_id: StringName, forlorn_page: bool, count: int = 1
-) -> int:
+func remove_parasitic_fragments(species_id: StringName, forlorn_page: bool, count: int = 1) -> int:
 	var removed := encyclopaedia.remove_parasitic(species_id, forlorn_page, count)
 	if removed > 0:
 		encyclopaedia_page_changed.emit(species_id, forlorn_page)

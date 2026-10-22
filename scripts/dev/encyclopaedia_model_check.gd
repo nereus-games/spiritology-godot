@@ -113,7 +113,9 @@ func _check_thresholds() -> void:
 	var got := m.unlocked_abilities(sp)
 	_check(got == [sp.encyclopaedia_abilities[0], sp.encyclopaedia_abilities[1]], "...the second")
 	m.set_arranged(A, false, 0)
-	_check(m.unlocked_abilities(sp).size() == 2, "arranged fragments falling to 0 take nothing back")
+	_check(
+		m.unlocked_abilities(sp).size() == 2, "arranged fragments falling to 0 take nothing back"
+	)
 	_check(m.set_arranged(A, false, 100) == 0 and m.arranged_fragments(A) == 33, "clamped to 33")
 	_check(
 		m.set_arranged(A, true, 20) == 0 and m.unlocked_abilities(sp).size() == 2,
@@ -133,11 +135,18 @@ func _check_destruction() -> void:
 	_check(m.ifp(A) == 93 and m.true_fragments(A) == 31, "...the page loses 6 IFP")
 	_check(m.arranged_fragments(A) == 30, "...the arranged count was untouched")
 	m.destroy_fragments(A, false, 5)
-	_check(m.true_fragments(A) == 26 and m.arranged_fragments(A) == 26, "arranged is capped to what is left")
+	_check(
+		m.true_fragments(A) == 26 and m.arranged_fragments(A) == 26,
+		"arranged is capped to what is left"
+	)
 	_check(m.unlocked_abilities(sp).size() == 2, "revealed abilities stay usable")
 	_check(m.add_ifp(A, 15) == 15 and m.true_fragments(A) == 31, "the IFP can be earned back")
-	_check(m.parasitic_fragments(A) == 33 + 5, "...and each re-formed fragment brings a parasitic one")
-	_check(m.remove_parasitic(A, false, 4) == 4 and m.parasitic_fragments(A) == 34, "parasitic removed")
+	_check(
+		m.parasitic_fragments(A) == 33 + 5, "...and each re-formed fragment brings a parasitic one"
+	)
+	_check(
+		m.remove_parasitic(A, false, 4) == 4 and m.parasitic_fragments(A) == 34, "parasitic removed"
+	)
 	_check(m.remove_parasitic(A, false, 99) == 34, "...never below none")
 	var odd := Model.new()
 	odd.add_ifp(A, 7)
@@ -207,13 +216,21 @@ func _check_save_round_trip() -> void:
 	back.from_dict(JSON.parse_string(text))
 	_check(back.ifp(A) == 90 and back.arranged_fragments(A) == 30, "pages come back")
 	_check(back.unlocked_abilities(GameData.species(A)).size() == 2, "...with their abilities")
-	_check(back.ifp(B) == 31 and back.parasitic_fragments(B) == 10, "...and their parasitic fragments")
-	_check(back.ifp(B, true) == 12 and back.arranged_fragments(B, true) == 4, "...Forlorn pages too")
+	_check(
+		back.ifp(B) == 31 and back.parasitic_fragments(B) == 10, "...and their parasitic fragments"
+	)
+	_check(
+		back.ifp(B, true) == 12 and back.arranged_fragments(B, true) == 4, "...Forlorn pages too"
+	)
 	_check(back.page(B).puzzle_state.has("order"), "...and the puzzle's own state")
 	var legacy := Model.new()
 	legacy.from_legacy_ifp({"zuk": 40.0, "ravbak": 100.0})
-	_check(legacy.ifp(B) == 40 and legacy.true_fragments(B) == 13, "an old save's IFP become a page")
-	_check(legacy.is_complete(A) and legacy.parasitic_fragments(A) == 0, "...a complete one stays so")
+	_check(
+		legacy.ifp(B) == 40 and legacy.true_fragments(B) == 13, "an old save's IFP become a page"
+	)
+	_check(
+		legacy.is_complete(A) and legacy.parasitic_fragments(A) == 0, "...a complete one stays so"
+	)
 
 
 func _check_session() -> void:
@@ -240,17 +257,26 @@ func _check_session() -> void:
 	_check(n > 0 and GameSession.page_ifp(&"gelmi") == n, "an Examine goes to the main page")
 	_check(not formed.is_empty() or n < 3, "...and announces fragments when 3 IFP are crossed")
 	_check(
-		GameSession.award_ifp(&"gelmi", GameEnums.IfpAction.EXAMINE_RIVAL, true) > 0
-		and GameSession.page_ifp(&"gelmi", true) == 0,
+		(
+			GameSession.award_ifp(&"gelmi", GameEnums.IfpAction.EXAMINE_RIVAL, true) > 0
+			and GameSession.page_ifp(&"gelmi", true) == 0
+		),
 		"a Forlorn rival whose main page is incomplete pays into the main page"
 	)
 	# A species whose page the tests take to 99.
 	GameSession.add_ifp(&"gelmi", 200)
 	_check(GameSession.page_ifp(&"gelmi") == 99, "the session's pages stop at 99")
-	_check(GameSession.award_ifp(&"gelmi", GameEnums.IfpAction.EXAMINE_RIVAL) == 0, "...and award 0")
 	_check(
-		GameSession.award_ifp(&"gelmi", GameEnums.IfpAction.EXAMINE_DECOR) == 0
-		and GameSession.exploration_examine_ifp.get(&"gelmi", 0) <= GameSession.EXAMINE_DECOR_CAP,
+		GameSession.award_ifp(&"gelmi", GameEnums.IfpAction.EXAMINE_RIVAL) == 0, "...and award 0"
+	)
+	_check(
+		(
+			GameSession.award_ifp(&"gelmi", GameEnums.IfpAction.EXAMINE_DECOR) == 0
+			and (
+				GameSession.exploration_examine_ifp.get(&"gelmi", 0)
+				<= GameSession.EXAMINE_DECOR_CAP
+			)
+		),
 		"a full page does not eat the decor allowance either"
 	)
 	_check(not GameSession.mark_page_assembled(&"gelmi"), "nothing arranged: not assembled")
@@ -264,7 +290,10 @@ func _check_session() -> void:
 
 	var before := GameSession.page_ifp(&"gelmi", true)
 	var f := GameSession.award_ifp(&"gelmi", GameEnums.IfpAction.EXAMINE_RIVAL, true)
-	_check(f > 0 and GameSession.page_ifp(&"gelmi", true) == before + f, "a Forlorn rival now pays into the Forlorn page")
+	_check(
+		f > 0 and GameSession.page_ifp(&"gelmi", true) == before + f,
+		"a Forlorn rival now pays into the Forlorn page"
+	)
 	_check(GameSession.page_ifp(&"gelmi") == 100, "...leaving the main page alone")
 	_check(progress.size() > 0, "encyclopaedia_progress still fires")
 
@@ -285,23 +314,33 @@ func _check_catalogues() -> void:
 	var second := sp.encyclopaedia_abilities[1]
 	# The data lists a species' gated abilities among its origin ones, so the fixture must be one
 	# where that holds for the check to mean anything.
-	_check(first in sp.origin_abilities and second in sp.origin_abilities, "fixture: gated and native")
+	_check(
+		first in sp.origin_abilities and second in sp.origin_abilities, "fixture: gated and native"
+	)
 	# A player of a species whose pages have revealed nothing has none of the gated abilities.
 	var plain := EncounterIndividual.new(sp, true)
 	_check(not (first in plain.ability_ids), "a player with nothing arranged lacks the first")
 	_check(not (sp.forlorn_ability in plain.ability_ids), "...and the Forlorn one")
 	var rival := EncounterIndividual.new(sp, false)
-	_check(first in rival.ability_ids and second in rival.ability_ids, "a rival keeps all of its own")
+	_check(
+		first in rival.ability_ids and second in rival.ability_ids, "a rival keeps all of its own"
+	)
 	GameSession.main_character = A
 	var duo := EncounterIndividual.new(sp, true)
-	_check(first in duo.ability_ids and not (second in duo.ability_ids), "the starting duo has the first")
+	_check(
+		first in duo.ability_ids and not (second in duo.ability_ids),
+		"the starting duo has the first"
+	)
 	GameSession.teammate = A
 	duo = EncounterIndividual.new(sp, true)
 	_check(first in duo.ability_ids and second in duo.ability_ids, "two of a species have both")
 	_check(not (sp.forlorn_ability in duo.ability_ids), "...but not the Forlorn one")
 	GameSession.add_ifp(A, 99, true)
 	GameSession.set_arranged_fragments(A, true, 15)
-	_check(sp.forlorn_ability in EncounterIndividual.new(sp, true).ability_ids, "15 Forlorn fragments reveal it")
+	_check(
+		sp.forlorn_ability in EncounterIndividual.new(sp, true).ability_ids,
+		"15 Forlorn fragments reveal it"
+	)
 	var other := EncounterIndividual.new(GameData.species(B), true)
 	_check(
 		not (GameData.species(B).encyclopaedia_abilities[0] in other.ability_ids),
@@ -315,7 +354,9 @@ func _check_catalogues() -> void:
 	sp.encyclopaedia_abilities.assign([first, &"fog_mantel"])
 	GameSession.reset()
 	GameSession.main_character = A
-	_check(not (&"fog_mantel" in Catalog.known_for_duo()), "exploration: a gated ability is not known")
+	_check(
+		not (&"fog_mantel" in Catalog.known_for_duo()), "exploration: a gated ability is not known"
+	)
 	GameSession.teammate = A
 	_check(&"fog_mantel" in Catalog.known_for_duo(), "exploration: ...until the 30th fragment")
 	sp.origin_abilities.assign(saved_origin)

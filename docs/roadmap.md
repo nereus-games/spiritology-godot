@@ -1,6 +1,6 @@
 # What isn't built yet
 
-The source carries about 45 `TODO` markers; `grep -rn TODO --include='*.gd' .` lists them.
+The source carries about 40 `TODO` markers, in some 30 files; `grep -rn TODO --include='*.gd' .` lists them.
 Scattered through the code they read like neglect; grouped, they are an accurate map of what
 the game still needs, and most of them are not debt at all — they are one system waiting on
 another.
@@ -104,8 +104,8 @@ unblock.
   assembly API, the 15 / 30 / Forlorn-15 ability thresholds, the starting duo, and persistence.
   The amount an Examine yields follows the info bonuses (Reconnaissance Glide, Halo Effect,
   Priming, Catatonia; `examine_bonus_step` in `data/balance.tres`, a placeholder). What is
-  missing: the `encyclopaedia_*` signals are shown nowhere yet; and Forlorn variants on the
-  individual. (`encounter_manager.gd`, `encyclopaedia_model.gd`)
+  missing: most `encyclopaedia_*` signals are still announced nowhere (only the assembly screen and
+  the selector's memory listen); and Forlorn variants on the individual. (`encounter_manager.gd`, `encyclopaedia_model.gd`)
 - **The encyclopaedia's screens.** The grid and the read-only page view are built and read the
   fragment model (see [architecture.md](architecture.md), *The encyclopaedia screens*), reachable
   only from the dev scenario picker. The assembly screen is built too (*The assembly screen*), reached from a page's

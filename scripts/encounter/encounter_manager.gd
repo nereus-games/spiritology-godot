@@ -726,6 +726,19 @@ func examine_factor(
 	return info
 
 
+## Examine Weakness: "a little info" on `other`, announced as one info fragment's worth of IFP
+## through [signal ifp_earned]. Only a player character gathers it, and only on a rival: a
+## rival has no encyclopaedia, and a teammate's page is not one to fill by striking its
+## weakness. Returns whether anything was announced.
+func gather_weakness_info(gatherer: EncounterIndividual, other: EncounterIndividual) -> bool:
+	if not gatherer.is_player or other == null or not all_rivals.has(other):
+		return false
+	ifp_earned.emit(
+		other.species_id(), GameEnums.IfpAction.WEAKNESS_INFO, _is_forlorn(other), true, 1.0
+	)
+	return true
+
+
 ## The Examines an ability made of other individuals (Halo Effect). Only a player character's
 ## Examine of a rival earns IFP.
 func _carry_out_examines(individual: EncounterIndividual, ctx: EncounterContext) -> void:

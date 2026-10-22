@@ -725,7 +725,7 @@ msgid "LOG_TALENT_SLICK_MERCHANT"
 msgstr "%s: %s's weakness takes on %s's."
 
 msgid "LOG_TALENT_EXAMINE_WEAKNESS"
-msgstr "%s: information gleaned on %s (weakness struck) [to come]."
+msgstr "%s: information gleaned on %s (weakness struck)."
 
 # %s = the talent, %s = the teammate healed, %d = the DEN given back.
 msgid "LOG_TALENT_SERENE_WAVES"

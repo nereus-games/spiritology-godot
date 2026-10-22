@@ -63,6 +63,7 @@ enum IfpAction {
 	EXAMINE_RIVAL,
 	TALK_RIVAL,  ## only earns anything if the dialogue is effective
 	DISSOLVE_RIVAL,
+	WEAKNESS_INFO,  ## Examine Weakness: one info fragment's worth on the other individual
 }
 
 ## What an inventory object DOES — not how much of it, which is parametric on

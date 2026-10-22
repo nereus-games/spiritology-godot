@@ -7,6 +7,7 @@
 ## As a start scene rather than --script; see geometry_check.gd.
 extends Node
 
+const Model := preload("res://scripts/encyclopaedia/encyclopaedia_model.gd")
 const ABILITY_DIR := "res://data/abilities/"
 
 var _fails: Array[String] = []
@@ -43,6 +44,7 @@ func _run_all() -> void:
 	await _check_catatonia()
 	await _check_priming()
 	await _check_recon_glide()
+	await _check_examine_weakness()
 	print("")
 	if _fails.is_empty():
 		print("ALL OK")
@@ -150,6 +152,117 @@ func _check_award() -> void:
 	)
 	_check(GameSession.page_ifp(species) == got, "...and the page receives what was awarded")
 	GameSession.encyclopaedia.from_dict(saved)
+
+
+func _check_weakness_award() -> void:
+	print("[weakness info in the encyclopaedia]")
+	var species := &"examine_weakness_test_species"
+	var saved: Dictionary = GameSession.encyclopaedia.to_dict()
+	GameSession.encyclopaedia.clear()
+	var got := GameSession.award_ifp(species, GameEnums.IfpAction.WEAKNESS_INFO)
+	_check(got == Model.IFP_PER_FRAGMENT, "the info is one fragment's worth (%d)" % got)
+	_check(
+		(
+			GameSession.encyclopaedia.true_fragments(species) == 1
+			and GameSession.encyclopaedia.parasitic_fragments(species) == 1
+		),
+		"...which forms a true fragment and a parasitic one"
+	)
+	GameSession.add_ifp(species, 200)
+	_check(
+		(
+			GameSession.award_ifp(species, GameEnums.IfpAction.WEAKNESS_INFO) == 0
+			and GameSession.page_ifp(species) == 99
+		),
+		"a page at 99 % takes no more of it"
+	)
+	GameSession.encyclopaedia.from_dict(saved)
+
+
+## The WEAKNESS_INFO announcements of an encounter, as the species they name.
+func _record_weakness(m: EncounterManager) -> Array:
+	var seen: Array = []
+	m.ifp_earned.connect(
+		func(species, action, _forlorn, _effective, factor):
+			if action == GameEnums.IfpAction.WEAKNESS_INFO and factor == 1.0:
+				seen.append(species)
+	)
+	return seen
+
+
+## `who` strikes `target`, whose exposed weakness is first made the ability's own, or not.
+func _strike(
+	m: EncounterManager, who: EncounterIndividual, target: EncounterIndividual, matching: bool
+) -> void:
+	var ability := _ability(&"brooding_fire")
+	var energy := ability.energy
+	var other := GameEnums.Energy.CRYSTAL
+	if energy == other:
+		other = GameEnums.Energy.HEAT
+	target.override_weakness(energy if matching else other, target, 5)
+	_play(m, who, [EncounterAction.use_ability(ability, [target])])
+
+
+func _check_examine_weakness() -> void:
+	print("[examine weakness]")
+	_check_weakness_award()
+	# The bearer strikes a rival's weakness: info on the rival.
+	var m := _encounter(&"gelmi")
+	var seen := _record_weakness(m)
+	_strike(m, m.players[0], m.rivals[0], true)
+	await m.run(1)
+	_check(seen == [&"skorpis"], "striking a rival's weakness announces info on it (%s)" % [seen])
+	m.free()
+
+	# The weakness is not struck: nothing.
+	m = _encounter(&"gelmi")
+	seen = _record_weakness(m)
+	_strike(m, m.players[0], m.rivals[0], false)
+	await m.run(1)
+	_check(seen.is_empty(), "a weakness that is not touched yields nothing")
+	m.free()
+
+	# The talent belongs to the species: a duo without it gets nothing.
+	m = _encounter(&"kalilk")
+	seen = _record_weakness(m)
+	_strike(m, m.players[0], m.rivals[0], true)
+	await m.run(1)
+	_check(seen.is_empty(), "a duo without the talent gets no info")
+	m.free()
+
+	# The bearer is struck on its weakness by a rival: info on that rival.
+	m = _encounter(&"gelmi")
+	seen = _record_weakness(m)
+	_strike(m, m.rivals[0], m.players[0], true)
+	await m.run(1)
+	_check(
+		seen == [&"skorpis"], "being struck on its weakness gives info on the user (%s)" % [seen]
+	)
+	m.free()
+
+	# ...but not on its own teammate.
+	m = _encounter(&"gelmi")
+	seen = _record_weakness(m)
+	_strike(m, m.players[1], m.players[0], true)
+	await m.run(1)
+	_check(seen.is_empty(), "...nor when the user is a teammate")
+	m.free()
+
+	# A rival bearing the talent earns the player nothing.
+	var all: Array = []
+	for id in [&"kalilk", &"fliritus", &"gelmi", &"gelmi"]:
+		all.append(EncounterManager.make_individual(id, all.size() < 2))
+	m = EncounterManager.new()
+	m.setup([all[0], all[1]], [all[2], all[3]], 20261022)
+	m.timeline.order = all.duplicate()
+	for f in all:
+		m.set_agent(f, Player.new())
+		f.eth = 20
+	seen = _record_weakness(m)
+	_strike(m, all[0], all[2], true)
+	await m.run(1)
+	_check(seen.is_empty(), "a rival's Examine Weakness has no encyclopaedia to fill")
+	m.free()
 
 
 # --------------------------------------------------------------------------

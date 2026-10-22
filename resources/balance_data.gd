@@ -41,6 +41,13 @@ extends Resource
 ## 0, which is to say for as long as the doc writes "Y DEN" instead of a number.
 @export var object_heal_den: int = 25
 
+## Rivals choosing an action "more often" (Radiant Secret, Hyping Up, Misty Secret, Business
+## Card): a probability added to the chance of Talking, Meditating or using an object on a turn.
+## The doc gives no figure, so the step the game already applies per condition stands in, as for
+## [member meditate_damage_bonus]. One's Ethos does give one: "5 % more often".
+@export var action_weight_bonus: float = 0.36
+@export var ethos_talk_bonus: float = 0.05
+
 ## Running away from an encounter: "teleporting 3 to 5 tiles away", counted in steps actually
 ## walkable from where the encounter took place. Figures the doc gives.
 @export var flee_distance_min: int = 3

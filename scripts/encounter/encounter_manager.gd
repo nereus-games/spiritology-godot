@@ -617,9 +617,11 @@ func _resolve_talk(individual: EncounterIndividual, action: EncounterAction) -> 
 		if speaker_team.has(t.owner):
 			chance = t.modify_talk_chance(self, individual, target, chance)
 	var effective := rng.randf() < chance
-	ifp_earned.emit(
-		target.species_id(), GameEnums.IfpAction.TALK_RIVAL, _is_forlorn(target), effective
-	)
+	# Only a player's Talk earns IFP; a rival talking to a player character earns none.
+	if individual.is_player:
+		ifp_earned.emit(
+			target.species_id(), GameEnums.IfpAction.TALK_RIVAL, _is_forlorn(target), effective
+		)
 	var verdict := _tr("LOG_DIALOGUE_EFFECTIVE" if effective else "LOG_DIALOGUE_INEFFECTIVE")
 	_emit_turn(individual, action, [_tr("LOG_TALK") % [target.display_name(), verdict]])
 	# Talents that react to a resolved Talk: Serene Waves heals the teammate, Slick Merchant

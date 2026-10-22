@@ -81,6 +81,19 @@ var action_weights: Array = []
 ## and in exploration it carries on with it.
 var departure := &""
 
+# --- Deflection, Tactical Retreat, Self-Denial ---
+
+## Multiplier on the damage it takes whose energy matches its own exposed weakness (Deflection
+## sets it on everyone). 1.0 means nothing is amplified. Timed like any other effect.
+var weakness_damage_factor := 1.0
+## Energies whose damage it turns into ETH instead of taking it (Tactical Retreat).
+var eth_from_energies: Array = []
+## Effects that act at the start of each of its turns until something clears them (Self-Denial's
+## drain): ability id -> [the AbilityData, instance id of whoever applied it]. An instance id and
+## not the individual, so that no reference cycle can form. They are never timed: what ends one is
+## [method AbilityScript.on_meditated], or the end of the encounter.
+var recurring: Dictionary = {}
+
 var _used_single: Dictionary = {}  ## ability id -> true, once its single use is spent
 var _weakness_override := false
 var _weakness_energy := GameEnums.Energy.NONE  ## The weakness forced for now
@@ -319,6 +332,44 @@ func expire_anchored_to(individual: EncounterIndividual) -> void:
 			_expire(key)
 
 
+## Multiplies the damage matching its exposed weakness. Set rather than multiplied: using
+## Deflection twice still doubles, it does not quadruple.
+func amplify_weakness_damage(
+	factor: float, anchor: EncounterIndividual = null, turns := UNTIL_NEXT_TURN
+) -> void:
+	weakness_damage_factor = factor
+	_arm("weakness_damage_factor", anchor, turns)
+
+
+## Turns this energy's damage into ETH instead of DEN (Tactical Retreat).
+func convert_damage_to_eth(
+	energy: GameEnums.Energy, anchor: EncounterIndividual = null, turns := UNTIL_NEXT_TURN
+) -> void:
+	if not eth_from_energies.has(energy):
+		eth_from_energies.append(energy)
+	_arm("eth_from:%d" % energy, anchor, turns)
+
+
+func converts_to_eth(energy: GameEnums.Energy) -> bool:
+	return eth_from_energies.has(energy)
+
+
+## Starts a recurring effect, applied by `source`. One per ability: using it again refreshes it.
+func add_recurring(ability: AbilityData, source: EncounterIndividual) -> void:
+	recurring[ability.id] = [ability, source.get_instance_id() if source != null else 0]
+
+
+## Puts back a field of the block above whose timer ran out. True if `key` was one of theirs.
+func _expire_extra(key: String) -> bool:
+	if key.begins_with("eth_from:"):
+		eth_from_energies.erase(int(key.get_slice(":", 1)))
+		return true
+	if key == "weakness_damage_factor":
+		weakness_damage_factor = 1.0
+		return true
+	return false
+
+
 func _arm(key: String, anchor: EncounterIndividual, turns: int) -> void:
 	if turns == FOR_ENCOUNTER:
 		_timers.erase(key)
@@ -331,6 +382,8 @@ func _arm(key: String, anchor: EncounterIndividual, turns: int) -> void:
 ## ends the weakness override even while a lock is on, since the two run out together.
 func _expire(key: String) -> void:
 	_timers.erase(key)
+	if _expire_extra(key):
+		return
 	if key.begins_with("immune:"):
 		immune_energies.erase(int(key.get_slice(":", 1)))
 		return

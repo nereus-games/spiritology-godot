@@ -365,6 +365,7 @@ func _begin_round() -> void:
 func _start_turn_of(individual: EncounterIndividual) -> void:
 	for f in all_players + all_rivals:
 		f.on_turn_start(individual)
+	_run_recurring(individual)
 
 
 func _take_turn(individual: EncounterIndividual) -> void:
@@ -583,16 +584,14 @@ func _resolve_meditate(individual: EncounterIndividual, action: EncounterAction)
 	var balance := BalanceData.current()
 	individual.recover_eth(balance.meditate_eth)
 	individual.grant_next_turn_damage_bonus(balance.meditate_damage_bonus)
-	_emit_turn(
-		individual,
-		action,
-		[
-			(
-				_tr("LOG_MEDITATE")
-				% [before, individual.eth, roundi(balance.meditate_damage_bonus * 100.0)]
-			)
-		]
-	)
+	var lines: Array = [
+		(
+			_tr("LOG_MEDITATE")
+			% [before, individual.eth, roundi(balance.meditate_damage_bonus * 100.0)]
+		)
+	]
+	lines.append_array(_shake_off_recurring(individual))
+	_emit_turn(individual, action, lines)
 
 
 ## Talk: "initiate dialogue with rival". Earns IFP only if the dialogue is
@@ -728,6 +727,40 @@ func _make_context(
 	ctx.completed_species = completed_species
 	ctx.resolved_energy = _round_energy
 	return ctx
+
+
+## The recurring effects on `individual` act, at the start of its turn. Announced the way a
+## reaction is, under the bearer's name.
+func _run_recurring(individual: EncounterIndividual) -> void:
+	if individual.is_dissolved() or individual.recurring.is_empty():
+		return
+	var noted: Array = []
+	for entry in individual.recurring.values():
+		var applied: AbilityData = entry[0]
+		var source := instance_from_id(entry[1]) as EncounterIndividual
+		var ctx := _make_context(source if source != null else individual, applied, [individual])
+		ctx.in_reaction = true
+		EffectCatalog.script_for(applied).recur(ctx)
+		if not ctx.log_lines.is_empty():
+			noted.append([individual, applied, ctx.log_lines])
+	_announce_reactions(noted)
+
+
+## Meditating: the recurring effects on `individual` that can be shaken off end. Returns the lines
+## to add to the turn.
+func _shake_off_recurring(individual: EncounterIndividual) -> Array:
+	var lines: Array = []
+	for aid in individual.recurring.keys():
+		var applied: AbilityData = individual.recurring[aid][0]
+		var ctx := _make_context(individual, applied, [individual])
+		if not EffectCatalog.script_for(applied).on_meditated(ctx):
+			continue
+		individual.recurring.erase(aid)
+		lines.append(
+			_tr("LOG_RECURRING_SHAKEN_OFF") % [individual.display_name(), _tr(applied.name_key())]
+		)
+		lines.append_array(ctx.log_lines)
+	return lines
 
 
 ## `individual`'s action has been resolved: whoever is watching is told, whatever the action was.

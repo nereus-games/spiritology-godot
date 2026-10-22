@@ -439,6 +439,12 @@ msgstr "%s recovers %d DEN."
 msgid "LOG_ETH_RECOVERED"
 msgstr "%s recovers %d ETH."
 
+msgid "LOG_DAMAGE_TO_ETH_ARMED"
+msgstr "%s turns damage into ETH (%s)."
+
+msgid "LOG_DAMAGE_TO_ETH"
+msgstr "%s turns %d damage into ETH."
+
 msgid "LOG_NEXT_DAMAGE_FACTOR"
 msgstr "next damage on %s ×%.2f."
 
@@ -466,8 +472,14 @@ msgstr "the weakness of %s cannot change."
 msgid "LOG_ALL_DAMAGE_FACTOR"
 msgstr "all damage taken by %s ×%.2f."
 
+msgid "LOG_WEAKNESS_DAMAGE_AMPLIFIED"
+msgstr "damage that matches a weakness ×%.2f for everyone."
+
 msgid "LOG_WEAKNESS_RESET"
 msgstr "weakness of %s restored."
+
+msgid "LOG_RECURRING_SHAKEN_OFF"
+msgstr "%s shakes off %s."
 
 msgid "LOG_WEAKNESS_SWAPPED"
 msgstr "%s and %s trade weaknesses."
@@ -488,6 +500,9 @@ msgstr "%s becomes wholly immune."
 # Turn order. SHUFFLED has no placeholder: it is the whole order that moves.
 msgid "LOG_TURN_ORDER_SHUFFLED"
 msgstr "the turn order is thrown into disarray."
+
+msgid "LOG_ETH_TRADED"
+msgstr "ETH changes hands according to the new positions."
 
 msgid "LOG_MOVED_LAST"
 msgstr "%s will go last next turn."

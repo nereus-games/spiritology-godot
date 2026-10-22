@@ -1,4 +1,3 @@
-# @unimplemented
 ## Fog Mantel — Exploration · from — · — · cost — · damage — · single use
 ##
 ## MECHANIC (from the design doc):
@@ -8,10 +7,12 @@
 ##   Player character becomes invisible from rivals for 5 to 8 tiles. The number of tiles is
 ##   picked at random each time this is used.
 ##   Encounters and trap activations before the effect ends ends it immediately.
+##
+## An exploration ability: it is never used inside an encounter, so this script has nothing to
+## run. The mechanic lives in `scripts/exploration/abilities/impl/fog_mantel.gd`: it hides the
+## player for a random 5 to 8 tiles, and a sprung trap or an encounter clears it at once.
 extends AbilityScript
 
 
-func execute(ctx: EncounterContext) -> void:
-	# TODO: implement the mechanic above, then drop the leading "@unimplemented". Until then the
-	# generic effects derived from the tags apply — that is scaffolding, not the real mechanic.
-	super.execute(ctx)
+func execute(_ctx: EncounterContext) -> void:
+	pass

@@ -87,12 +87,12 @@ unblock.
 - **A dungeon authoring format, and a validator.** An authored dungeon will fill
   `dungeon_layout.gd`, which holds the floor, holes, pits, walls and exits and nothing that
   happens on them, and the validator will check that object. Walls and holes are derived from
-  the floor grid instead of declared; the doc's level-design rules — stairs lead to floor with nothing
-  directly above, a narrow bridge always spans a floor, no bottomless hole — are checked only
-  on the dev scenario, and caught at runtime otherwise. Safe areas already report their own
-  faults (`safe_areas.violations()`), but only a check calls it. Becomes urgent with the first
-  real dungeon. (`dungeon_layout.gd`, `stairs.gd`, `exploration.gd`, `player_controller.gd` —
-  tagged `TODO(dungeon checker)`)
+  the floor grid instead of declared; the doc's level-design rules — stairs lead to floor with
+  nothing directly above, a narrow bridge always spans a floor, no bottomless hole — are
+  checked only on the dev scenario, and caught at runtime otherwise. Safe areas already report
+  their own faults (`safe_areas.violations()`), but only a check calls it. Becomes urgent with
+  the first real dungeon. (`dungeon_layout.gd`, `stairs.gd`, `exploration.gd`,
+  `player_controller.gd` — tagged `TODO(dungeon checker)`)
 - **Rivals carrying objects.** Examine should "reveal objects they carry", Steal has nothing to
   take, and Altruism has nothing to destroy. (`encounter_manager.gd`, `altruism.gd`)
 - **Encyclopaedia detail.** IFP are awarded and tallied, from encounters and from exploration

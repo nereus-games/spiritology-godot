@@ -5,6 +5,8 @@
 ## [GameData], which is static and reloaded at boot. Serialised by [SaveSystem].
 extends Node
 
+const EncyclopaediaModel := preload("res://scripts/encyclopaedia/encyclopaedia_model.gd")
+
 ## PSY thresholds that decide how much IFP an action earns.
 const PSY_LOW := 10
 const PSY_HIGH := 30
@@ -67,7 +69,17 @@ enum PartySlot { MAIN, TEAMMATE }
 
 signal psy_changed(new_value: int)
 signal fde_changed(new_value: int)
+## The MAIN page of a species gained or lost IFP. The Forlorn page has its own signal below.
 signal encyclopaedia_progress(species_id: StringName, ifp: int)
+## Any page of a species changed (IFP, fragments, a revealed ability), the Forlorn one included.
+signal encyclopaedia_page_changed(species_id: StringName, forlorn: bool)
+## IFP crossed a multiple of 3: `count` new true fragments, and as many parasitic ones, have
+## formed. "New encyclopaedia fragments have formed."
+signal encyclopaedia_fragments_formed(species_id: StringName, forlorn: bool, count: int)
+## Correctly arranging fragments revealed an ability, which is usable from now on.
+signal encyclopaedia_ability_unlocked(species_id: StringName, ability_id: StringName)
+## A page reached 100 % through a correct full assembly.
+signal encyclopaedia_page_assembled(species_id: StringName, forlorn: bool)
 ## A slot's persistent DEN changed — damage, healing, or recovery from devitalisation.
 signal den_changed(slot: PartySlot, new_value: int)
 ## A slot's persistent ETH changed.
@@ -80,8 +92,18 @@ signal inventory_changed(object_id: StringName, new_count: int)
 
 ## The playable duo, decided by the personality quiz. The same species can fill both
 ## slots, in which case its talent stacks.
-var main_character: StringName
-var teammate: StringName
+##
+## Setting either grants the duo's starting fragments ([method
+## EncyclopaediaModel.grant_starting_duo]), whoever sets it: the quiz, a loaded save, a dev
+## scenario.
+var main_character: StringName:
+	set(value):
+		main_character = value
+		_grant_starting_duo()
+var teammate: StringName:
+	set(value):
+		teammate = value
+		_grant_starting_duo()
 
 ## What the player named the main character.
 var player_name: String = ""
@@ -114,8 +136,10 @@ var fde_count: int = 0:
 		fde_count = value
 		fde_changed.emit(fde_count)
 
-## Encyclopaedia progress: species_id -> IFP, where 1 IFP is 1 % of a page.
-var encyclopaedia_ifp: Dictionary = {}
+## The encyclopaedia: a main page and a Forlorn page per species, their IFP, fragments and the
+## abilities arranging them revealed. Read it through the methods below; see
+## [EncyclopaediaModel] for the rules.
+var encyclopaedia := EncyclopaediaModel.new()
 
 ## How much each species has already yielded through "Examine decor / ground", so that
 ## [constant EXAMINE_DECOR_CAP] can be enforced across a whole playthrough.
@@ -148,14 +172,123 @@ func psy_tier() -> int:
 ## Gates what the encounter UI may show: "rival's density and weakness aren't shown in
 ## timeline if they aren't in the encyclopaedia (yet)".
 func knows_species(species_id: StringName) -> bool:
-	return int(encyclopaedia_ifp.get(species_id, 0)) > 0
+	return encyclopaedia.knows(species_id)
 
 
-## Adds IFP to a species' page, which caps at 100.
-func add_ifp(species_id: StringName, amount: int) -> void:
-	var current: int = encyclopaedia_ifp.get(species_id, 0)
-	encyclopaedia_ifp[species_id] = min(current + amount, 100)
-	encyclopaedia_progress.emit(species_id, encyclopaedia_ifp[species_id])
+## Adds IFP to a species' page (its Forlorn page if `forlorn_page`). A page stops at 99 %: the
+## last one comes from [method mark_page_assembled]. Forms fragments, and returns the IFP
+## actually added, which is 0 for a page at the cap.
+func add_ifp(species_id: StringName, amount: int, forlorn_page: bool = false) -> int:
+	var fragments_before := encyclopaedia.true_fragments(species_id, forlorn_page)
+	var added := encyclopaedia.add_ifp(species_id, amount, forlorn_page)
+	if added > 0:
+		_page_changed(species_id, forlorn_page)
+		var formed := encyclopaedia.true_fragments(species_id, forlorn_page) - fragments_before
+		if formed > 0:
+			encyclopaedia_fragments_formed.emit(species_id, forlorn_page, formed)
+	return added
+
+
+# --- Encyclopaedia pages and fragments ---
+
+
+## A page's percentage: 0 to 99 from IFP, 100 once assembled.
+func page_ifp(species_id: StringName, forlorn_page: bool = false) -> int:
+	return encyclopaedia.ifp(species_id, forlorn_page)
+
+
+## 100 %, i.e. correctly assembled. This is what the "page complete" damage condition and the
+## Forlorn bonus IFP read.
+func is_page_complete(species_id: StringName, forlorn_page: bool = false) -> bool:
+	return encyclopaedia.is_complete(species_id, forlorn_page)
+
+
+## Species whose main page is complete, for [member EncounterManager.completed_species].
+func completed_species() -> Dictionary:
+	return encyclopaedia.completed_species()
+
+
+func true_fragments(species_id: StringName, forlorn_page: bool = false) -> int:
+	return encyclopaedia.true_fragments(species_id, forlorn_page)
+
+
+func parasitic_fragments(species_id: StringName, forlorn_page: bool = false) -> int:
+	return encyclopaedia.parasitic_fragments(species_id, forlorn_page)
+
+
+func arranged_fragments(species_id: StringName, forlorn_page: bool = false) -> int:
+	return encyclopaedia.arranged_fragments(species_id, forlorn_page)
+
+
+## The abilities the encyclopaedia has revealed for a species, in unlock order.
+func unlocked_abilities(species_id: StringName) -> Array[StringName]:
+	return encyclopaedia.unlocked_abilities(GameData.species(species_id))
+
+
+## Every ability a player character of this species may use: the native ones, minus those the
+## encyclopaedia gates and has not revealed, plus those it has. See
+## [method EncyclopaediaModel.usable_abilities]. What a player-side catalogue must read.
+func usable_abilities(species_id: StringName) -> Array[StringName]:
+	return encyclopaedia.usable_abilities(GameData.species(species_id))
+
+
+## The puzzle reports how many true fragments are correctly arranged on a page. Reveals any
+## ability whose threshold (15, 30; 15 on a Forlorn page) is reached; one already revealed is
+## never taken back.
+func set_arranged_fragments(species_id: StringName, forlorn_page: bool, count: int) -> void:
+	var before := unlocked_abilities(species_id)
+	var arranged_before := encyclopaedia.arranged_fragments(species_id, forlorn_page)
+	encyclopaedia.set_arranged(species_id, forlorn_page, count)
+	_announce_unlocks(species_id, before)
+	if encyclopaedia.arranged_fragments(species_id, forlorn_page) != arranged_before:
+		encyclopaedia_page_changed.emit(species_id, forlorn_page)
+
+
+## The puzzle destroyed true fragments: the page loses 3 IFP each. Returns how many. The puzzle
+## then reports the new arranged count through [method set_arranged_fragments].
+func destroy_fragments(species_id: StringName, forlorn_page: bool, count: int = 1) -> int:
+	var destroyed := encyclopaedia.destroy_fragments(species_id, forlorn_page, count)
+	if destroyed > 0:
+		_page_changed(species_id, forlorn_page)
+	return destroyed
+
+
+## Parasitic fragments disappeared after a wrong assembly. Returns how many.
+func remove_parasitic_fragments(species_id: StringName, forlorn_page: bool, count: int = 1) -> int:
+	var removed := encyclopaedia.remove_parasitic(species_id, forlorn_page, count)
+	if removed > 0:
+		encyclopaedia_page_changed.emit(species_id, forlorn_page)
+	return removed
+
+
+## The puzzle calls this when a page has been assembled correctly and completely: 99 % becomes
+## 100 %. Returns false, changing nothing, unless the page is at 99 % with all 33 true fragments
+## reported arranged.
+func mark_page_assembled(species_id: StringName, forlorn_page: bool = false) -> bool:
+	var before := unlocked_abilities(species_id)
+	if not encyclopaedia.mark_assembled(species_id, forlorn_page):
+		return false
+	_page_changed(species_id, forlorn_page)
+	_announce_unlocks(species_id, before)
+	encyclopaedia_page_assembled.emit(species_id, forlorn_page)
+	return true
+
+
+func _grant_starting_duo() -> void:
+	for id in encyclopaedia.grant_starting_duo(main_character, teammate):
+		_page_changed(id, false)
+
+
+func _page_changed(species_id: StringName, forlorn_page: bool) -> void:
+	if not forlorn_page:
+		encyclopaedia_progress.emit(species_id, encyclopaedia.ifp(species_id))
+	encyclopaedia_page_changed.emit(species_id, forlorn_page)
+
+
+func _announce_unlocks(species_id: StringName, before: Array[StringName]) -> void:
+	for aid in unlocked_abilities(species_id):
+		if not (aid in before):
+			encyclopaedia_ability_unlocked.emit(species_id, aid)
 
 
 # --- Earning IFP ---
@@ -184,8 +317,10 @@ func ifp_amount(
 ##   - `yield_factor` scales the table's amount (see [signal EncounterManager.ifp_earned]);
 ##   - examining decor is capped per species at [constant EXAMINE_DECOR_CAP], truncated on
 ##     the way to the cap and 0 once reached.
-## ## TODO: give Forlorn pages their own percentage. Today their points are added to the
-## species' existing page.
+##   - a Forlorn rival's points (once the main page is complete) go to the species' FORLORN
+##     page, with its own percentage; before that they are an ordinary rival's, on the main one;
+##   - a page stops at 99 % ([method add_ifp]), and what it could not take is not counted
+##     against the decor ceiling.
 ## Called directly by exploration (examinable decor, litter, crumbly ground); encounters go
 ## through [signal EncounterManager.ifp_earned], relayed here by the encounter UI.
 func award_ifp(
@@ -198,12 +333,15 @@ func award_ifp(
 	# An ineffective Talk earns nothing.
 	if action == GameEnums.IfpAction.TALK_RIVAL and not dialogue_effective:
 		return 0
-	var main_page_complete: bool = int(encyclopaedia_ifp.get(species_id, 0)) >= 100
+	var main_page_complete := encyclopaedia.is_complete(species_id)
+	var forlorn_page := is_forlorn and main_page_complete
 	var amount := ifp_amount(action, is_forlorn, main_page_complete)
 	# A next-turn modifier on the encounter side (Hardening's Talk penalty). Rounded DOWN: the
 	# table holds whole points, and a penalty that rounded back up would never bite at 1 or 2.
 	if not is_equal_approx(yield_factor, 1.0):
 		amount = floori(amount * yield_factor)
+	# A page at 99 % takes nothing more.
+	amount = mini(amount, encyclopaedia.room(species_id, forlorn_page))
 	# Per-species ceiling on what examining decor can ever yield.
 	if action == GameEnums.IfpAction.EXAMINE_DECOR:
 		var already: int = exploration_examine_ifp.get(species_id, 0)
@@ -211,11 +349,11 @@ func award_ifp(
 		if room <= 0:
 			return 0
 		amount = mini(amount, room)
-		exploration_examine_ifp[species_id] = already + amount
+		if amount > 0:
+			exploration_examine_ifp[species_id] = already + amount
 	if amount <= 0:
 		return 0
-	add_ifp(species_id, amount)
-	return amount
+	return add_ifp(species_id, amount, forlorn_page)
 
 
 # --- The duo's talents ---
@@ -412,7 +550,7 @@ func reset() -> void:
 	player_name = ""
 	psy_score = 0
 	fde_count = 0
-	encyclopaedia_ifp.clear()
+	encyclopaedia.clear()
 	exploration_examine_ifp.clear()
 	dungeon_states.clear()
 	used_exploration_abilities.clear()

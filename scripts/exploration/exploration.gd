@@ -7,6 +7,7 @@
 extends Node3D
 
 const ScenarioCatalog := preload("res://scripts/dev/scenario_catalog.gd")
+const Trap := preload("res://scripts/exploration/mechanisms/trap.gd")
 const RivalSpawner := preload("res://scripts/exploration/rival_spawner.gd")
 
 ## How many traps Reveal Traps shows on entering a level.
@@ -133,16 +134,34 @@ func _on_encounter_finished(result: StringName, rivals: Array) -> void:
 ## rivals still in the encounter stay on the group's tile, and rest like after any other
 ## encounter.
 ##
+## Above the first PSY rung ([method GameSession.psy_above]) the duo lands closer, only
+## [member BalanceData.psy_flee_distance_min] to _max steps off, on a tile with no trap and no
+## rival on it, turned to face the group; and the group is
+## [member BalanceData.psy_flee_talk_malus] less likely to Talk while PSY stays above that rung.
+## The group stays either way.
+##
 ## The design doc was once read as adding "a 50 % chance the rival disappears"; that was dropped
 ## (2026-09-18) — a group vanishing looked exactly like every rival in it being devitalised.
 func _run_away(group: Node) -> void:
 	var balance := BalanceData.current()
 	var player := get_node_or_null("Player")
+	var shaken := GameSession.psy_above(1)
 	if player != null:
-		var dest := flight_destination(player.tile)
+		var dest: Vector3i = player.tile
+		if shaken:
+			dest = flight_destination(
+				player.tile, balance.psy_flee_distance_min, balance.psy_flee_distance_max, true
+			)
+		else:
+			dest = flight_destination(player.tile)
 		if dest != player.tile:
 			player.teleport_to(dest)
+		if shaken and group != null and player.has_method("face_tile"):
+			player.face_tile(group.tile)
 	if group != null:
+		if shaken:
+			for m in group.members:
+				m.talk_malus = balance.psy_flee_talk_malus
 		group.rest(balance.rival_rest_turns)
 
 
@@ -151,17 +170,29 @@ func _run_away(group: Node) -> void:
 ## mechanism on it and no rival next to it — running away onto a trap, or into the next
 ## group, would not be much of an escape. When nothing that far is reachable, the farthest
 ## reachable tile; `from` itself when there is none.
-func flight_destination(from: Vector3i) -> Vector3i:
+##
+## `strict` (above the first PSY rung) turns the preference into a rule: only a tile with no
+## trap and nobody on it will do (stairs, chests and decor are fine), and the farthest such tile
+## when none is in range. Walkability comes from the search itself, so a hole is never picked.
+func flight_destination(
+	from: Vector3i, min_steps := -1, max_steps := -1, strict := false
+) -> Vector3i:
 	var balance := BalanceData.current()
-	var steps: Dictionary = _dungeon.tile_search.walking_distances(from, balance.flee_distance_max)
+	if min_steps < 0:
+		min_steps = balance.flee_distance_min
+	if max_steps < 0:
+		max_steps = balance.flee_distance_max
+	var steps: Dictionary = _dungeon.tile_search.walking_distances(from, max_steps)
 	var in_range: Array[Vector3i] = []
 	var quiet: Array[Vector3i] = []
 	var farthest := from
 	for t in steps:
 		var tile: Vector3i = t
+		if strict and (_dungeon.occupant_at(tile) != null or _has_trap(tile)):
+			continue
 		if steps[tile] > steps[farthest]:
 			farthest = tile
-		if steps[tile] < balance.flee_distance_min:
+		if steps[tile] < min_steps:
 			continue
 		in_range.append(tile)
 		if _dungeon.mechanisms_at(tile).is_empty() and not _next_to_rival(tile):
@@ -171,6 +202,13 @@ func flight_destination(from: Vector3i) -> Vector3i:
 	if not in_range.is_empty():
 		return in_range[randi() % in_range.size()]
 	return farthest
+
+
+func _has_trap(tile: Vector3i) -> bool:
+	for m in _dungeon.mechanisms_at(tile):
+		if m is Trap:
+			return true
+	return false
 
 
 func _next_to_rival(tile: Vector3i) -> bool:

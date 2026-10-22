@@ -116,16 +116,25 @@ unblock.
   stays too long, agents arrive at hand-placed arrival points on hand-set timestamps and take
   the shortest path to the player; some dungeons hold a corruptible agent who delays the others
   for a price that rises each time.
-- **PSY's consequences.** Built so far: the IFP bands, the narrow bridge, the width of spawn
-  waves, rivals spawned by examined decor, and rungs 3 and 4 in part (`GameSession.psy_above`):
-  above 30 a rival's density is hidden in the encounter's turn order (Talk's IFP already drops to
-  its top-tier row), and above 40 rivals have no cooldown turn on the map and a poisoned player
+- **PSY's consequences.** Built so far (`GameSession.psy_above`): the IFP bands, the narrow
+  bridge, the width of spawn waves, rivals spawned by examined decor, and parts of every rung
+  but the second.
+  Above 10: the group stays when the duo flees (it always does; the 50 % disappearance was
+  dropped), the duo lands 2 to 3 walkable steps off on a tile with no trap and no rival on it,
+  facing the group, and that group's Talk chance is 10 % lower while PSY stays above 10
+  (`psy_flee_*` in `balance.tres`; `RivalMember.talk_malus`, carried into the encounter by
+  `encounter_state`, applied last in `EncounterManager._resolve_talk`). The malus is a
+  placeholder reading: relative, not stacking, ignored whenever PSY is 10 or less at the time of
+  the Talk (the flag stays on the group), and aimed at a group, not at one rival.
+  Above 30: a rival's density is hidden in the encounter's turn order (Talk's IFP already drops
+  to its top-tier row). Above 40: rivals have no cooldown turn on the map, a poisoned player
   cannot Meditate or use objects, in exploration or in encounters, with a warning
-  (`UI_PSY_POISON_FORBIDS`). Still unbuilt. Above 10: rivals talk 10 % less, and fleeing no
-  longer makes the rival go away (the player lands 2 to 3 tiles off, facing it). Above 20: more
-  risk of losing damaged fragments, and temporary oddities such as swapped icons (after event 3).
-  Above 30: one more wrong fragment each time (the wider spawn waves are built, at a placeholder
-  threshold of 20; see section 5). Above 40: the teammate may refuse an action, poison also
+  (`UI_PSY_POISON_FORBIDS`), and the teammate refuses the first action of a visit's first
+  encounter, then one action in five (`EncounterManager.enable_refusal`,
+  `psy_teammate_refusal_chance`).
+  Still unbuilt. Above 20: more risk of losing damaged fragments, and temporary oddities such as
+  swapped icons (after event 3). Above 30: one more wrong fragment each time (the wider spawn
+  waves are built, at a placeholder threshold of 20; see section 5). Above 40: poison also
   forbids the map, encyclopaedia and team views (those views do not exist yet; TODO in
   `GameSession.psy_forbids_while_poisoned`), and dungeons stay dark. (`game_session.gd`)
 - **Dark dungeons** ("In the Dark"): sight limited to one tile, rivals heard but not seen,

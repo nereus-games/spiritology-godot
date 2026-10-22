@@ -120,6 +120,7 @@ func begin(
 		if map_max_eth > 0:
 			f.max_eth = map_max_eth
 			f.eth = map_max_eth
+		f.talk_chance_malus = float(state.get("talk_malus", 0.0))
 		var map_den: int = int(state.get("den", 0))
 		if map_den > 0:
 			f.load_persistent_state(map_den, int(state.get("eth", f.eth)))

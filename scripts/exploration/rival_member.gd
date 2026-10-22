@@ -14,6 +14,10 @@ var max_den: int
 var den: int
 var max_eth: int
 var eth: int
+## The share taken off its Talk chance, 0 to 1: set when the duo flees its group above the first
+## PSY rung. It rides into every later encounter in [method encounter_state], but only counts
+## while PSY is above that rung when a Talk happens.
+var talk_malus := 0.0
 
 
 func _init(p_species_id: StringName = &"", p_max_den: int = 0, p_max_eth: int = 0) -> void:
@@ -31,7 +35,10 @@ func is_dissolved() -> bool:
 ## The state an encounter starts this individual from — the `rival_states` entry
 ## [method TransitionManager.open_encounter] takes.
 func encounter_state() -> Dictionary:
-	return {"den": den, "max_den": max_den, "eth": eth, "max_eth": max_eth}
+	var state := {"den": den, "max_den": max_den, "eth": eth, "max_eth": max_eth}
+	if talk_malus > 0.0:
+		state["talk_malus"] = talk_malus
+	return state
 
 
 ## Takes back the DEN and ETH an encounter left this individual with — one entry of

@@ -59,6 +59,20 @@ extends Resource
 @export var flee_distance_min: int = 3
 @export var flee_distance_max: int = 5
 
+## Running away above the first PSY rung ([method GameSession.psy_above]): "fleeing no longer
+## makes the rival go away" and the duo lands only this many walkable steps off, facing the
+## rival. The doc says "2 to 3 tiles"; PLACEHOLDERS for the walkable-step reading, like the
+## figures above.
+@export var psy_flee_distance_min: int = 2
+@export var psy_flee_distance_max: int = 3
+
+## A group the duo fled from above the first PSY rung is "10 % less" likely to Talk: the share
+## taken off its Talk chance (the species' talker_chance, a proxy; see
+## [method EncounterManager._resolve_talk]), as a fraction. Relative, not 10 points, and it does
+## not stack when the duo flees the same group twice. It only counts while the PSY score is still
+## above the first rung when the Talk happens.
+@export var psy_flee_talk_malus: float = 0.1
+
 ## Turns a group still on the map stays put after an encounter, so that it does not open the
 ## next one straight away. The doc says nothing about it: a placeholder, see
 ## [method RivalBehavior.rest].
@@ -84,6 +98,18 @@ extends Resource
 @export_range(0.0, 1.0) var decor_spawn_chance: float = 0.45
 @export var decor_spawn_groups_max: int = 2
 @export var decor_spawn_radius: int = 4
+
+## The doc's PSY ladder, "numbers need testing": a consequence applies once the score is
+## strictly above its rung. [method GameSession.psy_above] reads them, so that no effect
+## hardcodes a threshold.
+@export var psy_rung_1: int = 10
+@export var psy_rung_2: int = 20
+@export var psy_rung_3: int = 30
+@export var psy_rung_4: int = 40
+
+## Above rung 4 the teammate refuses an action: always the first of the first encounter of a
+## dungeon visit, then this chance each time it is asked to act. The doc says "1 in 5".
+@export_range(0.0, 1.0) var psy_teammate_refusal_chance: float = 0.2
 
 ## Hardening: "info penalty on Talk". The doc gives no figure; the penalty reuses the step the
 ## game already applies per condition, so a hardened individual's Talk yields

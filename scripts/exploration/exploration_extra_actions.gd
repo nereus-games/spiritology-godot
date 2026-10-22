@@ -80,9 +80,20 @@ func _ability_label_key(id: StringName) -> String:
 ## Meditate: the duo recovers [member BalanceData.meditate_eth] ETH each and, when facing a
 ## meditation gateway, the meditation counts towards opening it.
 func _run_meditate(gateway_meditation) -> void:
+	if _refused():
+		return
 	_ctx.recover_duo_eth(BalanceData.current().meditate_eth)
 	if gateway_meditation != null and gateway_meditation.callable.is_valid():
 		gateway_meditation.callable.call()
+
+
+## PSY rung 4: poison forbids Meditate and objects. The entries stay on the menu, and trying one
+## shows the warning.
+func _refused() -> bool:
+	if not _ctx.poison_forbids_actions():
+		return false
+	_ctx.refuse_poisoned_action()
+	return true
 
 
 func _run_ability(id: StringName) -> void:
@@ -92,4 +103,6 @@ func _run_ability(id: StringName) -> void:
 
 
 func _run_object(object_id: StringName) -> void:
+	if _refused():
+		return
 	Objects.use_object(object_id, _ctx)

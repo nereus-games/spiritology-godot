@@ -194,6 +194,8 @@ cost would *give* ETH back), never a particular balance.
 | `meditate_eth` / `meditate_damage_bonus` | 12 / +36 % | "recovers X ETH; damage +Y %" |
 | `object_heal_den` | 25 | "gives Y DEN to a target" |
 | `flee_distance_min` / `_max` | 3 / 5 | the doc's figures: "teleporting 3–5 tiles away" |
+| `psy_flee_distance_min` / `_max` | 2 / 3 | the doc's "2 to 3 tiles", read as walkable steps; above PSY rung 1 |
+| `psy_flee_talk_malus` | 0.1 | "rivals talk 10 % less": a relative cut of the Talk chance, for a group fled from above rung 1, while PSY stays above it |
 | `rival_rest_turns` | 3 | nothing — a group's pause after an encounter is our own |
 | `spawn_weight_common` / `_normal` | 3 / 2 | a rare species weighs 1; the multipliers are proposed, unanswered |
 | `wave_psy_threshold` / `_extra_groups` | 20 / +1 | waves "grow wider" at a high PSY, unquantified |

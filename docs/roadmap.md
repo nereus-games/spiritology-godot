@@ -206,6 +206,42 @@ Decisions taken in code, where the doc has to catch up — or say otherwise:
 - **A linked elevator moves empty**, leaving whoever stands on it behind. The doc now describes
   linked elevators, but not who rides them (`elevator.gd`, `linked`).
 
+The encyclopaedia, built on 2026-10-22 from the "Encyclopaedia" page, which leaves these open:
+
+- **Examine yield** (`examine_bonus_step`, `balance.tres`). One point of info bonus is +10 % of
+  an Examine's IFP, borrowed from Reconnaissance Glide. Points add up (4 points are +40 %, not
+  1.1 to the fourth), then multiply with the talent factor. A factor above 1 rounds the IFP up,
+  one below 1 rounds down (otherwise +10 % on 6 to 9 IFP would give nothing). Placeholder
+  amounts: Halo Effect 2 points per criterion met, Catatonia 2 per step, Priming 2. Priming's
+  bonus lasts until its user's next turn and an Examine does not spend it; Catatonia's covers
+  exactly the user's next turn. Only a player character's Examine of a rival earns IFP, so Halo
+  Effect on a teammate, or used by a rival, earns none. Active Listening's Talk, which counts as
+  an Examine, does not use the bonus. Known gap: two bonus sources on one individual share one
+  expiry timer.
+- **Abilities and the starting duo.** The data lists a species' encyclopaedia and Forlorn
+  abilities among its origin abilities too, so a player character's list is the native ones
+  minus the gated ones, plus those revealed; rivals keep all of them. A starting character's 15
+  arranged fragments also credit 45 IFP (30 and 90 for a same-species duo), with no parasitic
+  fragment left behind. Saves from before the model load: fragments are formed from the IFP and
+  none counts as arranged.
+- **Pages.** Forlorn IFP go to the Forlorn page only once the main page is at 100, and pay the
+  ordinary row into the main page before. A page at 99 % takes nothing, and the attempt does not
+  use up the 15-IFP decor allowance. A destroyed fragment costs 3 IFP and lowers the arranged
+  count but never an ability tier; a complete page cannot lose fragments.
+- **The assembly desk** (`puzzle_destroy_chance` 0.25, the doc's X; `puzzle_stain_rate` 0.02 a
+  second; `puzzle_stain_max` 0.85, below 1 so the edges stay visible). Fragments are squares of
+  at least 4 tiles; a group turns about the top-left corner of its bounding box. Edges are 6-bit
+  profiles that fit when XOR-complementary. A snap needs the gap between facing sides below 2
+  tiles and the offset along the side below 2; it brings the group flush and aligned; one snap
+  at most per request, a correct candidate winning over a closer incorrect one. An incorrect
+  snap is classed PARASITIC, then MISMATCH (not page neighbours in that direction, or rotated
+  differently), then HOLE (off the desk, over a third fragment, or enclosing empty tiles); it
+  puts back whatever the player moved. A group is a set of bonds, so destroying a member leaves
+  the others standing, and completion counts correct fragments bonded to at least one other,
+  destroyed ones included in the total.
+- **The screens.** Pages are ordered by species identifier in a grid (6 x 6 for 36 species);
+  the doc gives no order.
+
 One is waiting on play rather than on the doc: **how long a level-wide pursuit lasts**
 (`rival_behavior.gd`, `level_pursuit_turns`) has never been tried in game, and goes into the
 doc's "Rivals" page only once it has been.

@@ -15,6 +15,9 @@ extends Node
 signal turn_taken(
 	individual: EncounterIndividual, action: EncounterAction, lines: PackedStringArray
 )
+## An ability that was watching for something reacted to it. `lines` is what it did. Announced
+## separately from [signal turn_taken] because the one who reacts is not the one whose turn it is.
+signal reaction_noted(reactor: EncounterIndividual, ability: AbilityData, lines: PackedStringArray)
 ## How the encounter ended — see [method _check_end] for when each one applies:
 ## &"victory", &"defeat", &"fled", &"pacified", &"rivals_fled", &"timeout".
 signal ended(result: StringName)
@@ -53,6 +56,7 @@ const PACIFIED := &"pacified"
 ## [TalentCatalog] nor [TalentScript] declares a `class_name`, because only the editor
 ## regenerates the global class cache and this game is launched from the command line.
 const TalentCatalog := preload("res://scripts/encounter/talents/talent_catalog.gd")
+const EncounterEvent := preload("res://scripts/encounter/encounter_event.gd")
 
 ## The individuals still IN the encounter, dissolved ones included. One who leaves is taken out
 ## of these lists and out of the turn order, so that no targeting rule, no talent and no
@@ -89,6 +93,9 @@ var default_agent: EncounterAgent = AutoAgent.new()
 var _talents: Array = []
 
 var _round_energy := GameEnums.Energy.NONE
+
+## The damage the action being resolved dealt, for the reactions that care whether it dealt any.
+var _action_damage := 0
 
 
 ## Prepares the encounter. Resets the agents, so set any [UiAgent] AFTER calling this.
@@ -354,7 +361,9 @@ func _take_turn(individual: EncounterIndividual) -> void:
 		encounter_log.append(_tr("LOG_NO_ACTION") % individual.display_name())
 		return
 	var dissolved_before := rivals.filter(func(f): return f.is_dissolved())
+	_action_damage = 0
 	_resolve_action(individual, action)
+	_react_to_action(individual, action)
 	if individual.is_player:
 		_award_dissolutions(dissolved_before)
 
@@ -663,16 +672,9 @@ func _resolve_ability(individual: EncounterIndividual, action: EncounterAction) 
 	# Paid BEFORE the effect, so that an ability which restores ETH cannot refund itself.
 	# Agents only ever offer what is affordable; pay_eth clamps at 0 regardless.
 	individual.pay_eth(ability.eth_cost())
-	var ctx := EncounterContext.new()
-	ctx.ability = ability
-	ctx.user = individual
-	ctx.targets = action.targets
-	ctx.all_individuals = timeline.living()
-	ctx.timeline = timeline
-	ctx.rng = rng
-	ctx.completed_species = completed_species
-	ctx.resolved_energy = _round_energy
+	var ctx := _make_context(individual, ability, action.targets)
 	EffectCatalog.script_for(ability).execute(ctx)
+	_action_damage = ctx.damage_dealt
 	individual.mark_used(ability)
 	# Reuse (jézal) can hand a single-use ability back.
 	if ability.single_use:
@@ -688,10 +690,45 @@ func _resolve_ability(individual: EncounterIndividual, action: EncounterAction) 
 	for l in ctx.log_lines:
 		encounter_log.append(_tr("LOG_LINE_ABILITY") % [individual.display_name(), ability.id, l])
 	turn_taken.emit(individual, action, ctx.log_lines)
+	_announce_reactions(ctx.reactions_noted)
 	# Departures happen at the END of the turn — Opening up Closing's "the user flees at the end
 	# of the turn" — so that the rest of the effect still sees everyone.
 	for f in ctx.departures:
 		withdraw(f, FLED)
+
+
+## The context an effect runs in, for `individual` using `ability` on `targets`.
+func _make_context(
+	individual: EncounterIndividual, ability: AbilityData, targets: Array
+) -> EncounterContext:
+	var ctx := EncounterContext.new()
+	ctx.ability = ability
+	ctx.user = individual
+	ctx.targets = targets
+	ctx.all_individuals = timeline.living()
+	ctx.timeline = timeline
+	ctx.rng = rng
+	ctx.completed_species = completed_species
+	ctx.resolved_energy = _round_energy
+	return ctx
+
+
+## `individual`'s action has been resolved: whoever is watching is told, whatever the action was.
+## Damage is told on its own, as it is dealt — see [method EncounterContext.deal_damage].
+func _react_to_action(individual: EncounterIndividual, action: EncounterAction) -> void:
+	var ctx := _make_context(individual, null, action.targets)
+	ctx.fire(EncounterEvent.acted(individual, action, _action_damage))
+	_announce_reactions(ctx.reactions_noted)
+
+
+func _announce_reactions(noted: Array) -> void:
+	for entry in noted:
+		var reactor: EncounterIndividual = entry[0]
+		var ability: AbilityData = entry[1]
+		var lines: PackedStringArray = entry[2]
+		for l in lines:
+			encounter_log.append(_tr("LOG_LINE_ABILITY") % [reactor.display_name(), ability.id, l])
+		reaction_noted.emit(reactor, ability, lines)
 
 
 ## Targets whose exposed weakness matches the ability's effective energy.

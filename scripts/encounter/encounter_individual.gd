@@ -62,6 +62,12 @@ var last_damager: EncounterIndividual = null
 ## modifiers in [method EncounterContext._apply_modifiers].
 var outgoing_damage_bonus := 0.0
 
+## Abilities this individual is waiting to react with (id -> AbilityData): Victimism punishing a
+## rival that Talks, Homeostasis paying out when it is hurt. Each lasts like any timed effect —
+## until its anchor's next turn — and it is the encounter that asks them, see
+## [method AbilityScript.react]. A resource per ability, never an individual, so no cycle forms.
+var reactions: Dictionary = {}
+
 ## Why this individual left the encounter before its end — [constant EncounterManager.FLED]
 ## or [constant EncounterManager.PACIFIED] — or &"" while it is still in it. Set by
 ## [method EncounterManager.withdraw], and only there.
@@ -229,6 +235,14 @@ func grant_next_turn_damage_bonus(bonus: float) -> void:
 	_arm("outgoing_bonus", self, 2)
 
 
+## Starts watching with `ability`: whatever it reacts to, until `anchor`'s next turn begins.
+func watch(
+	ability: AbilityData, anchor: EncounterIndividual = null, turns := UNTIL_NEXT_TURN
+) -> void:
+	reactions[ability.id] = ability
+	_arm("reaction:%s" % ability.id, anchor, turns)
+
+
 ## A turn begins — `individual`'s. Everything anchored to it counts down one turn, and what
 ## runs out expires. The manager calls this on EVERY individual at the start of each turn,
 ## including the turns a dissolved individual skips, so that its effects still run out.
@@ -269,6 +283,9 @@ func _expire(key: String) -> void:
 		return
 	if key.begins_with("factor:"):
 		energy_damage_factor.erase(int(key.get_slice(":", 1)))
+		return
+	if key.begins_with("reaction:"):
+		reactions.erase(StringName(key.get_slice(":", 1)))
 		return
 	match key:
 		"weakness":

@@ -1,10 +1,15 @@
 ## Dodge Blur — podargolo · Toxic · medium · mini/small · [damage, damage reduction]
 ## MECHANIC: the user takes small damage; any rival that uses Talk before the end of the turn
-## takes damage (TODO); all other damage dealt before the end of the turn is halved.
+## takes damage; all other damage dealt before the end of the turn is halved.
 extends AbilityScript
 
 
 func execute(ctx: EncounterContext) -> void:
 	ctx.deal_damage(ctx.user, ctx.dmg(&"mini"))
 	ctx.scale_all_damage(ctx.user, 0.5)
-	# TODO: every rival that uses Talk this turn takes small.
+	ctx.watch_reactions()
+
+
+func react(ctx: EncounterContext, event) -> void:
+	if event.is_action_of(EncounterAction.Kind.TALK) and ctx.is_opponent(event.actor):
+		ctx.deal_damage(event.actor, ctx.dmg(&"small"))

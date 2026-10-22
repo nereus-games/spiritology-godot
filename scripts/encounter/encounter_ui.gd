@@ -121,6 +121,7 @@ func begin(
 		rf.append(f)
 
 	_manager.turn_taken.connect(_on_turn_taken)
+	_manager.reaction_noted.connect(_on_reaction_noted)
 	_manager.ended.connect(_on_ended)
 	_manager.departed.connect(_on_departed)
 	_manager.ifp_earned.connect(_on_ifp_earned)
@@ -599,6 +600,21 @@ func _on_turn_taken(
 	# DEN, ETH, dissolutions and reordering may all have moved.
 	_refresh_timeline()
 	_update_turn_label()
+
+
+## An ability that was watching reacted: its lines go under the turn that set it off, under the
+## name of the one who reacted.
+func _on_reaction_noted(
+	reactor: EncounterIndividual, ability: AbilityData, lines: PackedStringArray
+) -> void:
+	for l in lines:
+		_append(
+			(
+				"    [color=#b9b9c4]%s[/color]"
+				% (tr("LOG_LINE_ABILITY") % [reactor.display_name(), tr(ability.name_key()), l])
+			)
+		)
+	_refresh_timeline()
 
 
 ## The action's translated name, for the log header. `action.label()` is now only used by

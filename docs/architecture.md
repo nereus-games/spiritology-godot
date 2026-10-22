@@ -228,6 +228,48 @@ reached from the dev scenario picker, which also offers a deterministic sample o
 (`scripts/dev/encyclopaedia_sample.gd`). `encyclopaedia_shot.tscn` writes a PNG of the grid or a
 page.
 
+## The encyclopaedia's assembly desk
+
+`scripts/encyclopaedia/puzzle_*.gd` is the logic of "Page Assembly / Fragment Manipulation" and
+nothing else: no view, no signal, no `GameSession`. A view calls the desk and reads what comes
+back.
+
+- `puzzle_desk.gd` — the desk. Two areas: the new fragment area (inert) and the manipulation
+  area, a grid of `desk_size` tiles. Fragments are squares of `fragment_size` tiles (at least
+  4). Requests: `place(id, tile)`, `move(id, direction)` (one tile, orthogonal), `rotate_fragment(id,
+  clockwise)`, `return_to_new_area(id)`, `tick_handling(id, seconds)`. Queries: `fragment(id)`,
+  `group_of(id)`, `completion()`, `complete`.
+- `puzzle_results.gd` — `MoveResult` (accepted, or why `blocked`; its `snaps`) and `SnapResult`
+  (`reason` OK / PARASITIC / MISMATCH / HOLE, the two fragments, what was removed, damaged or
+  destroyed, `pushed_back`, `completed`). A view shows a notice on HOLE, as the doc suggests.
+- `puzzle_edges.gd` — the side-shape model: a side is a 6-bit profile, and two sides fit when one
+  is the negative of the other. `generate(cols, rows, rng)` draws a page's sides, seedable.
+- `puzzle_fragment.gd` — a fragment's state.
+
+**Fragment ids are opaque.** Anything usable as a Dictionary key (an int, a `StringName`) will
+do; the desk never inspects one. What the desk needs from the page model, per fragment:
+
+1. an `id`;
+2. whether it is correct, and if so its `page_cell` (`Vector2i`, in fragments, where it belongs
+   on the page); a parasite has none;
+3. its four sides as drawn on the page, a `PackedInt32Array` ordered north, east, south, west,
+   with neighbouring cells given complementary sides (`Edges.generate` does this; a stored page
+   would keep the result, or its seed).
+
+They are handed over with `add_correct(id, page_cell, edges)` and `add_parasite(id, edges)`,
+which put the fragment in the new fragment area. In return the desk reports, by id, what became
+of each one: removed (parasite), damaged, destroyed (the IFP is to be obtained again, and
+`add_correct` with the same id brings it back undamaged), and `completion()`. The per-species
+page state persists `damaged`, `stain` and the position of each fragment if it wants them kept;
+the desk holds nothing across sessions. The placeholders (`puzzle_destroy_chance`,
+`puzzle_stain_rate`, `puzzle_stain_max`) are in `data/balance.tres`.
+
+Rules the doc leaves open, and which are ours: a snap is looked for among the moved group's
+fragments against all others, needs the gap between facing sides below 2 tiles and the offset
+along the side below 2 tiles, and brings the group flush and aligned; a request sets off at most
+one snap; "pushed back" restores the position (and rotation, and area) from before the request;
+a HOLE is a target that is out of the desk, over a third fragment, or enclosing an empty cell.
+
 ## The encyclopaedia: a model with no screen
 
 `scripts/encyclopaedia/encyclopaedia_model.gd` holds the state, preloaded by `GameSession`

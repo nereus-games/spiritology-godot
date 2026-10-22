@@ -142,7 +142,7 @@ static func teleport_gate_between(dungeon, from_tile: Vector3i, to_tile: Vector3
 ## happens even when the arrival tile is taken:
 ##  - the player arriving on a rival, or a rival arriving on the player, starts an encounter;
 ##  - a rival group arriving on another pushes the one already there aside
-##    (see [method DungeonManager.push_group_aside]).
+##    (see [method TileSearch.push_group_aside]).
 ## Returns true when an encounter was requested — the caller's move ends there, as it does when
 ## walking into a rival. Otherwise the caller resolves the arrival as after any step: the tile's
 ## mechanisms, then the turn. Does not check that the gate admits `who`: see [method admits_from].
@@ -160,7 +160,11 @@ func send_through(who: Node) -> bool:
 			return true
 		return false
 	var there: Node = _dungeon.occupant_at(arrival)
-	if there != null and there != who and not _dungeon.push_group_aside(there, {who: true}):
+	if (
+		there != null
+		and there != who
+		and not _dungeon.tile_search.push_group_aside(there, {who: true})
+	):
 		# Nowhere to push the group already there — not even onto a trap, over a ledge, or into a
 		# neighbouring group. Some rival has to go somewhere, and it is the newcomer.
 		push_warning("[Gateway] %s: nowhere to push a rival group aside." % arrival)

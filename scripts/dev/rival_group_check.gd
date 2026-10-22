@@ -272,7 +272,7 @@ func _check_flight(ctx: Dictionary) -> void:
 	for i in FLIGHTS:
 		player.teleport_to(START)
 		var g = await _spawn_group(dm, NEXT_TO_START, [[&"ravbak", 60, 40]])
-		var steps: Dictionary = dm.walking_distances(START, balance.flee_distance_max)
+		var steps: Dictionary = dm.tile_search.walking_distances(START, balance.flee_distance_max)
 		scene._pending_rival = g
 		scene._on_encounter_finished(&"fled", [_report_entry(33, 20, &"stayed")])
 		var walked: int = steps.get(player.tile, -1)
@@ -308,8 +308,9 @@ func _check_flight(ctx: Dictionary) -> void:
 
 
 ## The key that closes the encounter screen must stop there. Exploration wakes up within the same
-## event, and Space is its `interact` too: after a flight, on a tile offering nothing but MENU,
-## the key went on to confirm it and the scenario was left for the picker.
+## event, and Space is its `interact` too: after a flight, with MENU selected, the key went on to
+## confirm it and the scenario was left for the picker. MENU is selected explicitly: Meditate, which
+## is always on offer, now comes first.
 func _check_closing_key(ctx: Dictionary) -> void:
 	print("[closing the encounter screen]")
 	var scene = ctx.scene
@@ -317,6 +318,7 @@ func _check_closing_key(ctx: Dictionary) -> void:
 	var hud = scene.get_node("HudExploration")
 	get_tree().current_scene = scene  # what TransitionManager pauses and wakes up
 	player.teleport_to(START)
+	hud._action_menu.cycle(-1)  # MENU is the last entry
 	TransitionManager.open_encounter([&"draka", &"kalilk"], [&"kalilk"], {}, [])
 	var ui = TransitionManager._encounter
 	await get_tree().process_frame
@@ -341,7 +343,7 @@ func _check_closing_key(ctx: Dictionary) -> void:
 	_check(TransitionManager._encounter == null, "Space closes the encounter screen")
 	_check(
 		hud._action_menu.selected_id() == &"menu",
-		"the duo lands where MENU is the action on offer (%s)" % hud._action_menu.selected_id()
+		"MENU is still the selected action (%s)" % hud._action_menu.selected_id()
 	)
 	_check(
 		is_instance_valid(scene) and TransitionManager._fade.modulate.a == 0.0,
@@ -378,7 +380,7 @@ func _check_leaving_the_dungeon(ctx: Dictionary) -> void:
 ## Distances are walked, not measured as the crow flies: a pillar stands at (2, 0, 3).
 func _check_walking_distances(ctx: Dictionary) -> void:
 	print("[walking distances]")
-	var steps: Dictionary = ctx.dm.walking_distances(Vector3i(2, 0, 2), 6)
+	var steps: Dictionary = ctx.dm.tile_search.walking_distances(Vector3i(2, 0, 2), 6)
 	_check(not steps.has(Vector3i(2, 0, 3)), "a pillar is not reachable")
 	_check(
 		steps.get(Vector3i(2, 0, 4), -1) == 4,

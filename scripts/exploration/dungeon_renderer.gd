@@ -2,8 +2,8 @@
 ##
 ## Kept apart from [DungeonManager], which holds the model — where the floor is, what blocks,
 ## who occupies what. This script only makes boxes out of it, and reads the dungeon through its
-## PUBLIC API alone ([method DungeonManager.floor_tiles], [method DungeonManager.pit_tiles],
-## [method DungeonManager.fall_landing], [member DungeonManager.safe_areas]). That is what makes
+## PUBLIC API alone ([method DungeonLayout.floor_tiles], [method DungeonLayout.pit_tiles],
+## [method DungeonLayout.fall_landing], [member DungeonManager.safe_areas]). That is what makes
 ## the boundary real: if rendering needs a fact, the model has to name it rather than leave it
 ## lying around in private.
 ##
@@ -24,8 +24,8 @@ const SAFE_FLOOR_COLOR := Color(0.22, 0.34, 0.27)
 static func render_grid(dm, wall_tiles: Dictionary) -> void:
 	var floor_mat := _material(FLOOR_COLOR)
 	var safe_mat := _material(SAFE_FLOOR_COLOR)
-	for c in dm.floor_tiles():
-		if dm.pit_tiles().has(c):
+	for c in dm.layout.floor_tiles():
+		if dm.layout.pit_tiles().has(c):
 			continue  # the lowered slab is rendered further down; the bridge plank goes over it
 		if wall_tiles.has(c + Vector3i.DOWN):
 			continue  # a wall block serves as the floor, so no slab on top of it
@@ -35,8 +35,8 @@ static func render_grid(dm, wall_tiles: Dictionary) -> void:
 	# Pits get a dark bottom slab below them ONLY when there is no real floor further down —
 	# otherwise we would hide the very ravine you are meant to be able to fall into.
 	var pit_mat := _material(PIT_COLOR)
-	for c in dm.pit_tiles():
-		if dm.fall_landing(c) != c:
+	for c in dm.layout.pit_tiles():
+		if dm.layout.fall_landing(c) != c:
 			continue  # a lower storey already serves as the bottom
 		var pos: Vector3 = dm.tile_to_world(c) + Vector3(0.0, -dm.PIT_DEPTH, 0.0)
 		dm.add_child(_make_slab(dm, pos, pit_mat))
@@ -46,7 +46,7 @@ static func render_grid(dm, wall_tiles: Dictionary) -> void:
 		# A wall with a floor tile above it wears the floor material on its top face: it IS the
 		# floor of the storey above.
 		var top_mat: StandardMaterial3D = (
-			floor_mat if dm.floor_tiles().has(w + Vector3i.UP) else null
+			floor_mat if dm.layout.floor_tiles().has(w + Vector3i.UP) else null
 		)
 		dm.add_child(_make_wall_block(dm, dm.tile_to_world(w), wall_mat, top_mat))
 

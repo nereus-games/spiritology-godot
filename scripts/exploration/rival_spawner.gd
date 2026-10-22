@@ -12,7 +12,7 @@
 ## A spawn point is never the player's tile nor next to it: a group that appears in contact would
 ## open an encounter nobody saw coming. Free points go first; when every one is occupied the new
 ## group appears anyway, and the occupant is pushed to an adjacent tile, by the same rule as a
-## Teleport Gate's arrival ([method DungeonManager.push_group_aside]). Nothing spawns past
+## Teleport Gate's arrival ([method TileSearch.push_group_aside]). Nothing spawns past
 ## [member DungeonConfig.rival_limit] groups on the map.
 ##
 ## Varieties of a random group are weighted by their rarity in the dungeon: rare 1, normal and
@@ -52,7 +52,7 @@ func populate() -> Array:
 		var members := _members_of(group)
 		if members.is_empty():
 			continue
-		spawned.append(spawn_group(members, _dungeon.free_tile_near(group.tile)))
+		spawned.append(spawn_group(members, _dungeon.tile_search.free_tile_near(group.tile)))
 	spawned.append_array(spawn_groups(config.initial_spawns))
 	return spawned
 
@@ -113,7 +113,7 @@ func spawn_groups_near(origin: Vector3i, count: int, radius: int) -> Array:
 	var spawned: Array = []
 	var player: Vector3i = _dungeon.player_tile()
 	var spots: Array[Vector3i] = []
-	for tile in _dungeon.free_tiles_near(origin, radius):
+	for tile in _dungeon.tile_search.free_tiles_near(origin, radius):
 		if tile != player:
 			spots.append(tile)
 	for tile in spots:
@@ -133,7 +133,7 @@ func _spawn_pushing(members: Array, occupied: Array[Vector3i]) -> Node:
 		var index := rng.randi_range(0, occupied.size() - 1)
 		var point := occupied[index]
 		var there: Node = _dungeon.occupant_at(point)
-		if there == null or _dungeon.push_group_aside(there):
+		if there == null or _dungeon.tile_search.push_group_aside(there):
 			return spawn_group(members, point)
 		occupied.remove_at(index)
 	return null

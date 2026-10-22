@@ -92,8 +92,22 @@ of which each talent overrides only what concerns it.
 
 ## Exploration: a logical grid, and mechanisms that register themselves
 
-`DungeonManager` holds the **logical grid** and it is the source of truth — floor tiles,
-walls, holes, occupants, edges. Nothing is decided by raycasting.
+The dungeon is a **logical grid** and it is the source of truth — floor tiles, walls, holes,
+occupants, edges. Nothing is decided by raycasting. `DungeonManager` holds it, in three parts:
+
+- the **layout** (`dungeon_layout.gd`, `dungeon_manager.layout`) is what level design lays down
+  and the game does not change: floor, holes, pits, the walls the grid implies, the entrance
+  and the exits. It is what a dungeon authoring format will fill, and what a validator will
+  check;
+- the **tile searches** (`tile_search.gd`, `dungeon_manager.tile_search`) answer "a free tile
+  near here", "what can be reached on foot", "a random tile to teleport to", and "make room
+  here" (`push_group_aside`, which moves rivals through the manager's own `release`/`reserve`);
+- the manager itself keeps what happens on the layout: who occupies which tile, the mechanisms
+  registered on tiles and edges, and the turn.
+
+The two collaborators and `safe_areas` follow one pattern — a `RefCounted` that is handed the
+manager, held as a member — rather than a growing list of methods on the manager, which
+`gdlintrc`'s ceiling on public methods holds in check.
 
 A mechanism is a `Node3D` sitting on one tile that registers itself with the manager, the
 same way rivals do. The base is `mechanisms/dungeon_mechanism.gd`, and the hooks are
@@ -116,7 +130,7 @@ Two details that are easy to get wrong:
   crossing without costing a tile or filling the space behind them.
 - A wall block can be the floor of the storey above it, so no slab is drawn on top of one.
   Walls and holes are currently DERIVED from the floor grid rather than declared, which is
-  authoring debt recorded in `dungeon_manager.gd`.
+  authoring debt recorded in `dungeon_layout.gd`.
 
 Drawing is separate: `DungeonRenderer` turns the grid into meshes and reads the dungeon only
 through its public API, so anything the drawing needs, the model has to name.

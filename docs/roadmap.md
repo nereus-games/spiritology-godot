@@ -17,32 +17,16 @@ on Notion?
 
 Each is explicit in the doc, has no prerequisite, and is wrong in play right now.
 
-- **Rivals see through walls.** The doc says "the line of sight is blocked by walls"; `_can_see`
-  ignores them. The fix is described in place: walk the tiles, stop at the first opaque edge.
-  (`rival_behavior.gd`, `_can_see`)
 - **The turn has no reveal phase.** The doc's exploration turn is player → reveal of
   mechanisms → rivals → mechanism activation; the second phase is missing, so a trap only comes
   to light by springing and `Trap.reveal()` has no caller. This is also exactly what Reveal
   Traps' first clause needs. (`dungeon_manager.gd`, `advance_turn`; `reveal_traps.gd`)
-- **Meditate is not an exploration action.** The doc lists it among the actions always
-  available; today it exists only as a meditation gateway's contextual action, and recovers no
-  ETH. The three steps are written out in place. (`exploration_extra_actions.gd`)
-- **A known chest looks like an unknown one.** The minimap hides a trap until it is revealed but
-  draws every chest regardless, so `Chest.revealed` — and Trick to Reveal's chest clause — has
-  no visible effect. (`chest.gd`)
 - **About 1 % of spawned rivals should be Forlorn.** The rest of "Rival Spawning" is built:
   species weighted by dungeon rarity, the spawn limit, a new group pushing the occupant of a
   taken spawn point aside, preset compositions in 0 to 50 % of spawns, waves wider at a high
   PSY, and examined decor spawning rivals above PSY 20. What is left needs the Forlorn
   individual of section 4: the roll, and the doc's table of bonuses. (`rival_spawner.gd`,
   `TODO(forlorn)`)
-- **Some text does not reach the player in their language.** This breaks the project's own rule
-  (every displayed line in both `.po` files) rather than the doc, and carries no `TODO`. Five
-  ability descriptions are empty in `en.po` — Fake News, Flow State, Gaslighting, Ghosting,
-  One's Ethos — though `fr.po` has them. Fifteen `fr.po` entries are still flagged `#, fuzzy`,
-  left over from the old generator; Godot skips fuzzy entries, so French players see English
-  there. They include every object description, which the encounter's Use / Give menu now
-  shows, and seven talent names. `msgfmt --statistics translations/*.po` lists both.
 
 ## 2. Encounter hooks that unlock abilities in bulk
 
@@ -80,8 +64,8 @@ can be picked up alone, after the hooks above if it needs one.
   (`affliction_state.gd`)
 - **Trick to Reveal cannot reach the dungeon.** Both ends exist; an encounter talent has no
   handle on the dungeon it was entered from. Revealing a trap would show on the map the moment
-  that handle exists; revealing a chest stays invisible until the `shows_on_map` override in
-  section 1 is done. (`trick_to_reveal.gd`)
+  that handle exists, a chest as well as a trap: both gate `shows_on_map` on `revealed`.
+  (`trick_to_reveal.gd`)
 - **Static Camouflage** should reveal 2 to 4 wandering groups one at a time and offer to take one
   on. Groups exist and spawn by each dungeon's rules; the reveal and the choice do not. The doc
   now adds that it does not stack with a costume, and that Forlorn shapes are likelier under it
@@ -97,7 +81,7 @@ unblock.
   exit interaction is still unwired, and a secondary exit should unlock a bonus dungeon. The
   title screen, the pause screen (the encounter's Menu
   button is hidden until it exists) and boot's hand-off belong to the same piece.
-  (`exploration.gd`, `dungeon_manager.gd`, `encounter_ui.gd`, `boot.gd`)
+  (`exploration.gd`, `dungeon_layout.gd`, `encounter_ui.gd`, `boot.gd`)
 - **Dungeon state between visits.** `GameSession.dungeon_states` is saved and loaded but never
   written: every entry is a first entry, so groups, examined decor and opened chests all reset.
   The doc ("Exit + Reentry") wants rivals that had not disappeared to stay where they were,
@@ -108,12 +92,14 @@ unblock.
   doc conditions Talk's rewards on an effective dialogue without giving the rule, and its drafts
   make it depend on objects given to the rival. Everything built on Talk is provisional,
   including pacifying a rival as a way out of an encounter. (`encounter_manager.gd`, Talk)
-- **A dungeon authoring format, and a validator.** Walls and holes are derived from the floor
-  grid instead of declared; the doc's level-design rules — stairs lead to floor with nothing
+- **A dungeon authoring format, and a validator.** An authored dungeon will fill
+  `dungeon_layout.gd`, which holds the floor, holes, pits, walls and exits and nothing that
+  happens on them, and the validator will check that object. Walls and holes are derived from
+  the floor grid instead of declared; the doc's level-design rules — stairs lead to floor with nothing
   directly above, a narrow bridge always spans a floor, no bottomless hole — are checked only
   on the dev scenario, and caught at runtime otherwise. Safe areas already report their own
   faults (`safe_areas.violations()`), but only a check calls it. Becomes urgent with the first
-  real dungeon. (`dungeon_manager.gd`, `stairs.gd`, `exploration.gd`, `player_controller.gd` —
+  real dungeon. (`dungeon_layout.gd`, `stairs.gd`, `exploration.gd`, `player_controller.gd` —
   tagged `TODO(dungeon checker)`)
 - **Rivals carrying objects.** Examine should "reveal objects they carry", Steal has nothing to
   take, and Altruism has nothing to destroy. (`encounter_manager.gd`, `altruism.gd`)

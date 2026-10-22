@@ -4,10 +4,9 @@
 ## The TRIGGER is in the encounter — ending on an effective dialogue — but the EFFECT is a
 ## reveal on the exploration MAP. The targets now exist ([method Trap.reveal] and
 ## [method Chest.reveal], with their `revealed` flag), and the minimap DOES draw mechanisms
-## ([method DungeonMechanism.shows_on_map]): revealing a TRAP would therefore show, since
-## [method Trap.shows_on_map] gates on `revealed`. Revealing a CHEST would not — [Chest] does
-## not override `shows_on_map`, so the map already draws every chest, known or not (the TODO in
-## `chest.gd`). What is missing either way is a link back from the encounter to the dungeon it
+## ([method DungeonMechanism.shows_on_map]): revealing a TRAP or a CHEST would therefore
+## show, since [method Trap.shows_on_map] and [method Chest.shows_on_map] both gate on
+## `revealed`. What is missing either way is a link back from the encounter to the dungeon it
 ## was entered from. So [method on_encounter_end] is overridden to record the intent: a logged
 ## STUB.
 ##

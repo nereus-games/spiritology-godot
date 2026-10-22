@@ -15,7 +15,7 @@ const OK := Results.SnapResult.Reason.OK
 const PARASITIC := Results.SnapResult.Reason.PARASITIC
 const MISMATCH := Results.SnapResult.Reason.MISMATCH
 const HOLE := Results.SnapResult.Reason.HOLE
-const Blocked := Results.MoveResult.Blocked
+const BLOCKED := Results.MoveResult.Blocked
 
 var _fails: Array[String] = []
 
@@ -139,9 +139,7 @@ func _check_edges() -> void:
 				continue
 			var physical: int = (Edges.EAST + rotation) % 4
 			var mine := Edges.side_signature(page[cell], rotation, physical)
-			var theirs := Edges.side_signature(
-				page[right], rotation, Edges.opposite(physical)
-			)
+			var theirs := Edges.side_signature(page[right], rotation, Edges.opposite(physical))
 			turned_fits = turned_fits and Edges.compatible(mine, theirs)
 	_check(turned_fits, "turned together, neighbours still fit, at every rotation")
 
@@ -158,31 +156,37 @@ func _check_overlap_and_bounds() -> void:
 	desk.add_parasite(11, PackedInt32Array([1, 1, 1, 1]))
 	_check(desk.place(10, Vector2i(4, 4)).accepted(), "a fragment is placed on the desk")
 	var r := desk.place(11, Vector2i(6, 6))
-	_check(r.blocked == Blocked.OVERLAP, "placing over another fragment is refused")
-	_check(desk.fragment(11).area == Fragment.Area.NEW, "the refused fragment stays in the new area")
+	_check(r.blocked == BLOCKED.OVERLAP, "placing over another fragment is refused")
+	_check(
+		desk.fragment(11).area == Fragment.Area.NEW, "the refused fragment stays in the new area"
+	)
 	r = desk.place(11, Vector2i(8, 4))
 	_check(r.accepted() and r.snaps.is_empty(), "placing right beside it is fine and snaps nothing")
 	# Edges touch at x = 8: 11 may not move left, onto 10.
 	r = desk.move(11, Vector2i.LEFT)
-	_check(r.blocked == Blocked.OVERLAP, "a move onto another fragment is refused")
+	_check(r.blocked == BLOCKED.OVERLAP, "a move onto another fragment is refused")
 	_check(_pos(desk, 11) == Vector2i(8, 4), "a refused move changes nothing")
 	r = desk.move(11, Vector2i.DOWN)
 	_check(r.accepted() and _pos(desk, 11) == Vector2i(8, 5), "a sliding move beside it is fine")
-	_check(desk.place(11, Vector2i(0, 0)).blocked == Blocked.NOT_ON_DESK, "place needs the new area")
+	_check(
+		desk.place(11, Vector2i(0, 0)).blocked == BLOCKED.NOT_ON_DESK, "place needs the new area"
+	)
 	var corner := _desk()
 	corner.add_parasite(1, PackedInt32Array([1, 1, 1, 1]))
 	_check(
-		corner.place(1, Vector2i(21, 0)).blocked == Blocked.OUT_OF_AREA,
+		corner.place(1, Vector2i(21, 0)).blocked == BLOCKED.OUT_OF_AREA,
 		"a fragment cannot stick out of the desk"
 	)
 	_check(corner.place(1, Vector2i(20, 12)).accepted(), "the last tile of the desk is usable")
-	_check(corner.move(1, Vector2i.RIGHT).blocked == Blocked.OUT_OF_AREA, "no move off the desk")
-	_check(corner.move(1, Vector2i(1, 1)).blocked == Blocked.BAD_DIRECTION, "no diagonal moves")
-	_check(corner.move(1, Vector2i.ZERO).blocked == Blocked.BAD_DIRECTION, "no zero moves")
-	_check(corner.move(99, Vector2i.UP).blocked == Blocked.UNKNOWN_FRAGMENT, "an unknown id is refused")
+	_check(corner.move(1, Vector2i.RIGHT).blocked == BLOCKED.OUT_OF_AREA, "no move off the desk")
+	_check(corner.move(1, Vector2i(1, 1)).blocked == BLOCKED.BAD_DIRECTION, "no diagonal moves")
+	_check(corner.move(1, Vector2i.ZERO).blocked == BLOCKED.BAD_DIRECTION, "no zero moves")
+	_check(
+		corner.move(99, Vector2i.UP).blocked == BLOCKED.UNKNOWN_FRAGMENT, "an unknown id is refused"
+	)
 	var fresh := _desk()
 	fresh.add_parasite(1, PackedInt32Array([1, 1, 1, 1]))
-	_check(fresh.move(1, Vector2i.UP).blocked == Blocked.NOT_ON_DESK, "no moving in the new area")
+	_check(fresh.move(1, Vector2i.UP).blocked == BLOCKED.NOT_ON_DESK, "no moving in the new area")
 	_check(
 		_desk(0.25).fragment_size == 4 and Desk.new(Vector2i(8, 8), 2).fragment_size == 4,
 		"a fragment is never smaller than 4 x 4 tiles"
@@ -245,7 +249,9 @@ func _check_snap_distance() -> void:
 	# The new area is inert.
 	desk = _pair()
 	desk.place(0, Vector2i(2, 2))
-	_check(desk.group_of(1) == [1] and desk.fragment(1).area == Fragment.Area.NEW, "new area is inert")
+	_check(
+		desk.group_of(1) == [1] and desk.fragment(1).area == Fragment.Area.NEW, "new area is inert"
+	)
 
 
 # --------------------------------------------------------------------------
@@ -280,8 +286,12 @@ func _check_parasitic() -> void:
 	_check(r.snaps.is_empty(), "2 tiles apart: the parasite is left alone")
 	r = desk.move(0, Vector2i.RIGHT)
 	snap = _first_snap(r)
-	_check(snap != null and snap.reason == PARASITIC, "moving a fragment onto a parasite: PARASITIC")
-	_check(_pos(desk, 0) == Vector2i(4, 2) and snap.pushed_back, "the moved fragment is pushed back")
+	_check(
+		snap != null and snap.reason == PARASITIC, "moving a fragment onto a parasite: PARASITIC"
+	)
+	_check(
+		_pos(desk, 0) == Vector2i(4, 2) and snap.pushed_back, "the moved fragment is pushed back"
+	)
 	_check(not desk.has_fragment(5) and desk.fragment(0).damaged, "parasite gone, fragment damaged")
 
 	# A parasite in the new area is not part of any of this; and a parasite never bonds.
@@ -303,7 +313,9 @@ func _check_mismatch() -> void:
 	desk.place(2, Vector2i(9, 2))
 	var r := _move_n(desk, 2, Vector2i.LEFT, 2)
 	var snap := _first_snap(r)
-	_check(snap != null and snap.reason == MISMATCH, "correct fragments that do not match: MISMATCH")
+	_check(
+		snap != null and snap.reason == MISMATCH, "correct fragments that do not match: MISMATCH"
+	)
 	_check(desk.fragment(0).damaged and desk.fragment(2).damaged, "both are damaged")
 	_check(snap != null and snap.damaged == [2, 0] and snap.destroyed.is_empty(), "and reported")
 	_check(_pos(desk, 2) == Vector2i(8, 2) and snap.pushed_back, "the moved one is pushed back")
@@ -332,7 +344,10 @@ func _check_hole_blocked() -> void:
 	var snap := _first_snap(r)
 	_check(snap != null and snap.reason == HOLE, "right fragments, but no room to snap: HOLE")
 	_check(snap != null and snap.damaged == [0, 1], "both correct fragments are damaged")
-	_check(desk.fragment(0).area == Fragment.Area.NEW and snap.pushed_back, "pushed back to the new area")
+	_check(
+		desk.fragment(0).area == Fragment.Area.NEW and snap.pushed_back,
+		"pushed back to the new area"
+	)
 	_check(desk.group_of(1) == [1], "nothing bonded")
 	_check(_pos(desk, 1) == Vector2i(10, 6) and _pos(desk, 2) == Vector2i(6, 3), "others stay put")
 
@@ -374,7 +389,9 @@ func _check_hole_cavity_and_completion() -> void:
 	snap = _first_snap(closing)
 	_check(snap != null and snap.reason == OK, "then the last one fits")
 	_check(snap != null and snap.completed and desk.complete, "and completes the page")
-	_check(snap != null and snap.parasites_cleared == [100], "the remaining parasite goes, silently")
+	_check(
+		snap != null and snap.parasites_cleared == [100], "the remaining parasite goes, silently"
+	)
 	_check(snap != null and snap.parasites_removed.is_empty(), "without the snickering")
 	var repaired := true
 	for id in desk.ids():
@@ -420,10 +437,17 @@ func _check_destruction() -> void:
 	desk.place(2, Vector2i(13, 2))
 	var hit := _first_snap(_move_n(desk, 2, Vector2i.LEFT, 2))
 	_check(hit != null and hit.reason == MISMATCH, "the stray third fragment mismatches")
-	_check(hit != null and hit.destroyed == [1] and hit.damaged == [2], "the damaged one is destroyed")
-	_check(desk.has_fragment(0) and not desk.has_fragment(1), "the other member of its group stands")
+	_check(
+		hit != null and hit.destroyed == [1] and hit.damaged == [2], "the damaged one is destroyed"
+	)
+	_check(
+		desk.has_fragment(0) and not desk.has_fragment(1), "the other member of its group stands"
+	)
 	_check(desk.group_of(0) == [0], "and the bond is gone with it")
-	_check(hit != null and hit.pushed_back and _pos(desk, 2) == Vector2i(12, 2), "the mover is pushed back")
+	_check(
+		hit != null and hit.pushed_back and _pos(desk, 2) == Vector2i(12, 2),
+		"the mover is pushed back"
+	)
 
 
 # --------------------------------------------------------------------------
@@ -435,13 +459,18 @@ func _check_rotation() -> void:
 	print("— rotation —")
 	var desk := _desk()
 	desk.add_parasite(1, PackedInt32Array([1, 1, 1, 1]))
-	_check(desk.rotate_fragment(1).accepted() and desk.fragment(1).rotation == 1, "turns in the new area")
+	_check(
+		desk.rotate_fragment(1).accepted() and desk.fragment(1).rotation == 1,
+		"turns in the new area"
+	)
 	desk.rotate_fragment(1, false)
 	desk.rotate_fragment(1, false)
 	_check(desk.fragment(1).rotation == 3, "either way, modulo four")
 	desk.place(1, Vector2i(4, 4))
 	desk.rotate_fragment(1)
-	_check(desk.fragment(1).rotation == 0 and _pos(desk, 1) == Vector2i(4, 4), "turns where it stands")
+	_check(
+		desk.fragment(1).rotation == 0 and _pos(desk, 1) == Vector2i(4, 4), "turns where it stands"
+	)
 
 	# A bonded pair turns as one.
 	desk = _pair()
@@ -449,13 +478,19 @@ func _check_rotation() -> void:
 	desk.place(1, Vector2i(6, 2))
 	var r := desk.rotate_fragment(0)
 	_check(r.accepted(), "a group turns")
-	_check(_pos(desk, 0) == Vector2i(2, 2) and _pos(desk, 1) == Vector2i(2, 6), "clockwise: B ends below A")
+	_check(
+		_pos(desk, 0) == Vector2i(2, 2) and _pos(desk, 1) == Vector2i(2, 6),
+		"clockwise: B ends below A"
+	)
 	_check(desk.fragment(0).rotation == 1 and desk.fragment(1).rotation == 1, "both turned")
 	desk.rotate_fragment(1, false)
 	_check(_pos(desk, 0) == Vector2i(2, 2) and _pos(desk, 1) == Vector2i(6, 2), "and back again")
 	_check(desk.fragment(0).rotation == 0, "to the original rotation")
 	desk.rotate_fragment(0, false)
-	_check(_pos(desk, 0) == Vector2i(2, 6) and _pos(desk, 1) == Vector2i(2, 2), "anticlockwise: B above A")
+	_check(
+		_pos(desk, 0) == Vector2i(2, 6) and _pos(desk, 1) == Vector2i(2, 2),
+		"anticlockwise: B above A"
+	)
 
 	# A turn that would overlap, or leave the desk, is refused and changes nothing.
 	desk = _trio()
@@ -464,13 +499,15 @@ func _check_rotation() -> void:
 	desk.place(1, Vector2i(6, 2))
 	desk.place(9, Vector2i(2, 8))
 	r = desk.rotate_fragment(0)
-	_check(r.blocked == Blocked.OVERLAP, "a turn onto another fragment is refused")
-	_check(_pos(desk, 1) == Vector2i(6, 2) and desk.fragment(0).rotation == 0, "and changes nothing")
+	_check(r.blocked == BLOCKED.OVERLAP, "a turn onto another fragment is refused")
+	_check(
+		_pos(desk, 1) == Vector2i(6, 2) and desk.fragment(0).rotation == 0, "and changes nothing"
+	)
 	desk = _pair()
 	desk.place(0, Vector2i(0, 12))
 	desk.place(1, Vector2i(4, 12))
 	_check(desk.group_of(0).size() == 2, "a pair at the bottom edge of the desk")
-	_check(desk.rotate_fragment(0).blocked == Blocked.OUT_OF_AREA, "a turn off the desk is refused")
+	_check(desk.rotate_fragment(0).blocked == BLOCKED.OUT_OF_AREA, "a turn off the desk is refused")
 	_check(_pos(desk, 1) == Vector2i(4, 12), "and changes nothing")
 
 
@@ -518,17 +555,19 @@ func _check_group_move() -> void:
 	_check(r.accepted(), "a group moves")
 	_check(_pos(desk, 0) == Vector2i(2, 3) and _pos(desk, 1) == Vector2i(6, 3), "as one")
 	r = desk.move(1, Vector2i.RIGHT)
-	_check(_pos(desk, 0) == Vector2i(3, 3) and _pos(desk, 1) == Vector2i(7, 3), "from either member")
+	_check(
+		_pos(desk, 0) == Vector2i(3, 3) and _pos(desk, 1) == Vector2i(7, 3), "from either member"
+	)
 	# The blocker stands in front of the member that is NOT the one being pushed.
 	desk.place(9, Vector2i(12, 3))
 	r = desk.move(0, Vector2i.RIGHT)
 	_check(r.accepted() and _pos(desk, 1) == Vector2i(8, 3), "up to the blocker")
 	r = desk.move(0, Vector2i.RIGHT)
-	_check(r.blocked == Blocked.OVERLAP, "the group cannot overlap a third fragment")
+	_check(r.blocked == BLOCKED.OVERLAP, "the group cannot overlap a third fragment")
 	_check(_pos(desk, 0) == Vector2i(4, 3) and _pos(desk, 1) == Vector2i(8, 3), "and neither moved")
 	_move_n(desk, 0, Vector2i.LEFT, 4)
 	r = desk.move(1, Vector2i.LEFT)
-	_check(r.blocked == Blocked.OUT_OF_AREA, "nor leave the desk")
+	_check(r.blocked == BLOCKED.OUT_OF_AREA, "nor leave the desk")
 	_check(not desk.return_to_new_area(0), "a bonded fragment cannot go back to the new area")
 	_check(desk.return_to_new_area(9), "a lone one can")
 
@@ -553,12 +592,18 @@ func _check_stain() -> void:
 	desk.tick_handling(9, 1.0)
 	_check(is_equal_approx(desk.fragment(9).stain, 2.0 * rate), "and keeps rising")
 	desk.tick_handling(9, 1.0e6)
-	_check(is_equal_approx(desk.fragment(9).stain, cap) and cap < 1.0, "up to almost the whole fragment")
+	_check(
+		is_equal_approx(desk.fragment(9).stain, cap) and cap < 1.0,
+		"up to almost the whole fragment"
+	)
 	desk.fragment(0).stain = 0.0
 	desk.fragment(1).stain = 0.0
 	desk.tick_handling(0, 1.0)
 	_check(
-		is_equal_approx(desk.fragment(0).stain, rate) and is_equal_approx(desk.fragment(1).stain, rate),
+		(
+			is_equal_approx(desk.fragment(0).stain, rate)
+			and is_equal_approx(desk.fragment(1).stain, rate)
+		),
 		"a group is stained as one"
 	)
 
@@ -573,7 +618,9 @@ func _check_generated_page() -> void:
 	var desk := Desk.new(Vector2i(24, 16), 4, 5)
 	desk.generate_page(2, 2, 2)
 	_check(desk.ids().size() == 6, "four correct fragments and two parasites")
-	_check(desk.fragment(5).is_parasitic() and not desk.fragment(3).is_parasitic(), "ids as documented")
+	_check(
+		desk.fragment(5).is_parasitic() and not desk.fragment(3).is_parasitic(), "ids as documented"
+	)
 	var ok := true
 	var positions := {0: Vector2i(2, 2), 1: Vector2i(6, 2), 2: Vector2i(2, 6), 3: Vector2i(6, 6)}
 	for id in [0, 1, 2]:
@@ -583,5 +630,3 @@ func _check_generated_page() -> void:
 	ok = snap != null and snap.reason == OK and snap.completed
 	_check(ok, "assembled from a generated page, in its page layout, it completes")
 	_check(desk.fragment(4) == null and desk.fragment(5) == null, "and the parasites are gone")
-
-

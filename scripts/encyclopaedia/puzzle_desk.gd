@@ -60,7 +60,9 @@ var _known_correct := {}  # id -> true, every correct fragment the page has, des
 
 
 func _init(
-	desk_tiles: Vector2i = Vector2i(24, 16), fragment_tiles: int = MIN_FRAGMENT_SIZE, seed_value := 0
+	desk_tiles: Vector2i = Vector2i(24, 16),
+	fragment_tiles: int = MIN_FRAGMENT_SIZE,
+	seed_value := 0
 ) -> void:
 	desk_size = desk_tiles
 	fragment_size = maxi(fragment_tiles, MIN_FRAGMENT_SIZE)
@@ -392,7 +394,13 @@ func _candidates(group: Array) -> Array:
 				var theirs := Edges.side_signature(o.edges, o.rotation, Edges.opposite(side))
 				if Edges.compatible(mine, theirs):
 					found.append(
-						{"m": m_id, "o": o_id, "side": side, "shift": shift, "distance": gap + absi(off)}
+						{
+							"m": m_id,
+							"o": o_id,
+							"side": side,
+							"shift": shift,
+							"distance": gap + absi(off)
+						}
 					)
 	# Insertion sort on distance: stable, so ties keep the order the fragments were added in
 	# (Array.sort_custom is not stable).

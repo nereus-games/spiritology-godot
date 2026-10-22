@@ -554,6 +554,14 @@ msgstr "%s va utiliser des objets plus souvent."
 msgid "LOG_EXAMINE_BONUS"
 msgstr "bonus d'Examen +%d sur %s [à venir]."
 
+# Halo Effect found no individual that repeats itself.
+msgid "LOG_HISTORY_NOBODY_REPEATS"
+msgstr "personne ne se répète."
+
+# An ability the doc makes usable only under a condition was used without it.
+msgid "LOG_CONDITION_UNMET"
+msgstr "la condition de cette capacité n'est pas remplie."
+
 # %s = qui.
 msgid "LOG_NEXT_TALK_AS_EXAMINE"
 msgstr "le prochain Parler de %s rapporte autant d'IFP qu'un Examen."

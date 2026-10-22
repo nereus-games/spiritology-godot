@@ -15,6 +15,7 @@ class_name EncounterContext
 extends RefCounted
 
 const EncounterEvent := preload("res://scripts/encounter/encounter_event.gd")
+const EncounterHistory := preload("res://scripts/encounter/encounter_history.gd")
 
 
 ## Damage added per condition met — weakness struck, shared Spiricosm, completed page,
@@ -61,6 +62,11 @@ var in_reaction := false
 ## reacting, its ability, the lines]. The manager announces them once the turn's own lines are out.
 var reactions_noted: Array = []
 
+## What has happened in the encounter so far — the manager's own, shared by every context of it.
+## Abilities query it directly (`ctx.history.times_used(...)`): this class has no room left for a
+## method per question. A context built by hand, as the checks do, has an empty one.
+var history := EncounterHistory.new()
+
 
 func note(line: String) -> void:
 	log_lines.append(line)
@@ -93,12 +99,12 @@ func deal_damage(target, base_amount: int) -> void:
 		victim.next_damage_factor = 1.0
 		if _converted_to_eth(victim, amount):
 			return
-		victim.apply_damage(amount)
+		_hurt(victim, user, amount)
 		damage_dealt += amount
 		if user is EncounterIndividual and amount > 0:
 			victim.last_damager = user
 			if victim.reflect_to_attacker and user != victim:
-				user.apply_damage(amount)  # Reflux: as much goes back to the attacker
+				_hurt(user, victim, amount)  # Reflux: as much goes back to the attacker
 	note(_tr("LOG_DAMAGE") % [amount, _name(victim)])
 	if victim is EncounterIndividual and amount > 0 and not in_reaction:
 		fire(EncounterEvent.damaged(victim, user if user is EncounterIndividual else null, amount))
@@ -173,6 +179,7 @@ func _reaction_context(owner, reacting: AbilityData, actor) -> EncounterContext:
 	c.completed_species = completed_species
 	c.resolved_energy = resolved_energy
 	c.in_reaction = true
+	c.history = history
 	return c
 
 
@@ -203,20 +210,24 @@ func _converted_to_eth(victim, amount: int) -> bool:
 func drain_eth(target, amount: int) -> void:
 	if target is EncounterIndividual:
 		target.drain_eth(amount)
-		if user is EncounterIndividual:
+		if user is EncounterIndividual and user != target:
 			target.last_damager = user
 	note(_tr("LOG_ETH_DRAINED") % [_name(target), amount])
 
 
 func recover_den(target, amount: int) -> void:
 	if target is EncounterIndividual:
+		var before: int = target.den
 		target.recover_den(amount)
+		_helped(target, EncounterHistory.AidKind.DEN, target.den - before)
 	note(_tr("LOG_DEN_RECOVERED") % [_name(target), amount])
 
 
 func recover_eth(target, amount: int) -> void:
 	if target is EncounterIndividual:
+		var before: int = target.eth
 		target.recover_eth(amount)
+		_helped(target, EncounterHistory.AidKind.ETH, target.eth - before)
 	note(_tr("LOG_ETH_RECOVERED") % [_name(target), amount])
 
 
@@ -593,6 +604,21 @@ func set_energy(energy: GameEnums.Energy) -> void:
 ## The energy actually in play, override and Random/Variable resolved.
 func energy() -> GameEnums.Energy:
 	return _effective_energy()
+
+
+# --- Writing the encounter history ---
+
+
+## `victim` loses `amount` DEN to `attacker`, and the history says how much it really lost.
+func _hurt(victim, attacker, amount: int) -> void:
+	var before: int = victim.den
+	victim.apply_damage(amount)
+	history.record_hurt(victim, attacker, before - victim.den)
+
+
+## The user's recovery of `target` was help, if it was someone else's and gained anything.
+func _helped(target, kind: EncounterHistory.AidKind, gained: int) -> void:
+	history.record_aid(user, target, kind, gained)
 
 
 # --- Helpers ---

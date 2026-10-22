@@ -339,6 +339,12 @@ func watch(
 	_arm("reaction:%s" % ability.id, anchor, turns)
 
 
+## Stops watching with `ability` at once, before its window would have run out.
+func unwatch(ability: AbilityData) -> void:
+	reactions.erase(ability.id)
+	_timers.erase("reaction:%s" % ability.id)
+
+
 # --- Action weights: rivals Talking, Meditating or using objects "more often" ---
 
 

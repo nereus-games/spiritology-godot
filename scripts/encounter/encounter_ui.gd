@@ -418,7 +418,7 @@ func _show_abilities(individual: EncounterIndividual, manager: EncounterManager)
 			_ability_label(ability), func(): _on_ability_chosen(individual, manager, ability)
 		)
 		_menu.set_energy_icon(btn, ability.energy)
-		btn.disabled = not individual.can_afford(ability)
+		btn.disabled = not manager.can_play(individual, ability)
 		# The mockup's "ability description text area": the description follows the focus.
 		btn.focus_entered.connect(func(): _menu.set_description(tr(ability.desc_key())))
 		btn.mouse_entered.connect(func(): _menu.set_description(tr(ability.desc_key())))

@@ -34,6 +34,13 @@ func react(_ctx: EncounterContext, _event) -> void:
 	pass
 
 
+## Override for an ability the doc makes usable only under a condition ("usable only if…").
+## `ctx` is the one the ability would run in, so the condition may ask the encounter history. The
+## menu greys the ability out, and [AutoAgent] leaves it alone, while this is false.
+func is_usable(_ctx: EncounterContext) -> bool:
+	return true
+
+
 ## Override for an ability that RECURS: one whose [method execute] calls
 ## [method EncounterContext.recur_each_turn] on its target. This runs at the start of each of the
 ## bearer's turns, for as long as the effect lasts. `ctx` is the ability's own context, its user

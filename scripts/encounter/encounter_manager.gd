@@ -31,9 +31,14 @@ signal departed(individual: EncounterIndividual, reason: StringName)
 ## The manager deliberately knows nothing of [GameSession]. Reaching for an autoload would
 ## tie it to a running game and cost it the ability to be tested on its own, so it
 ## announces what happened and the encounter UI relays it to
-## [method GameSession.award_ifp].
+## [method GameSession.award_ifp]. `yield_factor` scales the amount the table gives — 1.0 unless
+## a next-turn modifier acts on it (Hardening's Talk penalty).
 signal ifp_earned(
-	species_id: StringName, action: GameEnums.IfpAction, is_forlorn: bool, dialogue_effective: bool
+	species_id: StringName,
+	action: GameEnums.IfpAction,
+	is_forlorn: bool,
+	dialogue_effective: bool,
+	yield_factor: float
 )
 
 ## An object was spent by a Use / Give action — "Objects are all consumable items". The UI
@@ -390,7 +395,7 @@ func _award_dissolutions(dissolved_before: Array) -> void:
 	for r in rivals:
 		if r.is_dissolved() and not dissolved_before.has(r):
 			ifp_earned.emit(
-				r.species_id(), GameEnums.IfpAction.DISSOLVE_RIVAL, _is_forlorn(r), true
+				r.species_id(), GameEnums.IfpAction.DISSOLVE_RIVAL, _is_forlorn(r), true, 1.0
 			)
 
 
@@ -615,13 +620,16 @@ func _resolve_talk(individual: EncounterIndividual, action: EncounterAction) -> 
 			chance = t.modify_talk_chance(self, individual, target, chance)
 	var effective := rng.randf() < chance
 	last_talk_effective = effective  # [bridges]
+	var talk_yield := _talk_yield(individual, effective)
 	# Only a player's Talk earns IFP; a rival talking to a player character earns none.
 	if individual.is_player:
 		ifp_earned.emit(
-			target.species_id(), GameEnums.IfpAction.TALK_RIVAL, _is_forlorn(target), effective
+			target.species_id(), talk_yield[0], _is_forlorn(target), effective, talk_yield[1]
 		)
 	var verdict := _tr("LOG_DIALOGUE_EFFECTIVE" if effective else "LOG_DIALOGUE_INEFFECTIVE")
-	_emit_turn(individual, action, [_tr("LOG_TALK") % [target.display_name(), verdict]])
+	var lines: Array = [_tr("LOG_TALK") % [target.display_name(), verdict]]
+	lines.append_array(talk_yield[2])
+	_emit_turn(individual, action, lines)
 	# Talents that react to a resolved Talk: Serene Waves heals the teammate, Slick Merchant
 	# gives the rival the speaker's own weakness.
 	for t in _talents:
@@ -638,7 +646,7 @@ func _resolve_examine(individual: EncounterIndividual, action: EncounterAction) 
 		_emit_turn(individual, action, [_tr("LOG_EXAMINE_NO_TARGET")])
 		return
 	ifp_earned.emit(
-		target.species_id(), GameEnums.IfpAction.EXAMINE_RIVAL, _is_forlorn(target), true
+		target.species_id(), GameEnums.IfpAction.EXAMINE_RIVAL, _is_forlorn(target), true, 1.0
 	)
 	# Recon Glide (ravbak) raises the bearer's Examine yield by 10 %. How much information
 	# an Examine yields is not modelled at all, so we start from 1.0 and log the factor:
@@ -653,6 +661,26 @@ func _resolve_examine(individual: EncounterIndividual, action: EncounterAction) 
 	# chance of an agent appearing mid-encounter. No such system exists.
 	var suffix := _tr("LOG_EXAMINE_INFO_FACTOR") % info if not is_equal_approx(info, 1.0) else ""
 	_emit_turn(individual, action, [_tr("LOG_EXAMINE") % [target.display_name(), suffix]])
+
+
+# --- Next-turn modifiers ---
+
+
+## What the modifiers on a speaker make of a Talk's IFP: [the action the yield is looked up
+## under, the factor on it, the log lines saying so]. Active Listening is spent by the Talk it
+## changes whether or not the dialogue worked; the yield is still earned only by an effective
+## one, so an ineffective Talk stays [constant GameEnums.IfpAction.TALK_RIVAL] and gets nothing.
+func _talk_yield(individual: EncounterIndividual, effective: bool) -> Array:
+	var ifp_action := GameEnums.IfpAction.TALK_RIVAL
+	var lines: Array = []
+	if individual.consume_talk_as_examine():
+		lines.append(_tr("LOG_TALK_YIELDS_EXAMINE"))
+		if effective:
+			ifp_action = GameEnums.IfpAction.EXAMINE_RIVAL
+	var factor := individual.talk_info_factor
+	if not is_equal_approx(factor, 1.0):
+		lines.append(_tr("LOG_TALK_INFO_PENALIZED") % factor)
+	return [ifp_action, factor, lines]
 
 
 ## Whether this individual is its species' Forlorn variant.
@@ -687,8 +715,12 @@ func _resolve_ability(individual: EncounterIndividual, action: EncounterAction) 
 	var touched := _weakness_touched_targets(individual, ability, action.targets)
 	# Paid BEFORE the effect, so that an ability which restores ETH cannot refund itself.
 	# Agents only ever offer what is affordable; pay_eth clamps at 0 regardless.
-	individual.pay_eth(ability.eth_cost())
+	var free := individual.consume_free_ability()
+	if not free:
+		individual.pay_eth(ability.eth_cost())
 	var ctx := _make_context(individual, ability, action.targets)
+	if free:
+		ctx.note(_tr("LOG_ABILITY_FREE"))
 	EffectCatalog.script_for(ability).execute(ctx)
 	_action_damage = ctx.damage_dealt
 	individual.mark_used(ability)

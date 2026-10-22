@@ -439,6 +439,13 @@ msgstr "%s recovers %d DEN."
 msgid "LOG_ETH_RECOVERED"
 msgstr "%s recovers %d ETH."
 
+# %s = who.
+msgid "LOG_NEXT_ABILITY_FREE"
+msgstr "the next ability of %s costs no ETH."
+
+msgid "LOG_ABILITY_FREE"
+msgstr "pays no ETH for it."
+
 msgid "LOG_DAMAGE_TO_ETH_ARMED"
 msgstr "%s turns damage into ETH (%s)."
 
@@ -471,6 +478,14 @@ msgstr "the weakness of %s cannot change."
 
 msgid "LOG_ALL_DAMAGE_FACTOR"
 msgstr "all damage taken by %s ×%.2f."
+
+# %s = who.
+msgid "LOG_DAMAGE_STEPS_UP"
+msgstr "the damage dealt by %s goes up one tier."
+
+# %s = who, %.2f = the factor on the IFP their Talk yields.
+msgid "LOG_TALK_INFO_FACTOR"
+msgstr "the Talk of %s yields ×%.2f IFP."
 
 msgid "LOG_WEAKNESS_DAMAGE_AMPLIFIED"
 msgstr "damage that matches a weakness ×%.2f for everyone."
@@ -533,6 +548,10 @@ msgstr "%s will use objects more often."
 # %d = the bonus, %s = who is examined.
 msgid "LOG_EXAMINE_BONUS"
 msgstr "Examine bonus +%d on %s [to come]."
+
+# %s = who.
+msgid "LOG_NEXT_TALK_AS_EXAMINE"
+msgstr "the next Talk of %s yields as much IFP as an Examine."
 
 # %s = who, %s = the fragments below, comma-separated.
 msgid "LOG_RESTRICTED"
@@ -663,6 +682,13 @@ msgstr "examines %s%s."
 # Appended to LOG_EXAMINE when a talent changes the yield. %.2f = the factor.
 msgid "LOG_EXAMINE_INFO_FACTOR"
 msgstr " (info ×%.2f)"
+
+# Lines added to LOG_TALK by a modifier on the speaker. %.2f = the factor.
+msgid "LOG_TALK_YIELDS_EXAMINE"
+msgstr "its Talk yields as much IFP as an Examine."
+
+msgid "LOG_TALK_INFO_PENALIZED"
+msgstr "its Talk yields ×%.2f IFP."
 
 # Talent lines. The log marks them with its own prefix; %s is always the talent's name.
 msgid "LOG_TALENT_REUSE"

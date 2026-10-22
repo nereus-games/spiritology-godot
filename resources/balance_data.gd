@@ -79,6 +79,11 @@ extends Resource
 @export var decor_spawn_groups_max: int = 2
 @export var decor_spawn_radius: int = 4
 
+## Hardening: "info penalty on Talk". The doc gives no figure; the penalty reuses the step the
+## game already applies per condition, so a hardened individual's Talk yields
+## (1 - hardening_talk_penalty) of the IFP it would. Between 0 (no penalty) and 1 (nothing).
+@export_range(0.0, 1.0) var hardening_talk_penalty: float = 0.36
+
 const PATH := "res://data/balance.tres"
 
 static var _current: BalanceData
@@ -107,6 +112,16 @@ func cost_eth(cost: GameEnums.Cost) -> int:
 		GameEnums.Cost.A_LOT:
 			return cost_a_lot
 	return 0
+
+
+## One damage tier up from `amount`: the smallest tier figure above it, or `amount` itself when
+## it already reaches the top tier (mini to small to normal to big). An amount between two tiers
+## goes up to the next one. Priming.
+func step_up_damage(amount: int) -> int:
+	for tier in [damage_mini, damage_small, damage_normal, damage_big]:
+		if tier > amount:
+			return tier
+	return amount
 
 
 ## Damage for a named tier: "mini", "small", "normal", "big".

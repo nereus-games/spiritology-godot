@@ -17,7 +17,7 @@ signal turn_taken(
 )
 ## An ability that was watching for something reacted to it. `lines` is what it did. Announced
 ## separately from [signal turn_taken] because the one who reacts is not the one whose turn it is.
-signal reaction_noted(owner: EncounterIndividual, ability: AbilityData, lines: PackedStringArray)
+signal reaction_noted(reactor: EncounterIndividual, ability: AbilityData, lines: PackedStringArray)
 ## How the encounter ended — see [method _check_end] for when each one applies:
 ## &"victory", &"defeat", &"fled", &"pacified", &"rivals_fled", &"timeout".
 signal ended(result: StringName)
@@ -723,12 +723,12 @@ func _react_to_action(individual: EncounterIndividual, action: EncounterAction) 
 
 func _announce_reactions(noted: Array) -> void:
 	for entry in noted:
-		var owner: EncounterIndividual = entry[0]
+		var reactor: EncounterIndividual = entry[0]
 		var ability: AbilityData = entry[1]
 		var lines: PackedStringArray = entry[2]
 		for l in lines:
-			encounter_log.append(_tr("LOG_LINE_ABILITY") % [owner.display_name(), ability.id, l])
-		reaction_noted.emit(owner, ability, lines)
+			encounter_log.append(_tr("LOG_LINE_ABILITY") % [reactor.display_name(), ability.id, l])
+		reaction_noted.emit(reactor, ability, lines)
 
 
 ## Targets whose exposed weakness matches the ability's effective energy.

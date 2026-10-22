@@ -605,13 +605,13 @@ func _on_turn_taken(
 ## An ability that was watching reacted: its lines go under the turn that set it off, under the
 ## name of the one who reacted.
 func _on_reaction_noted(
-	owner: EncounterIndividual, ability: AbilityData, lines: PackedStringArray
+	reactor: EncounterIndividual, ability: AbilityData, lines: PackedStringArray
 ) -> void:
 	for l in lines:
 		_append(
 			(
 				"    [color=#b9b9c4]%s[/color]"
-				% (tr("LOG_LINE_ABILITY") % [owner.display_name(), tr(ability.name_key()), l])
+				% (tr("LOG_LINE_ABILITY") % [reactor.display_name(), tr(ability.name_key()), l])
 			)
 		)
 	_refresh_timeline()

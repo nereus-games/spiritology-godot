@@ -143,6 +143,9 @@ func watch_reactions() -> void:
 
 ## Tells every individual that is watching, and notes what each did in [member reactions_noted].
 func fire(event) -> void:
+	# What an individual did on its way out, or while being dissolved, concerns no one any more.
+	if event.is_action() and (event.actor.has_left() or event.actor.is_dissolved()):
+		return
 	for watcher in all_individuals:
 		if watcher.is_dissolved() or watcher.has_left() or watcher.reactions.is_empty():
 			continue

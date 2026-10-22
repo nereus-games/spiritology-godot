@@ -231,6 +231,12 @@ func _check_talent_in_encounter() -> void:
 	_check(asked[0] == 1, "an effective dialogue reveals once (%d)" % asked[0])
 	_check(_reveal_line(m), "and the log says so")
 
+	# The same talents, told the duo was defeated: an effective dialogue does not help then.
+	asked[0] = 0
+	for t in m._talents:
+		t.on_encounter_end(m, &"defeat")
+	_check(asked[0] == 0, "a defeat reveals nothing, whatever the last dialogue was")
+
 	# An ineffective one: nothing.
 	m = _encounter(0.0)
 	_counting(m, asked)

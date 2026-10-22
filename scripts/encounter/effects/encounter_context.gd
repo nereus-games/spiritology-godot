@@ -141,6 +141,37 @@ func watch_reactions() -> void:
 		user.watch(ability, _anchor(null))
 
 
+# --- Action weights ---
+
+
+## Makes `target` likelier to pick the base action `kind` when it is played automatically, by
+## `bonus` (a probability added on top), anchored to the user and lasting until its next turn
+## unless `turns` says otherwise. A `focus` aims the Talk at someone. See
+## [method EncounterIndividual.add_action_weight].
+func weigh_action(
+	target, kind: int, bonus: float, turns := EncounterIndividual.UNTIL_NEXT_TURN, focus = null
+) -> void:
+	if not (target is EncounterIndividual) or target.is_dissolved():
+		return
+	var focus_who: EncounterIndividual = focus if focus is EncounterIndividual else null
+	target.add_action_weight(kind, bonus, _anchor(null), turns, focus_who)
+	var key := "LOG_WEIGHT_TALK"
+	if kind == EncounterAction.Kind.MEDITATE:
+		key = "LOG_WEIGHT_MEDITATE"
+	elif kind == EncounterAction.Kind.USE_OBJECT:
+		key = "LOG_WEIGHT_OBJECT"
+	note(_tr(key) % _name(target))
+
+
+## The opponents sharing the user's origin, its Spiricosm.
+func opponents_of_same_origin() -> Array:
+	var out: Array = []
+	for f in opponents():
+		if f.species and user.species and f.species.spiricosm == user.species.spiricosm:
+			out.append(f)
+	return out
+
+
 ## Tells every individual that is watching, and notes what each did in [member reactions_noted].
 func fire(event) -> void:
 	# What an individual did on its way out, or while being dissolved, concerns no one any more.

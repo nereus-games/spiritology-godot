@@ -1,6 +1,6 @@
 # What isn't built yet
 
-The source carries about 80 `TODO` markers; `grep -rn TODO --include='*.gd' .` lists them.
+The source carries about 70 `TODO` markers; `grep -rn TODO --include='*.gd' .` lists them.
 Scattered through the code they read like neglect; grouped, they are an accurate map of what
 the game still needs, and most of them are not debt at all — they are one system waiting on
 another.
@@ -113,12 +113,13 @@ unblock.
   stays too long, agents arrive at hand-placed arrival points on hand-set timestamps and take
   the shortest path to the player; some dungeons hold a corruptible agent who delays the others
   for a price that rises each time.
-- **PSY's consequences.** Only the IFP bands and the narrow bridge read the PSY score today. The
-  doc's ladder is otherwise unbuilt. Above 10: rivals talk 10 % less, and fleeing no longer
+- **PSY's consequences.** Only the IFP bands, the narrow bridge, the width of spawn waves and
+  the rivals spawned by examined decor read the PSY score today. The doc's ladder is otherwise
+  unbuilt. Above 10: rivals talk 10 % less, and fleeing no longer
   makes the rival go away (the player lands 2 to 3 tiles off, facing it). Above 20: more risk of
   losing damaged fragments, and temporary oddities such as swapped icons (after event 3). Above
-  30: rival density hidden in encounters, one more wrong fragment each time, wider spawn waves.
-  Above 40: the teammate may refuse an action, poison forbids Meditate, map, encyclopaedia,
+  30: rival density hidden in encounters, one more wrong fragment each time (the wider spawn waves are built, at a placeholder
+  threshold of 20; see section 5). Above 40: the teammate may refuse an action, poison forbids Meditate, map, encyclopaedia,
   objects and team, rivals skip their cooldown turn, and dungeons stay dark. (`game_session.gd`)
 - **Dark dungeons** ("In the Dark"): sight limited to one tile, rivals heard but not seen,
   Meditate revealing them for 2 moves, and NPC quests that light an area. No implementation.

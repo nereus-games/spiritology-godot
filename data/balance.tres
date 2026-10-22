@@ -31,3 +31,4 @@ decor_psy_threshold = 20
 decor_spawn_chance = 0.45
 decor_spawn_groups_max = 2
 decor_spawn_radius = 4
+hardening_talk_penalty = 0.36

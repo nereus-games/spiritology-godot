@@ -652,9 +652,15 @@ func _action_verb(individual: EncounterIndividual, action: EncounterAction) -> S
 ## The manager announces IFP; this is where they reach the encyclopaedia, with the
 ## restrictions [method GameSession.award_ifp] already enforces.
 func _on_ifp_earned(
-	species_id: StringName, action: GameEnums.IfpAction, is_forlorn: bool, dialogue_effective: bool
+	species_id: StringName,
+	action: GameEnums.IfpAction,
+	is_forlorn: bool,
+	dialogue_effective: bool,
+	yield_factor: float
 ) -> void:
-	var gained := GameSession.award_ifp(species_id, action, is_forlorn, dialogue_effective)
+	var gained := GameSession.award_ifp(
+		species_id, action, is_forlorn, dialogue_effective, yield_factor
+	)
 	if gained > 0:
 		var sp: SpeciesData = GameData.species(species_id)
 		var sp_name := tr(sp.name_key()) if sp else String(species_id)

@@ -254,6 +254,83 @@ func grant_next_turn_damage_bonus(bonus: float) -> void:
 	_arm("outgoing_bonus", self, 2)
 
 
+# --- Next-turn modifiers ---
+#
+# An effect that changes what the individual's own NEXT action does: the ability that costs
+# nothing, the Talk that yields as much as an Examine, damage a tier higher, a Talk that yields
+# less. Timed like the others. The first two are also SPENT by the action they change, and
+# expire unspent when their window closes; the encounter reads them, see the "Next-turn
+# modifiers" block of [EncounterManager].
+
+## Its next ability costs no ETH (Self-Forgiveness). Spent by [method consume_free_ability].
+var free_next_ability := false
+## Its next Talk yields as much IFP as an Examine would (Active Listening). Spent by
+## [method consume_talk_as_examine].
+var talk_as_examine := false
+## How many damage tiers up what it DEALS goes (Priming). Applied by
+## [method EncounterContext.deal_damage].
+var damage_tier_steps := 0
+## Multiplier on the IFP its Talk yields (Hardening's penalty). 1.0 means no change.
+var talk_info_factor := 1.0
+
+
+## Makes the NEXT ability free. Two turns of its own, like [method grant_next_turn_damage_bonus]:
+## the current turn is spent, the modifier is there for the next, and gone the one after.
+func grant_free_next_ability() -> void:
+	free_next_ability = true
+	_arm("next_turn:free_ability", self, 2)
+
+
+## Spends the free ability. True if one was pending.
+func consume_free_ability() -> bool:
+	if not free_next_ability:
+		return false
+	_expire("next_turn:free_ability")
+	return true
+
+
+## Makes the NEXT Talk count as an Examine for IFP. Two turns of its own, as above.
+func grant_talk_as_examine() -> void:
+	talk_as_examine = true
+	_arm("next_turn:talk_as_examine", self, 2)
+
+
+## Spends the Talk bonus. True if one was pending.
+func consume_talk_as_examine() -> bool:
+	if not talk_as_examine:
+		return false
+	_expire("next_turn:talk_as_examine")
+	return true
+
+
+## Damage dealt goes `steps` tiers up until `anchor`'s next turn.
+func step_up_damage_tier(
+	steps: int, anchor: EncounterIndividual = null, turns := UNTIL_NEXT_TURN
+) -> void:
+	damage_tier_steps += steps
+	_arm("next_turn:damage_tier", anchor, turns)
+
+
+## Multiplies the IFP its Talk yields until `anchor`'s next turn. Factors multiply together.
+func scale_talk_info(
+	factor: float, anchor: EncounterIndividual = null, turns := UNTIL_NEXT_TURN
+) -> void:
+	talk_info_factor *= factor
+	_arm("next_turn:talk_info", anchor, turns)
+
+
+func _expire_next_turn(key: String) -> void:
+	match key.get_slice(":", 1):
+		"free_ability":
+			free_next_ability = false
+		"talk_as_examine":
+			talk_as_examine = false
+		"damage_tier":
+			damage_tier_steps = 0
+		"talk_info":
+			talk_info_factor = 1.0
+
+
 ## Starts watching with `ability`: whatever it reacts to, until `anchor`'s next turn begins.
 func watch(
 	ability: AbilityData, anchor: EncounterIndividual = null, turns := UNTIL_NEXT_TURN
@@ -402,6 +479,9 @@ func _expire(key: String) -> void:
 	if key.begins_with("reaction:"):
 		reactions.erase(StringName(key.get_slice(":", 1)))
 		return
+	if key.begins_with("next_turn:"):
+		_expire_next_turn(key)
+		return
 	match key:
 		"weakness":
 			_weakness_override = false
@@ -470,7 +550,7 @@ func is_spent(ability: AbilityData) -> bool:
 
 
 func can_afford(ability: AbilityData) -> bool:
-	return eth >= ability.eth_cost()
+	return free_next_ability or eth >= ability.eth_cost()
 
 
 ## Playable right now: neither spent nor unaffordable.

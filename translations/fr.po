@@ -444,6 +444,13 @@ msgstr "%s récupère %d DEN."
 msgid "LOG_ETH_RECOVERED"
 msgstr "%s récupère %d ETH."
 
+# %s = qui.
+msgid "LOG_NEXT_ABILITY_FREE"
+msgstr "la prochaine capacité de %s ne coûte pas d'ETH."
+
+msgid "LOG_ABILITY_FREE"
+msgstr "ne paie pas d'ETH pour elle."
+
 msgid "LOG_DAMAGE_TO_ETH_ARMED"
 msgstr "%s transforme les dégâts en ETH (%s)."
 
@@ -476,6 +483,14 @@ msgstr "la faiblesse de %s ne peut pas changer."
 
 msgid "LOG_ALL_DAMAGE_FACTOR"
 msgstr "tous les dégâts reçus par %s ×%.2f."
+
+# %s = qui.
+msgid "LOG_DAMAGE_STEPS_UP"
+msgstr "les dégâts infligés par %s montent d'un cran."
+
+# %s = qui, %.2f = le facteur sur les IFP que rapporte son Parler.
+msgid "LOG_TALK_INFO_FACTOR"
+msgstr "le Parler de %s rapporte ×%.2f IFP."
 
 msgid "LOG_WEAKNESS_DAMAGE_AMPLIFIED"
 msgstr "les dégâts qui touchent une faiblesse ×%.2f pour tout le monde."
@@ -546,6 +561,10 @@ msgstr "personne ne se répète."
 # An ability the doc makes usable only under a condition was used without it.
 msgid "LOG_CONDITION_UNMET"
 msgstr "la condition de cette capacité n'est pas remplie."
+
+# %s = qui.
+msgid "LOG_NEXT_TALK_AS_EXAMINE"
+msgstr "le prochain Parler de %s rapporte autant d'IFP qu'un Examen."
 
 # %s = who, %s = the fragments below, comma-separated.
 msgid "LOG_RESTRICTED"
@@ -676,6 +695,13 @@ msgstr "examine %s%s."
 # Appended to LOG_EXAMINE when a talent changes the yield. %.2f = the factor.
 msgid "LOG_EXAMINE_INFO_FACTOR"
 msgstr " (info ×%.2f)"
+
+# Lignes ajoutées à LOG_TALK par un modificateur du locuteur. %.2f = le facteur.
+msgid "LOG_TALK_YIELDS_EXAMINE"
+msgstr "son Parler rapporte autant d'IFP qu'un Examen."
+
+msgid "LOG_TALK_INFO_PENALIZED"
+msgstr "son Parler rapporte ×%.2f IFP."
 
 # Talent lines. The log marks them with its own prefix; %s is always the talent's name.
 msgid "LOG_TALENT_REUSE"

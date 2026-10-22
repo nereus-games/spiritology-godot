@@ -561,6 +561,10 @@ msgstr "the condition for this ability is not met."
 msgid "LOG_NEXT_TALK_AS_EXAMINE"
 msgstr "the next Talk of %s yields as much IFP as an Examine."
 
+# %s = who, %d = how many steps stronger.
+msgid "LOG_NEXT_MEDITATE_BOOSTED"
+msgstr "the next Meditate of %s is %d step(s) stronger."
+
 # %s = who, %s = the fragments below, comma-separated.
 msgid "LOG_RESTRICTED"
 msgstr "%s may now only: %s [to come]."

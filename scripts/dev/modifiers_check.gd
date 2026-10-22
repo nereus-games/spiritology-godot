@@ -1,8 +1,9 @@
 ## Headless check of the next-turn modifiers: what an ability does to its user's (or its
 ## teammates') NEXT action — the ability that costs nothing (Self-Forgiveness), the Talk that
 ## yields as much as an Examine (Active Listening), damage a tier higher (Priming) and a Talk
-## that yields less (Hardening). Each one is played through real rounds with someone it must
-## touch and someone it must leave alone, and shown to run out across the round boundary.
+## that yields less (Hardening), and a Meditate that is stronger (Catatonia). Each one is played
+## through real rounds with someone it must touch and someone it must leave alone, and shown to
+## run out across the round boundary.
 ##
 ## Run with: Godot --headless --path . res://scenes/dev/modifiers_check.tscn
 ## As a start scene rather than --script; see geometry_check.gd.
@@ -47,6 +48,7 @@ func _run_all() -> void:
 	await _check_priming()
 	_check_tier_step()
 	await _check_hardening()
+	await _check_catatonia_meditate()
 	print("")
 	if _fails.is_empty():
 		print("ALL OK")
@@ -339,4 +341,92 @@ func _check_hardening() -> void:
 		_check(is_equal_approx(seen[2][1], 1.0), "...and the hardened one's, once it has run out")
 	_check(is_equal_approx(p0.talk_info_factor, 1.0), "the factor is back to 1 afterwards")
 	_restore_dialogue(saved)
+	m.free()
+
+
+# --------------------------------------------------------------------------
+# Catatonia: a stronger Meditate
+# --------------------------------------------------------------------------
+
+
+## What a Meditate recovers and leaves behind, as [ETH gained, damage bonus], for an individual
+## that meditates in `round_meditated`. `hitters` hit p0 with an attack before it uses Catatonia
+## in round 1, from the individuals at those indices of [p0, p1, r0, r1]; the order of play puts
+## them first. `use_catatonia` false is the control: nobody is boosted.
+func _meditation(hitters: Array, use_catatonia: bool, round_meditated: int) -> Array:
+	var m := _encounter()
+	var all: Array = m.players + m.rivals
+	var p0: EncounterIndividual = all[0]
+	var order: Array = []
+	for i in hitters:
+		order.append(all[i])
+	order.append(p0)
+	for f in all:
+		if not order.has(f):
+			order.append(f)
+	m.timeline.order = order
+	for i in hitters:
+		_play(m, all[i], [_use(_hit(), p0)])
+	var plays: Array = [_use(_ability(&"catatonia"), p0)] if use_catatonia else [_pass(p0)]
+	while plays.size() < round_meditated - 1:
+		plays.append(_pass(p0))
+	plays.append(EncounterAction.of_kind(EncounterAction.Kind.MEDITATE, [p0]))
+	_play(m, p0, plays)
+	var seen: Array = []
+	var watcher: EncounterIndividual = all[3] if not hitters.has(3) else all[2]
+	_spy(
+		m,
+		p0,
+		func(f, mgr):
+			if mgr.round_number == round_meditated:
+				f.eth = 0
+	)
+	_spy(
+		m,
+		watcher,
+		func(_f, mgr):
+			if mgr.round_number == round_meditated and seen.is_empty():
+				seen.assign([p0.eth, p0.outgoing_damage_bonus])
+	)
+	await m.run(round_meditated)
+	m.free()
+	return seen
+
+
+func _check_catatonia_meditate() -> void:
+	print("[catatonia: the Meditate]")
+	var balance := BalanceData.current()
+	var step := balance.modifier_per_condition
+	var plain_eth := balance.meditate_eth
+	var plain_bonus := balance.meditate_damage_bonus
+
+	var control := await _meditation([], false, 2)
+	_check(control == [plain_eth, plain_bonus], "without Catatonia a Meditate is as ever")
+
+	var one := await _meditation([], true, 2)
+	_check(
+		one == [ceili(plain_eth * (1.0 + step)), plain_bonus * (1.0 + step)],
+		"Catatonia alone: one step more ETH and a larger damage bonus"
+	)
+	var hurt := await _meditation([2], true, 2)
+	_check(
+		hurt == [ceili(plain_eth * (1.0 + 2 * step)), plain_bonus * (1.0 + 2 * step)],
+		"hurt by a rival: two steps"
+	)
+	var by_mate := await _meditation([1, 2], true, 2)
+	_check(
+		by_mate == [ceili(plain_eth * (1.0 + 3 * step)), plain_bonus * (1.0 + 3 * step)],
+		"hurt by a teammate too: three steps"
+	)
+	var late := await _meditation([], true, 3)
+	_check(late == [plain_eth, plain_bonus], "unused, the boost is gone by the turn after")
+
+	var m := _encounter()
+	var p0: EncounterIndividual = m.players[0]
+	var p1: EncounterIndividual = m.players[1]
+	_play(m, p0, [_use(_ability(&"catatonia"), p0)])
+	_play(m, p1, [EncounterAction.of_kind(EncounterAction.Kind.MEDITATE, [p1])])
+	p1.eth = 0
+	await m.run(1)
+	_check(p1.eth == plain_eth, "a teammate's Meditate is not boosted")
 	m.free()

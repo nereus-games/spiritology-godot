@@ -17,12 +17,8 @@ on Notion?
 
 Each is explicit in the doc, has no prerequisite, and is wrong in play right now.
 
-- **About 1 % of spawned rivals should be Forlorn.** The rest of "Rival Spawning" is built:
-  species weighted by dungeon rarity, the spawn limit, a new group pushing the occupant of a
-  taken spawn point aside, preset compositions in 0 to 50 % of spawns, waves wider at a high
-  PSY, and examined decor spawning rivals above PSY 20. What is left needs the Forlorn
-  individual of section 4: the roll, and the doc's table of bonuses. (`rival_spawner.gd`,
-  `TODO(forlorn)`)
+Nothing at present. Every place where the game contradicts the doc and where nothing blocks
+the fix is done; what remains of rival spawning waits on a system, and is listed in section 4.
 
 ## 2. Encounter hooks that unlock abilities in bulk
 
@@ -104,6 +100,12 @@ unblock.
   multiplies a number with no consequence), info fragments (Examine Weakness), Forlorn variants
   on the individual, and Forlorn pages with their own percentage. (`encounter_manager.gd`,
   `examine_weakness.gd`, `game_session.gd`)
+- **Forlorn rivals at spawn.** About 1 % of spawned rivals should be Forlorn. The rest of
+  "Rival Spawning" is built: species weighted by dungeon rarity, the spawn limit, a new group
+  pushing the occupant of a taken spawn point aside, preset compositions in 0 to 50 % of
+  spawns, waves wider at a high PSY, and examined decor spawning rivals above PSY 20. What is
+  left needs the Forlorn individual (see *Encyclopaedia detail*, above): the roll, and the
+  doc's table of bonuses. (`rival_spawner.gd`, `TODO(forlorn)`)
 - **The exploration HUD's final form** — the stack of known abilities with its USE/CANCEL
   submenu, and the doc's layout. (`hud_exploration.gd`)
 - **The Coal Vetch**, a faction with two entrances, neither implemented. In an encounter, an

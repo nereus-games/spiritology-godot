@@ -122,7 +122,9 @@ relation declared on the ability rows, and must be kept consistent by hand:
 
 `encyclopaedia_abilities` comes from the species page's *Abilities unlock* block, in
 unlock order: `1st:` at 15 fragments, `2nd:` at 30. `forlorn_ability` is that block's
-`Extreme:` entry.
+`Extreme:` entry. The data also lists these abilities among `origin_abilities`; in play they are
+the species' *gated* ones, which a player character only has once the encyclopaedia has revealed
+them (see architecture.md), while a rival has them from the start.
 
 `loot` is the `Potential Loot` multi-select, slugified — the same slugs as `data/objects/`.
 

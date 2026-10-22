@@ -27,9 +27,9 @@ static func script_for(id: StringName):
 	return _BASE.new()
 
 
-## The duo's known exploration abilities: the union of origin, also_used and encyclopaedia
-## across both members, filtered to type EXPLORATION. Contextual abilities, such as the cracked
-## wall's, are excluded.
+## The duo's known exploration abilities: what both members may use (origin and also_used, the
+## encyclopaedia's own only once revealed), filtered to type EXPLORATION. Contextual abilities,
+## such as the cracked wall's, are excluded.
 static func known_for_duo() -> Array:
 	var ids := {}
 	for aid in dev_granted:
@@ -41,11 +41,10 @@ static func known_for_duo() -> Array:
 		var sp: SpeciesData = GameData.species(member)
 		if sp == null:
 			continue
-		for arr in [sp.origin_abilities, sp.also_used_abilities, sp.encyclopaedia_abilities]:
-			for aid in arr:
-				if aid in _CONTEXTUAL:
-					continue
-				var ab: AbilityData = GameData.ability(aid)
-				if ab != null and ab.type == GameEnums.AbilityType.EXPLORATION:
-					ids[aid] = true
+		for aid in GameSession.usable_abilities(member):
+			if aid in _CONTEXTUAL:
+				continue
+			var ab: AbilityData = GameData.ability(aid)
+			if ab != null and ab.type == GameEnums.AbilityType.EXPLORATION:
+				ids[aid] = true
 	return ids.keys()

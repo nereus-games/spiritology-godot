@@ -623,6 +623,9 @@ msgstr "tout sauf ses 2 dernières capacités"
 msgid "LOG_NO_ACTION"
 msgstr "%s n'a aucune action possible."
 
+msgid "LOG_TEAMMATE_REFUSES"
+msgstr "refuse d'agir."
+
 msgid "LOG_PASS"
 msgstr "passe son tour."
 

@@ -97,12 +97,15 @@ unblock.
 - **Rivals carrying objects.** Examine should "reveal objects they carry", Steal has nothing to
   take, Altruism has nothing to destroy, and Misty Secret's weight on using objects acts on no
   one. (`encounter_manager.gd`, `altruism.gd`, `misty_secret.gd`)
-- **Encyclopaedia detail.** IFP are awarded and tallied, from encounters and from exploration
-  alike; what is missing is the *amount* an Examine yields (so Reconnaissance Glide's +10 %
+- **Encyclopaedia detail.** The *model* is built (see architecture.md): pages and Forlorn pages
+  with their own percentage, fragments (3 IFP: one true, one parasitic), the 99 % cap, the
+  assembly API, the 15 / 30 / Forlorn-15 ability thresholds, the starting duo, and persistence.
+  What is missing: the *puzzle* and its screens (nothing calls `set_arranged_fragments`,
+  `destroy_fragments`, `remove_parasitic_fragments` or `mark_page_assembled` yet, nor shows the
+  `encyclopaedia_*` signals); the *amount* an Examine yields (so Reconnaissance Glide's +10 %
   multiplies a number with no consequence, as do Halo Effect's, Catatonia's and Priming's
-  bonuses), info fragments (Examine Weakness), Forlorn variants on the individual, and Forlorn
-  pages with their own percentage. (`encounter_manager.gd`, `examine_weakness.gd`,
-  `game_session.gd`)
+  bonuses); info fragments granted by Examine Weakness; and Forlorn variants on the individual.
+  (`encounter_manager.gd`, `examine_weakness.gd`, `encyclopaedia_model.gd`)
 - **Forlorn rivals at spawn.** About 1 % of spawned rivals should be Forlorn. The rest of
   "Rival Spawning" is built: species weighted by dungeon rarity, the spawn limit, a new group
   pushing the occupant of a taken spawn point aside, preset compositions in 0 to 50 % of

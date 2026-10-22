@@ -209,6 +209,31 @@ entry, N more every T turns, each composed at random X % of the time and picked 
 compositions otherwise, plus fixed groups on their own tiles. `rival_spawner.gd` applies them.
 "First entry" is every entry for now, since no dungeon state survives a visit.
 
+## The encyclopaedia: a model with no screen
+
+`scripts/encyclopaedia/encyclopaedia_model.gd` holds the state, preloaded by `GameSession`
+(`GameSession.encyclopaedia`) so that it can be unit-tested with no autoload. Per species there
+are two pages, the main one and the Forlorn one, each with its own percentage:
+
+- **IFP and fragments.** Every 3 IFP form one true fragment and one parasitic one; a page holds
+  33 true fragments, so IFP stop at 99. The last percent comes only from `mark_page_assembled`,
+  which the puzzle calls and which refuses unless 99 % and all 33 fragments are reported arranged.
+- **Abilities.** The puzzle reports how many true fragments are correctly arranged
+  (`set_arranged_fragments`); 15 reveals the first ability, 30 the second, and 15 on the Forlorn
+  page reveals `forlorn_ability`. A revealed ability is stored as a tier and never taken back,
+  even when fragments are later destroyed.
+- **Who sees what.** `data/` lists a species' gated abilities among its origin abilities too, so
+  a player character's list is `GameSession.usable_abilities(species)`: native abilities minus
+  the gated ones, plus those revealed. A rival keeps all of its own. Both the encounter
+  individual and the exploration catalogue read it.
+- **The starting duo** is granted by the setters of `main_character` and `teammate`: 15
+  arranged fragments (so 45 IFP) of each character's own species, 30 for two of one species.
+- **Forlorn IFP** go to the Forlorn page once the species' main page is complete, and to the main
+  page as an ordinary rival's before that (`award_ifp`).
+
+The model does not know geometry: the puzzle owns where fragments lie and may park its layout in
+a page's `puzzle_state`, which is saved untouched. `encyclopaedia_model_check` covers the lot.
+
 ## How the project tests itself
 
 There is no test framework. Each check is a Godot scene under `scenes/dev/` whose script

@@ -114,6 +114,11 @@ var _action_damage := 0
 ## Who did what to whom so far, turn by turn. Read by the abilities, through their context.
 var history := EncounterHistory.new()
 
+## The teammate that may refuse to act (PSY above rung 4), and whether its next action is the
+## one it always refuses. Armed by [method enable_refusal]; nobody refuses by default.
+var _refusing: EncounterIndividual = null
+var _refuse_next := false
+
 
 ## Prepares the encounter. Resets the agents, so set any [UiAgent] AFTER calling this.
 func setup(
@@ -126,6 +131,8 @@ func setup(
 	completed_species = completed
 	rng.seed = seed
 	result = &""
+	_refusing = null
+	_refuse_next = false
 	_agents.clear()
 	timeline = EncounterTimeline.new()
 	# "Turn order is defined at random when the encounter begins". Not cosmetic: position
@@ -142,6 +149,14 @@ func setup(
 ## Two individuals of the same species on one side stack the talent, which is what `stacks`
 ## carries — counted on the bearer's own side, and held at 1 for talents the doc does not
 ## make stackable.
+## Arms the teammate's refusals. `first_action` makes its very next action a refusal; after
+## that, each action is refused with [member BalanceData.psy_teammate_refusal_chance], drawn
+## from [member rng]. The manager knows no autoload, so the caller decides whether PSY allows it.
+func enable_refusal(teammate: EncounterIndividual, first_action: bool) -> void:
+	_refusing = teammate
+	_refuse_next = first_action
+
+
 func _collect_talents() -> void:
 	_talents.clear()
 	for f in players + rivals:
@@ -394,6 +409,13 @@ func _take_turn(individual: EncounterIndividual) -> void:
 	if action == null:
 		encounter_log.append(_tr("LOG_NO_ACTION") % individual.display_name())
 		return
+	if individual == _refusing and _teammate_refuses():
+		_emit_turn(
+			individual,
+			EncounterAction.of_kind(EncounterAction.Kind.PASS, [individual]),
+			[_tr("LOG_TEAMMATE_REFUSES")]
+		)
+		return
 	var dissolved_before := rivals.filter(func(f): return f.is_dissolved())
 	_action_damage = 0
 	var weakness_then := individual.active_weakness(timeline.position_of(individual))
@@ -402,6 +424,16 @@ func _take_turn(individual: EncounterIndividual) -> void:
 	_react_to_action(individual, action)
 	if individual.is_player:
 		_award_dissolutions(dissolved_before)
+
+
+## Does the teammate refuse the action it just chose? The first one it is asked for, once armed
+## so, always; every later one by chance. The draw is skipped for the forced refusal, so a given
+## seed stays reproducible either way.
+func _teammate_refuses() -> bool:
+	if _refuse_next:
+		_refuse_next = false
+		return true
+	return rng.randf() < BalanceData.current().psy_teammate_refusal_chance
 
 
 ## "Use Ability – upon dissolving rival": rivals dissolved by THIS player turn yield their

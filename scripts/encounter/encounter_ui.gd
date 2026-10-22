@@ -138,7 +138,11 @@ func begin(
 	# A negative `seed` means an ordinary encounter, with the turn order drawn at random.
 	# Fixing it makes the whole encounter reproducible, which is what the screenshot scene
 	# needs for one version to be comparable with the next.
-	_manager.setup(pf, rf, randi() if seed < 0 else seed)
+	_manager.setup(pf, rf, randi() if seed < 0 else seed, GameSession.completed_species())
+	# Spent whether or not PSY makes use of it: the first encounter of a visit happens once.
+	var first_encounter := GameSession.take_first_encounter()
+	if GameSession.psy_above(4) and pf.size() > 1:
+		_manager.enable_refusal(pf[1], first_encounter)
 	# AFTER setup(), which resets the agents. Only the duo becomes playable.
 	_agent.choice_requested.connect(_on_choice_requested)
 	for f in pf:

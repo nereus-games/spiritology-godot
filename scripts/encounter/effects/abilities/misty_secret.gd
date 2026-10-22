@@ -5,6 +5,8 @@
 ## object half is recorded (and logged) but nothing yet acts on it.
 extends AbilityScript
 
+const ActionWeights := preload("res://scripts/encounter/effects/action_weights.gd")
+
 
 func execute(ctx: EncounterContext) -> void:
 	for f in ctx.all_individuals:
@@ -12,5 +14,5 @@ func execute(ctx: EncounterContext) -> void:
 			ctx.set_weakness(f, GameEnums.Energy.FLUID, 1, f)  # until THEIR next turn
 	var bonus := BalanceData.current().action_weight_bonus
 	for r in ctx.opponents():
-		ctx.weigh_action(r, EncounterAction.Kind.MEDITATE, bonus)
-		ctx.weigh_action(r, EncounterAction.Kind.USE_OBJECT, bonus)
+		ActionWeights.weigh(ctx, r, EncounterAction.Kind.MEDITATE, bonus)
+		ActionWeights.weigh(ctx, r, EncounterAction.Kind.USE_OBJECT, bonus)

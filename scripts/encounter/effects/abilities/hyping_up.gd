@@ -4,11 +4,15 @@
 ## until the user's next turn, whether or not the 50% roll hit everyone.
 extends AbilityScript
 
+const ActionWeights := preload("res://scripts/encounter/effects/action_weights.gd")
+
 
 func execute(ctx: EncounterContext) -> void:
 	for r in ctx.opponents():
 		ctx.deal_damage(r, ctx.base_damage())
-		ctx.weigh_action(r, EncounterAction.Kind.TALK, BalanceData.current().action_weight_bonus)
+		ActionWeights.weigh(
+			ctx, r, EncounterAction.Kind.TALK, BalanceData.current().action_weight_bonus
+		)
 	if ctx.rng.randf() < 0.5:
 		for f in ctx.all_individuals:
 			if not f.is_dissolved():

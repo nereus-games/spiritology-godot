@@ -289,6 +289,18 @@ msgstr "  — L (fin)"
 msgid "UI_DEV_RIVAL_DEN_TOOLTIP"
 msgstr "Ordre de grandeur de la doc de design"
 
+msgid "UI_DEV_TAB_SCENARIOS"
+msgstr "Scénarios de test"
+
+msgid "UI_DEV_TAB_DUNGEONS"
+msgstr "Donjons"
+
+msgid "UI_DEV_DUNGEONS_EMPTY"
+msgstr "Aucun donjon pour l'instant. Les scénarios de test couvrent les mécanismes un par un ; un vrai donjon apparaîtra ici dès qu'il existera dans data/dungeons/."
+
+msgid "UI_DEV_DUNGEON_NOT_PLAYABLE"
+msgstr "Pas encore jouable — le format des plans de donjon n'existe pas."
+
 # --- The exploration test scenarios ---------------------------------------------------
 # One title and one instruction sheet per `data/scenarios/*.tres`. The .tres carries only
 # the id and the rank in the list; this is where the text lives.

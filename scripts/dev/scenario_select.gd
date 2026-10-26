@@ -37,24 +37,18 @@ func _ready() -> void:
 	box.add_child(_build_rival_den_row())
 	box.add_child(_build_encyclopaedia_row())
 
-	var scroll := ScrollContainer.new()
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	scroll.follow_focus = true  # keyboard navigation scrolls the list along
-	box.add_child(scroll)
+	# Two tabs under the shared header: the test scenarios, which exercise one mechanism each, and
+	# the real dungeons.
+	var tabs := TabContainer.new()
+	tabs.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	box.add_child(tabs)
 
-	# A ScrollContainer stretches its child to the full width, so to centre the grid under the
-	# header it goes inside a centred row rather than relying on its size flags.
-	var centered := HBoxContainer.new()
-	centered.alignment = BoxContainer.ALIGNMENT_CENTER
-	centered.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	scroll.add_child(centered)
+	var grid := _scrolling_grid(tabs, 2)
+	tabs.set_tab_title(0, tr("UI_DEV_TAB_SCENARIOS"))
 
-	var grid := GridContainer.new()
-	grid.columns = 2
-	grid.add_theme_constant_override("h_separation", 24)
-	grid.add_theme_constant_override("v_separation", 12)
-	centered.add_child(grid)
+	var dungeon_list := _scrolling_grid(tabs, 1)
+	tabs.set_tab_title(1, tr("UI_DEV_TAB_DUNGEONS"))
+	_fill_dungeons(dungeon_list)
 
 	for scenario in ScenarioCatalog.list():
 		var entry := VBoxContainer.new()
@@ -74,6 +68,58 @@ func _ready() -> void:
 		desc.add_theme_font_size_override("font_size", 12)
 		desc.add_theme_color_override("font_color", Color(0.68, 0.70, 0.76))
 		entry.add_child(desc)
+
+
+## A tab holding a scrolling grid of `columns` columns, centred under the header. Returns the
+## grid; the tab is added to `tabs`.
+func _scrolling_grid(tabs: TabContainer, columns: int) -> GridContainer:
+	var scroll := ScrollContainer.new()
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.follow_focus = true  # keyboard navigation scrolls the list along
+	tabs.add_child(scroll)
+
+	# A ScrollContainer stretches its child to the full width, so to centre the grid it goes
+	# inside a centred row rather than relying on its size flags.
+	var centered := HBoxContainer.new()
+	centered.alignment = BoxContainer.ALIGNMENT_CENTER
+	centered.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(centered)
+
+	var grid := GridContainer.new()
+	grid.columns = columns
+	grid.add_theme_constant_override("h_separation", 24)
+	grid.add_theme_constant_override("v_separation", 12)
+	centered.add_child(grid)
+	return grid
+
+
+## The real dungeons ([method ScenarioCatalog.real_dungeons]). None can be entered yet: there is
+## no authoring format for a layout, so a dungeon is listed with the reason it is greyed out —
+## and, with none at all, a line saying so.
+func _fill_dungeons(grid: GridContainer) -> void:
+	var dungeons := ScenarioCatalog.real_dungeons()
+	if dungeons.is_empty():
+		var empty := Label.new()
+		empty.text = tr("UI_DEV_DUNGEONS_EMPTY")
+		empty.add_theme_color_override("font_color", Color(0.68, 0.70, 0.76))
+		grid.add_child(empty)
+		return
+	for config in dungeons:
+		var entry := VBoxContainer.new()
+		entry.add_theme_constant_override("separation", 2)
+		grid.add_child(entry)
+
+		var button := Button.new()
+		button.text = String(TranslationServer.translate(config.name_key()))
+		button.custom_minimum_size = Vector2(460, 38)
+		button.disabled = true
+		entry.add_child(button)
+
+		var note := Label.new()
+		note.text = tr("UI_DEV_DUNGEON_NOT_PLAYABLE")
+		note.add_theme_font_size_override("font_size", 12)
+		note.add_theme_color_override("font_color", Color(0.68, 0.70, 0.76))
+		entry.add_child(note)
 
 
 ## DEV control for the playable duo: one list per role, restricted to the species the mini quiz

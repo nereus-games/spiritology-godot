@@ -103,6 +103,23 @@ static func find(id: StringName) -> ScenarioData:
 	return null
 
 
+## The REAL dungeons, for the selection screen's second tab: every [DungeonConfig] that no test
+## scenario runs under. `dev_rivals` belongs to the "rivals" scenario, so it is a test fixture
+## and stays out; whatever is left in `data/dungeons/` is a dungeon proper. Sorted by id so the
+## list does not depend on the order the directory was read in.
+static func real_dungeons() -> Array:
+	var owned := {}
+	for scenario in list():
+		if scenario.dungeon != null:
+			owned[scenario.dungeon.id] = true
+	var out: Array = []
+	for config in GameData.all_dungeons():
+		if not owned.has(config.id):
+			out.append(config)
+	out.sort_custom(func(a, b) -> bool: return String(a.id) < String(b.id))
+	return out
+
+
 ## Builds the scenario into `dm` and returns the player's starting tile. A scenario that runs
 ## under a [DungeonConfig] hands it to `dm`, where exploration picks it up.
 static func build(id: StringName, dm) -> Vector3i:

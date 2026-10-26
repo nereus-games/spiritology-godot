@@ -285,6 +285,18 @@ msgstr "  — L (late)"
 msgid "UI_DEV_RIVAL_DEN_TOOLTIP"
 msgstr "The design doc's ballpark figure"
 
+msgid "UI_DEV_TAB_SCENARIOS"
+msgstr "Test scenarios"
+
+msgid "UI_DEV_TAB_DUNGEONS"
+msgstr "Dungeons"
+
+msgid "UI_DEV_DUNGEONS_EMPTY"
+msgstr "No dungeon yet. Test scenarios cover the mechanisms one at a time; a dungeon proper appears here once it exists in data/dungeons/."
+
+msgid "UI_DEV_DUNGEON_NOT_PLAYABLE"
+msgstr "Cannot be entered yet — no dungeon layout format."
+
 # --- The exploration test scenarios ---------------------------------------------------
 # One title and one instruction sheet per `data/scenarios/*.tres`. The .tres carries only
 # the id and the rank in the list; this is where the text lives.

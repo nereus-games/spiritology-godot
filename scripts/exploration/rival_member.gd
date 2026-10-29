@@ -18,6 +18,12 @@ var eth: int
 ## PSY rung. It rides into every later encounter in [method encounter_state], but only counts
 ## while PSY is above that rung when a Talk happens.
 var talk_malus := 0.0
+## The objects it carries, decided when it is spawned (see `RivalSpawner.roll_objects`). They ride
+## into every encounter through [method encounter_state]; a stolen one leaves the list.
+var objects: Array[StringName] = []
+## Whether an Examine has revealed [member objects]. Kept on the map, so that a rival examined
+## in one encounter is still read in the next.
+var objects_known := false
 
 
 func _init(p_species_id: StringName = &"", p_max_den: int = 0, p_max_eth: int = 0) -> void:
@@ -38,6 +44,9 @@ func encounter_state() -> Dictionary:
 	var state := {"den": den, "max_den": max_den, "eth": eth, "max_eth": max_eth}
 	if talk_malus > 0.0:
 		state["talk_malus"] = talk_malus
+	if not objects.is_empty():
+		state["objects"] = objects.duplicate()
+		state["objects_known"] = objects_known
 	return state
 
 
@@ -46,3 +55,8 @@ func encounter_state() -> Dictionary:
 func take_encounter_state(entry: Dictionary) -> void:
 	den = clampi(int(entry.get("den", den)), 0, max_den)
 	eth = clampi(int(entry.get("eth", eth)), 0, max_eth)
+	if entry.has("objects"):
+		objects.clear()
+		for id in entry["objects"]:
+			objects.append(StringName(id))
+		objects_known = bool(entry.get("objects_known", objects_known))

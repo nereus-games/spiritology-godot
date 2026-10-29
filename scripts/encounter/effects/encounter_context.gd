@@ -46,6 +46,14 @@ var energy_override := GameEnums.Energy.NONE
 ## turn is over; the context only collects them, since it cannot reach the manager.
 var departures: Array = []
 
+## What the players own (slug -> count), if the encounter was given a way to tell; see
+## [member EncounterManager.inventory_view]. Empty Callable otherwise.
+var inventory_view: Callable = Callable()
+
+## Objects of the players' inventory this effect destroyed. Like [member departures], only
+## collected: the manager announces them once the effect is over, and the UI removes them.
+var destroyed_objects: Array[StringName] = []
+
 ## What this effect did, in readable lines. Reaches the player through the encounter log.
 var log_lines: PackedStringArray = PackedStringArray()
 
@@ -217,6 +225,47 @@ func drain_eth(target, amount: int) -> void:
 		if user is EncounterIndividual and user != target:
 			target.last_damager = user
 	note(_tr("LOG_ETH_DRAINED") % [_name(target), amount])
+
+
+## The object the user would pay with, or &"" when it has none: a rival's own, first in its list,
+## else a player character's, from the stack the players hold most of (the cheapest to lose; the
+## doc says the user picks, and there is no menu for it yet), ties to the first slug.
+func object_to_destroy() -> StringName:
+	if not (user is EncounterIndividual):
+		return &""
+	if not user.is_player:
+		return user.carried_objects[0] if not user.carried_objects.is_empty() else &""
+	if not inventory_view.is_valid():
+		return &""
+	var owned: Dictionary = inventory_view.call()
+	var best := &""
+	var best_count := 0
+	var slugs := owned.keys()
+	slugs.sort()
+	for id in slugs:
+		var spent := destroyed_objects.count(id)
+		if int(owned[id]) - spent > best_count:
+			best = id
+			best_count = int(owned[id]) - spent
+	return best
+
+
+## Destroys the object [method object_to_destroy] names: off a rival, now; out of the players'
+## inventory once the effect is over. Returns its slug, &"" when there was none.
+func destroy_object() -> StringName:
+	var id := object_to_destroy()
+	if id == &"":
+		return id
+	if user.is_player:
+		destroyed_objects.append(id)
+	else:
+		user.carried_objects.erase(id)  # erases the first one only
+	return id
+
+
+## The displayed name of an object slug, by the key its [ObjectData] derives it from.
+func object_name(object_id: StringName) -> String:
+	return String(TranslationServer.translate("OBJECT_%s_NAME" % GameEnums.key_token(object_id)))
 
 
 func recover_den(target, amount: int) -> void:

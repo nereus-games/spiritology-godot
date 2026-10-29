@@ -40,6 +40,14 @@ var next_damage_factor := 1.0
 ## at or under it; see
 ## [method EncounterManager._resolve_talk].
 var talk_chance_malus := 0.0
+
+## The objects it carries (slugs, one entry per object). Only a rival is given any, when it is
+## spawned; a player character's belongings are the session's inventory, which the encounter
+## engine does not know. Examine reveals them ([member objects_known]), Steal takes one, a rival
+## uses them when Misty Secret makes it likelier, and Altruism's user pays with one.
+var carried_objects: Array[StringName] = []
+## Whether an Examine has revealed [member carried_objects] to the players.
+var objects_known := false
 ## When set, the next damage taken goes to this individual instead (Victimism).
 var redirect_to: EncounterIndividual = null
 

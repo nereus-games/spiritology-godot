@@ -213,7 +213,9 @@ func _draw_members() -> Array:
 		var species := _draw_species()
 		var max_den := rng.randi_range(config.member_max_den_min, config.member_max_den_max)
 		var max_eth := rng.randi_range(config.member_max_eth_min, config.member_max_eth_max)
-		members.append(RivalMember.new(species, max_den, max_eth))
+		var member := RivalMember.new(species, max_den, max_eth)
+		member.objects = roll_objects(species)
+		members.append(member)
 	return members
 
 
@@ -223,8 +225,26 @@ func _members_of(group: RivalGroupData) -> Array:
 		return members
 	for m in group.members:
 		if m != null:
-			members.append(RivalMember.new(m.species_id, m.max_den, m.max_eth))
+			var member := RivalMember.new(m.species_id, m.max_den, m.max_eth)
+			member.objects = roll_objects(m.species_id)
+			members.append(member)
 	return members
+
+
+## The objects a new rival of this variety carries: each one the variety may drop (`loot` in its
+## data) with the chance [member BalanceData.rival_object_chance]. Rolled once, here, so what a
+## rival carries is fixed from its first appearance and an Examine only reveals it.
+func roll_objects(species: StringName) -> Array[StringName]:
+	var out: Array[StringName] = []
+	var path := "res://data/species/%s.tres" % species
+	if not ResourceLoader.exists(path):
+		return out
+	var data: SpeciesData = load(path)
+	var chance := BalanceData.current().rival_object_chance
+	for id in data.loot:
+		if rng.randf() < chance:
+			out.append(id)
+	return out
 
 
 ## Puts a group of `members` on `tile`. It registers itself with the dungeon once in the tree.

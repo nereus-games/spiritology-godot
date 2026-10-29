@@ -36,8 +36,6 @@ Halo Effect, Priming and Catatonia now raise it, as Reconnaissance Glide does. W
   "far more information out of Talk and Examine" is logged too. Each says what it should do
   ("the user Examines it"); converting one is a line, `ExamineYield.examine` or
   `ExamineYield.boost`, once its figure is chosen.
-- **Rivals carrying objects**: Misty Secret's weight on using objects is recorded and inert;
-  Altruism has nothing to destroy, and the encounter engine rightly knows no inventory (section 4).
 - **A decision on Deflection**: its docstring adds "requires that the user has not used the same
   action twice", which nothing enforces and which the history could now answer.
 
@@ -96,9 +94,9 @@ unblock.
   their own faults (`safe_areas.violations()`), but only a check calls it. Becomes urgent with
   the first real dungeon. (`dungeon_layout.gd`, `stairs.gd`, `exploration.gd`,
   `player_controller.gd` — tagged `TODO(dungeon checker)`)
-- **Rivals carrying objects.** Examine should "reveal objects they carry", Steal has nothing to
-  take, Altruism has nothing to destroy, and Misty Secret's weight on using objects acts on no
-  one. (`encounter_manager.gd`, `altruism.gd`, `misty_secret.gd`)
+- **Rivals carrying objects** is built (see *Decisions taken in code*). What is left: a rival's
+  objects are not dropped when it is dissolved, Altruism's user does not pick the object, and the
+  Coal Vetch's risk on Steal waits on the faction (below).
 - **Encyclopaedia detail.** The *model* is built (see architecture.md): pages and Forlorn pages
   with their own percentage, fragments (3 IFP: one true, one parasitic), the 99 % cap, the
   assembly API, the 15 / 30 / Forlorn-15 ability thresholds, the starting duo, and persistence.
@@ -211,6 +209,23 @@ Decisions taken in code, where the doc has to catch up — or say otherwise:
 - **Trick to Reveal** reveals the closest hidden chest or trap to the player after an effective
   dialogue; **Static Camouflage** draws the groups it shows at random among those on the map.
 
+- **Rivals carrying objects** (`rival_spawner.gd` `roll_objects`, `rival_member.gd`,
+  `encounter_manager.gd`). At spawn a rival rolls each object its variety may drop (`loot`, the
+  doc's "Potential Loot") with the chance `rival_object_chance` (0.5, a placeholder: the doc gives
+  no odds), once, so Examine only reveals what is already there. The objects live on the map
+  member and ride into encounters with its state (`objects`, `objects_known`), so a stolen one
+  stays stolen and a revealed one stays revealed. Examine reveals them all, by name in the log;
+  only a player character's Examine does, and it also counts when an ability makes one (Halo
+  Effect is untouched). Steal takes one at random from the target's objects (the thief does not
+  choose), costs the turn when there is none, and never fails until the Coal Vetch exists; the
+  object goes to the inventory through `EncounterManager.object_obtained`, as a spent one leaves
+  it through `object_consumed`. The engine reaches the inventory through one more handle,
+  `EncounterManager.inventory_view` (a copy of slug -> count), which Altruism alone reads: it
+  needs an object to be usable, destroys one (the players' most plentiful stack, ties by slug,
+  since there is no menu to pick from; a rival's first), then heals. A rival's objects are used
+  by `AutoAgent` only when a weight (Misty Secret) wins the draw: it uses its first object on
+  itself, and spends it from its own belongings, never the players' inventory. Dissolving a
+  rival drops nothing, and giving a rival an object does not make it carry it.
 - **Fleeing** takes out only the character who runs, and the rivals stay on their tile; the
   "50 % chance the rival disappears" was dropped on 2026-09-18, because from the map it looked
   exactly like the whole group being devitalised (`exploration.gd`, `_run_away`).

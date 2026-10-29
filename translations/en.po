@@ -662,8 +662,13 @@ msgstr "gives %s to %s."
 msgid "LOG_STEAL_NO_TARGET"
 msgstr "has nobody to steal from."
 
-msgid "LOG_STEAL"
-msgstr "tries to steal from %s [stolen object / Coal Vetch to come]."
+# %s = who is robbed, then the object taken.
+msgid "LOG_STEAL_TAKEN"
+msgstr "steals from %s and takes: %s."
+
+# %s = who is robbed.
+msgid "LOG_STEAL_NOTHING"
+msgstr "finds nothing to steal from %s."
 
 # Run Away: the character leaves, its teammate stays. In LOG_FLEE_NO_ETH, %d = the ETH a
 # talent charges for it.
@@ -701,6 +706,20 @@ msgstr "has nobody to examine."
 # %s = who is examined, %s = LOG_EXAMINE_INFO_FACTOR or nothing at all.
 msgid "LOG_EXAMINE"
 msgstr "examines %s%s."
+
+# Added to LOG_EXAMINE once an Examine reveals what a rival carries. %s = who, then the objects.
+msgid "LOG_EXAMINE_OBJECTS"
+msgstr "%s carries: %s."
+
+msgid "LOG_EXAMINE_NO_OBJECTS"
+msgstr "%s carries nothing."
+
+# Altruism: the user destroys an object to pay for the healing. %s = the object.
+msgid "LOG_ALTRUISM_DESTROYS"
+msgstr "destroys %s."
+
+msgid "LOG_ALTRUISM_NO_OBJECT"
+msgstr "has no object to destroy."
 
 # Appended to LOG_EXAMINE when a talent changes the yield. %.2f = the factor.
 msgid "LOG_EXAMINE_INFO_FACTOR"

@@ -25,18 +25,57 @@ editor, a validator before either is trusted.
 - The dev selection screen lists test scenarios only. It now has a second tab for real
   dungeons (see below); it is empty because there is nothing to put in it.
 
-## The decision that gates the rest: the authoring format
+## How dungeons are authored, and the format
 
-| Option | What it is | For | Against |
-|---|---|---|---|
-| **A. A text grid** — `data/dungeons/<slug>.dungeon` | One ASCII grid per storey, a legend, and a table of placements (`kind  tile  key=value…`) | Readable, diffable, editable by hand, validated from the command line with no editor — the project's stated preference. Content under LAL like the rest of `data/` | A parser to write and keep honest |
-| **B. A Godot resource** — `DungeonLayoutData` `.tres` | Typed fields; placements as sub-resources | No parser; fits `data/` as it is | A 40 × 40 × 3 grid in a `.tres` is unreadable in a diff and unwritable by hand |
-| **C. A Godot scene** (`GridMap` or nodes) | Painted in the editor | Visual from day one | Needs the editor, and the CLI trap list says to avoid it; hard to validate headless; merge conflicts |
+The workflow decides the format. Level design draws **one 2D map per storey**, with notes on
+many of the tiles; those maps are handed to Claude, who turns them into a dungeon; the result
+is then adjusted by hand in a text editor or in the dev editor's GUI. So the file is mostly
+*written by Claude and read by humans*, and what matters is that a person can open it,
+understand it, and fix a tile.
 
-**Recommendation: A**, with `DungeonConfig` staying a `.tres` beside it (rules and layout
-travel together by sharing a slug). Everything else below is built so that the format is a
-detail of one loader: the validator, the tools and the editor all work on `DungeonLayout`
-plus a list of placements, never on the file.
+Constraints from that: plain text, readable in a diff, no editor needed, no size limit
+(a dungeon has none in theory, so nothing may assume one), and one storey per file so that
+the maps handed over map one to one onto the files.
+
+**Proposal** — a folder per dungeon, beside the `DungeonConfig` that already carries its
+rules:
+
+```
+data/dungeons/<slug>/
+  dungeon.toml        # name key, entrance, exits, links between storeys
+  floor_00.map        # one file per storey: y = 0, 1, 2…
+  floor_01.map
+data/dungeons/<slug>.tres   # the DungeonConfig, unchanged
+```
+
+A `.map` file is a grid, a legend and a list of annotated tiles:
+
+```
+# x grows to the right, z downwards, the top-left character is tile (0, 0).
+[grid]
+##########
+#..T..c..#
+#..^..#..#
+#..>.....#
+##########
+
+[legend]
+# floor  . | wall  # | hole  ~ | pit  _
+# the other characters are placements, defined below
+
+[tiles]
+T   trap    kind=poison        hidden=true
+c   chest   loot=rune_stone
+^   stairs  up
+3,2 note="the rival waits here"      # one tile, by coordinate
+```
+
+The grid is the part a designer recognises from their own map. A character stands for a
+*kind* of thing; a coordinate line overrides or adds to one tile. Free-text notes from the
+designer's map are kept as `note=` so they are not lost, and they cost the validator nothing.
+Godot's `ConfigFile` reads the `dungeon.toml`-style sections natively; only the grid needs a
+few lines of parser. Any format that stays readable would do — this one is a recommendation,
+and it is isolated behind one loader.
 
 ## Proposed work, in order
 
@@ -66,8 +105,9 @@ First rules, all of them already written down above or in `data-model.md`:
 - **Config:** what `data_integrity_check` already knows about a `DungeonConfig`, plus a
   `scene_path` that resolves, if one is set.
 
-It runs as `tools/validate_dungeons.sh [slug…]` (non-zero exit on an error), as a check in
-`run_checks.sh`, and from the editor. The existing `TODO(dungeon checker)` sites then shrink to
+It runs **on demand** — `tools/validate_dungeons.sh [slug…]` (non-zero exit on an error) and
+a *Validate* button in the editor — and **automatically** as a CI job on every pull request that
+touches `data/dungeons/` (and in `run_checks.sh`, for the dungeons already committed). The existing `TODO(dungeon checker)` sites then shrink to
 a runtime guardrail pointing at the rule's code. Test scenarios that break a rule on purpose
 (the bottomless fall, the bridge over nothing) say so explicitly rather than being exempt.
 
@@ -87,7 +127,8 @@ Each one is a thin scene under `scenes/dev/`, like the screenshot scenes:
   the real movement code. The validator's connectivity is a model; this is the proof.
 
 ### 5. The selection screen
-The *Dungeons* tab (built) lists the dungeons in `data/dungeons/` that no scenario runs
+The *Dungeons* tab (built; it is the editor's entry point too, an *Edit* button per dungeon)
+lists the dungeons in `data/dungeons/` that no scenario runs
 under, with the validator's verdict beside each. Entering one goes through the loader. Until
 then the entries are greyed out with the reason.
 
@@ -103,15 +144,15 @@ A dev scene on top of what exists, not a second renderer:
 It is the last step because it is the only one whose design depends on how it feels to use —
 and everything before it is useful with a text editor alone.
 
-## What I need from you
+## Still open
 
-1. **The format.** A, B or C above. Recommendation A.
-2. **Severity.** Is an unreachable chest an error, or a warning for a designer who means it
-   (a chest behind an object you must find)? My default: error, with an explicit
-   `allow_unreachable` on the placement.
-3. **Scale.** Rough expected size of a real dungeon (tiles, storeys). It decides whether the
-   walker and the flood fill need care.
-4. **The design doc.** Any level-design rule beyond the four tagged ones — it lives in Notion,
-   and there is no `notion-export/` in this clone.
-5. **Who edits.** Only the two of us, or will someone without the repository need the editor?
-   It changes whether the editor must be a shipped scene or may stay a dev tool.
+1. **A real example.** One of the colleague's maps with its notes, even rough. Everything above
+   is a guess at what the notes look like; the legend, the property names and the validator's
+   first rules should come from a real one.
+2. **Stairs and lifts across storeys.** Do the maps say where a staircase on one storey comes
+   out on the next, or is that implied by drawing them aligned on the same coordinates? I
+   assume the second.
+3. **Severity.** My default: an unreachable chest is an error, unless the placement says
+   `allow_unreachable=true`. Tell me if some rules should only warn.
+4. **Design-doc rules beyond the four tagged ones.** The doc is in Notion and there is no
+   `notion-export/` in this clone.

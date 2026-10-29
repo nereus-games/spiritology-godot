@@ -8,7 +8,8 @@ extends Node
 const ScenarioCatalog := preload("res://scripts/dev/scenario_catalog.gd")
 const EXPLORATION := preload("res://scenes/exploration/exploration.tscn")
 const ExtraActions := preload("res://scripts/exploration/exploration_extra_actions.gd")
-const ExplorationContext := preload("res://scripts/exploration/abilities/exploration_context.gd")
+const ActionMenu := preload("res://scripts/ui/exploration_action_menu.gd")
+const ExplorationContext :=preload("res://scripts/exploration/abilities/exploration_context.gd")
 
 ## The meditation gateway of the "gates" scenario sits on the edge south of this tile.
 const GATE_TILE := Vector3i(1, 0, 9)
@@ -83,6 +84,23 @@ func _run_all() -> void:
 	_check(
 		_count(_menu(extra, dm, player), &"meditate") == 1,
 		"Meditate stays on offer once the gateway is open"
+	)
+
+	print("[Meditate through the menu, which the HUD refreshes while the ids stay the same]")
+	var gate_menu := ActionMenu.new()
+	scene.add_child(gate_menu)
+	await get_tree().process_frame
+	var fresh_gate = dm.edge_mechanisms_between(GATE_TILE, GATE_TILE + SOUTH)[0]
+	fresh_gate._open = false  # shut again: the section above opened it
+	fresh_gate._meditations = 0
+	player.teleport_to(PLAIN_TILE)
+	gate_menu.set_actions(_menu(extra, dm, player))  # no gateway in front yet
+	player.teleport_to(GATE_TILE)
+	gate_menu.set_actions(_menu(extra, dm, player))  # same ids, now bound to the gateway
+	gate_menu.confirm()
+	_check(
+		not fresh_gate.is_open() and fresh_gate._meditations == 1,
+		"the menu's Meditate counts towards the gateway after walking up to it"
 	)
 
 	print("")

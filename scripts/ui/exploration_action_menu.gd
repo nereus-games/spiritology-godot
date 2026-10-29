@@ -47,10 +47,13 @@ func selected_id() -> StringName:
 	return _actions[_selected].id
 
 
-## Replaces the action list. Rebuilds only when the ids changed, which avoids flickering every
-## frame, and keeps the selection on the same id where it can.
+## Replaces the action list. Rebuilds the rows only when the ids changed, which avoids flickering
+## every frame, and keeps the selection on the same id where it can. The actions themselves are
+## always replaced: same ids can hide different callables (Meditate bound to a gateway or not), and
+## a stale one would act on the tile the player has left.
 func set_actions(actions: Array) -> void:
 	if _same_ids(actions):
+		_actions = actions
 		return
 	var previously := selected_id()
 	_actions = actions

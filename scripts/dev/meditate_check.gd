@@ -86,8 +86,6 @@ func _run_all() -> void:
 		"Meditate stays on offer once the gateway is open"
 	)
 
-	# TODO: this section has not been run yet (written without a Godot binary). Run the check, and
-	# break set_actions on purpose to see it go red, then drop this note.
 	print("[Meditate through the menu, which the HUD refreshes while the ids stay the same]")
 	var gate_menu := ActionMenu.new()
 	scene.add_child(gate_menu)

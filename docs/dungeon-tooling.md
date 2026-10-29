@@ -37,45 +37,62 @@ Constraints from that: plain text, readable in a diff, no editor needed, no size
 (a dungeon has none in theory, so nothing may assume one), and one storey per file so that
 the maps handed over map one to one onto the files.
 
-**Proposal** — a folder per dungeon, beside the `DungeonConfig` that already carries its
-rules:
+**The format** (built: `scripts/dungeon/`) — a folder per dungeon, one `.map` file per
+storey, beside the `DungeonConfig` `.tres` that already carries its rules:
 
 ```
-data/dungeons/<slug>/
-  dungeon.toml        # name key, entrance, exits, links between storeys
-  floor_00.map        # one file per storey: y = 0, 1, 2…
-  floor_01.map
-data/dungeons/<slug>.tres   # the DungeonConfig, unchanged
+data/dungeons/<slug>/floor_00.map     # y = 0
+data/dungeons/<slug>/floor_01.map     # y = 1
+data/dungeons/<slug>.tres             # the DungeonConfig (optional until it has spawn rules)
 ```
 
-A `.map` file is a grid, a legend and a list of annotated tiles:
-
 ```
-# x grows to the right, z downwards, the top-left character is tile (0, 0).
-[grid]
+[floor]
+y = 0
+
+[grid]            # x to the right, z downwards; the top-left character is tile (0, 0)
 ##########
-#..T..c..#
-#..^..#..#
-#..>.....#
+#E..T..c.#
+#..^.....#
 ##########
 
-[legend]
-# floor  . | wall  # | hole  ~ | pit  _
-# the other characters are placements, defined below
+[legend]          # every character beyond  . # ~ _ E X  and space
+T = trap type=poison poison_turns=4
+c = chest loot=rune_stone,spade
+^ = stairs dir=up face=E
 
-[tiles]
-T   trap    kind=poison        hidden=true
-c   chest   loot=rune_stone
-^   stairs  up
-3,2 note="the rival waits here"      # one tile, by coordinate
+[tiles]           # one tile, by x,z (or x,y,z)
+3,1 note="the rival waits here" tags=unreachable_ok
+7,1 chest trapped=true asset=res://assets/props/old_chest.glb
+
+[zones]           # named areas, shared across storeys by name
+hall tags=safe,no_teleport rect=1,1:3,2
 ```
 
-The grid is the part a designer recognises from their own map. A character stands for a
-*kind* of thing; a coordinate line overrides or adds to one tile. Free-text notes from the
-designer's map are kept as `note=` so they are not lost, and they cost the validator nothing.
-Godot's `ConfigFile` reads the `dungeon.toml`-style sections natively; only the grid needs a
-few lines of parser. Any format that stays readable would do — this one is a recommendation,
-and it is isolated behind one loader.
+`.` floor, `#` or space nothing, `~` a hole, `_` a pit, `E` the entrance, `X` an exit. A kind's
+properties are typed and checked (`scripts/dungeon/dungeon_kinds.gd` is the table; N is up the
+page for directions).
+
+**Special cases have a place in the format from the start**, and none needs code:
+
+- a **specific visual** is `asset=res://…` on any placement or annotated tile, and the validator
+  checks that it exists;
+- a **specific rule** is a **tag** on a tile or a zone. `no_teleport` (no teleport may land
+  there), `safe` (a safe area) and `unreachable_ok` (not an error if nothing reaches it) mean
+  something to the validator today; any other tag is kept for the day a rule needs it;
+- the designer's **notes** are kept as `note=` and otherwise ignored;
+- a property the table does not know yet is written `custom.<name>=…` and passes unchecked,
+  while a plain typo is a warning.
+
+Linking storeys is implicit: they share coordinates, and stairs say where they go.
+
+## Status
+
+Built: the format's parser (`dungeon_map_parser.gd`), the plan it fills (`dungeon_plan.gd`),
+the validator (`dungeon_validator.gd`) with its checks (`dungeon_validator_check`), and
+`tools/validate_dungeons.sh`, which CI runs on every push and pull request. Not built: the
+loader that turns a plan into a playable dungeon, the other command-line tools, the editor, and
+the *Dungeons* tab's Edit and Play buttons. There is no real dungeon in `data/dungeons/` yet.
 
 ## Proposed work, in order
 
@@ -146,13 +163,12 @@ and everything before it is useful with a text editor alone.
 
 ## Still open
 
-1. **A real example.** One of the colleague's maps with its notes, even rough. Everything above
-   is a guess at what the notes look like; the legend, the property names and the validator's
-   first rules should come from a real one.
-2. **Stairs and lifts across storeys.** Do the maps say where a staircase on one storey comes
-   out on the next, or is that implied by drawing them aligned on the same coordinates? I
-   assume the second.
-3. **Severity.** My default: an unreachable chest is an error, unless the placement says
-   `allow_unreachable=true`. Tell me if some rules should only warn.
-4. **Design-doc rules beyond the four tagged ones.** The doc is in Notion and there is no
-   `notion-export/` in this clone.
+1. **A real example.** One of the colleague's maps with its notes. The legend, the property
+   names and the validator's rules are so far written from the code, not from a real dungeon;
+   the first one will probably move some of them.
+2. **Design-doc rules beyond the ones implemented.** The doc is in Notion and there is no
+   `notion-export/` in this clone. A second pass from a clone that has it should check the
+   validator's rules, and the property names in `dungeon_kinds.gd`, against it.
+
+Settled: unreachable tiles are errors unless a tag says otherwise; storeys are linked implicitly;
+there is no size limit; the editor is a dev tool reached from the test screen.

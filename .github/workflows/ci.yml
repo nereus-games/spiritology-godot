@@ -48,6 +48,11 @@ jobs:
       - name: Headless checks
         run: ./tools/run_checks.sh
 
+      # Every dungeon in data/dungeons/, on every push and pull request: a map that breaks a
+      # level-design rule fails here, whoever touched it and however.
+      - name: Validate the dungeons
+        run: ./tools/validate_dungeons.sh
+
   reuse:
     name: REUSE compliance (dual licence)
     runs-on: ubuntu-latest

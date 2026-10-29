@@ -102,13 +102,10 @@ func peek_move() -> bool:
 ## mouse gesture that commits no turn is deflected without counting anything down (see
 ## [method peek_move]).
 ##
-## TODO (encounter): the design doc has disarray still active when an encounter opens carry into
-## it — "each player action count as a movement and has 35% or 100% chance of being a different
-## one than chosen". NOTHING is wired: the `scripts/encounter/` layer knows nothing of
-## afflictions, for players or rivals (the same missing wiring as handing a rival's poison to the
-## encounter). To be taken up when exploration and encounter are better connected; it first needs
-## deciding what "a different one" means in the encounter menu — a different ability, a different
-## target, or both.
+## In an encounter the same state rides in with the individuals it afflicts
+## ([member EncounterIndividual.affliction]) and the encounter consumes a move for each action
+## taken, see [method EncounterManager._take_turn]; whatever is left is still here on the map
+## afterwards, because the object itself is handed over rather than a copy.
 func consume_move() -> bool:
 	if _disarray_queue.is_empty():
 		return false

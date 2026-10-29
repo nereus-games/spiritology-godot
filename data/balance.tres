@@ -27,6 +27,7 @@ psy_flee_distance_min = 2
 psy_flee_distance_max = 3
 psy_flee_talk_malus = 0.1
 rival_rest_turns = 3
+affliction_poison_round_interval = 1
 spawn_weight_common = 3
 spawn_weight_normal = 2
 wave_psy_threshold = 20

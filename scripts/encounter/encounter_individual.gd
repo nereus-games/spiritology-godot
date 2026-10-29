@@ -40,6 +40,13 @@ var next_damage_factor := 1.0
 ## at or under it; see
 ## [method EncounterManager._resolve_talk].
 var talk_chance_malus := 0.0
+## The lingering afflictions (poison, disarray) carried in from the map, or null. Duck-typed: the
+## encounter only calls `has_poison`, `tick_poison`, `has_disarray` and `consume_move`, and knows
+## nothing of where it comes from. It is the SAME object as the one on the map — every member
+## of a side afflicted together holds one — so what the encounter spends of it is spent for the
+## map too, and the manager ticks it once for all its holders, see
+## [method EncounterManager._tick_afflictions].
+var affliction = null
 ## When set, the next damage taken goes to this individual instead (Victimism).
 var redirect_to: EncounterIndividual = null
 

@@ -51,10 +51,6 @@ encounter-side scripts are now explicit no-ops that say so.
 
 ## 3. Joining exploration and encounters
 
-- **Afflictions do not reach the encounter.** Disarray still running when an encounter opens
-  should carry into it, and a rival's poison should too; `scripts/encounter/` knows nothing of
-  afflictions. Needs deciding first what "a different action" means in the encounter menu.
-  (`affliction_state.gd`)
 - **Static Camouflage's unknown species and Forlorn shapes.** The watch itself is built (2 to
   4 groups, one at a time, take one on or keep waiting; `scouting.gd`), but the doc's chances of
   including unknown species and variations — higher next to litter, and Forlorn shapes likelier
@@ -216,6 +212,26 @@ Decisions taken in code, where the doc has to catch up — or say otherwise:
   exactly like the whole group being devitalised (`exploration.gd`, `_run_away`).
 - **A linked elevator moves empty**, leaving whoever stands on it behind. The doc now describes
   linked elevators, but not who rides them (`elevator.gd`, `linked`).
+
+- **Afflictions in encounters** (`EncounterManager._disarrayed` and `_tick_afflictions`,
+  `affliction_poison_round_interval`). The doc says an active disarray carries into the encounter,
+  "each player action counting as a movement" with a 35 % or 100 % chance of being "a different
+  one than chosen". Read as: every action a character takes (a pass and a teammate's refusal
+  excepted) uses up one move of the disarray, shared by the duo as it is on the map; a deflected
+  action is swapped for an action of another KIND, drawn at random among those possible then:
+  Use Ability, Talk, Examine and Meditate for a player character (a random usable ability, never
+  one that takes its user away, and a random legal target), Use Ability and Meditate for a rival.
+  Never an object (the engine knows no inventory), Flee or Steal. With nothing else possible the
+  action stands and the move is spent. The log says who stumbled. A rival carrying a disarray of
+  its own, which the doc does not mention, is handled the same way.
+  Poison takes its DEN once per round, after the last turn, from everyone who holds it, the
+  whole duo on the player side as on the map, and a round uses up one turn of it (one tick every
+  `affliction_poison_round_interval` rounds, a placeholder of 1). It can dissolve a side and end
+  the encounter at once. An encounter that ends within its first round never ticks.
+  The afflictions enter as the object the map holds (`EncounterIndividual.affliction`), the
+  player's read off the `player` node and a group's handed to each member through
+  `RivalBehavior.encounter_states`, so what the encounter uses up is used up on the map and
+  nothing needs carrying back. Poison that runs out mid-encounter lifts the PSY rung 4 refusal.
 
 The encyclopaedia, built on 2026-10-22 from the "Encyclopaedia" page, which leaves these open:
 

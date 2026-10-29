@@ -563,8 +563,15 @@ func encounter_species() -> Array:
 
 
 ## The state each member enters the encounter with, parallel to [method encounter_species].
+##
+## An afflicted group hands its [member affliction] to every member, the object itself: what the
+## encounter spends of it (poison turns, disarray moves) is spent on the map as well.
 func encounter_states() -> Array:
-	return members.map(func(m): return m.encounter_state())
+	var states: Array = members.map(func(m): return m.encounter_state())
+	if affliction.is_afflicted():
+		for state in states:
+			state["affliction"] = affliction
+	return states
 
 
 ## Writes back how the encounter left the group. `report` is

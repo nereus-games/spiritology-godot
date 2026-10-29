@@ -101,6 +101,7 @@ func _ready() -> void:
 		GameSession.arranged_fragments(species_id, forlorn),
 		GameSession.is_page_complete(species_id, forlorn)
 	)
+	logic.desk.destroy_bonus = GameSession.psy_destroy_bonus()
 	_picture = Art.picture(logic.page_seed, false)
 	_decoy = Art.picture(logic.page_seed, true)
 	logic.ensure_cursor()

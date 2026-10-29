@@ -144,11 +144,15 @@ unblock.
   (`UI_PSY_POISON_FORBIDS`), and the teammate refuses the first action of a visit's first
   encounter, then one action in five (`EncounterManager.enable_refusal`,
   `psy_teammate_refusal_chance`).
-  Still unbuilt. Above 20: more risk of losing damaged fragments, and temporary oddities such as
-  swapped icons (after event 3). Above 30: one more wrong fragment each time (the wider spawn
-  waves are built, at a placeholder threshold of 20; see section 5). Above 40: poison also
-  forbids the map, encyclopaedia and team views (those views do not exist yet; TODO in
-  `GameSession.psy_forbids_while_poisoned`), and dungeons stay dark. (`game_session.gd`)
+  Above 20: damaged fragments are likelier to be destroyed on the assembly desk
+  (`psy_destroy_bonus`), and temporary oddities may begin after an encounter, swapped icons in the
+  encyclopaedia grid being the one so far (`psy_oddity_*`, `GameSession.tick_oddities`). Above 30:
+  one more wrong fragment each time fragments are produced (`psy_extra_parasites`; the wider spawn
+  waves are built, at a placeholder threshold of 20; see section 5). Above 40: poison also forbids
+  the encyclopaedia (`GameSession.psy_forbids_while_poisoned`, asked by the screen on opening).
+  Still unbuilt: the same refusal for the map and team views, which do not exist yet; the oddity
+  gate "after event 3", which the doc leaves unexplained; further oddities beyond swapped icons;
+  and dungeons staying dark (see *Dark dungeons*). (`game_session.gd`)
 - **Dark dungeons** ("In the Dark"): sight limited to one tile, rivals heard but not seen,
   Meditate revealing them for 2 moves, and NPC quests that light an area. No implementation.
 - **A QTE**, which Slick Merchant's Run Away should hide behind; until then it always succeeds.
@@ -195,6 +199,18 @@ pages the doc has not given yet.
   (`litter.gd`, `examinable_decor.gd`).
 
 Decisions taken in code, where the doc has to catch up — or say otherwise:
+
+- **PSY and the encyclopaedia** (`balance.tres`, all placeholders). "More risk of losing damaged
+  fragments" above PSY 20 adds `psy_destroy_bonus` (0.25) to the destruction chance of an
+  already damaged fragment, read when the assembly desk opens. "One more wrong fragment each
+  time" above PSY 30 is one extra parasitic fragment per batch of fragments formed by an IFP
+  award (not per fragment, not for the starting duo). "Temporary oddities after event 3": no
+  event 3 is defined anywhere, so nothing gates on it. Instead, above PSY 20, each encounter end
+  starts an oddity with chance `psy_oddity_chance` (0.3), chosen in `psy_oddity_ids`, lasting
+  `psy_oddity_encounters` (3) encounters, in memory only (not saved). "Swapped icons" swaps the
+  icons of the grid's cells in pairs (first with second, ...), each with its own page state.
+  Poison above PSY 40 closes the encyclopaedia screen on opening, with a notice, reading poison
+  from the player node when the screen is not told (`poisoned`).
 
 - **Info bonuses** add up as points, then multiply with talents (Reconnaissance Glide), and the IFP
   of an Examine are rounded **up** when the factor is above 1 (a penalty rounds down), so that a

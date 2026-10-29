@@ -26,6 +26,11 @@ signal closed
 ## the species the encyclopaedia last gained information on.
 var start_species: StringName = &""
 
+## Whether the player is poisoned. Left unset, it is read from the exploration actor, if there is
+## one; set directly by tests and by any owner that knows better. Above PSY 40 a poisoned player
+## cannot open the encyclopaedia ([method GameSession.psy_forbids_while_poisoned]).
+var poisoned: bool = false
+
 var _grid: Control
 var _page: Control
 var _body: Control
@@ -65,7 +70,32 @@ func _ready() -> void:
 	_hint.add_theme_color_override("font_color", Color(0.55, 0.58, 0.65))
 	column.add_child(_hint)
 
-	_show_grid()
+	if not poisoned:
+		poisoned = _read_player_poison()
+	if is_forbidden():
+		_show_refusal()
+	else:
+		_show_grid()
+
+
+## True when the PSY ladder keeps this view shut right now.
+func is_forbidden() -> bool:
+	return GameSession.psy_forbids_while_poisoned(poisoned)
+
+
+func _read_player_poison() -> bool:
+	var pl := get_tree().get_first_node_in_group("player")
+	var aff = pl.get("affliction") if pl != null else null
+	return aff != null and aff.has_poison()
+
+
+func _show_refusal() -> void:
+	var warning := Label.new()
+	warning.text = tr("UI_PSY_POISON_FORBIDS_VIEW")
+	warning.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	warning.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_body.add_child(warning)
+	_hint.text = tr("UI_ENCYCLOPAEDIA_HINT_REFUSED")
 
 
 ## Species in display order: by identifier, a placeholder until the doc orders the pages.

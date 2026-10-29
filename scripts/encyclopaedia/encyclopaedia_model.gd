@@ -196,8 +196,11 @@ func usable_abilities(species: SpeciesData) -> Array[StringName]:
 
 
 ## Adds IFP, stopping at the 99 % cap, and forms one true and one parasitic fragment per 3
-## IFP crossed. Returns what was actually added.
-func add_ifp(species_id: StringName, amount: int, forlorn: bool = false) -> int:
+## IFP crossed. Returns what was actually added. `extra_parasites` more wrong fragments come
+## each time a batch of fragments forms (PSY above the third rung).
+func add_ifp(
+	species_id: StringName, amount: int, forlorn: bool = false, extra_parasites: int = 0
+) -> int:
 	if amount <= 0:
 		return 0
 	var p := _page_for_write(species_id, forlorn)
@@ -208,7 +211,9 @@ func add_ifp(species_id: StringName, amount: int, forlorn: bool = false) -> int:
 		return 0
 	var before := p.true_fragments()
 	p.ifp += added
-	p.parasitic += p.true_fragments() - before
+	var formed := p.true_fragments() - before
+	if formed > 0:
+		p.parasitic += formed + maxi(extra_parasites, 0)
 	return added
 
 

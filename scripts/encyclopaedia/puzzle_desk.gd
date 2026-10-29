@@ -44,6 +44,8 @@ var desk_size: Vector2i
 var fragment_size: int
 ## Draws the page's sides and the destruction rolls; seed it for a reproducible desk.
 var rng := RandomNumberGenerator.new()
+## Added to the destruction chance of an already damaged fragment (PSY above the second rung).
+var destroy_bonus: float = 0.0
 ## Where the tunable figures are read from (`puzzle_*`).
 var balance: BalanceData = BalanceData.current()
 
@@ -565,7 +567,7 @@ func _punish(result: Results.SnapResult) -> void:
 		elif not f.damaged:
 			f.damaged = true
 			result.damaged.append(id)
-		elif rng.randf() < balance.puzzle_destroy_chance:
+		elif rng.randf() < balance.puzzle_destroy_chance + destroy_bonus:
 			_remove(id)
 			result.destroyed.append(id)
 

@@ -79,8 +79,8 @@ signal fde_changed(new_value: int)
 signal encyclopaedia_progress(species_id: StringName, ifp: int)
 ## Any page of a species changed (IFP, fragments, a revealed ability), the Forlorn one included.
 signal encyclopaedia_page_changed(species_id: StringName, forlorn: bool)
-## IFP crossed a multiple of 3: `count` new true fragments, and as many parasitic ones, have
-## formed. "New encyclopaedia fragments have formed."
+## IFP crossed a multiple of 3: `count` new true fragments, and as many parasitic ones (plus
+## the extra ones of a high PSY, see [method psy_extra_parasites]), have formed. "New encyclopaedia fragments have formed."
 signal encyclopaedia_fragments_formed(species_id: StringName, forlorn: bool, count: int)
 ## Correctly arranging fragments revealed an ability, which is usable from now on.
 signal encyclopaedia_ability_unlocked(species_id: StringName, ability_id: StringName)
@@ -133,6 +133,13 @@ var psy_score: int = 0:
 	set(value):
 		psy_score = value
 		psy_changed.emit(psy_score)
+
+## The oddity in force ("swapped_icons", ...), or an empty name. Temporary: it is not saved,
+## and ends after [member BalanceData.psy_oddity_encounters] encounters.
+var active_oddity: StringName = &""
+var _oddity_left: int = 0
+## Draws whether an oddity begins; seed it for a reproducible run.
+var oddity_rng := RandomNumberGenerator.new()
 
 ## Full Devitalisation Encounters — a "murderous spree" counter, hidden from the player.
 ## Counts encounters where EVERY rival was devitalised, and resets the moment one ends any
@@ -192,10 +199,44 @@ func psy_above(rung: int) -> bool:
 
 ## Does the PSY ladder forbid Meditate and objects right now? Rung 4 (PSY above 40) with the
 ## player poisoned. `poisoned` is passed in because poison lives on the exploration actor, not
-## here. The map, encyclopaedia and team views are forbidden too by the doc.
-## TODO: gate those three once the views exist; they should ask this same function.
+## here. The map, encyclopaedia and team views are forbidden too by the doc: every one of them
+## asks this same function when it opens. Built so far: the encyclopaedia screen. TODO: the
+## map and team views, once they exist.
 func psy_forbids_while_poisoned(poisoned: bool) -> bool:
 	return poisoned and psy_above(4)
+
+
+## PSY above 30: how many wrong fragments come on top of the usual ones each time fragments
+## are produced.
+func psy_extra_parasites() -> int:
+	return BalanceData.current().psy_extra_parasites if psy_above(3) else 0
+
+
+## PSY above 20: the extra chance that an already damaged fragment is destroyed.
+func psy_destroy_bonus() -> float:
+	return BalanceData.current().psy_destroy_bonus if psy_above(2) else 0.0
+
+
+func oddity_active(oddity_id: StringName) -> bool:
+	return active_oddity == oddity_id
+
+
+## Called at the end of every encounter: ticks the oddity in force down, and above PSY 20 may
+## begin a new one. The hook other oddities plug into: add an id to `psy_oddity_ids` and let
+## the view that shows it ask [method oddity_active].
+func tick_oddities() -> void:
+	if active_oddity != &"":
+		_oddity_left -= 1
+		if _oddity_left <= 0:
+			active_oddity = &""
+		return
+	var balance := BalanceData.current()
+	if not psy_above(2) or balance.psy_oddity_ids.is_empty():
+		return
+	if oddity_rng.randf() < balance.psy_oddity_chance:
+		var pick := oddity_rng.randi_range(0, balance.psy_oddity_ids.size() - 1)
+		active_oddity = StringName(balance.psy_oddity_ids[pick])
+		_oddity_left = maxi(balance.psy_oddity_encounters, 1)
 
 
 ## Has this species been entered in the encyclopaedia at all?
@@ -211,7 +252,7 @@ func knows_species(species_id: StringName) -> bool:
 ## actually added, which is 0 for a page at the cap.
 func add_ifp(species_id: StringName, amount: int, forlorn_page: bool = false) -> int:
 	var fragments_before := encyclopaedia.true_fragments(species_id, forlorn_page)
-	var added := encyclopaedia.add_ifp(species_id, amount, forlorn_page)
+	var added := encyclopaedia.add_ifp(species_id, amount, forlorn_page, psy_extra_parasites())
 	if added > 0:
 		_page_changed(species_id, forlorn_page)
 		var formed := encyclopaedia.true_fragments(species_id, forlorn_page) - fragments_before
@@ -513,6 +554,7 @@ func resolve_party_wipe() -> bool:
 ## Updates the FDE counter at the end of an encounter. `all_rivals_devitalised` is true
 ## only on a victory where every rival was dissolved.
 func register_encounter_end(all_rivals_devitalised: bool) -> void:
+	tick_oddities()
 	if not all_rivals_devitalised:
 		fde_count = 0
 		return
@@ -616,6 +658,8 @@ func reset() -> void:
 	player_name = ""
 	psy_score = 0
 	fde_count = 0
+	active_oddity = &""
+	_oddity_left = 0
 	encyclopaedia.clear()
 	exploration_examine_ifp.clear()
 	dungeon_states.clear()

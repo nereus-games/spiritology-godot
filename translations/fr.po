@@ -256,6 +256,10 @@ msgstr "☠ Poison : %d tour(s) (-%d DEN)"
 msgid "UI_PSY_POISON_FORBIDS"
 msgstr "Le poison trouble votre esprit : impossible de méditer ou d'utiliser des objets."
 
+# PSY above 40 while poisoned: shown in place of the map, encyclopaedia and team views.
+msgid "UI_PSY_POISON_FORBIDS_VIEW"
+msgstr "Le poison trouble votre esprit : impossible d'y voir clair pour le moment."
+
 # %d = the moves still affected.
 msgid "UI_STATUS_DISARRAY"
 msgstr "✦ Désorienté : %d mouvement(s)"
@@ -1277,6 +1281,9 @@ msgstr "Complétion : %d %%"
 
 msgid "UI_ENCYCLOPAEDIA_HINT_GRID"
 msgstr "Flèches : déplacer le sélecteur · Valider : ouvrir la page · Annuler : retour"
+
+msgid "UI_ENCYCLOPAEDIA_HINT_REFUSED"
+msgstr "Annuler : retour"
 
 msgid "UI_ENCYCLOPAEDIA_HINT_PAGE"
 msgstr "Gauche / Droite : changer d'onglet · Annuler : retour à la grille"

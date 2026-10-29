@@ -9,6 +9,7 @@ extends Node3D
 const ScenarioCatalog := preload("res://scripts/dev/scenario_catalog.gd")
 const Trap := preload("res://scripts/exploration/mechanisms/trap.gd")
 const RivalSpawner := preload("res://scripts/exploration/rival_spawner.gd")
+const CoalVetch := preload("res://scripts/exploration/coal_vetch.gd")
 
 ## How many traps Reveal Traps shows on entering a level.
 const REVEAL_TRAPS_COUNT := 3
@@ -22,6 +23,9 @@ var _pending_rival: Node
 
 ## Makes rival groups appear, when the dungeon has spawn rules. Null otherwise.
 var _spawner
+
+## Brings the Coal Vetch's agents in, when the dungeon has any. Null otherwise.
+var _vetch
 
 # --- Real-time narrow-bridge driver (per tile, in both directions) ---
 var _active_bridge  ## the bridge tile in progress, or null
@@ -38,6 +42,7 @@ func _ready() -> void:
 	_dungeon.encounter_requested.connect(_on_encounter_requested)
 	_dungeon.bridge_collision.connect(_on_bridge_collision)
 	_dungeon.turn_advanced.connect(_on_turn_advanced)
+	_dungeon.agent_caught_player.connect(_on_agent_caught_player)
 	TransitionManager.encounter_finished.connect(_on_encounter_finished)
 	GameSession.party_wiped.connect(_on_party_wiped)
 	# Entering a dungeon fully restores the duo's ETH (the "Game Units" rule), and resets the
@@ -74,6 +79,9 @@ func _ready() -> void:
 	if _dungeon.config != null:
 		_spawner = RivalSpawner.new(_dungeon.config, _dungeon)
 		_spawner.populate()
+		if not _dungeon.config.coal_vetch_arrivals.is_empty():
+			_vetch = CoalVetch.new(_dungeon.config, _dungeon)
+			_vetch.populate()
 
 
 func _on_encounter_requested(rival: Node, initiated_by_rival: bool) -> void:
@@ -240,6 +248,16 @@ func _on_turn_advanced(turn: int) -> void:
 	# hook in here too.
 	if _spawner != null:
 		_spawner.on_turn(turn)
+	# The Coal Vetch's agents, if the player has stayed long enough.
+	if _vetch != null and not _vetch.on_turn(turn).is_empty():
+		_dungeon.post_message(tr("UI_VETCH_ARRIVES"))
+
+
+## An agent of the Coal Vetch reached the player: it takes its toll and leaves.
+func _on_agent_caught_player(agent: Node) -> void:
+	if _vetch == null:
+		return
+	_dungeon.post_message(tr("UI_VETCH_CAUGHT") % _vetch.catch_player(agent))
 
 
 # --------------------------------------------------------------------------

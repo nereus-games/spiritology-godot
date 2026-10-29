@@ -123,11 +123,15 @@ unblock.
   doc's table of bonuses. (`rival_spawner.gd`, `TODO(forlorn)`)
 - **The exploration HUD's final form** — the stack of known abilities with its USE/CANCEL
   submenu, and the doc's layout. (`hud_exploration.gd`)
-- **The Coal Vetch**, a faction with two entrances, neither implemented. In an encounter, an
-  agent can appear after repeated Examines (`encounter_manager.gd`). In a dungeon, if the player
-  stays too long, agents arrive at hand-placed arrival points on hand-set timestamps and take
-  the shortest path to the player; some dungeons hold a corruptible agent who delays the others
-  for a price that rises each time.
+- **The Coal Vetch**, a faction with two entrances, both built on a placeholder reading (see
+  *Decisions taken in code*). In an encounter, repeated Examines of one rival or a Steal can
+  call an agent, which makes Steal fail half the time and cuts the player side's Examines
+  (`encounter_manager.gd`). In a dungeon, agents arrive at hand-placed points on hand-set turns,
+  take the shortest path to the player, and a corruptible agent delays them for a price that rises
+  (`coal_vetch.gd`). What is left: the agent has no art, no species and no encounter of its own;
+  nothing keeps its state between visits (waits on *Dungeon state between visits*); the bribe has
+  no screen to choose the objects paid with; no dungeon declares arrivals yet, and the validator
+  only checks their turns.
 - **PSY's consequences.** Built so far (`GameSession.psy_above`): the IFP bands, the narrow
   bridge, the width of spawn waves, rivals spawned by examined decor, and parts of every rung
   but the second.
@@ -214,6 +218,24 @@ Decisions taken in code, where the doc has to catch up — or say otherwise:
 - **Fleeing** takes out only the character who runs, and the rivals stay on their tile; the
   "50 % chance the rival disappears" was dropped on 2026-09-18, because from the map it looked
   exactly like the whole group being devitalised (`exploration.gd`, `_run_away`).
+- **The Coal Vetch in an encounter** (`coal_vetch_*` in `balance.tres`). The doc gives only
+  Steal's "50 % chance of failing" while an agent is present. An agent is not an individual: it
+  is a flag on the encounter, with no turn and no DEN. It can come after the player side has
+  Examined one rival twice (the old TODO's "two Examines on the same rival", also counting an
+  ability's Examine), each further Examine rolling 25 %, and on a Steal (25 %); once per
+  encounter. While it is there, a player character's Examine yields half its IFP (rounded down)
+  and Steal fails half the time. The Steal's taking half is still a stub.
+- **The Coal Vetch in a dungeon.** "Stays too long" is the arrivals' own turn, counted from the
+  start of the visit; the turn is the map's unit of time. An arriving agent appears on its tile, or
+  the nearest free one, and does not move the turn it arrives. It takes one step a turn along the
+  shortest path (`TileSearch.shortest_path`), across floors by staircase and not by elevator or
+  fall, sees through stealth, and respects safe areas; with no path or a rival in the way it waits.
+  Reaching the player opens no encounter (an agent is no species): it takes 20 DEN from each of the
+  duo, never below 1, and leaves. The corruption price is objects (1, then 1 more each time), taken
+  from the biggest stacks unless the caller names them; a bribe delays every arrival still to come
+  by 20 turns, not the agents already walking. It is offered next to the corruptible agent while an
+  arrival is pending. Where the doc is silent on the currency, the effect of arriving or the delay,
+  these are placeholders to change.
 - **A linked elevator moves empty**, leaving whoever stands on it behind. The doc now describes
   linked elevators, but not who rides them (`elevator.gd`, `linked`).
 

@@ -5,9 +5,9 @@
 ##
 ## The MENU half, handled here: Talk removed, Steal added (see
 ## [constant EncounterAction.Kind.STEAL]).
-## The RESOLUTION half is a stub in the manager: taking an object off the target assumes rivals
-## CARRY objects, and no such data exists, while the Coal Vetch appearing is a system that does
-## not exist either (as with the double Examine). See EncounterManager._resolve_steal.
+## The RESOLUTION half is built for the Coal Vetch (it may appear, and then fails the Steal half
+## the time) and a stub for the taking, which assumes rivals CARRY objects and no such data
+## exists. See EncounterManager._resolve_steal.
 extends "res://scripts/encounter/talents/talent_script.gd"
 
 

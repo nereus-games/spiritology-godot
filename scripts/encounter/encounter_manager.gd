@@ -22,6 +22,10 @@ signal reaction_noted(reactor: EncounterIndividual, ability: AbilityData, lines:
 ## &"victory", &"defeat", &"fled", &"pacified", &"rivals_fled", &"timeout".
 signal ended(result: StringName)
 
+## A member of the Coal Vetch has appeared in the encounter. `cause` is [constant VETCH_EXAMINES]
+## or [constant VETCH_STEAL]. It happens at most once per encounter.
+signal agent_appeared(cause: StringName)
+
 ## An individual left the encounter before its end. `reason` is [constant FLED] or
 ## [constant PACIFIED].
 signal departed(individual: EncounterIndividual, reason: StringName)
@@ -58,6 +62,10 @@ var map_reveal: Callable = Callable()
 var last_talk_effective := false
 
 const ABILITY_DIR := "res://data/abilities/"
+
+## Why a Coal Vetch agent came: repeated Examines of one rival, or the risk Steal carries.
+const VETCH_EXAMINES := &"examines"
+const VETCH_STEAL := &"steal"
 
 ## Why an individual left: it ran away (Run Away, a smoke bomb, Ghosting)...
 const FLED := &"fled"
@@ -120,6 +128,18 @@ var history := EncounterHistory.new()
 var _refusing: EncounterIndividual = null
 var _refuse_next := false
 
+## Whether a member of the Coal Vetch is in the encounter. It is not an individual: it has no
+## turn, no DEN and nobody to target it, and only changes the rules while it is there (see
+## [method _vetch_may_appear], [method examine_factor] and [method _resolve_steal]).
+var coal_vetch_present := false
+
+## Examines the player side made of each rival, by rival: what repeated Examines are counted on.
+var _examine_counts: Dictionary = {}
+
+## The Coal Vetch's own dice. Kept apart from [member rng] on purpose: an agent that may or may
+## not appear must not shift every other roll of a seeded encounter.
+var _vetch_rng := RandomNumberGenerator.new()
+
 
 ## Prepares the encounter. Resets the agents, so set any [UiAgent] AFTER calling this.
 func setup(
@@ -134,6 +154,9 @@ func setup(
 	result = &""
 	_refusing = null
 	_refuse_next = false
+	coal_vetch_present = false
+	_examine_counts.clear()
+	_vetch_rng.seed = seed ^ 0xC0A1
 	_agents.clear()
 	timeline = EncounterTimeline.new()
 	# "Turn order is defined at random when the encounter begins". Not cosmetic: position
@@ -531,15 +554,25 @@ func _resolve_object(individual: EncounterIndividual, action: EncounterAction) -
 ## Steal, from granop's talent: "takes an object from the target, but has a risk of a
 ## member of The Coal Vetch appearing; if present, Steal has a 50 % chance of failing".
 ##
-## A stub, because stealing supposes rivals CARRY objects — nothing says which — and the
-## Coal Vetch does not exist. The action is routed and logged anyway, so the chain from
-## menu to resolution is whole the day those systems arrive.
+## The Coal Vetch half is built: the risk is [member BalanceData.coal_vetch_steal_appear_chance],
+## rolled when no agent is there yet, and the failure [member BalanceData.coal_vetch_steal_fail_chance].
+## The taking half is a stub, because stealing supposes rivals CARRY objects and nothing says
+## which; a Steal that does not fail is logged and takes nothing.
 func _resolve_steal(individual: EncounterIndividual, action: EncounterAction) -> void:
 	var target := _first_target(action)
 	if target == null:
 		_emit_turn(individual, action, [_tr("LOG_STEAL_NO_TARGET")])
 		return
-	_emit_turn(individual, action, [_tr("LOG_STEAL") % target.display_name()])
+	var balance := BalanceData.current()
+	var lines: Array = []
+	if not coal_vetch_present and _vetch_rng.randf() < balance.coal_vetch_steal_appear_chance:
+		lines.append(_vetch_appears(VETCH_STEAL))
+	if coal_vetch_present and _vetch_rng.randf() < balance.coal_vetch_steal_fail_chance:
+		lines.append(_tr("LOG_STEAL_FAILS_VETCH") % target.display_name())
+		_emit_turn(individual, action, lines)
+		return
+	lines.append(_tr("LOG_STEAL") % target.display_name())
+	_emit_turn(individual, action, lines)
 
 
 ## Run Away, put in the menu by a talent (run_away_2, slick_merchant). Only the character who
@@ -706,16 +739,48 @@ func _resolve_examine(individual: EncounterIndividual, action: EncounterAction) 
 	)
 	# TODO: "reveals objects they carry" — rivals carry none, and the examined rival's
 	# Talk/Challenge reaction is unwritten.
-	# TODO: Coal Vetch — two Examines on the same rival, or one ability, should give some
-	# chance of an agent appearing mid-encounter. No such system exists.
 	var suffix := _tr("LOG_EXAMINE_INFO_FACTOR") % info if not is_equal_approx(info, 1.0) else ""
-	_emit_turn(individual, action, [_tr("LOG_EXAMINE") % [target.display_name(), suffix]])
+	var lines: Array = [_tr("LOG_EXAMINE") % [target.display_name(), suffix]]
+	# Repeated Examines of one rival draw the Coal Vetch's eye.
+	if _count_examine(individual, target) and _vetch_may_appear(target):
+		lines.append(_vetch_appears(VETCH_EXAMINES))
+	_emit_turn(individual, action, lines)
+
+
+## Counts an Examine of `target` by `individual`, if it counts: a player character's Examine of
+## a rival, whether it is the action or an ability's. Returns whether it did.
+func _count_examine(individual: EncounterIndividual, target: EncounterIndividual) -> bool:
+	if not individual.is_player or not all_rivals.has(target):
+		return false
+	_examine_counts[target] = int(_examine_counts.get(target, 0)) + 1
+	return true
+
+
+## Whether the Examine just counted of `target` calls an agent: none is there yet, it has now been
+## examined [member BalanceData.coal_vetch_examine_threshold] times or more, and the roll against
+## [member BalanceData.coal_vetch_examine_chance] succeeds. The roll is made on every Examine
+## from the threshold on, until an agent comes.
+func _vetch_may_appear(target: EncounterIndividual) -> bool:
+	if coal_vetch_present:
+		return false
+	var balance := BalanceData.current()
+	if int(_examine_counts.get(target, 0)) < balance.coal_vetch_examine_threshold:
+		return false
+	return _vetch_rng.randf() < balance.coal_vetch_examine_chance
+
+
+## An agent comes. Returns the log line saying so.
+func _vetch_appears(cause: StringName) -> String:
+	coal_vetch_present = true
+	agent_appeared.emit(cause)
+	return _tr("LOG_VETCH_APPEARS")
 
 
 ## The factor on the IFP of an Examine of `target` by `individual`: its info bonus points, plus
 ## `extra_points` an ability puts on this one Examine (Halo Effect), as
 ## [method ExamineYield.factor_for] values them, times what each of its talents makes of it
-## (Reconnaissance Glide).
+## (Reconnaissance Glide), and by [member BalanceData.coal_vetch_examine_factor] once a Coal Vetch
+## agent is present.
 func examine_factor(
 	individual: EncounterIndividual, target: EncounterIndividual, extra_points := 0
 ) -> float:
@@ -723,6 +788,9 @@ func examine_factor(
 	for t in _talents:
 		if t.owner == individual:
 			info = t.modify_examine_info(self, target, info)
+	# An agent watching makes a player character's Examine yield less.
+	if coal_vetch_present and individual.is_player:
+		info *= BalanceData.current().coal_vetch_examine_factor
 	return info
 
 
@@ -755,6 +823,8 @@ func _carry_out_examines(individual: EncounterIndividual, ctx: EncounterContext)
 			true,
 			examine_factor(individual, target, entry[1])
 		)
+		if _count_examine(individual, target) and _vetch_may_appear(target):
+			encounter_log.append(_vetch_appears(VETCH_EXAMINES))
 
 
 # --- Next-turn modifiers ---

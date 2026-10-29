@@ -63,6 +63,10 @@ signal turn_advanced(turn: int)
 ## Emitted when a move lands on a tile held by an opposing individual.
 signal encounter_requested(rival: Node, initiated_by_rival: bool)
 
+## An agent of the Coal Vetch has reached the player, or the player walked into it. What follows
+## is the exploration scene's to say ([method Exploration._on_agent_caught_player]).
+signal agent_caught_player(agent: Node)
+
 ## A rival steps onto the narrow-bridge tile the player is on: both fall.
 signal bridge_collision(rival: Node, tile: Vector3i)
 
@@ -345,8 +349,17 @@ func post_message(text: String) -> void:
 	message_posted.emit(text)
 
 
+## An agent of the Coal Vetch is no group of spirimonsters, so meeting one opens no encounter.
 func request_encounter(rival: Node, initiated_by_rival: bool) -> void:
+	if _is_agent(rival):
+		agent_caught_player.emit(rival)
+		return
 	encounter_requested.emit(rival, initiated_by_rival)
+
+
+## An agent has met the player — on its own move, see [method request_encounter] for the player's.
+func agent_reached_player(agent: Node) -> void:
+	agent_caught_player.emit(agent)
 
 
 ## Two characters meet on the SAME narrow-bridge tile: both fall, per the design doc. The
@@ -356,9 +369,28 @@ func request_bridge_collision(rival: Node, tile: Vector3i) -> void:
 	bridge_collision.emit(rival, tile)
 
 
-## Registered rivals, as a copy — the caller is free to dissolve some while iterating.
+## Registered rival GROUPS, as a copy — the caller is free to dissolve some while iterating. The
+## Coal Vetch's agents are registered too (they take turns and occupy tiles) but are no groups:
+## see [method agents].
 func rivals() -> Array[Node]:
-	return _rivals.duplicate()
+	var out: Array[Node] = []
+	for r in _rivals:
+		if not _is_agent(r):
+			out.append(r)
+	return out
+
+
+## The Coal Vetch's agents on the map, as a copy.
+func agents() -> Array[Node]:
+	var out: Array[Node] = []
+	for r in _rivals:
+		if _is_agent(r):
+			out.append(r)
+	return out
+
+
+func _is_agent(who: Node) -> bool:
+	return is_instance_valid(who) and who.has_method("is_coal_vetch_agent")
 
 
 ## An actor has CHANGED FLOOR — a fall, stairs, tomorrow an elevator or anything else. The

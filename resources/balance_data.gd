@@ -129,6 +129,28 @@ extends Resource
 ## edges are visible". Strictly below 1, or the edges would vanish too.
 @export_range(0.0, 0.99) var puzzle_stain_max: float = 0.85
 
+## The Coal Vetch in an encounter. The doc gives one figure, Steal's 50 % chance of failing while
+## an agent is there; the rest is ours. An agent can come after the player side has Examined one
+## rival [member coal_vetch_examine_threshold] times (the old TODO said "two"): from then on every
+## Examine of it rolls [member coal_vetch_examine_chance]. Steal rolls
+## [member coal_vetch_steal_appear_chance] ("a risk of a member appearing"). While an agent is
+## present, a player character's Examine yields only [member coal_vetch_examine_factor] of its IFP.
+@export var coal_vetch_examine_threshold: int = 2
+@export_range(0.0, 1.0) var coal_vetch_examine_chance: float = 0.25
+@export_range(0.0, 1.0) var coal_vetch_steal_appear_chance: float = 0.25
+@export_range(0.0, 1.0) var coal_vetch_steal_fail_chance: float = 0.5
+@export_range(0.0, 1.0) var coal_vetch_examine_factor: float = 0.5
+
+## The Coal Vetch in a dungeon. A corruptible agent delays every agent still to arrive by
+## [member coal_vetch_delay_turns] turns; the price is a number of objects, [member
+## coal_vetch_bribe_base] the first time and [member coal_vetch_bribe_step] more each time after.
+## An agent that reaches the player takes [member coal_vetch_catch_den] DEN from each member of the
+## duo, never below 1, and leaves.
+@export var coal_vetch_delay_turns: int = 20
+@export var coal_vetch_bribe_base: int = 1
+@export var coal_vetch_bribe_step: int = 1
+@export var coal_vetch_catch_den: int = 20
+
 const PATH := "res://data/balance.tres"
 
 static var _current: BalanceData

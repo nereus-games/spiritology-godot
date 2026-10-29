@@ -256,6 +256,25 @@ msgstr "☠ Poison : %d tour(s) (-%d DEN)"
 msgid "UI_PSY_POISON_FORBIDS"
 msgstr "Le poison trouble votre esprit : impossible de méditer ou d'utiliser des objets."
 
+# The Coal Vetch, in a dungeon.
+msgid "UI_ACTION_BRIBE_AGENT"
+msgstr "Corrompre l'agent"
+
+msgid "UI_VETCH_ARRIVES"
+msgstr "Un agent de la Coal Vetch est arrivé."
+
+# %d = DEN taken from each of the duo.
+msgid "UI_VETCH_CAUGHT"
+msgstr "Un agent de la Coal Vetch vous a rattrapés et a pris %d DEN."
+
+# %d = the price in objects.
+msgid "UI_VETCH_BRIBE_POOR"
+msgstr "L'agent veut %d objets."
+
+# %d = objects paid, %d = turns the other agents are delayed by.
+msgid "UI_VETCH_BRIBE_PAID"
+msgstr "Vous avez payé %d objets : les autres agents sont retardés de %d tours."
+
 # %d = the moves still affected.
 msgid "UI_STATUS_DISARRAY"
 msgstr "✦ Désorienté : %d mouvement(s)"
@@ -668,7 +687,14 @@ msgid "LOG_STEAL_NO_TARGET"
 msgstr "n'a personne à voler."
 
 msgid "LOG_STEAL"
-msgstr "tente de voler %s [objet volé / Coal Vetch à venir]."
+msgstr "tente de voler %s [objet volé à venir]."
+
+msgid "LOG_VETCH_APPEARS"
+msgstr "Un membre de la Coal Vetch apparaît."
+
+# %s = who is stolen from.
+msgid "LOG_STEAL_FAILS_VETCH"
+msgstr "tente de voler %s, mais la Coal Vetch s'interpose."
 
 # Run Away: the character leaves, its teammate stays. In LOG_FLEE_NO_ETH, %d = the ETH a
 # talent charges for it.

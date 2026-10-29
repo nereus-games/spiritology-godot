@@ -73,6 +73,19 @@ extends Resource
 @export var fixed_groups: Array[RivalGroupData] = []
 
 
+@export_group("Coal Vetch")
+
+## Agents of the Coal Vetch who arrive if the player stays too long: each one at its own arrival
+## point on its own turn of the visit, and then on the shortest path to the player. Empty means
+## the Coal Vetch never comes to this dungeon.
+@export var coal_vetch_arrivals: Array[CoalVetchArrival] = []
+
+## Whether one agent can be corrupted: standing on [member corruptible_agent_tile], it delays every
+## agent still to arrive, for a price in objects that rises each time.
+@export var has_corruptible_agent: bool = false
+@export var corruptible_agent_tile: Vector3i = Vector3i.ZERO
+
+
 ## Every variety a rival group can be made of here — random, special or fixed. What has to be
 ## preloaded on entry.
 func all_rival_species() -> Array[StringName]:

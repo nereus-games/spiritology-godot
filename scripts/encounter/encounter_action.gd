@@ -20,7 +20,7 @@ extends RefCounted
 
 ## [constant Kind.STEAL], like FLEE, is added to the menu by a talent — `steal` (granop)
 ## offers it in place of Talk. It takes an object from the target, at the risk of summoning
-## a member of the Coal Vetch. Neither rivals carrying objects nor the Coal Vetch exists.
+## a member of the Coal Vetch. Rivals carrying objects do not exist yet; the Coal Vetch does (see [method EncounterManager._resolve_steal]).
 enum Kind { ABILITY, TALK, EXAMINE, MEDITATE, USE_OBJECT, FLEE, STEAL, PASS }
 
 var kind: Kind = Kind.ABILITY

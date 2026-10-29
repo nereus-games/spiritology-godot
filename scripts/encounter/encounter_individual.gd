@@ -22,6 +22,9 @@ extends RefCounted
 
 var species: SpeciesData
 var is_player: bool
+## Whether it is its species' Forlorn variant: the stronger one, which yields more IFP once the
+## ordinary page is complete and alone has the species' Forlorn ability.
+var is_forlorn := false
 var max_den: int
 var max_eth: int
 var den: int
@@ -109,12 +112,16 @@ var _timers: Dictionary = {}
 var _weight_serial := 0  ## Names the timer of each action weight
 
 
-func _init(p_species: SpeciesData, p_is_player: bool) -> void:
+func _init(p_species: SpeciesData, p_is_player: bool, p_forlorn: bool = false) -> void:
 	species = p_species
 	is_player = p_is_player
+	is_forlorn = p_forlorn and not p_is_player
 	var balance := BalanceData.current()
 	max_den = balance.base_den
 	max_eth = balance.base_eth
+	if is_forlorn:
+		max_den = roundi(max_den * balance.forlorn_den_factor)
+		max_eth = roundi(max_eth * balance.forlorn_eth_factor)
 	den = max_den
 	eth = max_eth
 	if species:
@@ -125,16 +132,22 @@ func _init(p_species: SpeciesData, p_is_player: bool) -> void:
 ## Filtering to ENCOUNTER type happens later, when the manager offers a choice.
 ##
 ## A player character only has the abilities the player has revealed in the encyclopaedia (see
-## [method GameSession.usable_abilities]); a rival has all of its species'.
+## [method GameSession.usable_abilities]); a rival has all of its species', except that the
+## Forlorn ability is the Forlorn variant's alone.
 func _populate_abilities() -> void:
 	if is_player:
 		ability_ids.append_array(GameSession.usable_abilities(species.id))
 		return
 	var seen := {}
 	for list in [
-		species.origin_abilities, species.also_used_abilities, species.encyclopaedia_abilities
+		species.origin_abilities,
+		species.also_used_abilities,
+		species.encyclopaedia_abilities,
+		[species.forlorn_ability],
 	]:
 		for aid in list:
+			if aid == &"" or (aid == species.forlorn_ability and not is_forlorn):
+				continue
 			if not seen.has(aid):
 				seen[aid] = true
 				ability_ids.append(aid)

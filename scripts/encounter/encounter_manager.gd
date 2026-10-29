@@ -204,12 +204,14 @@ func note_talent(line: String) -> void:
 
 
 ## Builds an individual from a species slug.
-static func make_individual(species_id: StringName, is_player: bool) -> EncounterIndividual:
+static func make_individual(
+	species_id: StringName, is_player: bool, forlorn: bool = false
+) -> EncounterIndividual:
 	var sp: SpeciesData = load("res://data/species/%s.tres" % species_id)
 	if sp == null:
 		push_error("[EncounterManager] unknown species: %s" % species_id)
 		return null
-	return EncounterIndividual.new(sp, is_player)
+	return EncounterIndividual.new(sp, is_player, forlorn)
 
 
 # --- Agents ---
@@ -619,6 +621,7 @@ func rival_report() -> Array:
 			outcome = f.departure
 		var entry := {
 			"species_id": f.species_id(),
+			"forlorn": f.is_forlorn,
 			"den": f.den,
 			"max_den": f.max_den,
 			"eth": f.eth,
@@ -778,11 +781,8 @@ func _talk_yield(individual: EncounterIndividual, effective: bool) -> Array:
 
 
 ## Whether this individual is its species' Forlorn variant.
-## TODO: Forlorn variants are not modelled on the individual at all — [SpeciesData] carries
-## only a Forlorn ability and sprite. Until they are, the higher Forlorn IFP can
-## never be earned.
-func _is_forlorn(_individual: EncounterIndividual) -> bool:
-	return false
+func _is_forlorn(individual: EncounterIndividual) -> bool:
+	return individual != null and individual.is_forlorn
 
 
 func _first_target(action: EncounterAction) -> EncounterIndividual:

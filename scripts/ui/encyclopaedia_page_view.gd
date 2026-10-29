@@ -3,7 +3,6 @@
 ##
 ## The fragment assembly desk is a screen of its own, opened from the encyclopaedia screen; this
 ## view only says that it can be. No text here that the page source does not give.
-## The Forlorn tab is a placeholder until the Forlorn individual exists.
 ##
 ## No `class_name` (the CLI class-cache trap): the screen preloads this.
 extends VBoxContainer
@@ -41,7 +40,7 @@ func setup(species_id: StringName) -> void:
 		_tab_labels.append(label)
 
 	_page = _build_page(info)
-	_forlorn = _build_forlorn()
+	_forlorn = _build_forlorn(Source.build_forlorn(species_id))
 	add_child(_page)
 	add_child(_forlorn)
 	set_forlorn_tab(false)
@@ -141,10 +140,29 @@ func _build_page(info: Dictionary) -> Control:
 	return row
 
 
-func _build_forlorn() -> Control:
-	var label := _dim_label(tr("UI_ENCYCLOPAEDIA_FORLORN_PENDING"))
-	label.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	return label
+func _build_forlorn(info: Dictionary) -> Control:
+	var sp: SpeciesData = info.species
+	var box := VBoxContainer.new()
+	box.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	box.add_theme_constant_override("separation", 8)
+	var name_label := Label.new()
+	name_label.text = tr(sp.name_key())
+	name_label.add_theme_font_size_override("font_size", 28)
+	box.add_child(name_label)
+	box.add_child(_dim_label(tr("UI_ENCYCLOPAEDIA_COMPLETION") % info.completion))
+	if not info.open:
+		box.add_child(_dim_label(tr("UI_ENCYCLOPAEDIA_FORLORN_LOCKED")))
+	if info.ability != &"":
+		box.add_child(_heading("UI_ENCYCLOPAEDIA_ABILITIES"))
+		if info.unlocked:
+			box.add_child(_text(tr(GameData.ability(info.ability).name_key()), 18))
+		else:
+			box.add_child(_dim_label(tr("UI_ENCYCLOPAEDIA_ABILITY_LOCKED") % info.fragments))
+	if Source.can_assemble(sp.id, true):
+		var assemble := _dim_label(tr("UI_ENCYCLOPAEDIA_ASSEMBLE"))
+		assemble.add_theme_color_override("font_color", COLOR_TAB_ON)
+		box.add_child(assemble)
+	return box
 
 
 func _heading(key: String) -> Label:

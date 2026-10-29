@@ -97,9 +97,9 @@ func _show_page(species_id: StringName) -> void:
 	_show_page_hint()
 
 
-## Whether the page on show has fragments to assemble. The Forlorn tab is a placeholder.
+## Whether the page on show (the tab on show) has fragments to assemble.
 func _can_assemble() -> bool:
-	return _page != null and not _page.forlorn_tab and Source.can_assemble(start_species)
+	return _page != null and Source.can_assemble(start_species, _page.forlorn_tab)
 
 
 ## Puts the assembly desk of the page on show over the screen. It is the same scene that anything
@@ -108,14 +108,18 @@ func _can_assemble() -> bool:
 func _open_assembly() -> void:
 	_assembly = ASSEMBLY_SCENE.instantiate()
 	_assembly.species_id = start_species
+	_assembly.forlorn = _page.forlorn_tab
 	_assembly.closed.connect(_close_assembly)
 	add_child(_assembly)
 
 
 func _close_assembly() -> void:
+	var on_forlorn_tab: bool = _assembly.forlorn
 	_assembly.queue_free()
 	_assembly = null
 	_show_page(start_species)
+	_page.set_forlorn_tab(on_forlorn_tab)
+	_show_page_hint()
 
 
 func _show_page_hint() -> void:

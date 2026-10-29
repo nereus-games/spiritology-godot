@@ -38,6 +38,9 @@ func _ready() -> void:
 
 func _run_all() -> void:
 	await get_tree().process_frame
+	# A Forlorn member has larger maximums than the dungeon's bounds; its roll is covered by
+	# forlorn_check, and would make these bounds fail for about one group in a hundred.
+	BalanceData.current().forlorn_chance = 0.0
 	ScenarioCatalog.selected_id = &"rivals"
 	var scene = EXPLORATION.instantiate()
 	get_tree().root.add_child(scene)

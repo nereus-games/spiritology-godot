@@ -97,6 +97,10 @@ msgstr "Group %d of %d: %s"
 msgid "UI_SCOUT_MEMBER"
 msgstr "%d x %s"
 
+# %d = how many individuals, %s = their species. They are the Forlorn variant.
+msgid "UI_SCOUT_MEMBER_FORLORN"
+msgstr "%d x %s (Forlorn)"
+
 msgid "UI_SCOUT_NONE_LEFT"
 msgstr "It seems no other group is wandering here."
 
@@ -1283,8 +1287,8 @@ msgstr "Page"
 msgid "UI_ENCYCLOPAEDIA_TAB_FORLORN"
 msgstr "Forlorn"
 
-msgid "UI_ENCYCLOPAEDIA_FORLORN_PENDING"
-msgstr "The Forlorn variant's page is not available yet."
+msgid "UI_ENCYCLOPAEDIA_FORLORN_LOCKED"
+msgstr "A Forlorn rival yields its extra information only once the ordinary page is complete."
 
 # %s = a spiricosm (TERM_SPIRICOSM_*).
 msgid "UI_ENCYCLOPAEDIA_SPIRICOSM"

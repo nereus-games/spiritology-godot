@@ -14,9 +14,12 @@
 ## - the watch costs no turn: nothing on the map moves while the player picks;
 ## - the player cannot move for the watch (the transformation is immobile).
 ##
-## ## TODO: "X % chances (Y % next to litter) of including unknown species and variations" is
-## about how the SHOWN groups are composed. Groups are shown as they already are on the map; the
-## unknown-species and Forlorn rolls wait for the Forlorn individual (roadmap, section 4).
+## - a group holding a Forlorn member is [member BalanceData.camouflage_forlorn_weight] times as
+##   likely to be among those shown (the doc has Forlorn shapes "likelier than by default"), and
+##   a Forlorn member is shown as such;
+##
+## ## TODO: "X % chances (Y % next to litter) of including unknown species" — groups that are not
+## on the map — is not built: it needs the litter and a group that is shown without existing.
 ##
 ## No `class_name` (the CLI class-cache trap): preloaded.
 extends RefCounted
@@ -50,7 +53,7 @@ func begin(groups: Array, rng: RandomNumberGenerator, player = null) -> void:
 	var wanted := rng.randi_range(MIN_GROUPS, MAX_GROUPS)
 	_queue = []
 	while _queue.size() < wanted and not pool.is_empty():
-		_queue.append(pool.pop_at(rng.randi_range(0, pool.size() - 1)))
+		_queue.append(pool.pop_at(_draw_index(pool, rng)))
 	_total = _queue.size()
 	_shown = 0
 	if _queue.is_empty():
@@ -61,6 +64,32 @@ func begin(groups: Array, rng: RandomNumberGenerator, player = null) -> void:
 	if _player != null:
 		_player.input_locked = true
 	_shown = 1
+
+
+## The index of the next group shown: weighted, a group with a Forlorn member counting for
+## [member BalanceData.camouflage_forlorn_weight].
+func _draw_index(pool: Array, rng: RandomNumberGenerator) -> int:
+	var forlorn_weight := maxi(1, BalanceData.current().camouflage_forlorn_weight)
+	var weights: Array[int] = []
+	var total := 0
+	for g in pool:
+		var w := forlorn_weight if has_forlorn(g) else 1
+		weights.append(w)
+		total += w
+	var roll := rng.randi_range(1, total)
+	for i in weights.size():
+		roll -= weights[i]
+		if roll <= 0:
+			return i
+	return pool.size() - 1
+
+
+## Whether a group holds a Forlorn member.
+static func has_forlorn(group: Node) -> bool:
+	for m in group.members:
+		if m.forlorn:
+			return true
+	return false
 
 
 ## The group currently shown, or null.
@@ -75,17 +104,22 @@ func description() -> String:
 	var group := current()
 	if group == null:
 		return ""
+	# Keyed by species, then by shape, so that a Forlorn member is told apart from its kin.
 	var counts: Dictionary = {}
 	for m in group.members:
-		counts[m.species_id] = int(counts.get(m.species_id, 0)) + 1
+		var key := [m.species_id, m.forlorn]
+		counts[key] = int(counts.get(key, 0)) + 1
 	var parts: Array[String] = []
-	for id in counts:
+	for key in counts:
+		var id: StringName = key[0]
 		var name := String(id)
 		var sp = GameData.species(id)
 		if sp != null:
 			name = String(TranslationServer.translate(sp.name_key()))
-		var line := String(TranslationServer.translate("UI_SCOUT_MEMBER"))
-		parts.append(line % [counts[id], name])
+		var line := String(
+			TranslationServer.translate("UI_SCOUT_MEMBER_FORLORN" if key[1] else "UI_SCOUT_MEMBER")
+		)
+		parts.append(line % [counts[key], name])
 	var head := String(TranslationServer.translate("UI_SCOUT_GROUP"))
 	return head % [_shown, _total, ", ".join(parts)]
 

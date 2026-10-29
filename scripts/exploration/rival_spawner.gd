@@ -18,10 +18,9 @@
 ## Varieties of a random group are weighted by their rarity in the dungeon: rare 1, normal and
 ## common by [BalanceData].
 ##
-## ## TODO(forlorn): about 1 % of spawned rivals should be Forlorn, with the doc's table of
-## bonuses. That needs the Forlorn individual (roadmap, section 4): a variant of a species on
-## [RivalMember] and in the encounter. The roll belongs in [method spawn_group], once a member can
-## carry the flag.
+## Forlorn: each member of a composed group (drawn or picked from a special composition, not a
+## fixed group) is its species' Forlorn variant with the chance [member BalanceData.forlorn_chance],
+## about 1 %, rolled once as the group is composed ([method roll_forlorn]).
 ##
 ## No `class_name` (the CLI class-cache trap): preloaded.
 extends RefCounted
@@ -175,12 +174,26 @@ func roll_composition() -> Array:
 	var can_draw := not config.possible_species.is_empty() and config.group_size_max > 0
 	var can_pick := not config.special_compositions.is_empty()
 	var draw := can_draw and (not can_pick or rng.randf() < config.random_composition_chance)
+	var members: Array = []
 	if draw:
-		return _draw_members()
-	if can_pick:
+		members = _draw_members()
+	elif can_pick:
 		var index := rng.randi_range(0, config.special_compositions.size() - 1)
-		return _members_of(config.special_compositions[index])
-	return []
+		members = _members_of(config.special_compositions[index])
+	roll_forlorn(members)
+	return members
+
+
+## Makes each of `members` Forlorn with the chance [member BalanceData.forlorn_chance]. Returns
+## how many became so.
+func roll_forlorn(members: Array) -> int:
+	var chance := BalanceData.current().forlorn_chance
+	var made := 0
+	for m in members:
+		if rng.randf() < chance:
+			m.make_forlorn()
+			made += 1
+	return made
 
 
 ## The weight of a variety in a random draw: its rarity here, rare 1, normal and common from

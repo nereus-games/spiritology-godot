@@ -104,8 +104,11 @@ func _build() -> void:
 		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		icon.texture = Art.icon(sp.id)
-		Art.apply_state(icon, GridLogic.icon_state(GameSession.page_ifp(sp.id)))
+		var shown: SpeciesData = sp
+		if GameSession.oddity_active(&"swapped_icons"):
+			shown = _species[GridLogic.swapped_icon_cell(i, _species.size())]
+		icon.texture = Art.icon(shown.id)
+		Art.apply_state(icon, GridLogic.icon_state(GameSession.page_ifp(shown.id)))
 		cell.add_child(icon)
 		_icons.append(icon)
 

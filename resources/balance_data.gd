@@ -129,6 +129,20 @@ extends Resource
 ## edges are visible". Strictly below 1, or the edges would vanish too.
 @export_range(0.0, 0.99) var puzzle_stain_max: float = 0.85
 
+## PSY above the second rung: "more risk of losing damaged fragments". Added to
+## [member puzzle_destroy_chance] (the sum is capped at 1). The doc gives no figure.
+@export_range(0.0, 1.0) var psy_destroy_bonus: float = 0.25
+## PSY above the third rung: every time fragments are produced, this many wrong (parasitic)
+## fragments come on top of the usual one per true fragment. The doc says "one more".
+@export var psy_extra_parasites: int = 1
+## PSY above the second rung: "temporary oddities, such as swapped icons". When an encounter
+## ends, an oddity begins with this chance, picked among [member psy_oddity_ids], and lasts
+## [member psy_oddity_encounters] further encounters. The doc says only "after event 3": what
+## that event is has not been written down, so nothing gates on it yet.
+@export_range(0.0, 1.0) var psy_oddity_chance: float = 0.3
+@export var psy_oddity_encounters: int = 3
+@export var psy_oddity_ids: PackedStringArray = PackedStringArray(["swapped_icons"])
+
 const PATH := "res://data/balance.tres"
 
 static var _current: BalanceData

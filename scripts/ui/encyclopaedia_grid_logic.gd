@@ -41,6 +41,13 @@ static func icon_state(ifp: int) -> IconState:
 	return IconState.NONE
 
 
+## Oddity "swapped_icons": the cell whose icon is shown in cell `index`, its neighbour in the pair
+## (0 and 1, 2 and 3, ...). A last cell with no partner keeps its own.
+static func swapped_icon_cell(index: int, count: int) -> int:
+	var partner := index ^ 1
+	return partner if partner < count else index
+
+
 ## The number of columns for `count` cells: as square as it gets.
 static func columns_for(count: int) -> int:
 	return maxi(1, ceili(sqrt(float(count))))

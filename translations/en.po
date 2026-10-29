@@ -252,6 +252,10 @@ msgstr "☠ Poison: %d turn(s) (-%d DEN)"
 msgid "UI_PSY_POISON_FORBIDS"
 msgstr "Poison clouds your mind: you cannot Meditate or use objects."
 
+# PSY above 40 while poisoned: shown in place of the map, encyclopaedia and team views.
+msgid "UI_PSY_POISON_FORBIDS_VIEW"
+msgstr "Poison clouds your mind: you cannot make sense of this right now."
+
 # %d = the moves still affected.
 msgid "UI_STATUS_DISARRAY"
 msgstr "✦ Disarray: %d move(s)"
@@ -1273,6 +1277,9 @@ msgstr "Completion: %d %%"
 
 msgid "UI_ENCYCLOPAEDIA_HINT_GRID"
 msgstr "Arrows: move the selector · Accept: open the page · Cancel: back"
+
+msgid "UI_ENCYCLOPAEDIA_HINT_REFUSED"
+msgstr "Cancel: back"
 
 msgid "UI_ENCYCLOPAEDIA_HINT_PAGE"
 msgstr "Left / Right: switch tab · Cancel: back to the grid"

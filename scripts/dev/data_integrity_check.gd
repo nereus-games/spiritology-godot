@@ -267,6 +267,21 @@ func _check_balance() -> void:
 		bad.append("puzzle_stain_rate = %s (must be >= 0)" % b.puzzle_stain_rate)
 	if not (0.0 <= b.puzzle_stain_max and b.puzzle_stain_max < 1.0):
 		bad.append("puzzle_stain_max = %s (must be 0..<1)" % b.puzzle_stain_max)
+	# The Coal Vetch: probabilities stay probabilities, and a bribe must delay and cost something.
+	for field in [
+		"coal_vetch_examine_chance",
+		"coal_vetch_steal_appear_chance",
+		"coal_vetch_steal_fail_chance",
+		"coal_vetch_examine_factor"
+	]:
+		if not (0.0 <= float(b.get(field)) and float(b.get(field)) <= 1.0):
+			bad.append("%s = %s (must be 0..1)" % [field, b.get(field)])
+	for field in ["coal_vetch_examine_threshold", "coal_vetch_delay_turns", "coal_vetch_bribe_base"]:
+		if int(b.get(field)) < 1:
+			bad.append("%s = %s (must be >= 1)" % [field, b.get(field)])
+	for field in ["coal_vetch_bribe_step", "coal_vetch_catch_den"]:
+		if int(b.get(field)) < 0:
+			bad.append("%s = %s (must be >= 0)" % [field, b.get(field)])
 	_check_empty(bad, "the balance values stay playable")
 
 
@@ -325,6 +340,12 @@ func _check_rival_spawns() -> void:
 				for member in group.members:
 					if member == null or member.max_den < 1 or member.max_eth < 0:
 						bad.append("%s.%s[%d] has a member with no DEN" % [id, list_name, i])
+		for i in dg.coal_vetch_arrivals.size():
+			var arrival: CoalVetchArrival = dg.coal_vetch_arrivals[i]
+			if arrival == null or arrival.turn < 1:
+				bad.append("%s.coal_vetch_arrivals[%d] needs a turn of 1 or more" % [id, i])
+		if dg.has_corruptible_agent and dg.coal_vetch_arrivals.is_empty():
+			bad.append("%s: a corruptible agent, but no agent ever arrives" % id)
 	_check_empty(bad, "every dungeon's rival spawn rules can actually spawn")
 
 

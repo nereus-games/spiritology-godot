@@ -149,6 +149,8 @@ A `DungeonConfig` says how rival groups appear, and every figure is per dungeon:
 | `group_size_*`, `member_max_den_*`, `member_max_eth_*` | the random draw's bounds |
 | `special_compositions` | `RivalGroupData`, picked when not drawn at random |
 | `fixed_groups` | `RivalGroupData` with a `tile`: tutorials, bosses, once on entry |
+| `coal_vetch_arrivals` | `CoalVetchArrival` — a `tile` and a `turn` of the visit: an agent arrives there then, and hunts the player. Empty, the Coal Vetch never comes |
+| `has_corruptible_agent` / `corruptible_agent_tile` | one agent who, for a price in objects that rises each time, delays every agent still to arrive |
 
 A `RivalGroupData` lists `RivalMemberData` — a species, a maximum DEN and ETH — as
 sub-resources of the dungeon file. The integrity check refuses rules that cannot spawn;
@@ -201,6 +203,12 @@ cost would *give* ETH back), never a particular balance.
 | `wave_psy_threshold` / `_extra_groups` | 20 / +1 | waves "grow wider" at a high PSY, unquantified |
 | `decor_psy_threshold` / `decor_spawn_chance` | 20 / 45 % | the figures the doc gives |
 | `decor_spawn_groups_max` / `decor_spawn_radius` | 2 / 4 | "one or more groups nearby" |
+| `coal_vetch_examine_threshold` / `_chance` | 2 / 25 % | an agent may appear after repeated Examines of one rival (the doc gives no figure) |
+| `coal_vetch_steal_appear_chance` / `_fail_chance` | 25 % / 50 % | Steal "has a risk" of an agent appearing; with one there, "50 % chance of failing" |
+| `coal_vetch_examine_factor` | 0.5 | nothing: what an agent's presence leaves of a player character's Examine |
+| `coal_vetch_delay_turns` | 20 | nothing: how long a bribe holds the agents still to arrive |
+| `coal_vetch_bribe_base` / `_step` | 1 / 1 | nothing: the price in objects, and what each bribe adds to the next |
+| `coal_vetch_catch_den` | 20 | nothing: the DEN an agent takes from each of the duo when it reaches them |
 | `puzzle_destroy_chance` | 25 % | "X % risk of being destroyed", for an already damaged fragment |
 | `puzzle_stain_rate` / `puzzle_stain_max` | 0.02 per s / 0.85 | "slowly spreads to almost the whole fragment"; a comment asks for a surface per minute |
 

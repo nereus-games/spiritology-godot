@@ -69,6 +69,59 @@ func walking_distances(from: Vector3i, max_steps: int) -> Dictionary:
 	return steps
 
 
+## The shortest way on foot from `from` to `to`, as the tiles to cross, both ends included. Empty
+## when there is none. Two things set it apart from [method walking_distances]: occupants do not
+## stand in the way (the caller decides what to do about a tile that is taken when it gets there),
+## and it goes across floors, by every staircase — a tile and the one it leads to are consecutive
+## in the path though they are not neighbours. Elevators and falls are not used.
+##
+## `avoid_safe` keeps the path out of safe areas, as a rival is kept out of them.
+func shortest_path(from: Vector3i, to: Vector3i, avoid_safe := false) -> Array[Vector3i]:
+	var path: Array[Vector3i] = []
+	if from == to:
+		return [from]
+	var links := _stair_links()
+	var came := {from: from}
+	var frontier: Array[Vector3i] = [from]
+	while not frontier.is_empty() and not came.has(to):
+		var current: Vector3i = frontier.pop_front()
+		var nexts: Array[Vector3i] = []
+		for delta in NEIGHBOURS:
+			var n: Vector3i = current + delta
+			if _dungeon.is_floor(n) and not _dungeon.is_blocked_by_mechanism(n):
+				if not _dungeon.is_edge_blocked(current, n):
+					nexts.append(n)
+		for dest in links.get(current, []):
+			nexts.append(dest)
+		for n in nexts:
+			if came.has(n) or (avoid_safe and _dungeon.safe_areas.has(n)):
+				continue
+			came[n] = current
+			frontier.append(n)
+	if not came.has(to):
+		return path
+	var step := to
+	while step != from:
+		path.push_front(step)
+		step = came[step]
+	path.push_front(from)
+	return path
+
+
+## The staircases of the dungeon as standing tile -> the tiles taking them leads to.
+func _stair_links() -> Dictionary:
+	var links := {}
+	for m in _dungeon.get_children():
+		if not m.has_method("has_level_link") or not m.has_level_link():
+			continue
+		if not m.level_link_needs_step_in() or not _dungeon.is_floor(m.level_link_to()):
+			continue
+		var out: Array = links.get(m.level_link_from(), [])
+		out.append(m.level_link_to())
+		links[m.level_link_from()] = out
+	return links
+
+
 ## A random walkable floor tile other than `exclude`, outside every safe area when
 ## `avoid_safe` — where a random teleport may drop a rival. Returns `exclude` when there is none.
 func random_floor_tile(exclude: Vector3i, avoid_safe := false) -> Vector3i:

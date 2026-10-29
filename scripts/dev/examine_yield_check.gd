@@ -38,6 +38,9 @@ func _ready() -> void:
 
 func _run_all() -> void:
 	await get_tree().process_frame
+	# Repeated Examines can call a Coal Vetch agent, which halves later ones; that has its own check
+	# (`coal_vetch_check.gd`), and here the yields must be the plain ones.
+	BalanceData.current().coal_vetch_examine_chance = 0.0
 	_check_rounding()
 	_check_award()
 	await _check_plain()

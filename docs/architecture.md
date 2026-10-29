@@ -120,6 +120,11 @@ More pieces let the other abilities say what the doc says:
   other modifiers; Priming, Catatonia), plus the points an ability puts on one Examine (Halo
   Effect, through `ctx.examines`, carried out by the manager when the effect is over), turned into
   a factor by `examine_yield.gd` and multiplied by its talents' `modify_examine_info`.
+- **The Coal Vetch in an encounter.** Not an individual: `EncounterManager.coal_vetch_present`, a
+  flag with no turn and no DEN, set by `agent_appeared` when repeated Examines of one rival (or
+  Steal's risk) call an agent. It lives on its own dice (`_vetch_rng`), so an encounter replays
+  the same whether an agent could come or not. While it is there, a player character's Examine
+  yields less and Steal can fail.
 
 `EncounterContext` sits at `gdlintrc`'s ceiling on public methods, so these are static helpers
 in `effects/` (`action_weights.gd`, `next_turn_modifiers.gd`, `one_off_rules.gd`) rather than
@@ -166,6 +171,14 @@ Two details that are easy to get wrong:
 - A wall block can be the floor of the storey above it, so no slab is drawn on top of one.
   Walls and holes are currently DERIVED from the floor grid rather than declared, which is
   authoring debt recorded in `dungeon_layout.gd`.
+
+**The Coal Vetch in a dungeon** is `coal_vetch.gd`, held by the exploration scene when the
+dungeon lists arrivals (`DungeonConfig.coal_vetch_arrivals`, each a tile and a turn). On a turn
+it brings an agent (`coal_vetch_agent.gd`, a `RivalBehavior` that decides differently) in; the
+agent registers as a rival, so it occupies a tile and takes its turn, but `DungeonManager.rivals()`
+leaves it out (`agents()` has them) and meeting it emits `agent_caught_player` instead of opening
+an encounter. Its path is `TileSearch.shortest_path`, across floors by staircase. The corruptible
+agent is a mechanism (`mechanisms/corruptible_agent.gd`) that asks the director to `pay`.
 
 Drawing is separate: `DungeonRenderer` turns the grid into meshes and reads the dungeon only
 through its public API, so anything the drawing needs, the model has to name.

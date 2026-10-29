@@ -9,7 +9,7 @@ const ScenarioCatalog := preload("res://scripts/dev/scenario_catalog.gd")
 const EXPLORATION := preload("res://scenes/exploration/exploration.tscn")
 const ExtraActions := preload("res://scripts/exploration/exploration_extra_actions.gd")
 const ActionMenu := preload("res://scripts/ui/exploration_action_menu.gd")
-const ExplorationContext :=preload("res://scripts/exploration/abilities/exploration_context.gd")
+const ExplorationContext := preload("res://scripts/exploration/abilities/exploration_context.gd")
 
 ## The meditation gateway of the "gates" scenario sits on the edge south of this tile.
 const GATE_TILE := Vector3i(1, 0, 9)

@@ -72,6 +72,10 @@ func _encounter(order: Array = [0, 1, 2, 3]) -> EncounterManager:
 		all.append(EncounterManager.make_individual(id, false))
 	var m := EncounterManager.new()
 	m.setup([all[0], all[1]], [all[2], all[3]], 20261022)
+	# Altruism is paid for with an object: the players own plenty, the rivals carry one each.
+	m.inventory_view = func() -> Dictionary: return {&"notice": 99}
+	for r in [all[2], all[3]]:
+		r.carried_objects.append(&"notice")
 	var ordered: Array = []
 	for i in order:
 		ordered.append(all[i])

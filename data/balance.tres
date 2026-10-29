@@ -20,6 +20,7 @@ meditate_damage_bonus = 0.36
 object_heal_den = 25
 examine_bonus_step = 0.1
 action_weight_bonus = 0.36
+rival_object_chance = 0.5
 ethos_talk_bonus = 0.05
 flee_distance_min = 3
 flee_distance_max = 5

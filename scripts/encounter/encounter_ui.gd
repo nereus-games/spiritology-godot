@@ -121,6 +121,9 @@ func begin(
 			f.max_eth = map_max_eth
 			f.eth = map_max_eth
 		f.talk_chance_malus = float(state.get("talk_malus", 0.0))
+		for object_id in state.get("objects", []):
+			f.carried_objects.append(StringName(object_id))
+		f.objects_known = bool(state.get("objects_known", false))
 		var map_den: int = int(state.get("den", 0))
 		if map_den > 0:
 			f.load_persistent_state(map_den, int(state.get("eth", f.eth)))
@@ -132,9 +135,13 @@ func begin(
 	_manager.departed.connect(_on_departed)
 	_manager.ifp_earned.connect(_on_ifp_earned)
 	_manager.object_consumed.connect(_on_object_consumed)
+	_manager.object_obtained.connect(_on_object_obtained)
 	# The manager knows no autoloads, so it is handed a way to resolve object slugs.
 	_manager.object_provider = func(id: StringName) -> ObjectData: return GameData.object(id)
 	_manager.map_reveal = map_reveal  # [bridges]
+	# What the session holds, for the abilities that pay with an object (Altruism): a copy, so
+	# nothing in the encounter can change the inventory other than through object_consumed.
+	_manager.inventory_view = func() -> Dictionary: return GameSession.inventory.duplicate()
 	# A negative `seed` means an ordinary encounter, with the turn order drawn at random.
 	# Fixing it makes the whole encounter reproducible, which is what the screenshot scene
 	# needs for one version to be comparable with the next.
@@ -709,6 +716,11 @@ func _on_ifp_earned(
 ## "Objects are all consumable items (removed from inventory after use)".
 func _on_object_consumed(object_id: StringName) -> void:
 	GameSession.remove_object(object_id)
+
+
+## Steal: the object taken from a rival goes into the inventory.
+func _on_object_obtained(object_id: StringName) -> void:
+	GameSession.add_object(object_id)
 
 
 ## Someone left before the end: the turn order and the artwork no longer show them.

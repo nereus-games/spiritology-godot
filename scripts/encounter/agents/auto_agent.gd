@@ -21,7 +21,7 @@ func decide(individual: EncounterIndividual, manager: EncounterManager) -> Encou
 		# Nothing playable left — all spent, or all too expensive. Meditate costs nothing,
 		# needs no target, and the doc grants it to rivals too: better to rebuild ETH than
 		# to waste the turn. Talk and Use/Give Object are open to them as well, but the AI
-		# does not play them — Talk needs the dialogue system, and rivals carry no objects.
+		# plays them only when an ability made them likelier (see [method _weighted_action]).
 		return EncounterAction.of_kind(EncounterAction.Kind.MEDITATE, [individual])
 	var targets := manager.candidate_targets(individual, ability)
 	return EncounterAction.use_ability(ability, [targets[0]] if not targets.is_empty() else [])
@@ -45,7 +45,7 @@ func _choose_ability(individual: EncounterIndividual, manager: EncounterManager)
 ## number, which keeps every earlier replay as it was. A weight is a probability added to the
 ## chance of that action; together they stop at 1. The remainder is the usual choice.
 ##
-## Using an object is weighted but never played: rivals carry no objects yet (TODO).
+## Using an object is played when the individual carries one: the first it holds, on itself.
 func _weighted_action(
 	individual: EncounterIndividual, manager: EncounterManager
 ) -> EncounterAction:
@@ -59,7 +59,10 @@ func _weighted_action(
 	):
 		talk = individual.action_bonus(EncounterAction.Kind.TALK)
 	var meditate := individual.action_bonus(EncounterAction.Kind.MEDITATE)
-	if talk <= 0.0 and meditate <= 0.0:
+	var use := 0.0
+	if not individual.carried_objects.is_empty():
+		use = individual.action_bonus(EncounterAction.Kind.USE_OBJECT)
+	if talk <= 0.0 and meditate <= 0.0 and use <= 0.0:
 		return null
 	var draw := manager.rng.randf()
 	if draw < minf(talk, 1.0):
@@ -69,4 +72,8 @@ func _weighted_action(
 		return EncounterAction.of_kind(EncounterAction.Kind.TALK, [target])
 	if draw < minf(talk + meditate, 1.0):
 		return EncounterAction.of_kind(EncounterAction.Kind.MEDITATE, [individual])
+	if draw < minf(talk + meditate + use, 1.0):
+		var action := EncounterAction.of_kind(EncounterAction.Kind.USE_OBJECT, [individual])
+		action.object_id = individual.carried_objects[0]
+		return action
 	return null

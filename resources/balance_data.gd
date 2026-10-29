@@ -54,6 +54,11 @@ extends Resource
 @export var action_weight_bonus: float = 0.36
 @export var ethos_talk_bonus: float = 0.05
 
+## Rivals carrying objects: the chance that a spawned rival carries each object its variety may
+## drop (`loot` in its data). The doc lists "Potential Loot" per variety and no odds, so this is a
+## placeholder, rolled once per potential object when the rival is spawned.
+@export_range(0.0, 1.0) var rival_object_chance: float = 0.5
+
 ## Running away from an encounter: "teleporting 3 to 5 tiles away", counted in steps actually
 ## walkable from where the encounter took place. Figures the doc gives.
 @export var flee_distance_min: int = 3

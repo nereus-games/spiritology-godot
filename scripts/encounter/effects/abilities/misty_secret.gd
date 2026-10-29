@@ -1,8 +1,9 @@
 ## Misty Secret — vilgane · Fluid · normal · [change weakness, limit actions]
 ## MECHANIC: everyone's weakness becomes Fluid until their next turn; on later turns the rivals
 ## Meditate and use objects more often: until the user's next turn, every rival is likelier to
-## Meditate and to use an object by the balance step. TODO: rivals carry no objects, so the
-## object half is recorded (and logged) but nothing yet acts on it.
+## Meditate and to use an object by the balance step. A rival that carries an object plays
+## one on itself when the weight wins the draw (see [AutoAgent]); one that carries none has
+## nothing to use, and the weight stays recorded.
 extends AbilityScript
 
 const ActionWeights := preload("res://scripts/encounter/effects/action_weights.gd")

@@ -45,9 +45,19 @@ signal ifp_earned(
 ## removes it from the inventory, for the same reason as [signal ifp_earned].
 signal object_consumed(object_id: StringName)
 
+## A player character came away with an object taken from a rival (Steal). The UI puts it in the
+## inventory, as it removes a consumed one.
+signal object_obtained(object_id: StringName)
+
 ## Turns an object slug into [ObjectData]. Injected by the UI, again so that the manager
 ## needs no autoload.
 var object_provider: Callable = Callable()
+
+## What the players own, as a Dictionary of slug -> count: a copy, never the inventory itself.
+## Injected like [member object_provider] and for the same reason; the one thing that asks for it
+## is Altruism, whose user pays with an object. Invalid in a harness without an inventory, where
+## the players own nothing.
+var inventory_view: Callable = Callable()
 
 ## [bridges] Reveals one hidden thing on the exploration map the encounter was entered from, and
 ## returns whether it found anything. Injected like [member object_provider], for the same
@@ -490,7 +500,15 @@ func _resolve_object(individual: EncounterIndividual, action: EncounterAction) -
 	if target == null:
 		target = individual
 	var given := not target.is_player
-	object_consumed.emit(action.object_id)
+	if individual.is_player:
+		object_consumed.emit(action.object_id)
+	else:
+		# A rival spends what it carries, not the players' inventory.
+		var at := individual.carried_objects.find(action.object_id)
+		if at < 0:
+			_emit_turn(individual, action, [_tr("LOG_OBJECT_NOT_FOUND") % action.object_id])
+			return
+		individual.carried_objects.remove_at(at)
 	var lines: Array = []
 	match obj.effect:
 		GameEnums.ObjectEffect.HEAL_DEN:
@@ -531,15 +549,51 @@ func _resolve_object(individual: EncounterIndividual, action: EncounterAction) -
 ## Steal, from granop's talent: "takes an object from the target, but has a risk of a
 ## member of The Coal Vetch appearing; if present, Steal has a 50 % chance of failing".
 ##
-## A stub, because stealing supposes rivals CARRY objects — nothing says which — and the
-## Coal Vetch does not exist. The action is routed and logged anyway, so the chain from
-## menu to resolution is whole the day those systems arrive.
+## Takes one of the objects the target carries, drawn at random from the encounter's rng: the
+## doc does not say that the thief chooses, and an Examine is what tells the player what is
+## there to be had. A player character's loot is announced through [signal object_obtained]; a
+## rival thief keeps it. A target carrying nothing costs the thief its turn.
+## The Coal Vetch does not exist yet, so Steal never fails (see the roadmap).
 func _resolve_steal(individual: EncounterIndividual, action: EncounterAction) -> void:
 	var target := _first_target(action)
 	if target == null:
 		_emit_turn(individual, action, [_tr("LOG_STEAL_NO_TARGET")])
 		return
-	_emit_turn(individual, action, [_tr("LOG_STEAL") % target.display_name()])
+	if target.carried_objects.is_empty():
+		_emit_turn(individual, action, [_tr("LOG_STEAL_NOTHING") % target.display_name()])
+		return
+	var at := rng.randi_range(0, target.carried_objects.size() - 1)
+	var taken: StringName = target.carried_objects[at]
+	target.carried_objects.remove_at(at)
+	if individual.is_player:
+		object_obtained.emit(taken)
+	else:
+		individual.carried_objects.append(taken)
+	_emit_turn(
+		individual,
+		action,
+		[_tr("LOG_STEAL_TAKEN") % [target.display_name(), _object_name(taken)]]
+	)
+
+
+## The displayed name of an object slug; the slug itself when the provider cannot place it.
+func _object_name(object_id: StringName) -> String:
+	var obj: ObjectData = object_provider.call(object_id) if object_provider.is_valid() else null
+	return tr(obj.name_key()) if obj != null else String(object_id)
+
+
+## The names of `target`'s objects, once an Examine has revealed them: the line to add to the
+## Examine, or nothing when `examiner` is not a player character.
+func _reveal_objects(examiner: EncounterIndividual, target: EncounterIndividual) -> Array:
+	if not examiner.is_player or target.is_player:
+		return []
+	target.objects_known = true
+	if target.carried_objects.is_empty():
+		return [_tr("LOG_EXAMINE_NO_OBJECTS") % target.display_name()]
+	var names: PackedStringArray = []
+	for id in target.carried_objects:
+		names.append(_object_name(id))
+	return [_tr("LOG_EXAMINE_OBJECTS") % [target.display_name(), ", ".join(names)]]
 
 
 ## Run Away, put in the menu by a talent (run_away_2, slick_merchant). Only the character who
@@ -624,6 +678,8 @@ func rival_report() -> Array:
 			"eth": f.eth,
 			"max_eth": f.max_eth,
 			"outcome": outcome,
+			"objects": f.carried_objects.duplicate(),
+			"objects_known": f.objects_known,
 		}
 		out.append(entry)
 	return out
@@ -691,8 +747,8 @@ func _resolve_talk(individual: EncounterIndividual, action: EncounterAction) -> 
 
 
 ## Examine: "gets info on rival; reveals objects they carry; rival may react with Talk or
-## Challenge". Revealing objects and the rival's reaction both need systems that do not
-## exist; the IFP, at least, are awarded — Examine "works all the time".
+## Challenge". The IFP are awarded — Examine "works all the time" — and the rival's objects are
+## revealed; its reaction needs a system that does not exist.
 func _resolve_examine(individual: EncounterIndividual, action: EncounterAction) -> void:
 	var target := _first_target(action)
 	if target == null:
@@ -704,12 +760,13 @@ func _resolve_examine(individual: EncounterIndividual, action: EncounterAction) 
 	ifp_earned.emit(
 		target.species_id(), GameEnums.IfpAction.EXAMINE_RIVAL, _is_forlorn(target), true, info
 	)
-	# TODO: "reveals objects they carry" — rivals carry none, and the examined rival's
-	# Talk/Challenge reaction is unwritten.
+	# TODO: the examined rival's Talk/Challenge reaction is unwritten.
 	# TODO: Coal Vetch — two Examines on the same rival, or one ability, should give some
 	# chance of an agent appearing mid-encounter. No such system exists.
 	var suffix := _tr("LOG_EXAMINE_INFO_FACTOR") % info if not is_equal_approx(info, 1.0) else ""
-	_emit_turn(individual, action, [_tr("LOG_EXAMINE") % [target.display_name(), suffix]])
+	var lines: Array = [_tr("LOG_EXAMINE") % [target.display_name(), suffix]]
+	lines.append_array(_reveal_objects(individual, target))
+	_emit_turn(individual, action, lines)
 
 
 ## The factor on the IFP of an Examine of `target` by `individual`: its info bonus points, plus
@@ -818,6 +875,8 @@ func _resolve_ability(individual: EncounterIndividual, action: EncounterAction) 
 	EffectCatalog.script_for(ability).execute(ctx)
 	_action_damage = ctx.damage_dealt
 	_carry_out_examines(individual, ctx)
+	for object_id in ctx.destroyed_objects:
+		object_consumed.emit(object_id)
 	individual.mark_used(ability)
 	# Reuse (jézal) can hand a single-use ability back.
 	if ability.single_use:
@@ -854,6 +913,7 @@ func _make_context(
 	ctx.completed_species = completed_species
 	ctx.resolved_energy = _round_energy
 	ctx.history = history
+	ctx.inventory_view = inventory_view
 	return ctx
 
 

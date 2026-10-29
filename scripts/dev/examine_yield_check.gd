@@ -1,7 +1,8 @@
 ## Headless check of what an Examine yields: the info bonuses of Priming and Catatonia, the
 ## talent factor of Reconnaissance Glide, how the two multiply, and how GameSession turns the
 ## factor into whole IFP. Halo Effect's own Examine is covered by `history_check.gd`, where its
-## conditions are set up.
+## conditions are set up. Also the abilities that "Examine" or "give info" (Absorption Guard, Steep
+## In, Shadow Work, Bystander Effect, the generic effect).
 ##
 ## Run with: Godot --headless --path . res://scenes/dev/examine_yield_check.tscn
 ## As a start scene rather than --script; see geometry_check.gd.
@@ -45,6 +46,7 @@ func _run_all() -> void:
 	await _check_priming()
 	await _check_recon_glide()
 	await _check_examine_weakness()
+	await _check_examine_abilities()
 	print("")
 	if _fails.is_empty():
 		print("ALL OK")
@@ -75,11 +77,11 @@ func _pass(who: EncounterIndividual) -> EncounterAction:
 
 ## Two players and two rivals in the order [p0, p1, r0, r1]; `first` is the species of p0.
 ## Everyone passes until told otherwise.
-func _encounter(first := &"kalilk") -> EncounterManager:
+func _encounter(first := &"kalilk", second_rival := &"skorpis") -> EncounterManager:
 	var all: Array = []
 	for id in [first, &"fliritus"]:
 		all.append(EncounterManager.make_individual(id, true))
-	for id in [&"skorpis", &"skorpis"]:
+	for id in [&"skorpis", second_rival]:
 		all.append(EncounterManager.make_individual(id, false))
 	var m := EncounterManager.new()
 	m.setup([all[0], all[1]], [all[2], all[3]], 20261022)
@@ -355,5 +357,110 @@ func _check_recon_glide() -> void:
 	_check(
 		is_equal_approx(m.examine_factor(p0, m.rivals[0]), (1.0 + 2 * _step()) * 1.1),
 		"the talent multiplies the bonus"
+	)
+	m.free()
+
+
+# --------------------------------------------------------------------------
+# The abilities that Examine
+# --------------------------------------------------------------------------
+
+
+func _check_examine_abilities() -> void:
+	print("[abilities that examine]")
+	var step := _step()
+	# Steep In: a plain Examine of the target.
+	var m := _encounter(&"vernal")
+	var seen := _record(m)
+	_play(m, m.players[0], [_use(&"steep_in", m.rivals[0])])
+	await m.run(1)
+	_check(
+		_factors(seen) == [1.0] and seen[0][0] == m.players[0],
+		"Steep In: one plain Examine by the user (%s)" % [_factors(seen)]
+	)
+	m.free()
+
+	# ...which a bonus the user already carries scales.
+	m = _encounter(&"vernal")
+	seen = _record(m)
+	m.players[0].grant_examine_bonus_points(3, m.players[1])  # lasts past the user's own turn
+	_play(m, m.players[0], [_use(&"steep_in", m.rivals[0])])
+	await m.run(1)
+	_check(
+		_factors(seen) == [snappedf(1.0 + 3 * step, 0.0001)],
+		"...and it takes the user's own bonus into account (%s)" % [_factors(seen)]
+	)
+	m.free()
+
+	# Absorption Guard: a plain Examine of the rival that was struck.
+	m = _encounter(&"gelmi")
+	seen = _record(m)
+	_play(m, m.players[0], [_use(&"absorption_guard", m.rivals[0])])
+	await m.run(1)
+	_check(
+		_factors(seen) == [1.0] and seen[0][0] == m.players[0],
+		"Absorption Guard: one plain Examine by the user (%s)" % [_factors(seen)]
+	)
+	m.free()
+
+	# Shadow Work: one Examine per species, with its bonus; two rivals of one species count once.
+	var shadow := snappedf(1.0 + 2 * step, 0.0001)
+	m = _encounter(&"spodra")
+	seen = _record(m)
+	_play(m, m.players[0], [_use(&"shadow_work", m.players[0])])
+	await m.run(1)
+	_check(
+		_factors(seen) == [shadow],
+		"Shadow Work: two rivals of one species are one Examine, bonus included (%s)" % [_factors(seen)]
+	)
+	m.free()
+	m = _encounter(&"spodra", &"mastel")
+	seen = _record(m)
+	_play(m, m.players[0], [_use(&"shadow_work", m.players[0])])
+	await m.run(1)
+	_check(
+		_factors(seen) == [shadow, shadow],
+		"...two species, two Examines (%s)" % [_factors(seen)]
+	)
+	m.free()
+	m = _encounter(&"spodra", &"mastel")
+	seen = _record(m)
+	m.rivals[1].den = 0
+	_play(m, m.players[0], [_use(&"shadow_work", m.players[0])])
+	await m.run(1)
+	_check(_factors(seen) == [shadow], "...a dissolved rival is not examined (%s)" % [_factors(seen)])
+	m.free()
+
+	# Bystander Effect: the others get far more out of Examine and Talk until the user's next turn.
+	var far := snappedf(1.0 + 5 * step, 0.0001)
+	m = _encounter(&"ravbak")
+	seen = _record(m)
+	var p0: EncounterIndividual = m.players[0]
+	var p1: EncounterIndividual = m.players[1]
+	_play(m, p0, [_use(&"bystander_effect", m.rivals[0])])
+	_play(m, p1, [_examine(m.rivals[0]), _examine(m.rivals[0])])
+	await m.run(1)
+	_check(
+		p1.examine_bonus_points == 5 and is_equal_approx(p1.talk_info_factor, far),
+		"Bystander Effect: the teammate's Examine and Talk are worth more (%d, %.2f)" % [
+			p1.examine_bonus_points, p1.talk_info_factor
+		]
+	)
+	_check(_factors(seen) == [far], "...and its Examine yields it (%s)" % [_factors(seen)])
+	_check(p0.examine_bonus_points == 0, "...the user itself gets none")
+	await m.run(2)
+	_check(
+		p1.examine_bonus_points == 0 and is_equal_approx(p1.talk_info_factor, 1.0),
+		"...until the user's next turn"
+	)
+	m.free()
+
+	# The generic effect: the user Examines each target, one point of bonus.
+	m = _encounter()
+	var ctx := m._make_context(m.players[0], _ability(&"steep_in"), [m.rivals[0]])
+	ExamineBonusEffect.new().execute(ctx)
+	_check(
+		ctx.examines == [[m.rivals[0], ExamineBonusEffect.DEFAULT_AMOUNT]],
+		"the generic info/Examine bonus effect Examines its target (%s)" % [ctx.examines]
 	)
 	m.free()

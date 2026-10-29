@@ -23,7 +23,10 @@ static func factor_for(points: int) -> float:
 ## already has. Carried out by the manager when the effect is over.
 static func examine(ctx: EncounterContext, target, points: int) -> void:
 	ctx.examines.append([target, points])
-	ctx.note(_tr("LOG_EXAMINE_BOOST") % [points, _name(target)])
+	if points > 0:
+		ctx.note(_tr("LOG_EXAMINE_BOOST") % [points, _name(target)])
+	else:
+		ctx.note(_tr("LOG_EXAMINE_MADE") % _name(target))
 
 
 ## `target`'s Examines get `points` of info bonus until `anchor`'s next turn, or for `turns` of it.

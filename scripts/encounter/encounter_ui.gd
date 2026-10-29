@@ -21,6 +21,8 @@ signal finished(result: StringName, rivals: Array)
 ## Preloaded rather than named: see that script's header.
 const TimelineEntry := preload("res://scripts/ui/encounter_timeline_entry.gd")
 const MenuPanel := preload("res://scripts/ui/encounter_menu_panel.gd")
+const QteOverlay := preload("res://scripts/ui/encounter_qte_overlay.gd")
+const Qte := preload("res://scripts/encounter/qte.gd")
 
 ## Width of the docked log in the debug view.
 const DEBUG_LOG_WIDTH := 380.0
@@ -135,6 +137,7 @@ func begin(
 	# The manager knows no autoloads, so it is handed a way to resolve object slugs.
 	_manager.object_provider = func(id: StringName) -> ObjectData: return GameData.object(id)
 	_manager.map_reveal = map_reveal  # [bridges]
+	_manager.qte_runner = _play_qte  # [bridges]
 	# A negative `seed` means an ordinary encounter, with the turn order drawn at random.
 	# Fixing it makes the whole encounter reproducible, which is what the screenshot scene
 	# needs for one version to be comparable with the next.
@@ -624,6 +627,13 @@ func _clear_highlight() -> void:
 			var f: EncounterIndividual = art.get_meta("individual")
 			if not f.has_left():
 				art.modulate = Color(1, 1, 1)
+
+
+## Slick Merchant's Run Away: puts the QTE on screen and waits for it. See `qte.gd`.
+func _play_qte(individual: EncounterIndividual) -> bool:
+	var overlay := QteOverlay.new()
+	$Root.add_child(overlay)
+	return await overlay.play(Qte.from_balance(), individual.display_name())
 
 
 func _submit(action: EncounterAction) -> void:

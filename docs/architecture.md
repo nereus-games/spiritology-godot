@@ -120,6 +120,12 @@ More pieces let the other abilities say what the doc says:
   other modifiers; Priming, Catatonia), plus the points an ability puts on one Examine (Halo
   Effect, through `ctx.examines`, carried out by the manager when the effect is over), turned into
   a factor by `examine_yield.gd` and multiplied by its talents' `modify_examine_info`.
+- **A QTE behind Slick Merchant's Run Away.** `qte.gd` holds the pure rules (a marker sweeping a
+  bar, a zone, a press and a time limit, figures in `balance.tres`); `_resolve_flee` asks
+  `EncounterManager.qte_runner` for a verdict when the bearer's talent says `flee_needs_qte` and
+  the bearer is a player character. The runner is a bridge, like `object_provider`: the encounter
+  screen sets one that shows `encounter_qte_overlay.gd`, and where it is invalid, as in every
+  check, the QTE is skipped and passed.
 
 `EncounterContext` sits at `gdlintrc`'s ceiling on public methods, so these are static helpers
 in `effects/` (`action_weights.gd`, `next_turn_modifiers.gd`, `one_off_rules.gd`) rather than

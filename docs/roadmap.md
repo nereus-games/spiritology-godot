@@ -26,20 +26,14 @@ The four pieces this page used to list are built, and with them most of the abil
 waited on them (see [architecture.md](architecture.md), *The encounter loop*): **reactions**
 (an ability watches what others do or suffer until its user's next turn), an **encounter
 history**, **weighted rival choices**, and **next-turn modifiers**; the one-offs — Shuffle,
-Deflection, Self-Denial, Tactical Retreat — are done too. About 8 markers are left in the
-encounter abilities, across 7 of the 111 scripts, and they no longer share a missing piece of
-engine. The amount an Examine yields is built too (`examine_yield.gd`, see *The encounter loop*):
-Halo Effect, Priming and Catatonia now raise it, as Reconnaissance Glide does. What remains waits on:
+Deflection, Self-Denial, Tactical Retreat — are done too. A few markers are left in the
+encounter abilities, and they no longer share a missing piece of engine. The amount an Examine yields is built too (`examine_yield.gd`, see *The encounter loop*):
+Halo Effect, Priming and Catatonia now raise it, as Reconnaissance Glide does, and so do the
+other "Examine bonus" abilities (Absorption Guard, Steep In, Shadow Work, Bystander Effect and the
+generic effect), and Deflection enforces its condition through the history. What remains waits on:
 
-- **The other "Examine bonus" abilities**: Absorption Guard, Steep In, Shadow Work and the generic
-  effect only log a bonus (`EncounterContext.grant_examine_bonus`, a stub), and Bystander Effect's
-  "far more information out of Talk and Examine" is logged too. Each says what it should do
-  ("the user Examines it"); converting one is a line, `ExamineYield.examine` or
-  `ExamineYield.boost`, once its figure is chosen.
 - **Rivals carrying objects**: Misty Secret's weight on using objects is recorded and inert;
   Altruism has nothing to destroy, and the encounter engine rightly knows no inventory (section 4).
-- **A decision on Deflection**: its docstring adds "requires that the user has not used the same
-  action twice", which nothing enforces and which the history could now answer.
 
 **Five abilities implement nothing** — Anti-Stress, Avoidant Gaze, Distancing, Flow State,
 Self-Sabotage — and fall back on generic per-tag effects: their first line is `# @unimplemented`
@@ -151,8 +145,9 @@ unblock.
   `GameSession.psy_forbids_while_poisoned`), and dungeons stay dark. (`game_session.gd`)
 - **Dark dungeons** ("In the Dark"): sight limited to one tile, rivals heard but not seen,
   Meditate revealing them for 2 moves, and NPC quests that light an area. No implementation.
-- **A QTE**, which Slick Merchant's Run Away should hide behind; until then it always succeeds.
-  (`encounter_manager.gd`)
+- **The QTE's finish.** Slick Merchant's Run Away is behind a working quick-time event
+  (`qte.gd`, `encounter_qte_overlay.gd`), but a minimal one: no art, no sound, no controls page in
+  the doc, and the form itself (a marker over a zone) is ours. See section 5.
 - **Save migration** between versions. Only matters once a save format has shipped.
   (`save_system.gd`)
 
@@ -176,7 +171,8 @@ pages the doc has not given yet.
   `hardening_talk_penalty`, 0.36 likewise. All in `data/balance.tres`.
 - The worth of "more info": one point of info bonus is +10 % of an Examine's IFP
   (`examine_bonus_step`; the 10 % is Reconnaissance Glide's figure, borrowed). Halo Effect gives 2
-  points per criterion, Catatonia 2 per step, Priming 2 (all placeholders in their scripts).
+  points per criterion, Catatonia 2 per step, Priming 2, Shadow Work 2 per species, the generic
+  effect 1, Bystander Effect 5 (all placeholders in their scripts).
 - Catatonia's step: each step it earns makes the next Meditate recover and leave a damage bonus
   larger by the per-condition step (`modifier_per_condition`, 0.36, borrowed).
 - Self-Disclosure's unit (one "small" tier per ability used, split equally among the living) and
@@ -195,6 +191,25 @@ pages the doc has not given yet.
   (`litter.gd`, `examinable_decor.gd`).
 
 Decisions taken in code, where the doc has to catch up — or say otherwise:
+
+- **Slick Merchant's QTE** (`qte.gd`, `qte_*` in `balance.tres`, all placeholders): the doc says
+  only that Run Away is "behind a QTE" that can fail. A marker sweeps a bar (1.2 s from end to end
+  and back), the player presses Accept once, and the press succeeds when the marker is inside a
+  zone 30 % of the bar wide at its middle; no press within 3 s fails. The 10 ETH are paid whether
+  it succeeds or not; a failure leaves the character in the encounter with its turn spent. Only a
+  player character plays it: a rival with the talent gets away unconditionally. Run Away 2 has none,
+  as its text says. Where `EncounterManager.qte_runner` is not set (checks, headless) the QTE is
+  skipped and passed.
+- **Deflection's condition**: "has not used the same action twice" is read as the user's last two
+  turns not being the same action (the same kind, and for abilities the same one; a pass is no
+  action), whatever rounds they fell in. It is `is_usable`: greyed out in the menu, left alone by
+  the automatic agent, and a no-op if used regardless, as Moral Elevation.
+- **The "Examine bonus" abilities** make a real Examine (`ExamineYield.examine`): Absorption Guard
+  and Steep In a plain one (their text gives no bonus, so 0 points; Absorption Guard keeps its
+  unconditional "acts on the user" approximation), Shadow Work one per species present, not per
+  individual, with 2 points each (placeholder), the generic effect 1 point on each target
+  (placeholder). Bystander Effect's "far more" is 5 points on the others' Examines (+50 %) and the
+  same factor on the IFP of their Talks, until the user's next turn (placeholder).
 
 - **Info bonuses** add up as points, then multiply with talents (Reconnaissance Glide), and the IFP
   of an Examine are rounded **up** when the factor is above 1 (a penalty rounds down), so that a

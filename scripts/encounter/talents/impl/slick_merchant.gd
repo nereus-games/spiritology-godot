@@ -10,9 +10,8 @@
 ##
 ## The MENU half: "on turn 1, and when this character has 10 % DEN or less, it can't Use
 ## Ability, but gets an extra action: Run Away, which costs 10 ETH" — [method modify_menu] and
-## [method flee_eth_cost].
-## ## TODO: the doc puts a QTE behind that Run Away, so the attempt can fail. No QTE system
-## exists, so for now it always succeeds — see [method EncounterManager._resolve_flee].
+## [method flee_eth_cost]. The doc puts a QTE behind that Run Away, so the attempt can fail
+## ([method flee_needs_qte], `qte.gd`); the 10 ETH are paid either way.
 extends "res://scripts/encounter/talents/talent_script.gd"
 
 const EARLY_TURNS := 3
@@ -52,6 +51,10 @@ func modify_menu(manager, kinds: Array) -> void:
 
 func flee_eth_cost(_manager) -> int:
 	return RUN_AWAY_ETH
+
+
+func flee_needs_qte(_manager) -> bool:
+	return true
 
 
 func _label() -> String:

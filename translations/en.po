@@ -549,9 +549,9 @@ msgstr "%s will Meditate more often."
 msgid "LOG_WEIGHT_OBJECT"
 msgstr "%s will use objects more often."
 
-# %d = the bonus, %s = who is examined.
-msgid "LOG_EXAMINE_BONUS"
-msgstr "Examine bonus +%d on %s [to come]."
+# %s = who is examined, by an ability that adds no info bonus to the Examine.
+msgid "LOG_EXAMINE_MADE"
+msgstr "Examines %s."
 
 # %d = info bonus points, %s = whose Examine (or who is examined).
 msgid "LOG_EXAMINE_BOOST"
@@ -1362,3 +1362,16 @@ msgstr "Encyclopaedia"
 
 msgid "UI_DEV_ENCYCLOPAEDIA_SAMPLE"
 msgstr "Encyclopaedia (sample progress)"
+
+# Run Away's quick-time event. %s = the character who runs.
+msgid "UI_QTE_PROMPT"
+msgstr "%s is trying to get away: press Accept when the marker is in the green zone!"
+
+msgid "UI_QTE_PASSED"
+msgstr "Perfect timing!"
+
+msgid "UI_QTE_FAILED"
+msgstr "Too slow, or too early..."
+
+msgid "LOG_FLEE_QTE_FAILED"
+msgstr "tries to run away but fumbles it, and stays in the encounter."

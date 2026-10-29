@@ -3,7 +3,12 @@
 ## rival acts on the user this turn, the user Examines it without reprisal and gains X DEN (half
 ## the percentage of info known about its species). The "acts on the user" condition is
 ## approximated.
+##
+## The Examine is a plain one ([method ExamineYield.examine] with no extra info bonus: the text
+## gives none), so it yields what an Examine of that rival would, the user's own bonuses included.
 extends AbilityScript
+
+const ExamineYield := preload("res://scripts/encounter/effects/examine_yield.gd")
 
 
 func execute(ctx: EncounterContext) -> void:
@@ -11,5 +16,5 @@ func execute(ctx: EncounterContext) -> void:
 	var t = ctx.random_opponent()
 	if t:
 		ctx.deal_damage(t, ctx.base_damage())
-		ctx.grant_examine_bonus(t, 1)
+		ExamineYield.examine(ctx, t, 0)
 		ctx.recover_den(ctx.user, ctx.dmg(&"mini"))

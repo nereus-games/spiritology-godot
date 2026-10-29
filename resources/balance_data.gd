@@ -116,6 +116,18 @@ extends Resource
 ## (1 - hardening_talk_penalty) of the IFP it would. Between 0 (no penalty) and 1 (nothing).
 @export_range(0.0, 1.0) var hardening_talk_penalty: float = 0.36
 
+## The quick-time event behind Slick Merchant's Run Away ("QTE" in the doc, which describes
+## nothing of it): a marker sweeps back and forth along a bar and the player presses Accept while it
+## is inside a zone. All four figures are placeholders; see `qte.gd`.
+## Seconds for the marker to go from one end of the bar to the other and back.
+@export_range(0.1, 10.0) var qte_period: float = 1.2
+## Where the zone is centred along the bar, 0 (start) to 1 (end).
+@export_range(0.0, 1.0) var qte_zone_center: float = 0.5
+## The zone's width as a fraction of the bar.
+@export_range(0.01, 1.0) var qte_zone_width: float = 0.3
+## Seconds before the attempt is given up, which fails it.
+@export_range(0.1, 30.0) var qte_time_limit: float = 3.0
+
 ## Page assembly ("Page Assembly / Fragment Manipulation"). The doc writes the chance of
 ## destroying an already damaged fragment as "X %", and says the stain spreads "slowly",
 ## with a comment asking for a surface per minute: all three are placeholders for play-testing.

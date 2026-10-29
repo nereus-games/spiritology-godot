@@ -238,8 +238,7 @@ Decisions taken in code, where the doc has to catch up — or say otherwise:
   restarts the count. A refused Meditate (poison above 40) reveals nothing.
 - **A hidden rival still plays**, chases and starts encounters; walking into one unseen is an
   encounter like any other.
-- **A lit area** stays lit for the rest of the visit, and a dungeon above PSY 40 is dark even
-  if its config is lit; a lit area lights it for the player all the same.
+- **A lit area** stays lit for the rest of the visit, in a dark dungeon of either kind.
 
 The encyclopaedia, built on 2026-10-22 from the "Encyclopaedia" page, which leaves these open:
 

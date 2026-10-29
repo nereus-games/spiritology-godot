@@ -197,6 +197,22 @@ func repeated_action(who) -> bool:
 	return now != null and before != null and now.same_action_as(before)
 
 
+## Whether `who`'s last two recorded turns were the same action (Deflection's condition). The turn
+## being decided is not recorded yet, so these are the two it has already taken, whatever rounds
+## they fell in.
+func repeated_twice(who) -> bool:
+	var last: Turn = null
+	for i in range(_turns.size() - 1, -1, -1):
+		var t: Turn = _turns[i]
+		if t.actor != who:
+			continue
+		if last == null:
+			last = t
+		else:
+			return last.same_action_as(t)
+	return false
+
+
 # --- Damage ---
 
 

@@ -101,6 +101,12 @@ func flee_eth_cost(_manager) -> int:
 	return 0
 
 
+## Whether the bearer's Run Away is behind a quick-time event that can fail (Slick Merchant).
+## Only a player character plays it; see [method EncounterManager.flee_needs_qte].
+func flee_needs_qte(_manager) -> bool:
+	return false
+
+
 ## Mutates the actions offered to the bearer, in place. Run Away and Steal both arrive
 ## this way, each replacing Talk. An action a talent removes is ABSENT from the menu rather
 ## than greyed out: the talent replaces it, it does not forbid it.

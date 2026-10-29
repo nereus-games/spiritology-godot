@@ -273,13 +273,6 @@ func force_talk(target) -> void:
 	note(_tr("LOG_FORCED_TO_TALK") % _name(target))
 
 
-## A STUB, for the abilities that merely mention an Examine bonus (Absorption Guard, Steep In,
-## Bystander Effect, Shadow Work, the generic effect): it logs. The ones that act on it are
-## written with `examine_yield.gd` instead.
-func grant_examine_bonus(target, amount: int) -> void:
-	note(_tr("LOG_EXAMINE_BONUS") % [amount, _name(target)])
-
-
 func change_turn_order(_payload: Dictionary = {}) -> void:
 	if timeline and rng:
 		timeline.request_shuffle(rng)

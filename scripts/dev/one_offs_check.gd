@@ -212,6 +212,61 @@ func _check_deflection() -> void:
 	_check(100 - p0.den == off_weakness, "...damage that matches no weakness is not")
 	_check(second == on_weakness, "...and the doubling ends with the user's next turn")
 	m.free()
+	await _check_deflection_condition()
+
+
+## "Requires that the user has not used the same action twice": read from the history.
+func _check_deflection_condition() -> void:
+	var deflection := _ability(&"deflection")
+	var heat := GameEnums.Energy.HEAT
+	var m := _encounter()
+	var p0: EncounterIndividual = m.players[0]
+	var r0: EncounterIndividual = m.rivals[0]
+	p0.ability_ids.append(&"deflection")
+	_check(m.can_play(p0, deflection), "a fresh user may Deflect")
+	_play(m, p0, [_use(_hit(heat), r0)])
+	await m.run(1)
+	_check(m.can_play(p0, deflection), "...after one action")
+	m.free()
+	m = _encounter()
+	p0 = m.players[0]
+	r0 = m.rivals[0]
+	p0.ability_ids.append(&"deflection")
+	_play(m, p0, [_use(_hit(heat), r0), _use(_hit(heat), r0)])
+	await m.run(2)
+	_check(not m.can_play(p0, deflection), "...not after the same ability twice in a row")
+	_check(not m.usable_abilities(p0).has(deflection), "...and the menu does not offer it")
+	# Used regardless, it does nothing.
+	var weakness: GameEnums.Energy = r0.active_weakness(m.timeline.position_of(r0))
+	var ctx := m._make_context(p0, deflection, [r0])
+	EffectCatalog.script_for(deflection).execute(ctx)
+	_check(
+		r0.active_weakness(m.timeline.position_of(r0)) == weakness,
+		"...and used regardless, it changes no weakness"
+	)
+	m.free()
+
+	# Two different abilities, or an ability between two equal ones, lift the ban.
+	m = _encounter()
+	p0 = m.players[0]
+	r0 = m.rivals[0]
+	p0.ability_ids.append(&"deflection")
+	_play(m, p0, [_use(_hit(heat), r0), _meditate(p0)])
+	await m.run(2)
+	_check(m.can_play(p0, deflection), "different actions in a row do not bar it")
+	m.free()
+
+	m = _encounter()
+	p0 = m.players[0]
+	r0 = m.rivals[0]
+	p0.ability_ids.append(&"deflection")
+	_play(m, p0, [_meditate(p0), _meditate(p0)])
+	await m.run(2)
+	_check(not m.can_play(p0, deflection), "...two Meditates are the same action as well")
+	_play(m, p0, [_pass(p0)])
+	await m.run(1)
+	_check(m.can_play(p0, deflection), "...and a pass in between is a different one")
+	m.free()
 
 
 # --------------------------------------------------------------------------

@@ -54,6 +54,13 @@ var object_provider: Callable = Callable()
 ## reason: the manager must not reach the dungeon. Invalid in a harness without a map.
 var map_reveal: Callable = Callable()
 
+## [bridges] Plays the quick-time event behind a Run Away that has one (Slick Merchant) for the
+## individual it is given, and returns whether it was passed; a coroutine may be supplied. Injected
+## like [member object_provider]: the manager draws nothing. Invalid, as in every check and every
+## harness without a screen, the QTE is skipped and counts as passed, which is also what makes a
+## run reproducible. A rival never plays it, whatever is set here. See `qte.gd`.
+var qte_runner: Callable = Callable()
+
 ## [bridges] Whether the LAST Talk of the encounter was effective. False until one is resolved.
 var last_talk_effective := false
 
@@ -420,7 +427,7 @@ func _take_turn(individual: EncounterIndividual) -> void:
 	var dissolved_before := rivals.filter(func(f): return f.is_dissolved())
 	_action_damage = 0
 	var weakness_then := individual.active_weakness(timeline.position_of(individual))
-	_resolve_action(individual, action)
+	await _resolve_action(individual, action)
 	history.record_turn(individual, action, _action_damage, weakness_then)
 	_react_to_action(individual, action)
 	if individual.is_player:
@@ -463,7 +470,7 @@ func _resolve_action(individual: EncounterIndividual, action: EncounterAction) -
 		EncounterAction.Kind.STEAL:
 			_resolve_steal(individual, action)
 		EncounterAction.Kind.FLEE:
-			_resolve_flee(individual, action)
+			await _resolve_flee(individual, action)
 		EncounterAction.Kind.PASS:
 			# The doc's "…" action: passes the turn WITHOUT giving up your place.
 			_emit_turn(individual, action, [_tr("LOG_PASS")])
@@ -549,17 +556,40 @@ func _resolve_steal(individual: EncounterIndividual, action: EncounterAction) ->
 ## What happens next is exploration's business: the duo lands 3-5 tiles away, and the rivals
 ## still in the encounter stay where they were. The encounter only records who left.
 ##
-## slick_merchant charges 10 ETH, through [method flee_cost].
-## ## TODO: slick_merchant's QTE, which can make the attempt fail. There is no QTE system; until
-## there is, its Run Away always succeeds.
+## slick_merchant charges 10 ETH, through [method flee_cost], and puts a QTE behind the attempt
+## ([method flee_needs_qte]). The ETH is paid whether or not it is passed: it is the price of the
+## attempt. A failed attempt leaves the character in the encounter, its turn spent. Only a player
+## character plays the QTE; a rival always gets away.
 func _resolve_flee(individual: EncounterIndividual, action: EncounterAction) -> void:
 	var cost := flee_cost(individual)
 	if individual.eth < cost:
 		_emit_turn(individual, action, [_tr("LOG_FLEE_NO_ETH") % cost])
 		return
 	individual.pay_eth(cost)
+	if flee_needs_qte(individual) and not await _play_qte(individual):
+		_emit_turn(individual, action, [_tr("LOG_FLEE_QTE_FAILED")])
+		return
 	_emit_turn(individual, action, [_tr("LOG_FLEE")])
 	withdraw(individual, FLED)
+
+
+## Whether this individual's Run Away is behind a QTE: one of its talents says so, and it is a
+## player character (a rival does not play one).
+func flee_needs_qte(individual: EncounterIndividual) -> bool:
+	if not individual.is_player:
+		return false
+	for t in _talents:
+		if t.owner == individual and t.flee_needs_qte(self):
+			return true
+	return false
+
+
+## Passed, when nothing is there to play it.
+func _play_qte(individual: EncounterIndividual) -> bool:
+	if not qte_runner.is_valid():
+		return true
+	@warning_ignore("redundant_await")
+	return bool(await qte_runner.call(individual))
 
 
 ## What running away costs this individual in ETH — 0 unless one of its talents charges for

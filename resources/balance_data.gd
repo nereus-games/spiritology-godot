@@ -179,3 +179,15 @@ func damage(tier: StringName) -> int:
 		&"big":
 			return damage_big
 	return damage_normal
+
+## Forlorn variants. The doc: about 1 % of spawned rivals are Forlorn ([member forlorn_chance]),
+## and a Forlorn rival is a stronger, richer-yielding variant; the bonuses are still marked X, Y
+## or TBD there. PLACEHOLDERS: a Forlorn rival's maximum DEN and ETH are its group's, times these
+## factors ([method RivalMember.make_forlorn]); the extra IFP it yields is in
+## [constant GameSession.IFP_TABLE]. Under Static Camouflage a watched group holding a Forlorn
+## member is [member camouflage_forlorn_weight] times as likely to be among the groups shown, the
+## doc having Forlorn shapes "likelier than by default" without a figure.
+@export_range(0.0, 1.0) var forlorn_chance: float = 0.01
+@export var forlorn_den_factor: float = 1.25
+@export var forlorn_eth_factor: float = 1.25
+@export var camouflage_forlorn_weight: int = 4

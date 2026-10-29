@@ -97,6 +97,9 @@ msgstr "Groupe %d sur %d : %s"
 msgid "UI_SCOUT_MEMBER"
 msgstr "%d x %s"
 
+msgid "UI_SCOUT_MEMBER_FORLORN"
+msgstr "%d x %s (Esseulé)"
+
 msgid "UI_SCOUT_NONE_LEFT"
 msgstr "Il semble qu'aucun autre groupe ne rôde par ici."
 
@@ -1287,8 +1290,8 @@ msgstr "Page"
 msgid "UI_ENCYCLOPAEDIA_TAB_FORLORN"
 msgstr "Esseulé"
 
-msgid "UI_ENCYCLOPAEDIA_FORLORN_PENDING"
-msgstr "La page de la variété Esseulé n'est pas encore disponible."
+msgid "UI_ENCYCLOPAEDIA_FORLORN_LOCKED"
+msgstr "Un rival esseulé ne livre ses informations supplémentaires qu'une fois la page ordinaire complète."
 
 # %s = a spiricosm (TERM_SPIRICOSM_*).
 msgid "UI_ENCYCLOPAEDIA_SPIRICOSM"

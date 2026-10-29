@@ -55,12 +55,13 @@ encounter-side scripts are now explicit no-ops that say so.
   should carry into it, and a rival's poison should too; `scripts/encounter/` knows nothing of
   afflictions. Needs deciding first what "a different action" means in the encounter menu.
   (`affliction_state.gd`)
-- **Static Camouflage's unknown species and Forlorn shapes.** The watch itself is built (2 to
-  4 groups, one at a time, take one on or keep waiting; `scouting.gd`), but the doc's chances of
-  including unknown species and variations — higher next to litter, and Forlorn shapes likelier
-  than by default — and the rule that it does not stack with a costume wait on the Forlorn
-  individual (section 4) and on the costume rethink (section 5). The groups are shown as text,
-  not as their sprites.
+- **Static Camouflage's unknown species.** The watch itself is built (2 to 4 groups, one at a
+  time, take one on or keep waiting; `scouting.gd`), and Forlorn shapes are likelier in it (a
+  group holding a Forlorn member weighs `camouflage_forlorn_weight` in the draw, and is shown as
+  such). What is left is the doc's chance of including unknown species — groups that are not on
+  the map, higher next to litter — which needs a group that is shown without existing, and the
+  rule that it does not stack with a costume, which waits on the costume rethink (section 5). The
+  groups are shown as text, not as their sprites.
 
 Trick to Reveal now reaches the dungeon through a narrow handle the encounter is given
 (`EncounterManager.map_reveal`, like `object_provider`), and reveals the closest hidden chest or
@@ -105,22 +106,25 @@ unblock.
   The amount an Examine yields follows the info bonuses (Reconnaissance Glide, Halo Effect,
   Priming, Catatonia; `examine_bonus_step` in `data/balance.tres`, a placeholder). What is
   missing: most `encyclopaedia_*` signals are still announced nowhere (only the assembly screen and
-  the selector's memory listen); and Forlorn variants on the individual. (`encounter_manager.gd`, `encyclopaedia_model.gd`)
+  the selector's memory listen). The Forlorn variant is on the individual now
+  (`EncounterIndividual.is_forlorn`), so its higher IFP are earned. (`encounter_manager.gd`, `encyclopaedia_model.gd`)
 - **The encyclopaedia's screens.** The grid and the read-only page view are built and read the
   fragment model (see [architecture.md](architecture.md), *The encyclopaedia screens*), reachable
   only from the dev scenario picker. The assembly screen is built too (*The assembly screen*), reached from a page's
   Accept. What is left: sounds for it (a hook only), art for the fragments, its controls page
-  in the doc (TBD there); the Forlorn tab, a placeholder until the Forlorn individual exists; real icons and the pages'
+  in the doc (TBD there); real icons and the pages'
   remaining sections (personality, environment, routine, the illustration carousel); the order
   of the pages, which is by identifier meanwhile; and a way in from the real menus, which do
   not exist. The selector's starting species is remembered by `encyclopaedia_recent.gd`, not
   saved with the session.
-- **Forlorn rivals at spawn.** About 1 % of spawned rivals should be Forlorn. The rest of
-  "Rival Spawning" is built: species weighted by dungeon rarity, the spawn limit, a new group
-  pushing the occupant of a taken spawn point aside, preset compositions in 0 to 50 % of
-  spawns, waves wider at a high PSY, and examined decor spawning rivals above PSY 20. What is
-  left needs the Forlorn individual (see *Encyclopaedia detail*, above): the roll, and the
-  doc's table of bonuses. (`rival_spawner.gd`, `TODO(forlorn)`)
+- **Forlorn rivals at spawn** are built: each member of a composed group (drawn, or from a
+  preset composition; not a hand-placed fixed group) is Forlorn with `forlorn_chance`, 1 %
+  (`rival_spawner.gd`), and carries the flag as `RivalMember.forlorn` into the encounter's
+  `EncounterIndividual.is_forlorn`. The rest of "Rival Spawning" is built too: species weighted
+  by dungeon rarity, the spawn limit, a new group pushing the occupant of a taken spawn point
+  aside, preset compositions in 0 to 50 % of spawns, waves wider at a high PSY, and examined
+  decor spawning rivals above PSY 20. What is left is the doc's table of Forlorn bonuses, which
+  the doc still marks X, Y or TBD: the ones in place are placeholders (section 5).
 - **The exploration HUD's final form** — the stack of known abilities with its USE/CANCEL
   submenu, and the doc's layout. (`hud_exploration.gd`)
 - **The Coal Vetch**, a faction with two entrances, neither implemented. In an encounter, an
@@ -183,7 +187,11 @@ pages the doc has not given yet.
   Tactical Retreat's rate (1 DEN avoided for 1 ETH).
 - The multipliers for common and normal species against rare ones in spawning (proposed 3 and
   2, not yet answered; `spawn_weight_common` and `spawn_weight_normal` in `data/balance.tres`),
-  and the Forlorn bonuses still marked X, Y or TBD (`rival_spawner.gd`).
+  and the Forlorn bonuses still marked X, Y or TBD. In `data/balance.tres`: the chance
+  (`forlorn_chance`, 1 %, which the doc does give), the Forlorn variant's DEN and ETH
+  (`forlorn_den_factor` and `forlorn_eth_factor`, 1.25 each), and how much likelier a group with
+  a Forlorn member is to be shown by Static Camouflage (`camouflage_forlorn_weight`, 4 against
+  1). The extra IFP are the doc's own table (`GameSession.IFP_TABLE`).
 - Spawning figures the doc leaves open, placeholders in `data/balance.tres`: what "high PSY"
   means for wider waves and by how many groups (`wave_psy_*`; 20 and +1), how many groups and
   how near "one or more groups nearby" is for examined decor (`decor_spawn_groups_max` and
@@ -195,6 +203,17 @@ pages the doc has not given yet.
   (`litter.gd`, `examinable_decor.gd`).
 
 Decisions taken in code, where the doc has to catch up — or say otherwise:
+
+- **The Forlorn individual.** The doc says only that a Forlorn rival is a variant, yields more
+  IFP once the ordinary page is complete, and has an exclusive ability. Read as: a stronger
+  rival (the DEN and ETH factors above, applied to a spawned member's maximums and to an
+  individual made without a map state), rolled per member rather than per group, only at spawn
+  and not for fixed groups, and never a player character. The Forlorn ability is the variant's
+  alone: an ordinary rival no longer has it, though the data lists it among the species'
+  origin abilities. A Forlorn flag survives encounters the way DEN does. The encyclopaedia's
+  Forlorn tab shows the page's completion, the ability (revealed at 15 arranged fragments) and a
+  line saying the page fills only once the ordinary page is complete; its fragments open the
+  same assembly desk.
 
 - **Info bonuses** add up as points, then multiply with talents (Reconnaissance Glide), and the IFP
   of an Examine are rounded **up** when the factor is above 1 (a penalty rounds down), so that a
@@ -272,7 +291,7 @@ The encyclopaedia, built on 2026-10-22 from the "Encyclopaedia" page, which leav
   Selecting is separate from moving: Accept picks up (the grid shows), arrows move, Accept or
   Cancel puts down; Backspace sends a lone fragment back. A refused move shakes the fragment.
   Fragments in the new area are in a fixed shuffled order. Key repeat: 0.28 s then every 0.1 s.
-  The Forlorn tab cannot open the desk yet.
+  The Forlorn tab opens the desk on the Forlorn page.
 - **The screens.** Pages are ordered by species identifier in a grid (6 x 6 for 36 species);
   the doc gives no order.
 

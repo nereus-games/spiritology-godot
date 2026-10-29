@@ -180,14 +180,18 @@ one, which is what hand-built scenarios rely on.
 **Going in**, exploration hands the encounter every member with its current state, so damage
 taken on the map — a fall — is still there. **Coming back**, the encounter hands exploration
 a report, one entry per member (`EncounterManager.rival_report`), and the group takes it:
-dissolved members are gone, the others keep the DEN and ETH they came out with.
+dissolved members are gone, the others keep the DEN and ETH they came out with. A member can be
+its species' **Forlorn** variant (`RivalMember.forlorn`, rolled by `RivalSpawner`): the flag rides
+in the member's state, becomes `EncounterIndividual.is_forlorn` (larger DEN and ETH, and the
+species' Forlorn ability, which an ordinary rival lacks), and is what `ifp_earned` announces.
 
 **The encounter reaches the dungeon through narrow handles, never a reference to it.**
 `EncounterManager.map_reveal` is a callable handed in the way `object_provider` is, set by
 `TransitionManager.open_encounter`; Trick to Reveal calls it after an effective dialogue, and
 exploration answers by revealing the closest hidden chest or trap. The other direction is
 Static Camouflage: `DungeonManager.scouting` (`scouting.gd`) shows 2 to 4 of the map's groups
-one at a time and swaps the exploration menu for "take this group on" / "keep waiting".
+one at a time and swaps the exploration menu for "take this group on" / "keep waiting"; a group
+holding a Forlorn member is likelier to be among those shown, and is shown as such.
 
 An encounter no longer ends only when a side is dissolved. An individual can **leave**:
 `EncounterManager.withdraw` takes it out of its side and of the turn order, so no targeting

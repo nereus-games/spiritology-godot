@@ -18,6 +18,8 @@ var eth: int
 ## PSY rung. It rides into every later encounter in [method encounter_state], but only counts
 ## while PSY is above that rung when a Talk happens.
 var talk_malus := 0.0
+## Whether it is its species' Forlorn variant. Set once, when the group is composed.
+var forlorn := false
 
 
 func _init(p_species_id: StringName = &"", p_max_den: int = 0, p_max_eth: int = 0) -> void:
@@ -28,6 +30,19 @@ func _init(p_species_id: StringName = &"", p_max_den: int = 0, p_max_eth: int = 
 	eth = p_max_eth
 
 
+## Turns this individual into its species' Forlorn variant: its maximums grow by the Forlorn
+## factors in [BalanceData], and what it has now with them.
+func make_forlorn() -> void:
+	if forlorn:
+		return
+	forlorn = true
+	var balance := BalanceData.current()
+	max_den = roundi(max_den * balance.forlorn_den_factor)
+	den = max_den
+	max_eth = roundi(max_eth * balance.forlorn_eth_factor)
+	eth = max_eth
+
+
 func is_dissolved() -> bool:
 	return den <= 0
 
@@ -36,6 +51,8 @@ func is_dissolved() -> bool:
 ## [method TransitionManager.open_encounter] takes.
 func encounter_state() -> Dictionary:
 	var state := {"den": den, "max_den": max_den, "eth": eth, "max_eth": max_eth}
+	if forlorn:
+		state["forlorn"] = true
 	if talk_malus > 0.0:
 		state["talk_malus"] = talk_malus
 	return state

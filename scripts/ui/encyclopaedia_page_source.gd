@@ -9,6 +9,8 @@ extends RefCounted
 ## Fragments to arrange correctly for each encyclopaedia ability, in order. Source: design doc,
 ## Encyclopaedia / Filling the Encyclopaedia.
 const FRAGMENTS_FOR_ABILITY: Array[int] = [15, 30]
+## The same for the Forlorn page's single ability.
+const FORLORN_FRAGMENTS := 15
 
 
 ## Everything the page shows, as a Dictionary. Keys: `species` ([SpeciesData]), `ifp`,
@@ -43,6 +45,24 @@ static func build(species_id: StringName) -> Dictionary:
 		"talent": GameData.talent(sp.talent),
 		"abilities": abilities,
 		"loot": sp.loot,
+	}
+
+
+## What the Forlorn tab of a species shows. Keys: `species` ([SpeciesData]), `ifp`, `completion`,
+## `ability` (the Forlorn ability id, or &"" if the species has none), `unlocked` (whether the
+## Forlorn page has revealed it), `fragments` (arranged fragments it takes), and `open` (whether
+## the ordinary page is complete, which is when Forlorn rivals start to fill this page).
+static func build_forlorn(species_id: StringName) -> Dictionary:
+	var sp: SpeciesData = GameData.species(species_id)
+	return {
+		"species": sp,
+		"ifp": GameSession.page_ifp(species_id, true),
+		"completion": clampi(GameSession.page_ifp(species_id, true), 0, 100),
+		"ability": sp.forlorn_ability,
+		"unlocked":
+		sp.forlorn_ability != &"" and sp.forlorn_ability in GameSession.unlocked_abilities(species_id),
+		"fragments": FORLORN_FRAGMENTS,
+		"open": GameSession.is_page_complete(species_id),
 	}
 
 

@@ -105,13 +105,15 @@ func begin(
 			_player_slots.append({"individual": f, "slot": slot})
 	var rf: Array = []
 	for i in rival_ids.size():
-		var f := EncounterManager.make_individual(StringName(rival_ids[i]), false)
+		var state: Dictionary = rival_states[i] if i < rival_states.size() else {}
+		var f := EncounterManager.make_individual(
+			StringName(rival_ids[i]), false, bool(state.get("forlorn", false))
+		)
 		if f == null:
 			continue
 		# Map state: the MAXIMUM is a level design setting (the doc's magnitudes are in
 		# GameSession.RIVAL_DEN_*), while the current value carries over damage already
 		# taken while exploring. Set the max FIRST — the carry-over clamps to it.
-		var state: Dictionary = rival_states[i] if i < rival_states.size() else {}
 		var map_max: int = int(state.get("max_den", 0))
 		if map_max > 0:
 			f.max_den = map_max

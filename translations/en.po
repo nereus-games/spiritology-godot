@@ -217,6 +217,42 @@ msgstr "Stay put"
 msgid "UI_ACTION_MEDITATE"
 msgstr "Meditate"
 
+# Opens the stack of known exploration abilities (HUD element 4), and its USE / CANCEL submenu.
+msgid "UI_ACTION_ABILITIES"
+msgstr "Abilities"
+
+msgid "UI_ABILITY_USE"
+msgstr "USE"
+
+msgid "UI_ABILITY_CANCEL"
+msgstr "CANCEL"
+
+# Why an ability in the stack cannot be used: already used this visit, or a watch is running.
+msgid "UI_ABILITY_SPENT"
+msgstr "Already used during this visit."
+
+msgid "UI_ABILITY_BUSY"
+msgstr "Finish what you are doing first."
+
+# --- Encyclopaedia notices on the exploration HUD --------------------------------------
+# %s = the species, %d = fragments formed, %d = the page's percentage.
+msgid "NOTICE_ENC_FRAGMENTS"
+msgstr "%s: %d new fragment(s) (page at %d %%)"
+
+msgid "NOTICE_ENC_FRAGMENTS_FORLORN"
+msgstr "%s, Forlorn page: %d new fragment(s) (page at %d %%)"
+
+# %s = the ability, %s = the species.
+msgid "NOTICE_ENC_ABILITY"
+msgstr "New ability revealed: %s (%s)"
+
+# The main page being complete is also when its Forlorn page opens.
+msgid "NOTICE_ENC_PAGE_COMPLETE"
+msgstr "The page of %s is complete. Its Forlorn page opens."
+
+msgid "NOTICE_ENC_FORLORN_COMPLETE"
+msgstr "The Forlorn page of %s is complete."
+
 # --- Exploration: the effect log and the status banner --------------------------------
 # What an exploration ability or an object did, recorded by ExplorationContext, and the
 # lasting afflictions the HUD shows top-left. "tiles" is the exploration unit throughout.

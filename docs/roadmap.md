@@ -104,8 +104,11 @@ unblock.
   assembly API, the 15 / 30 / Forlorn-15 ability thresholds, the starting duo, and persistence.
   The amount an Examine yields follows the info bonuses (Reconnaissance Glide, Halo Effect,
   Priming, Catatonia; `examine_bonus_step` in `data/balance.tres`, a placeholder). What is
-  missing: most `encyclopaedia_*` signals are still announced nowhere (only the assembly screen and
-  the selector's memory listen); and Forlorn variants on the individual. (`encounter_manager.gd`, `encyclopaedia_model.gd`)
+  missing: Forlorn variants on the individual. The signals reach the player on the exploration
+  HUD's banner (`encyclopaedia_notices.gd`): fragments formed, an ability revealed, a page
+  assembled (the main one also opens its Forlorn page); progress and page changes are not
+  announced, only the screens listen to them. Nothing announces them in an encounter or on the
+  assembly screen, which have their own feedback. (`encounter_manager.gd`, `encyclopaedia_model.gd`)
 - **The encyclopaedia's screens.** The grid and the read-only page view are built and read the
   fragment model (see [architecture.md](architecture.md), *The encyclopaedia screens*), reachable
   only from the dev scenario picker. The assembly screen is built too (*The assembly screen*), reached from a page's
@@ -121,8 +124,11 @@ unblock.
   spawns, waves wider at a high PSY, and examined decor spawning rivals above PSY 20. What is
   left needs the Forlorn individual (see *Encyclopaedia detail*, above): the roll, and the
   doc's table of bonuses. (`rival_spawner.gd`, `TODO(forlorn)`)
-- **The exploration HUD's final form** — the stack of known abilities with its USE/CANCEL
-  submenu, and the doc's layout. (`hud_exploration.gd`)
+- **The exploration HUD's final form** — the functional side is built: the stack of known
+  abilities with its USE / CANCEL submenu (`exploration_ability_stack.gd`, drawn by
+  `exploration_ability_stack_view.gd`, opened by the action menu's "Abilities" entry), and the
+  encyclopaedia notices (see *Encyclopaedia detail*). What is left is the look: the doc's layout
+  and round icons, which are art. (`hud_exploration.gd`)
 - **The Coal Vetch**, a faction with two entrances, neither implemented. In an encounter, an
   agent can appear after repeated Examines (`encounter_manager.gd`). In a dungeon, if the player
   stays too long, agents arrive at hand-placed arrival points on hand-set timestamps and take
@@ -216,6 +222,22 @@ Decisions taken in code, where the doc has to catch up — or say otherwise:
   exactly like the whole group being devitalised (`exploration.gd`, `_run_away`).
 - **A linked elevator moves empty**, leaving whoever stands on it behind. The doc now describes
   linked elevators, but not who rides them (`elevator.gd`, `linked`).
+
+The exploration HUD's ability stack and notices (`exploration_ability_stack.gd`,
+`encyclopaedia_notices.gd`), where the doc's layout was not available to read:
+
+- **The stack** replaces the one-entry-per-ability lines of the action menu with one "Abilities"
+  entry. Every known ability is listed, a spent one greyed rather than hidden (the doc's rule for
+  unusable encounter actions, extended). An ability is usable if unspent this visit and no Static
+  Camouflage watch runs. A spent ability's submenu opens with USE greyed and the cursor on CANCEL;
+  forcing USE posts the reason. USE closes the whole stack, CANCEL goes back to it. Keys: the
+  action menu's (Tab, Shift+Tab, Space/Enter), Backspace or Escape to go back. Poison does not
+  forbid abilities, only Meditate and objects (PSY rung 4).
+- **The notices** are one banner line per event, queued so that several in one frame show one
+  after another, and never cutting a dungeon message short. Fragments formed (every 3 IFP) stand
+  for "a page progressing" instead of every IFP; an ability revealed is announced by name; a
+  main page assembled says its Forlorn page opens (that is when it does); a Forlorn page assembled
+  is announced.
 
 The encyclopaedia, built on 2026-10-22 from the "Encyclopaedia" page, which leaves these open:
 

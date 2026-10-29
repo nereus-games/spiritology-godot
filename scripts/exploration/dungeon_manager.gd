@@ -23,6 +23,7 @@ const SafeAreas := preload("res://scripts/exploration/safe_areas.gd")
 const Scouting := preload("res://scripts/exploration/scouting.gd")
 const DungeonLayout := preload("res://scripts/exploration/dungeon_layout.gd")
 const TileSearch := preload("res://scripts/exploration/tile_search.gd")
+const DungeonSight := preload("res://scripts/exploration/dungeon_sight.gd")
 
 ## Tile size in world units (metres). A wall block is 1 m x 1 m x 1 m.
 const TILE_SIZE := 1.0
@@ -94,6 +95,9 @@ var scouting = Scouting.new(self)
 
 ## Looking for tiles — a free one nearby, the ones within walking reach, a random one.
 var tile_search = TileSearch.new(self)
+
+## What the player can see: the dark, the light, the rivals heard but not seen.
+var sight = DungeonSight.new(self)
 
 ## The dungeon's level-design configuration — which rival groups appear, where and when. Null
 ## for a room built by hand with no such rules, as most test scenarios are.
@@ -227,6 +231,7 @@ func register_rival(rival: Node) -> void:
 		return
 	_rivals.append(rival)
 	reserve(world_to_tile(rival.global_position), rival)
+	refresh_sight()
 
 
 func unregister_rival(rival: Node) -> void:
@@ -253,6 +258,29 @@ func advance_turn() -> void:
 					m.on_turn(turn_count)
 	# Per-actor lingering effects (poison), after the rivals have played.
 	_tick_actor_afflictions()
+	# Sight last: Meditate's reveal runs down by this move, then the rivals are shown or hidden
+	# where they now stand, and a rival that has come within earshot is announced.
+	sight.on_move()
+	refresh_sight()
+	var heard: String = sight.heard_message()
+	if heard != "":
+		post_message(heard)
+
+
+## Shows or hides every rival according to [member sight]. A hidden rival keeps playing; it is
+## only not drawn. Called whenever something that sight depends on has changed.
+func refresh_sight() -> void:
+	if _player == null:
+		return
+	for rival in _rivals:
+		if is_instance_valid(rival):
+			rival.visible = sight.rival_visible(rival)
+
+
+## Meditate in the dark: shows every rival for the next few moves.
+func reveal_rivals() -> void:
+	sight.reveal_rivals()
+	refresh_sight()
 
 
 ## Asks for the `count` closest unrevealed traps to `from_tile` to be revealed in the next
@@ -525,6 +553,7 @@ func teleport_actor_to(who: Node, dest: Vector3i) -> Vector3i:
 		_occupants[dest] = who
 	if who.has_method("teleport_to"):
 		who.teleport_to(dest)
+	refresh_sight()
 	return dest
 
 

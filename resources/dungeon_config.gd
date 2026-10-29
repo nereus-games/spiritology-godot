@@ -27,6 +27,10 @@ extends Resource
 ## Scripted rivals and special factions present here, such as The Coal Vetch.
 @export var special_rivals: Array[StringName] = []
 
+## Is this dungeon dark? Sight is then limited and rivals are heard rather than seen; see
+## [DungeonSight]. A PSY above the fourth rung makes any dungeon dark, whatever this says.
+@export var dark := false
+
 ## Ambient music, loaded with the rest of the dungeon's assets.
 @export_file("*.ogg", "*.wav") var ambient_music: String = ""
 

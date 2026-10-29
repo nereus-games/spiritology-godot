@@ -145,6 +145,7 @@ A `DungeonConfig` says how rival groups appear, and every figure is per dungeon:
 | `random_composition_chance` | X, from 0.5 to 1 — a group drawn at random, else a special one (so presets are 0 to 50 % of spawns) |
 | `possible_species` | the varieties a random group is drawn from |
 | `common_species` / `rare_species` | subsets of `possible_species`; the others are normal. Weighted 3 : 2 : 1 by default |
+| `dark` | the dungeon is dark: sight of one tile, rivals heard not seen (see `dungeon_sight.gd`); any dungeon is dark above PSY 40 |
 | `rival_limit` | the most groups on the map at once; 0, no limit |
 | `group_size_*`, `member_max_den_*`, `member_max_eth_*` | the random draw's bounds |
 | `special_compositions` | `RivalGroupData`, picked when not drawn at random |

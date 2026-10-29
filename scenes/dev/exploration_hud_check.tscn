@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://b0spexplhudchk"]
+
+[ext_resource type="Script" path="res://scripts/dev/exploration_hud_check.gd" id="1"]
+
+[node name="ExplorationHudCheck" type="Node"]
+script = ExtResource("1")

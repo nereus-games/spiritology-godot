@@ -7,9 +7,11 @@
 ## `cycle_action` (Tab) cycles, `cycle_action_reverse` (Shift+Tab) cycles back, `interact`
 ## (Space/Enter) confirms. It updates live from [GameSession]'s DEN/ETH signals.
 ## The mini-map (element 1) is `exploration_minimap.gd`.
-## TODO, from the design doc's "User Interface": the stack of known exploration abilities
-## (element 4) with its USE/CANCEL submenu, and the final layout (DEN/ETH bottom-centre, round
-## icons).
+## The stack of known exploration abilities (element 4) is opened by the "Abilities" entry of the
+## action menu; its logic is `exploration_ability_stack.gd`, drawn by
+## `exploration_ability_stack_view.gd`. Encyclopaedia notices (a page progressing, an ability
+## revealed) arrive through `encyclopaedia_notices.gd` and share the one-off message banner.
+## TODO, from the design doc's "User Interface": the final look (round icons, art).
 extends CanvasLayer
 
 const ExplorationActionMenu := preload("res://scripts/ui/exploration_action_menu.gd")
@@ -17,6 +19,8 @@ const ExplorationContext := preload("res://scripts/exploration/abilities/explora
 const ExplorationExtraActions := preload("res://scripts/exploration/exploration_extra_actions.gd")
 const ExplorationAction := preload("res://scripts/exploration/exploration_action.gd")
 const ExplorationMinimap := preload("res://scripts/ui/exploration_minimap.gd")
+const AbilityStackView := preload("res://scripts/ui/exploration_ability_stack_view.gd")
+const EncyclopaediaNotices := preload("res://scripts/ui/encyclopaedia_notices.gd")
 
 ## DEV: the test-scenario selection screen, where the MENU button leads. Temporary.
 const SCENARIO_SELECT := "res://scenes/dev/scenario_select.tscn"
@@ -47,6 +51,11 @@ var _status_label: Label
 ## The one-off message banner — a dieverting's outcome and the like — and its fade-out.
 var _message_label: Label
 var _message_tween: Tween
+## Seconds the current message still holds the banner; encyclopaedia notices wait for it to end.
+var _message_hold_left := 0.0
+
+var _stack_view: Control
+var _notices
 
 ## How long a message stays at full opacity, in seconds, then how long the fade takes.
 const MESSAGE_HOLD := 4.0
@@ -61,6 +70,11 @@ func _ready() -> void:
 	_build_minimap()
 	_build_status()
 	_build_message()
+	_stack_view = AbilityStackView.new()
+	_stack_view.set_anchors_preset(Control.PRESET_FULL_RECT)
+	add_child(_stack_view)
+	_notices = EncyclopaediaNotices.new()
+	_notices.connect_session()
 	GameSession.den_changed.connect(_on_den_changed)
 	GameSession.eth_changed.connect(_on_eth_changed)
 	for slot in SLOTS:
@@ -189,7 +203,8 @@ func _build_action_menu() -> void:
 ## Asks every frame which contextual actions are available while the player is at rest, and
 ## updates the menu. The dungeon and the player are resolved lazily, since the HUD can be ready
 ## before them.
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
+	_pump_notices(delta)
 	if _dungeon == null:
 		_dungeon = get_tree().get_first_node_in_group("dungeon") as DungeonManager
 		if _dungeon != null:
@@ -209,6 +224,7 @@ func _process(_delta: float) -> void:
 func _refresh_actions() -> void:
 	if _extra_actions == null:
 		_extra_actions = ExplorationExtraActions.new(ExplorationContext.new(_dungeon, _player))
+		_stack_view.bind(_extra_actions.stack)
 	# Static Camouflage's watch: its choice is all there is, abilities and objects included.
 	if _dungeon.scouting.active:
 		_action_menu.set_actions(_dungeon.scouting.actions())
@@ -270,11 +286,25 @@ func show_message(text: String) -> void:
 		return
 	_message_label.text = text
 	_message_label.modulate.a = 1.0
+	_message_hold_left = MESSAGE_HOLD
 	if _message_tween != null and _message_tween.is_valid():
 		_message_tween.kill()
 	_message_tween = create_tween()
 	_message_tween.tween_interval(MESSAGE_HOLD)
 	_message_tween.tween_property(_message_label, "modulate:a", 0.0, MESSAGE_FADE)
+
+
+## Shows the next waiting encyclopaedia notice once the banner is free, so that a notice never
+## cuts a dungeon message short and several notices follow one another.
+func _pump_notices(delta: float) -> void:
+	_message_hold_left = maxf(0.0, _message_hold_left - delta)
+	if _notices != null and _message_hold_left <= 0.0 and _notices.has_pending():
+		show_message(_notices.take())
+
+
+func _exit_tree() -> void:
+	if _notices != null:
+		_notices.disconnect_session()
 
 
 ## The mini-map, anchored bottom-right (element 1 of the HUD).
@@ -324,6 +354,9 @@ func hide_balance() -> void:
 
 ## Keyboard navigation for the action menu. Not modal: it does not block movement.
 func _unhandled_input(event: InputEvent) -> void:
+	if _handle_stack_input(event):
+		get_viewport().set_input_as_handled()
+		return
 	if _action_menu == null or not _action_menu.has_actions():
 		return
 	# Shift+Tab BEFORE Tab: `is_action_pressed` ignores modifiers by default, so Shift+Tab would
@@ -342,3 +375,29 @@ func _unhandled_input(event: InputEvent) -> void:
 		if _dungeon != null and _player != null:
 			_refresh_actions()
 		get_viewport().set_input_as_handled()
+
+
+## While the ability stack is open it takes the menu's keys: the cycling keys move, `interact`
+## accepts, Backspace or Escape goes back a level. Returns true when the event was used.
+func _handle_stack_input(event: InputEvent) -> bool:
+	if _extra_actions == null or not _extra_actions.stack.is_open():
+		return false
+	var stack = _extra_actions.stack
+	if event.is_action_pressed("cycle_action_reverse", false, true):
+		stack.move(-1)
+	elif event.is_action_pressed("cycle_action"):
+		stack.move(1)
+	elif event.is_action_pressed("interact"):
+		stack.accept()
+		# An ability may have changed the menu (Static Camouflage replaces it).
+		if _dungeon != null and _player != null:
+			_refresh_actions()
+	elif event.is_action_pressed("ui_cancel") or _is_backspace(event):
+		stack.back()
+	else:
+		return false
+	return true
+
+
+func _is_backspace(event: InputEvent) -> bool:
+	return event is InputEventKey and event.pressed and event.keycode == KEY_BACKSPACE

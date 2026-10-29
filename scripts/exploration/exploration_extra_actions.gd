@@ -11,17 +11,21 @@
 extends RefCounted
 
 const ExplorationAction := preload("res://scripts/exploration/exploration_action.gd")
-const Catalog := preload("res://scripts/exploration/abilities/exploration_ability_catalog.gd")
+const AbilityStack := preload("res://scripts/exploration/exploration_ability_stack.gd")
 const Objects := preload("res://scripts/exploration/exploration_objects.gd")
 
 ## Id of the Meditate action, shared with the meditation gateway's contextual one.
 const MEDITATE_ID := &"meditate"
+
+## The stack of known exploration abilities, opened by the "Abilities" entry. The HUD draws it.
+var stack
 
 var _ctx
 
 
 func _init(ctx) -> void:
 	_ctx = ctx
+	stack = AbilityStack.new(ctx)
 
 
 ## Merges the contextual actions of the tile being faced with the ones offered everywhere: returns
@@ -40,7 +44,8 @@ func combine(contextual: Array) -> Array:
 	return actions
 
 
-## Builds the action list: Meditate, always on offer, then the unused exploration abilities and the
+## Builds the action list: Meditate, always on offer, then "Abilities" when the duo knows any
+## exploration ability (it opens [member stack], where the spent ones show greyed), then the
 ## usable objects. `gateway_meditation` is the facing meditation gateway's own Meditate action, if
 ## there is one: choosing Meditate then also counts towards opening that gateway.
 func build(gateway_meditation = null) -> Array:
@@ -51,13 +56,10 @@ func build(gateway_meditation = null) -> Array:
 			Callable(self, "_run_meditate").bind(gateway_meditation)
 		)
 	]
-	# Known exploration abilities, not yet used this visit.
-	for id in Catalog.known_for_duo():
-		if GameSession.is_exploration_ability_used(id):
-			continue
+	if stack.has_abilities():
 		actions.append(
 			ExplorationAction.new(
-				id, _ability_label_key(id), Callable(self, "_run_ability").bind(id)
+				&"abilities", "UI_ACTION_ABILITIES", Callable(self, "_open_stack")
 			)
 		)
 	# Inventory objects usable during exploration.
@@ -72,9 +74,8 @@ func build(gateway_meditation = null) -> Array:
 	return actions
 
 
-func _ability_label_key(id: StringName) -> String:
-	var ab: AbilityData = GameData.ability(id)
-	return ab.name_key() if ab != null else String(id)
+func _open_stack() -> void:
+	stack.open()
 
 
 ## Meditate: the duo recovers [member BalanceData.meditate_eth] ETH each and, when facing a
@@ -94,12 +95,6 @@ func _refused() -> bool:
 		return false
 	_ctx.refuse_poisoned_action()
 	return true
-
-
-func _run_ability(id: StringName) -> void:
-	var ability = Catalog.script_for(id)
-	if ability.use(_ctx):
-		GameSession.mark_exploration_ability_used(id)
 
 
 func _run_object(object_id: StringName) -> void:

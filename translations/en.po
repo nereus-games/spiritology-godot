@@ -100,6 +100,22 @@ msgstr "%d x %s"
 msgid "UI_SCOUT_NONE_LEFT"
 msgstr "It seems no other group is wandering here."
 
+# "In the Dark": a rival heard but not seen. %s = one of the compass words below.
+msgid "UI_DARK_HEARD"
+msgstr "You hear something moving to the %s."
+
+msgid "UI_DARK_DIR_NORTH"
+msgstr "north"
+
+msgid "UI_DARK_DIR_EAST"
+msgstr "east"
+
+msgid "UI_DARK_DIR_SOUTH"
+msgstr "south"
+
+msgid "UI_DARK_DIR_WEST"
+msgstr "west"
+
 # "…" action: pass the turn when nothing else is available. Nothing to translate.
 msgid "UI_ENCOUNTER_ACTION_PASS"
 msgstr "…"

@@ -189,6 +189,11 @@ exploration answers by revealing the closest hidden chest or trap. The other dir
 Static Camouflage: `DungeonManager.scouting` (`scouting.gd`) shows 2 to 4 of the map's groups
 one at a time and swaps the exploration menu for "take this group on" / "keep waiting".
 
+What the player can see lives in `DungeonManager.sight` (`dungeon_sight.gd`), a model with no
+drawing of its own: darkness (the config flag, or PSY above 40), lit areas, which rivals are
+seen or heard, and Meditate's two-move reveal. `advance_turn` ends by asking it to hide or show
+the rivals (`refresh_sight`) and post the cue for a newly audible one.
+
 An encounter no longer ends only when a side is dissolved. An individual can **leave**:
 `EncounterManager.withdraw` takes it out of its side and of the turn order, so no targeting
 rule, talent or ability has to know about departures. Whatever the way out — Run Away, a

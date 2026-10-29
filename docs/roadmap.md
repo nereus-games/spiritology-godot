@@ -148,9 +148,17 @@ unblock.
   swapped icons (after event 3). Above 30: one more wrong fragment each time (the wider spawn
   waves are built, at a placeholder threshold of 20; see section 5). Above 40: poison also
   forbids the map, encyclopaedia and team views (those views do not exist yet; TODO in
-  `GameSession.psy_forbids_while_poisoned`), and dungeons stay dark. (`game_session.gd`)
-- **Dark dungeons** ("In the Dark"): sight limited to one tile, rivals heard but not seen,
-  Meditate revealing them for 2 moves, and NPC quests that light an area. No implementation.
+  `GameSession.psy_forbids_while_poisoned`). (`game_session.gd`) Dungeons staying dark above
+  40 is built: see *Dark dungeons*, below.
+- **Dark dungeons** ("In the Dark"). The model is built (`DungeonManager.sight`, `dungeon_sight.gd`):
+  a dungeon is dark when `DungeonConfig.dark` is set or PSY is above 40; sight is then one tile;
+  rivals out of sight are hidden and, within earshot, announced by a message (`UI_DARK_HEARD`);
+  Meditate shows every rival for 2 moves; and `sight.light_tiles`, `light_radius` and `light_box`
+  light an area, which is what an NPC quest would call. Left: the NPC quests themselves, which
+  need NPCs; drawing the dark (the renderer should ask `sight.tile_visible`; only the rivals
+  are hidden for now, and the map still shows everything); lit areas are not kept between
+  visits, awaiting `GameSession.dungeon_states`; and the hearing cue is a message only, with no
+  sound. (`dungeon_sight.gd`)
 - **A QTE**, which Slick Merchant's Run Away should hide behind; until then it always succeeds.
   (`encounter_manager.gd`)
 - **Save migration** between versions. Only matters once a save format has shipped.
@@ -216,6 +224,22 @@ Decisions taken in code, where the doc has to catch up — or say otherwise:
   exactly like the whole group being devitalised (`exploration.gd`, `_run_away`).
 - **A linked elevator moves empty**, leaving whoever stands on it behind. The doc now describes
   linked elevators, but not who rides them (`elevator.gd`, `linked`).
+
+"In the Dark", built from the one-line description in the doc:
+
+- **"Sight limited to one tile"** is the player's tile and its four neighbours on the same
+  floor (`dark_sight_range`, 1, Manhattan). A lit tile is seen from anywhere.
+- **"Heard"** is a rival within 4 tiles (`dark_hearing_range`, a placeholder; a floor of
+  difference counts as 2 tiles) that is not seen. The cue is a message, "You hear something
+  moving to the north", posted when a rival becomes audible and not repeated while it stays so.
+  The compass is the dungeon's (north is -z), not the player's facing.
+- **"Revealing them for 2 moves"**: Meditate shows every rival on the map, wherever it is,
+  for the next 2 moves (a turn, as everywhere: a step or a quarter turn). Meditating again
+  restarts the count. A refused Meditate (poison above 40) reveals nothing.
+- **A hidden rival still plays**, chases and starts encounters; walking into one unseen is an
+  encounter like any other.
+- **A lit area** stays lit for the rest of the visit, and a dungeon above PSY 40 is dark even
+  if its config is lit; a lit area lights it for the player all the same.
 
 The encyclopaedia, built on 2026-10-22 from the "Encyclopaedia" page, which leaves these open:
 

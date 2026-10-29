@@ -111,6 +111,13 @@ extends Resource
 ## dungeon visit, then this chance each time it is asked to act. The doc says "1 in 5".
 @export_range(0.0, 1.0) var psy_teammate_refusal_chance: float = 0.2
 
+## "In the Dark": how far the player sees (1 tile), how far a rival is still heard, and for how
+## many moves Meditate shows the rivals (2). The first and last are the doc's; the hearing range
+## is a placeholder.
+@export var dark_sight_range: int = 1
+@export var dark_hearing_range: int = 4
+@export var dark_reveal_moves: int = 2
+
 ## Hardening: "info penalty on Talk". The doc gives no figure; the penalty reuses the step the
 ## game already applies per condition, so a hardened individual's Talk yields
 ## (1 - hardening_talk_penalty) of the IFP it would. Between 0 (no penalty) and 1 (nothing).

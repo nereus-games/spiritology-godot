@@ -69,6 +69,13 @@ func refuse_poisoned_action() -> void:
 		dungeon.post_message(TranslationServer.translate("UI_PSY_POISON_FORBIDS"))
 
 
+## Meditate in a dark dungeon shows every rival for a few moves. Nothing happens when the
+## dungeon has no sight model.
+func reveal_rivals() -> void:
+	if dungeon != null and dungeon.has_method("reveal_rivals"):
+		dungeon.reveal_rivals()
+
+
 ## Cures the player's poison outright (a tea drop, or an anti-poison ability).
 func cure_poison() -> void:
 	if player != null:

@@ -77,12 +77,14 @@ func _ability_label_key(id: StringName) -> String:
 	return ab.name_key() if ab != null else String(id)
 
 
-## Meditate: the duo recovers [member BalanceData.meditate_eth] ETH each and, when facing a
-## meditation gateway, the meditation counts towards opening it.
+## Meditate: the duo recovers [member BalanceData.meditate_eth] ETH each, the rivals are shown for
+## a few moves in a dark dungeon and, when facing a meditation gateway, the meditation counts
+## towards opening it.
 func _run_meditate(gateway_meditation) -> void:
 	if _refused():
 		return
 	_ctx.recover_duo_eth(BalanceData.current().meditate_eth)
+	_ctx.reveal_rivals()
 	if gateway_meditation != null and gateway_meditation.callable.is_valid():
 		gateway_meditation.callable.call()
 

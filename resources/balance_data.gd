@@ -73,6 +73,11 @@ extends Resource
 ## above the first rung when the Talk happens.
 @export var psy_flee_talk_malus: float = 0.1
 
+## Poison carried into an encounter takes its DEN every this many rounds, after the round's last
+## turn, and one such tick uses up one turn of the poison. The doc counts poison in map turns and
+## says nothing of encounters: one tick a round is the placeholder.
+@export var affliction_poison_round_interval: int = 1
+
 ## Turns a group still on the map stays put after an encounter, so that it does not open the
 ## next one straight away. The doc says nothing about it: a placeholder, see
 ## [method RivalBehavior.rest].

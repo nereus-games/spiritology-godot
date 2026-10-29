@@ -625,6 +625,12 @@ msgstr "%s has no action it can take."
 msgid "LOG_TEAMMATE_REFUSES"
 msgstr "refuses to act."
 
+msgid "LOG_DISARRAY_DEFLECTED"
+msgstr "%s stumbles and does something else."
+
+msgid "LOG_POISON_DAMAGE"
+msgstr "%s loses %d DEN to poison."
+
 msgid "LOG_PASS"
 msgstr "passes its turn."
 

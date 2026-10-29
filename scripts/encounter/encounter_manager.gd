@@ -18,6 +18,10 @@ signal turn_taken(
 ## An ability that was watching for something reacted to it. `lines` is what it did. Announced
 ## separately from [signal turn_taken] because the one who reacts is not the one whose turn it is.
 signal reaction_noted(reactor: EncounterIndividual, ability: AbilityData, lines: PackedStringArray)
+## An affliction carried in from the map acted: poison took DEN off `individual`, or disarray
+## turned its action into another. `line` is already translated. Announced apart from
+## [signal turn_taken] because poison belongs to no turn.
+signal affliction_noted(individual: EncounterIndividual, line: String)
 ## How the encounter ended — see [method _check_end] for when each one applies:
 ## &"victory", &"defeat", &"fled", &"pacified", &"rivals_fled", &"timeout".
 signal ended(result: StringName)
@@ -352,6 +356,11 @@ func run(max_rounds: int = 30) -> StringName:
 			var res := _check_end()
 			if res != &"":
 				return _finish(res)
+		# Poison runs on rounds, like it runs on map turns: after everyone has played.
+		if _tick_afflictions():
+			var poisoned_res := _check_end()
+			if poisoned_res != &"":
+				return _finish(poisoned_res)
 		timeline.apply_pending()
 	return _finish(&"timeout")
 
@@ -417,6 +426,7 @@ func _take_turn(individual: EncounterIndividual) -> void:
 			[_tr("LOG_TEAMMATE_REFUSES")]
 		)
 		return
+	action = _disarrayed(individual, action)
 	var dissolved_before := rivals.filter(func(f): return f.is_dissolved())
 	_action_damage = 0
 	var weakness_then := individual.active_weakness(timeline.position_of(individual))
@@ -425,6 +435,90 @@ func _take_turn(individual: EncounterIndividual) -> void:
 	_react_to_action(individual, action)
 	if individual.is_player:
 		_award_dissolutions(dissolved_before)
+
+
+# --- Afflictions carried in from the map ---
+
+
+## Disarray: every action counts as a move of the afflicted ("each player action count as a
+## movement and has 35% or 100% chance of being a different one than chosen" - the design doc),
+## and a deflected one is swapped for a DIFFERENT KIND of action, whatever else the individual
+## could do this turn: Use Ability, Talk, Examine or Meditate for a player character, Use Ability
+## or Meditate for a rival (the two the doc leaves it). Objects are never the replacement, since
+## the manager knows no inventory, nor are Flee and Steal, which a talent adds and which a
+## stumble should not trigger. With no other kind possible the action stands, and the move is
+## spent all the same. A pass costs no move: nothing was chosen.
+func _disarrayed(individual: EncounterIndividual, action: EncounterAction) -> EncounterAction:
+	var aff = individual.affliction
+	if aff == null or action.kind == EncounterAction.Kind.PASS:
+		return action
+	if not aff.consume_move():
+		return action
+	var options: Array = []
+	var kinds := menu_kinds(individual)
+	if action.kind != EncounterAction.Kind.ABILITY and kinds.has(EncounterAction.Kind.ABILITY):
+		var abilities := usable_abilities(individual).filter(
+			func(a): return not EffectCatalog.script_for(a).takes_user_away()
+		)
+		if not abilities.is_empty():
+			var ability: AbilityData = abilities[rng.randi() % abilities.size()]
+			var targets := candidate_targets(individual, ability)
+			if not targets.is_empty():
+				options.append(
+					EncounterAction.use_ability(ability, [targets[rng.randi() % targets.size()]])
+				)
+	if individual.is_player:
+		if action.kind != EncounterAction.Kind.TALK and kinds.has(EncounterAction.Kind.TALK):
+			var talkable := talk_targets(individual)
+			if not talkable.is_empty():
+				options.append(
+					EncounterAction.of_kind(
+						EncounterAction.Kind.TALK, [talkable[rng.randi() % talkable.size()]]
+					)
+				)
+		if action.kind != EncounterAction.Kind.EXAMINE and kinds.has(EncounterAction.Kind.EXAMINE):
+			var foes := living_opponents(individual)
+			if not foes.is_empty():
+				options.append(
+					EncounterAction.of_kind(
+						EncounterAction.Kind.EXAMINE, [foes[rng.randi() % foes.size()]]
+					)
+				)
+	if action.kind != EncounterAction.Kind.MEDITATE:
+		options.append(EncounterAction.of_kind(EncounterAction.Kind.MEDITATE, [individual]))
+	if options.is_empty():
+		return action
+	var swapped: EncounterAction = options[rng.randi() % options.size()]
+	affliction_noted.emit(individual, _tr("LOG_DISARRAY_DEFLECTED") % individual.display_name())
+	return swapped
+
+
+## Elapses poison once a round (every [member BalanceData.affliction_poison_round_interval]th),
+## once per affliction however many individuals hold it, and takes its DEN off each of them still
+## in the encounter, the whole duo on the player side, as it does on the map. Returns whether any
+## DEN was taken.
+func _tick_afflictions() -> bool:
+	var interval := maxi(BalanceData.current().affliction_poison_round_interval, 1)
+	if round_number % interval != 0:
+		return false
+	var everyone := all_players + all_rivals
+	var seen: Array = []
+	var hurt := false
+	for f in everyone:
+		var aff = f.affliction
+		if aff == null or seen.has(aff):
+			continue
+		seen.append(aff)
+		var dmg: int = aff.tick_poison()
+		if dmg <= 0:
+			continue
+		for g in everyone:
+			if g.affliction != aff or g.is_dissolved() or g.has_left():
+				continue
+			g.apply_damage(dmg)
+			hurt = true
+			affliction_noted.emit(g, _tr("LOG_POISON_DAMAGE") % [g.display_name(), dmg])
+	return hurt
 
 
 ## Does the teammate refuse the action it just chose? The first one it is asked for, once armed

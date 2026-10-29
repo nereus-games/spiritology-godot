@@ -93,6 +93,7 @@ func begin(
 	seed: int = -1
 ) -> void:
 	player_poisoned = _read_player_poison()
+	player_affliction = _read_player_affliction()
 	var pf: Array = []
 	for i in player_ids.size():
 		var f := EncounterManager.make_individual(StringName(player_ids[i]), true)
@@ -102,6 +103,7 @@ func begin(
 			# MAIN, which should not happen.
 			var slot := GameSession.PartySlot.TEAMMATE if i == 1 else GameSession.PartySlot.MAIN
 			f.load_persistent_state(GameSession.get_den(slot), GameSession.get_eth(slot))
+			f.affliction = player_affliction
 			_player_slots.append({"individual": f, "slot": slot})
 	var rf: Array = []
 	for i in rival_ids.size():
@@ -121,6 +123,7 @@ func begin(
 			f.max_eth = map_max_eth
 			f.eth = map_max_eth
 		f.talk_chance_malus = float(state.get("talk_malus", 0.0))
+		f.affliction = state.get("affliction", null)
 		var map_den: int = int(state.get("den", 0))
 		if map_den > 0:
 			f.load_persistent_state(map_den, int(state.get("eth", f.eth)))
@@ -128,6 +131,7 @@ func begin(
 
 	_manager.turn_taken.connect(_on_turn_taken)
 	_manager.reaction_noted.connect(_on_reaction_noted)
+	_manager.affliction_noted.connect(_on_affliction_noted)
 	_manager.ended.connect(_on_ended)
 	_manager.departed.connect(_on_departed)
 	_manager.ifp_earned.connect(_on_ifp_earned)
@@ -229,6 +233,26 @@ func _hides_den(individual: EncounterIndividual) -> bool:
 ## PSY rung 4: is the player poisoned, read from the exploration actor the encounter opened
 ## from. Set directly by tests, which have no exploration behind them.
 var player_poisoned := false
+
+
+## The duo's afflictions, the very object the exploration actor holds, so that what the encounter
+## uses up of them is used up on the map too. Null with no exploration behind the encounter.
+var player_affliction = null
+
+
+func _read_player_affliction():
+	var pl := get_tree().get_first_node_in_group("player")
+	var aff = pl.get("affliction") if pl != null else null
+	return aff if aff != null and aff.is_afflicted() else null
+
+
+## An affliction acted: a line under the turn, and the poison flag follows the poison itself, so
+## that the PSY rung 4 refusal ends with it.
+func _on_affliction_noted(_individual: EncounterIndividual, line: String) -> void:
+	_append("    [color=#b9b9c4]%s[/color]" % line)
+	if player_affliction != null:
+		player_poisoned = player_affliction.has_poison()
+	_refresh_timeline()
 
 
 func _read_player_poison() -> bool:

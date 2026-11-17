@@ -294,8 +294,12 @@ msgstr "Dungeons"
 msgid "UI_DEV_DUNGEONS_EMPTY"
 msgstr "No dungeon yet. Test scenarios cover the mechanisms one at a time; a dungeon proper appears here once it exists in data/dungeons/."
 
+# %d = errors, %d = warnings, as the dungeon validator counts them.
+msgid "UI_DEV_DUNGEON_VERDICT"
+msgstr "Validator: %d error(s), %d warning(s)"
+
 msgid "UI_DEV_DUNGEON_NOT_PLAYABLE"
-msgstr "Cannot be entered yet — no dungeon layout format."
+msgstr "Cannot be entered yet: nothing loads maps into a dungeon."
 
 # --- The exploration test scenarios ---------------------------------------------------
 # One title and one instruction sheet per `data/scenarios/*.tres`. The .tres carries only
@@ -374,6 +378,9 @@ msgstr "A lone rival waits near the entrance, two groups appear on spawn points 
 
 msgid "DUNGEON_DEV_RIVALS_NAME"
 msgstr "Rival test room"
+
+msgid "DUNGEON_NORGZEVOD_FROZEN_LAKE_NAME"
+msgstr "Norgzévod frozen lake"
 
 # --- The encounter log ---------------------------------------------------------------
 # One line per thing an action or an ability effect does, as the LOG panel shows it. The

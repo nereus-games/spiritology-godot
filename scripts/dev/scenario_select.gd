@@ -6,6 +6,8 @@
 extends Control
 
 const ScenarioCatalog := preload("res://scripts/dev/scenario_catalog.gd")
+const MapParser := preload("res://scripts/dungeon/dungeon_map_parser.gd")
+const Validator := preload("res://scripts/dungeon/dungeon_validator.gd")
 const EXPLORATION := "res://scenes/exploration/exploration.tscn"
 ## The encyclopaedia, until a menu exists to reach it from.
 const ENCYCLOPAEDIA := "res://scenes/ui/encyclopaedia.tscn"
@@ -93,33 +95,52 @@ func _scrolling_grid(tabs: TabContainer, columns: int) -> GridContainer:
 	return grid
 
 
-## The real dungeons ([method ScenarioCatalog.real_dungeons]). None can be entered yet: there is
-## no authoring format for a layout, so a dungeon is listed with the reason it is greyed out —
-## and, with none at all, a line saying so.
+## The real dungeons ([method ScenarioCatalog.real_dungeon_ids]), each with what the validator
+## makes of its maps. None can be entered yet: nothing loads a map into a dungeon, so every entry
+## is greyed out with the reason — and, with no dungeon at all, a line says so.
 func _fill_dungeons(grid: GridContainer) -> void:
-	var dungeons := ScenarioCatalog.real_dungeons()
-	if dungeons.is_empty():
+	var ids := ScenarioCatalog.real_dungeon_ids()
+	if ids.is_empty():
 		var empty := Label.new()
 		empty.text = tr("UI_DEV_DUNGEONS_EMPTY")
 		empty.add_theme_color_override("font_color", Color(0.68, 0.70, 0.76))
 		grid.add_child(empty)
 		return
-	for config in dungeons:
+	for id in ids:
 		var entry := VBoxContainer.new()
 		entry.add_theme_constant_override("separation", 2)
 		grid.add_child(entry)
 
 		var button := Button.new()
-		button.text = String(TranslationServer.translate(config.name_key()))
+		button.text = _dungeon_name(id)
 		button.custom_minimum_size = Vector2(460, 38)
 		button.disabled = true
 		entry.add_child(button)
 
-		var note := Label.new()
-		note.text = tr("UI_DEV_DUNGEON_NOT_PLAYABLE")
-		note.add_theme_font_size_override("font_size", 12)
-		note.add_theme_color_override("font_color", Color(0.68, 0.70, 0.76))
-		entry.add_child(note)
+		entry.add_child(_dim_label(tr("UI_DEV_DUNGEON_NOT_PLAYABLE")))
+		if MapParser.slugs().has(id):
+			var issues: Array = Validator.new().validate(
+				MapParser.load_slug(id), GameData.dungeon(id)
+			)
+			var errors := Validator.error_count(issues)
+			entry.add_child(
+				_dim_label(tr("UI_DEV_DUNGEON_VERDICT") % [errors, issues.size() - errors])
+			)
+
+
+## The dungeon's translated name, or its id while it has none.
+func _dungeon_name(id: StringName) -> String:
+	var key := "DUNGEON_%s_NAME" % GameEnums.key_token(id)
+	var name := String(TranslationServer.translate(key))
+	return String(id) if name == key else name
+
+
+func _dim_label(text: String) -> Label:
+	var label := Label.new()
+	label.text = text
+	label.add_theme_font_size_override("font_size", 12)
+	label.add_theme_color_override("font_color", Color(0.68, 0.70, 0.76))
+	return label
 
 
 ## DEV control for the playable duo: one list per role, restricted to the species the mini quiz

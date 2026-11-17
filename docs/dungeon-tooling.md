@@ -38,12 +38,12 @@ Constraints from that: plain text, readable in a diff, no editor needed, no size
 the maps handed over map one to one onto the files.
 
 **The format** (built: `scripts/dungeon/`) — a folder per dungeon, one `.map` file per
-storey, beside the `DungeonConfig` `.tres` that already carries its rules:
+storey, and an optional `rules.cfg` for what concerns the dungeon as a whole:
 
 ```
-data/dungeons/<slug>/floor_00.map     # y = 0
-data/dungeons/<slug>/floor_01.map     # y = 1
-data/dungeons/<slug>.tres             # the DungeonConfig (optional until it has spawn rules)
+data/dungeons/<slug>/floor_-1.map      # y = -1 … floor_0.map, floor_1.map
+data/dungeons/<slug>/rules.cfg         # spawn rules, water, waivers
+data/dungeons/<slug>.tres              # a DungeonConfig, once it has spawn rules to carry
 ```
 
 ```
@@ -51,27 +51,31 @@ data/dungeons/<slug>.tres             # the DungeonConfig (optional until it has
 y = 0
 
 [grid]            # x to the right, z downwards; the top-left character is tile (0, 0)
-##########
-#E..T..c.#
+#########
+#E..i~..#
 #..^.....#
-##########
+#########
 
-[legend]          # every character beyond  . # ~ _ E X  and space
-T = trap type=poison poison_turns=4
-c = chest loot=rune_stone,spade
-^ = stairs dir=up face=E
+[legend]          # every character beyond  . i ~ # _ : E X  and space
+^ = stairs dir=up face=N
 
-[tiles]           # one tile, by x,z (or x,y,z)
-3,1 note="the rival waits here" tags=unreachable_ok
-7,1 chest trapped=true asset=res://assets/props/old_chest.glb
+[tiles]           # one tile, by cell name (as in the viewer), x,z or x,y,z
+D2 note="the rival waits here" tags=unreachable_ok
+H2 chest trapped=true asset=res://assets/props/old_chest.glb
+E3 gate type=automated edge=N
 
 [zones]           # named areas, shared across storeys by name
-hall tags=safe,no_teleport rect=1,1:3,2
+hall tags=safe,no_teleport rect=B2:D3
 ```
 
-`.` floor, `#` or space nothing, `~` a hole, `_` a pit, `E` the entrance, `X` an exit. A kind's
-properties are typed and checked (`scripts/dungeon/dungeon_kinds.gd` is the table; N is up the
-page for directions).
+`.` floor, `i` ice (floor), `~` water, `#` a wall, `_` or space empty, `:` a hole, `E` the
+entrance, `X` an exit. A kind's properties are typed and checked
+(`scripts/dungeon/dungeon_kinds.gd` is the table; N is up the page for directions).
+
+Water is never walked into on purpose; falling into it (off a bridge, or from a floor above)
+ends on the tile `rules.cfg` names, `[water] emerge = "F25@0"`. Stairs are one tile per storey
+they touch: the lower storey's tile climbs, the upper storey's descends; a long flight is a
+ramp of floor and then one stairs tile.
 
 **Special cases have a place in the format from the start**, and none needs code:
 
@@ -82,17 +86,28 @@ page for directions).
   something to the validator today; any other tag is kept for the day a rule needs it;
 - the designer's **notes** are kept as `note=` and otherwise ignored;
 - a property the table does not know yet is written `custom.<name>=…` and passes unchecked,
-  while a plain typo is a warning.
+  while a plain typo is a warning;
+- a **known fault** is written once in `rules.cfg` under `[waive]`, with the reason, as
+  `CODE = "why"` or `CODE:F27@0 = "why"` for one place. It is still printed, as a warning, so
+  CI passes on a dungeon whose faults are written down; a waiver that matches nothing is itself
+  reported, so the line gets removed once the fault is fixed.
 
 Linking storeys is implicit: they share coordinates, and stairs say where they go.
+
+**Importing from the mapper.** The designers draw each dungeon in the top-down mapper, which
+exports a text description and a PNG per floor. `tools/import_mapper.py <export> <folder>`
+turns that into the files above, reading off the images what the export does not state (a
+staircase's direction, the edge a gate sits on, the extent of an event area) and listing in the
+console whatever it had to guess. It is a bootstrap: a second run overwrites the hand edits.
 
 ## Status
 
 Built: the format's parser (`dungeon_map_parser.gd`), the plan it fills (`dungeon_plan.gd`),
-the validator (`dungeon_validator.gd`) with its checks (`dungeon_validator_check`), and
-`tools/validate_dungeons.sh`, which CI runs on every push and pull request. Not built: the
-loader that turns a plan into a playable dungeon, the other command-line tools, the editor, and
-the *Dungeons* tab's Edit and Play buttons. There is no real dungeon in `data/dungeons/` yet.
+the validator (`dungeon_validator.gd`) with its checks (`dungeon_validator_check`),
+`tools/validate_dungeons.sh`, which CI runs on every push and pull request, the importer, and
+the *Dungeons* tab, which lists every dungeon with the validator's verdict. One real dungeon is
+in: `norgzevod_frozen_lake`, imported from the mapper and then edited. Not built: the loader
+that turns a plan into a playable dungeon, the other command-line tools, and the editor.
 
 ## Proposed work, in order
 
@@ -163,12 +178,16 @@ and everything before it is useful with a text editor alone.
 
 ## Still open
 
-1. **A real example.** One of the colleague's maps with its notes. The legend, the property
-   names and the validator's rules are so far written from the code, not from a real dungeon;
-   the first one will probably move some of them.
-2. **Design-doc rules beyond the ones implemented.** The doc is in Notion and there is no
+1. **Stairs.** The lake's staircases are read as drawn on both storeys they join. Two on
+   floor 1 (P28, Q28) have no counterpart on floor 0, so nothing climbs them: waived for now.
+2. **The underground** of the lake is work in progress, and its faults are waived with a note.
+3. **Design-doc rules beyond the ones implemented.** The doc is in Notion and there is no
    `notion-export/` in this clone. A second pass from a clone that has it should check the
    validator's rules, and the property names in `dungeon_kinds.gd`, against it.
+4. **Things the format carries but nothing uses yet:** the spawn rules in `rules.cfg` (decor
+   and traps at entry, the conditions on the encyclopaedia and on the first visit) and the
+   event area. The validator checks only that enough rival spawn points exist.
 
-Settled: unreachable tiles are errors unless a tag says otherwise; storeys are linked implicitly;
-there is no size limit; the editor is a dev tool reached from the test screen.
+Settled: unreachable tiles are errors unless a tag or a waiver says otherwise; storeys are
+linked implicitly; there is no size limit; the editor is a dev tool reached from the test
+screen; a fall costs damage but is not lethal, water included.

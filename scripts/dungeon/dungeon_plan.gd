@@ -15,9 +15,13 @@ var slug: StringName = &""
 
 ## Walkable tiles. Vector3i -> true. A pit is in here only under a bridge plank.
 var floor_tiles: Dictionary = {}
-## Deliberate holes (`~`) and pits (`_`, or a plank's tile). Vector3i -> true.
+## Deliberate holes (`:`) and the tiles under a bridge plank. Vector3i -> true.
 var hole_tiles: Dictionary = {}
 var pit_tiles: Dictionary = {}
+## Walls drawn as such (`#`): solid, never a drop, whatever lies below. Vector3i -> true.
+var wall_tiles: Dictionary = {}
+## Water (`~`): not walkable, and what a fall from above lands in. Vector3i -> true.
+var water_tiles: Dictionary = {}
 
 var entrance := Vector3i.ZERO
 var has_entrance := false
@@ -30,9 +34,12 @@ var placements: Array = []
 ## Free notes and annotations on a bare tile: Vector3i -> props Dictionary.
 var tile_props: Dictionary = {}
 
-## Named zones: name -> {tags: Array[String], tiles: Dictionary (Vector3i -> true)}. The same
-## name in several storey files is one zone.
+## Named zones: name -> {tags: Array, tiles: Dictionary (Vector3i -> true), props: Dictionary}.
+## The same name in several storey files is one zone.
 var zones: Dictionary = {}
+
+## The dungeon-wide rules from `rules.cfg`: section -> key -> value, as ConfigFile read them.
+var rules: Dictionary = {}
 
 ## What the parser itself could not read: the same shape the validator reports.
 var issues: Array = []
@@ -64,7 +71,7 @@ func placements_at(tile: Vector3i) -> Array:
 
 func add_zone_tile(zone: String, tags: Array, tile: Vector3i) -> void:
 	if not zones.has(zone):
-		zones[zone] = {"tags": [], "tiles": {}}
+		zones[zone] = {"tags": [], "tiles": {}, "props": {}}
 	for t in tags:
 		if not zones[zone]["tags"].has(t):
 			zones[zone]["tags"].append(t)
@@ -93,11 +100,16 @@ func tiles_with_tag(tag: String) -> Dictionary:
 	return out
 
 
-## The first floor tile below `tile`, within the engine's reach of a fall, or `tile` itself when
-## there is none. Same rule as [method DungeonLayout.fall_landing].
+## A rule's value, or `fallback` when the section or key is missing.
+func rule(section: String, key: String, fallback = null):
+	return rules.get(section, {}).get(key, fallback)
+
+
+## The first floor or water tile below `tile`, within the engine's reach of a fall, or `tile`
+## itself when there is none. Same rule as [method DungeonLayout.fall_landing], plus water.
 func fall_landing(tile: Vector3i) -> Vector3i:
 	for level in range(tile.y - 1, tile.y - 12, -1):
 		var below := Vector3i(tile.x, level, tile.z)
-		if floor_tiles.has(below):
+		if floor_tiles.has(below) or water_tiles.has(below):
 			return below
 	return tile

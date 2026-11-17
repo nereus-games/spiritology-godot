@@ -298,8 +298,12 @@ msgstr "Donjons"
 msgid "UI_DEV_DUNGEONS_EMPTY"
 msgstr "Aucun donjon pour l'instant. Les scénarios de test couvrent les mécanismes un par un ; un vrai donjon apparaîtra ici dès qu'il existera dans data/dungeons/."
 
+# %d = errors, %d = warnings, as the dungeon validator counts them.
+msgid "UI_DEV_DUNGEON_VERDICT"
+msgstr "Validateur : %d erreur(s), %d avertissement(s)"
+
 msgid "UI_DEV_DUNGEON_NOT_PLAYABLE"
-msgstr "Pas encore jouable — le format des plans de donjon n'existe pas."
+msgstr "Pas encore jouable : rien ne charge encore les cartes en donjon."
 
 # --- The exploration test scenarios ---------------------------------------------------
 # One title and one instruction sheet per `data/scenarios/*.tres`. The .tres carries only
@@ -378,6 +382,9 @@ msgstr "Un rival seul attend près de l'entrée, deux groupes apparaissent sur d
 
 msgid "DUNGEON_DEV_RIVALS_NAME"
 msgstr "Salle de test des rivaux"
+
+msgid "DUNGEON_NORGZEVOD_FROZEN_LAKE_NAME"
+msgstr "Lac gelé de Norgzévod"
 
 # --- The encounter log ---------------------------------------------------------------
 # One line per thing an action or an ability effect does, as the LOG panel shows it. The

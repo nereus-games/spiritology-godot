@@ -22,10 +22,14 @@
 ##   [zones]
 ##   hall tags=safe,no_teleport rect=1,1:3,1
 ##
-## The grid's own characters: `.` floor, `#` or space nothing, `~` a hole, `_` a pit, `E` the
-## entrance, `X` an exit. Any other character must be in the legend, as `char = kind props…`.
-## A `[tiles]` line is `x,z` then either properties, or a kind and its properties. Values with
+## The grid's own characters: `.` floor, `i` ice (floor), `~` water, `#` a wall, `_` or space
+## empty, `:` a hole, `E` the entrance, `X` an exit. Any other character must be in the legend,
+## as `char = kind props…`. A `[tiles]` line is a tile — `x,z`, `x,y,z` or a cell name like
+## `AB24`, as in the viewer — then either properties, or a kind and its properties. Values with
 ## spaces are quoted.
+##
+## Beside the maps, an optional `rules.cfg` (a ConfigFile) holds the dungeon-wide rules, such as
+## `[water] emerge = "F25@0"` and `[spawn_at_entry] rivals = 10`.
 ##
 ## A problem is recorded as an issue in the plan, never raised: the validator reports the lot at
 ## once, with the file and line.
@@ -36,7 +40,7 @@ extends RefCounted
 const Kinds := preload("res://scripts/dungeon/dungeon_kinds.gd")
 const Plan := preload("res://scripts/dungeon/dungeon_plan.gd")
 
-const CORE_CHARS := ".# ~_EX"
+const CORE_CHARS := ".i~#_ :EX"
 
 var _plan
 var _file := ""
@@ -64,6 +68,17 @@ static func load_slug(slug: StringName, root: String = "res://data/dungeons/") -
 	for f in names:
 		var text := FileAccess.get_file_as_string(dir_path.path_join(f))
 		new().read_floor(plan, text, "%s/%s" % [slug, f])
+	var rules_path := dir_path.path_join("rules.cfg")
+	if FileAccess.file_exists(rules_path):
+		var cfg := ConfigFile.new()
+		var err := cfg.load(rules_path)
+		if err != OK:
+			plan.add_issue("error", "BAD_RULES_FILE", null, "%s/rules.cfg" % slug, [err])
+		else:
+			for section in cfg.get_sections():
+				plan.rules[section] = {}
+				for key in cfg.get_section_keys(section):
+					plan.rules[section][key] = cfg.get_value(section, key)
 	return plan
 
 
@@ -181,12 +196,17 @@ func _read_grid(rows: Array[String], first_line: int, legend: Dictionary) -> voi
 			match ch:
 				".":
 					_plan.floor_tiles[tile] = true
-				"#", " ":
+				"i":
+					_plan.floor_tiles[tile] = true
+					_tile_prop(tile, "surface", "ice")
+				"#":
+					_plan.wall_tiles[tile] = true
+				"_", " ":
 					pass
 				"~":
+					_plan.water_tiles[tile] = true
+				":":
 					_plan.hole_tiles[tile] = true
-				"_":
-					_plan.pit_tiles[tile] = true
 				"E":
 					_plan.floor_tiles[tile] = true
 					if _plan.has_entrance:
@@ -223,10 +243,17 @@ func _read_tile_line(s: String) -> void:
 	_plan.tile_props[tile].merge(props, true)
 
 
+func _tile_prop(tile: Vector3i, key: String, value) -> void:
+	if not _plan.tile_props.has(tile):
+		_plan.tile_props[tile] = {}
+	_plan.tile_props[tile][key] = value
+
+
 func _read_zone_line(s: String) -> void:
 	var tokens := _tokens(s)
 	var name: String = tokens[0]
 	var tags: Array = []
+	var zone_props := {}
 	var tiles: Array[Vector3i] = []
 	for t in tokens.slice(1):
 		var kv: PackedStringArray = String(t).split("=", true, 1)
@@ -253,14 +280,20 @@ func _read_zone_line(s: String) -> void:
 						_issue("error", "BAD_VALUE", null, [t])
 						return
 					tiles.append(c)
+			"note":
+				zone_props["note"] = kv[1]
 			_:
-				_issue("error", "BAD_VALUE", null, [t])
-				return
+				if kv[0].begins_with("custom."):
+					zone_props[kv[0]] = kv[1]
+				else:
+					_issue("error", "BAD_VALUE", null, [t])
+					return
 	if tiles.is_empty():
 		_issue("error", "BAD_LINE", null, [s])
 		return
 	for tile in tiles:
 		_plan.add_zone_tile(name, tags, tile)
+	_plan.zones[name]["props"].merge(zone_props, true)
 
 
 # --------------------------------------------------------------------------
@@ -283,6 +316,8 @@ func _place(kind: StringName, tile: Vector3i, tokens: Array, from_grid: bool = f
 			_plan.floor_tiles.erase(tile)
 	if def.get("pit", false):
 		_plan.pit_tiles[tile] = true
+	if kind == &"bridge" and props.get("over", "void") == "water":
+		_plan.water_tiles[tile] = true
 	_plan.add_placement(kind, tile, props, "%s:%d" % [_file, _line])
 
 
@@ -345,17 +380,8 @@ func _convert(type: String, raw: String):
 	return null
 
 
-## `x,z` on this storey, or `x,y,z`; null when it is neither.
 func _parse_tile(s: String):
-	var parts := s.strip_edges().split(",")
-	for p in parts:
-		if not p.strip_edges().is_valid_int():
-			return null
-	if parts.size() == 2:
-		return Vector3i(parts[0].to_int(), _y, parts[1].to_int())
-	if parts.size() == 3:
-		return Vector3i(parts[0].to_int(), parts[1].to_int(), parts[2].to_int())
-	return null
+	return Kinds.parse_tile(s, _y)
 
 
 ## Splits on whitespace, keeping a quoted value whole: `note="a b"` is one token, `note=a b`.

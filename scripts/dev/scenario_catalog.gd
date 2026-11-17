@@ -30,6 +30,7 @@ const Guardrail := preload("res://scripts/exploration/mechanisms/guardrail.gd")
 const AbilityCatalog := preload(
 	"res://scripts/exploration/abilities/exploration_ability_catalog.gd"
 )
+const MapParser := preload("res://scripts/dungeon/dungeon_map_parser.gd")
 const RIVAL_SCENE := preload("res://scenes/exploration/rival/rival.tscn")
 
 ## The scenario picked on the selection screen; the first one by default.
@@ -117,6 +118,19 @@ static func real_dungeons() -> Array:
 		if not owned.has(config.id):
 			out.append(config)
 	out.sort_custom(func(a, b) -> bool: return String(a.id) < String(b.id))
+	return out
+
+
+## The ids of every real dungeon, from either source: a [DungeonConfig] no scenario runs under, or
+## a folder of maps in `data/dungeons/`. A dungeon can be one, the other, or both. Sorted.
+static func real_dungeon_ids() -> Array:
+	var ids := {}
+	for config in real_dungeons():
+		ids[config.id] = true
+	for slug in MapParser.slugs():
+		ids[slug] = true
+	var out: Array = ids.keys()
+	out.sort()
 	return out
 
 

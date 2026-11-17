@@ -31,6 +31,10 @@ func _ready() -> void:
 	_check_teleports_and_zones()
 	_check_safe_areas()
 	_check_assets_and_props()
+	_check_terrain_and_cells()
+	_check_water()
+	_check_waivers_and_rules()
+	_check_committed_dungeons()
 	if _fails.is_empty():
 		print("All checks pass.")
 		get_tree().quit(0)
@@ -49,26 +53,27 @@ func _floor(y: int, grid: Array, extra: String = "") -> String:
 	return "[floor]\ny = %d\n[grid]\n%s\n%s" % [y, "\n".join(grid), extra]
 
 
-func _plan_of(floors: Array) -> Plan:
+func _plan_of(floors: Array, rules: Dictionary = {}) -> Plan:
 	var plan := Plan.new()
+	plan.rules = rules
 	for i in floors.size():
 		Parser.new().read_floor(plan, floors[i], "fixture_%d.map" % i)
 	return plan
 
 
-func _issues(floors: Array) -> Array:
-	return Validator.new().validate(_plan_of(floors))
+func _issues(floors: Array, rules: Dictionary = {}) -> Array:
+	return Validator.new().validate(_plan_of(floors, rules))
 
 
-func _codes(floors: Array) -> Array:
+func _codes(floors: Array, rules: Dictionary = {}) -> Array:
 	var out: Array = []
-	for i in _issues(floors):
+	for i in _issues(floors, rules):
 		out.append(i["code"])
 	return out
 
 
-func _has(floors: Array, code: String) -> bool:
-	return _codes(floors).has(code)
+func _has(floors: Array, code: String, rules: Dictionary = {}) -> bool:
+	return _codes(floors, rules).has(code)
 
 
 # --------------------------------------------------------------------------
@@ -156,9 +161,9 @@ func _check_reachability() -> void:
 
 
 func _check_holes_and_bridges() -> void:
-	var pit := [_floor(0, ["#####", "#E~.#", "#####"])]
+	var pit := [_floor(0, ["#####", "#E:.#", "#####"])]
 	_check(_has(pit, "BOTTOMLESS_HOLE"), "a hole with nothing below")
-	var caught := [_floor(-1, ["#####", "#...#", "#####"]), _floor(0, ["#####", "#E~.#", "#####"])]
+	var caught := [_floor(-1, ["#####", "#...#", "#####"]), _floor(0, ["#####", "#E:.#", "#####"])]
 	_check(not _has(caught, "BOTTOMLESS_HOLE"), "...and one with a floor below is not")
 	var legend := "[legend]\n= = bridge\n"
 	# Floor y = 0 is the ravine bottom, y = 1 holds the bridge and its two ends.
@@ -231,14 +236,14 @@ func _check_safe_areas() -> void:
 	_check(_has(trapped, "SAFE_HAZARD"), "a trapped chest is a hazard")
 	var ledge := [
 		_floor(-1, ["#####", "#...#", "#####"]),
-		_floor(0, ["#####", "#E.~#", "#####"], "[zones]\nsafe tags=safe rect=1,1:2,1\n"),
+		_floor(0, ["#####", "#E.:#", "#####"], "[zones]\nsafe tags=safe rect=1,1:2,1\n"),
 	]
 	_check(_has(ledge, "SAFE_LEDGE"), "an unrailed ledge on a safe tile")
 	var railed := [
 		_floor(-1, ["#####", "#...#", "#####"]),
 		_floor(
 			0,
-			["#####", "#E|~#", "#####"],
+			["#####", "#E|:#", "#####"],
 			"[legend]\n| = guardrail edge=E\n[zones]\nsafe tags=safe rect=1,1:2,1\n"
 		),
 	]
@@ -265,3 +270,95 @@ func _check_assets_and_props() -> void:
 			_check(i["severity"] == "warning", "...only a warning")
 	var special := [_floor(0, ["#####", "#E.c#", "#####"], "[legend]\nc = chest custom.glow=blue\n")]
 	_check(not _has(special, "UNKNOWN_PROP"), "a custom.* property passes")
+
+
+func _check_terrain_and_cells() -> void:
+	var plan := _plan_of(
+		[
+			_floor(
+				0,
+				["#######", "#Ei~:_#", "#######"],
+				"[tiles]\nC2 note=hello\nB2 facing=N\n[zones]\nz tags=a rect=B2:C2\n"
+			)
+		]
+	)
+	_check(plan.issues.is_empty(), "the viewer's terrain characters read clean")
+	_check(plan.is_floor(Vector3i(2, 0, 1)), "ice is floor")
+	_check(plan.tile_props[Vector3i(2, 0, 1)]["surface"] == "ice", "...and says so")
+	_check(plan.water_tiles.has(Vector3i(3, 0, 1)) and not plan.is_floor(Vector3i(3, 0, 1)), "~ is water, not floor")
+	_check(plan.hole_tiles.has(Vector3i(4, 0, 1)), ": is a hole")
+	_check(plan.wall_tiles.has(Vector3i(0, 0, 1)), "# is a wall")
+	_check(not plan.wall_tiles.has(Vector3i(5, 0, 1)), "_ is empty, not a wall")
+	_check(plan.tile_props[Vector3i(2, 0, 1)]["note"] == "hello", "a cell name addresses a tile")
+	_check(plan.tile_props[Vector3i(1, 0, 1)]["facing"] == Vector3i(0, 0, -1), "facing is a direction")
+	_check(plan.has_tag(Vector3i(1, 0, 1), "a") and plan.has_tag(Vector3i(2, 0, 1), "a"), "...in a zone rect too")
+	var kinds := preload("res://scripts/dungeon/dungeon_kinds.gd")
+	_check(kinds.parse_tile("AB24", 3) == Vector3i(27, 3, 23), "AB24 is column 27, row 23, from 0")
+	_check(kinds.parse_tile("F25@-1", 0) == Vector3i(5, -1, 24), "@ names the storey")
+	_check(kinds.parse_tile("1,2,3", 0) == Vector3i(1, 2, 3), "x,y,z")
+	_check(kinds.parse_tile("A0", 0) == null and kinds.parse_tile("zz", 0) == null, "not a tile")
+	# A wall on an upper storey is solid; empty space over ground is a drop.
+	var ground := _floor(0, ["#####", "#...#", "#####"])
+	var walled := [ground, _floor(1, ["#####", "#E.##", "#####"])]
+	var open := [ground, _floor(1, ["#####", "#E. #", "#####"])]
+	_check(_has(walled, "UNREACHABLE"), "a wall over ground is no way down")
+	_check(not _has(open, "UNREACHABLE"), "...empty space over ground is")
+	# A cracked wall is crossed one way only when it says so.
+	var wall := _floor(0, ["#######", "#E.#..#", "#######"], "[tiles]\n3,1 cracked_wall axis=%s\n")
+	_check(not _has([wall % "ew"], "UNREACHABLE"), "a cracked wall crossed east-west")
+	_check(_has([wall % "ns"], "UNREACHABLE"), "...not when it is crossed north-south")
+
+
+func _check_water() -> void:
+	var legend := "[legend]\n= = bridge over=water\n"
+	var rules := {"water": {"emerge": "B2"}}
+	var bridge := [_floor(0, ["#######", "#E==.X#", "#######"], legend)]
+	_check(_has(bridge, "WATER_NO_EMERGE"), "a bridge over water needs an emerge tile too")
+	var lake := [_floor(0, ["#######", "#E~.X##", "#######"])]
+	_check(_has(lake, "WATER_NO_EMERGE"), "water with no emerge tile")
+	_check(not _has(lake, "WATER_NO_EMERGE", rules), "...and with one")
+	_check(_has(lake, "WATER_EMERGE_NOT_FLOOR", {"water": {"emerge": "C2"}}), "an emerge tile on water")
+	_check(_has(lake, "UNREACHABLE", rules), "water is not walked into: the far bank is cut off")
+	var spanned := [_floor(0, ["#######", "#E==.X#", "#######"], legend)]
+	_check(not _has(spanned, "UNREACHABLE", rules), "a bridge over water joins both banks")
+	_check(not _has(spanned, "BRIDGE_NO_GAP", rules), "...water being what it spans")
+	_check(not _has(spanned, "WATER_NO_WAY_BACK", rules), "a fall into the water comes back to the entrance")
+	var stranded := [_floor(0, ["#######", "#E==.X#", "#######", "#.#####"], legend)]
+	_check(_has(stranded, "WATER_NO_WAY_BACK", {"water": {"emerge": "B4"}}), "...unless it emerges somewhere cut off")
+	var above := [
+		_floor(0, ["#######", "#E~~.##", "#######"]),
+		_floor(1, ["#######", "#.E=.##", "#######"], "[legend]\n= = bridge over=void\n"),
+	]
+	_check(not _has(above, "BRIDGE_NO_GAP", {"water": {"emerge": "B2@0"}}), "a bridge over water on the floor below")
+
+
+func _check_waivers_and_rules() -> void:
+	var cut := [_floor(0, ["#########", "#E..#..##", "#########"])]
+	var all := {"waive": {"UNREACHABLE": "work in progress"}}
+	_check(not _issues(cut).is_empty() and Validator.error_count(_issues(cut)) > 0, "an unreachable pocket is an error")
+	_check(Validator.error_count(_issues(cut, all)) == 0, "a waiver turns it into a warning")
+	var waived: Dictionary = _issues(cut, all)[0]
+	_check(waived.get("waived", "") == "work in progress", "...that carries its reason")
+	_check(Validator.format_issue(waived).contains("work in progress"), "...and prints it")
+	var here := {"waive": {"UNREACHABLE:F2": "by place"}}
+	_check(Validator.error_count(_issues(cut, {"waive": {"UNREACHABLE:F2": "x"}})) == 0, "a waiver by place")
+	_check(Validator.error_count(_issues(cut, {"waive": {"UNREACHABLE:A1": "x"}})) > 0, "...another place does not waive it")
+	_check(_has(cut, "WAIVER_UNUSED", {"waive": {"BOTTOMLESS_HOLE": "x"}}), "a waiver that matches nothing is reported")
+	_check(here.size() == 1, "(fixture)")
+	var spawns := [_floor(0, ["#####", "#Es.#", "#####"], "[legend]\ns = rival_spawn\n")]
+	_check(_has(spawns, "SPAWN_POINTS_SHORT", {"spawn_at_entry": {"rivals": 2}}), "more rivals than spawn points")
+	_check(not _has(spawns, "SPAWN_POINTS_SHORT", {"spawn_at_entry": {"rivals": 1}}), "...and exactly enough")
+
+
+## Every dungeon committed under data/dungeons/ validates without an error — the same bar CI
+## sets with tools/validate_dungeons.sh, so that a broken map is caught by the checks too.
+func _check_committed_dungeons() -> void:
+	for slug in Parser.slugs():
+		var plan := Parser.load_slug(slug)
+		var issues := Validator.new().validate(plan, GameData.dungeon(slug))
+		var errors: Array = []
+		for i in issues:
+			if i["severity"] == "error":
+				errors.append(Validator.format_issue(i))
+		_check(errors.is_empty(), "%s: no validator error %s" % [slug, errors])
+		_check(not plan.floor_tiles.is_empty() and plan.has_entrance, "%s: has floor and an entrance" % slug)

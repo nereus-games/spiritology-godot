@@ -44,7 +44,14 @@ const MESSAGES := {
 	"STAIRS_ABOVE": "the tile directly above the stairs is floor",
 	"STAIRS_FACE": "stairs need `face=N|E|S|W`",
 	"BRIDGE_NOT_PIT": "a bridge plank on a tile that is not a pit",
-	"BRIDGE_NO_GAP": "a bridge over nothing: no floor below",
+	"BRIDGE_NO_GAP": "a bridge over nothing: no floor or water below",
+	"BRIDGE_NOT_OVER_WATER": "the bridge says `over=water` but the tile has no water",
+	"WATER_NO_EMERGE": "there is water but no `[water] emerge` tile in rules.cfg",
+	"WATER_EMERGE_NOT_FLOOR": "the tile the player emerges on (%s) is not floor",
+	"WATER_NO_WAY_BACK": "after falling into the water there is no way back to the entrance",
+	"WAIVER_UNUSED": "the waiver '%s' matches no fault any more: remove it from rules.cfg",
+	"BAD_RULES_FILE": "rules.cfg cannot be read (error %d)",
+	"SPAWN_POINTS_SHORT": "%d rivals spawn at entry but only %d basic rival spawn points exist",
 	"BRIDGE_NO_WAY_BACK": "after a fall from this bridge there is no way back to the entrance",
 	"LIFT_NO_PATH": "a lift with no `path`",
 	"LIFT_END_NOT_FLOOR": "the lift's far end %s is not floor",
@@ -84,13 +91,49 @@ func validate(plan, config = null) -> Array:
 	_check_holes()
 	_index_edges_and_links()
 	_check_stairs()
+	_check_water()
 	_check_bridges()
 	_check_lifts()
 	_check_gates()
 	_check_reachability()
 	_check_safe_areas()
 	_check_config()
+	_apply_waivers()
 	return _issues
+
+
+## Faults the dungeon's own `rules.cfg` says to tolerate for now, under `[waive]`: a key is an issue
+## code, or `CODE:tile` (`UNREACHABLE:F27@0`) for one place only, and its value is the reason, which
+## is required. A waived error is still reported, as a warning that carries the reason, so that it
+## cannot be forgotten — and so that CI passes on a dungeon whose known faults are written down.
+func _apply_waivers() -> void:
+	var waivers: Dictionary = _plan.rules.get("waive", {})
+	if waivers.is_empty():
+		return
+	var used := {}
+	for issue in _issues:
+		if issue["severity"] != "error":
+			continue
+		var code: String = issue["code"]
+		var key := ""
+		if waivers.has(code):
+			key = code
+		elif issue["tile"] != null:
+			for k in waivers:
+				var at := String(k).find(":")
+				if at > 0 and String(k).substr(0, at) == code:
+					var t = Kinds.parse_tile(String(k).substr(at + 1), 0)
+					if t != null and t == issue["tile"]:
+						key = k
+						break
+		if key != "":
+			issue["severity"] = "warning"
+			issue["waived"] = String(waivers[key])
+			used[key] = true
+	# A waiver that matches nothing is a fault that got fixed: say so, so the line gets removed.
+	for k in waivers:
+		if not used.has(k):
+			_add("warning", "WAIVER_UNUSED", null, [String(k)], "rules.cfg")
 
 
 ## The English line for an issue.
@@ -108,7 +151,10 @@ static func format_issue(issue: Dictionary) -> String:
 	if issue["tile"] != null:
 		var t: Vector3i = issue["tile"]
 		where = "  (%d, %d, %d)" % [t.x, t.y, t.z]
-	return "%-7s %s%s  %s" % [issue["severity"], issue["source"], where, message(issue)]
+	var text := "%-7s %s%s  %s" % [issue["severity"], issue["source"], where, message(issue)]
+	if issue.has("waived"):
+		text += "  [waived: %s]" % issue["waived"]
+	return text
 
 
 static func error_count(issues: Array) -> int:
@@ -178,8 +224,16 @@ func _index_edges_and_links() -> void:
 				if not path.is_empty():
 					_link(tile, path[-1])
 					_link(path[-1], tile)
+			&"bridge":
+				# A fall off the plank happens in place: to the floor below, or to the emerge tile.
+				var end = _fall_end(tile)
+				if end != null:
+					_link(tile, end)
 			&"cracked_wall":
+				var axis: String = props.get("axis", "")
 				for d in NEIGHBOURS:
+					if axis == "ew" and d.x == 0 or axis == "ns" and d.z == 0:
+						continue
 					_link(tile - d, tile + d)
 
 
@@ -205,19 +259,63 @@ func _check_stairs() -> void:
 
 ## A narrow bridge spans a drop, and a fall from it must leave a way back.
 func _check_bridges() -> void:
-	var back: Dictionary = {}  # landing -> bool, so a long bridge walks once per landing
+	var back: Dictionary = {}  # where a fall ends -> bool, so a long bridge walks once per end
 	for p in _plan.placements:
 		if p["kind"] != &"bridge":
 			continue
 		var tile: Vector3i = p["tile"]
-		var landing: Vector3i = _plan.fall_landing(tile)
-		if landing == tile:
-			_add("error", "BRIDGE_NO_GAP", tile, [], p["source"])
+		var over_water: bool = p["props"].get("over", "void") == "water"
+		if over_water and not _plan.water_tiles.has(tile):
+			_add("warning", "BRIDGE_NOT_OVER_WATER", tile, [], p["source"])
+		var end = _fall_end(tile)
+		if end == null:
+			# Nothing to fall onto. Over water the missing piece is the emerge tile, said once.
+			if not _plan.water_tiles.has(tile):
+				_add("error", "BRIDGE_NO_GAP", tile, [], p["source"])
 			continue
-		if not back.has(landing):
-			back[landing] = _plan.has_entrance and _reach(landing).has(_plan.entrance)
-		if not back[landing]:
-			_add("error", "BRIDGE_NO_WAY_BACK", tile, [], p["source"])
+		if not back.has(end):
+			back[end] = _plan.has_entrance and _reach(end).has(_plan.entrance)
+		if not back[end]:
+			_add(
+				"error",
+				"WATER_NO_WAY_BACK" if _plan.water_tiles.has(tile) else "BRIDGE_NO_WAY_BACK",
+				tile,
+				[],
+				p["source"]
+			)
+
+
+## Water is a place to fall into, never to walk into, and it hands the player back on a tile the
+## level names in `rules.cfg`.
+func _check_water() -> void:
+	if _plan.water_tiles.is_empty():
+		return
+	var emerge = _emerge_tile()
+	if emerge == null:
+		_add("error", "WATER_NO_EMERGE", null)
+	elif not _plan.is_floor(emerge):
+		_add("error", "WATER_EMERGE_NOT_FLOOR", emerge, ["%d,%d,%d" % [emerge.x, emerge.y, emerge.z]])
+
+
+## `[water] emerge = "F25@0"`: where the player comes back up. Null when absent or unreadable.
+func _emerge_tile():
+	var text = _plan.rule("water", "emerge")
+	if text == null:
+		return null
+	return Kinds.parse_tile(String(text), 0)
+
+
+## Where a fall from `tile` ends, or null when it ends nowhere: the floor below, or the emerge
+## tile when what lies below is water.
+func _fall_end(tile: Vector3i):
+	var landing: Vector3i = _plan.fall_landing(tile)
+	if _plan.water_tiles.has(tile) and landing == tile:
+		return _emerge_tile()  # a plank laid over water of its own tile
+	if landing == tile:
+		return null
+	if _plan.water_tiles.has(landing):
+		return _emerge_tile()
+	return landing
 
 
 func _check_lifts() -> void:
@@ -286,21 +384,31 @@ func _check_safe_areas() -> void:
 			var n: Vector3i = tile + d
 			if _plan.is_floor(n) or _blocked_edges.has(_edge_key(tile, n)):
 				continue
+			if _plan.wall_tiles.has(n):
+				continue
 			if _plan.hole_tiles.has(n) or _plan.fall_landing(n) != n:
 				_add("error", "SAFE_LEDGE", tile, ["%d,%d,%d" % [n.x, n.y, n.z]])
 
 
 func _check_config() -> void:
+	# Rules from rules.cfg: a rival cannot appear on a spawn point that does not exist.
+	var wanted: int = int(_plan.rule("spawn_at_entry", "rivals", 0))
+	var points := 0
+	for p in _plan.placements:
+		if p["kind"] == &"rival_spawn":
+			points += 1
+	if wanted > points:
+		_add("error", "SPAWN_POINTS_SHORT", null, [wanted, points])
 	if _config == null:
 		return
 	var safe: Dictionary = _plan.tiles_with_tag("safe")
-	var points: Array = []
+	var tiles: Array = []
 	for point in _config.spawn_points:
-		points.append(point)
+		tiles.append(point)
 	for group in _config.fixed_groups:
 		if group != null:
-			points.append(group.tile)
-	for point in points:
+			tiles.append(group.tile)
+	for point in tiles:
 		if not _plan.is_floor(point):
 			_add("error", "SPAWN_NOT_FLOOR", point, ["%d,%d,%d" % [point.x, point.y, point.z]])
 		elif safe.has(point):
@@ -362,11 +470,14 @@ func _moves(tile: Vector3i) -> Array[Vector3i]:
 		if _plan.is_floor(n):
 			out.append(n)
 			continue
+		# Water at the same level is never entered on purpose, and a wall is a wall.
+		if _plan.water_tiles.has(n) or _plan.wall_tiles.has(n):
+			continue
 		# Open air with floor further down: a ledge, and stepping off it is a fall. A staircase
 		# or a cracked wall stands on a tile that is not floor but is not air either.
-		var landing: Vector3i = _plan.fall_landing(n)
-		if landing != n and not _is_solid_mechanism(n):
-			out.append(landing)
+		var end = _fall_end(n)
+		if end != null and not _is_solid_mechanism(n):
+			out.append(end)
 	for target in _links.get(tile, []):
 		if _plan.is_floor(target):
 			out.append(target)

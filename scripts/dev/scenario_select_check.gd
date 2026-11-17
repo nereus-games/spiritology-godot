@@ -6,6 +6,7 @@
 extends Node
 
 const ScenarioCatalog := preload("res://scripts/dev/scenario_catalog.gd")
+const MapParser := preload("res://scripts/dungeon/dungeon_map_parser.gd")
 const SCREEN := preload("res://scenes/dev/scenario_select.tscn")
 
 var _fails: Array[String] = []
@@ -37,6 +38,10 @@ func _check_real_dungeons() -> void:
 		ids.append(config.id)
 	_check(not ids.has(&"dev_rivals"), "a dungeon a scenario runs under is not a real dungeon")
 	_check(GameData.dungeon(&"dev_rivals") != null, "...though GameData still holds it")
+	_check(
+		ScenarioCatalog.real_dungeon_ids().has(&"norgzevod_frozen_lake"),
+		"a folder of maps is a real dungeon, with no DungeonConfig"
+	)
 	var owned := 0
 	for scenario in ScenarioCatalog.list():
 		if scenario.dungeon != null:
@@ -63,12 +68,19 @@ func _check_tabs() -> void:
 	for b in tabs.get_child(0).find_children("*", "Button", true, false):
 		buttons += 1
 	_check(buttons == ScenarioCatalog.list().size(), "one button per test scenario")
-	if ScenarioCatalog.real_dungeons().is_empty():
-		var labels := tabs.get_child(1).find_children("*", "Label", true, false)
-		_check(
-			labels.size() == 1 and labels[0].text == tr("UI_DEV_DUNGEONS_EMPTY"),
-			"no real dungeon: the tab says so"
-		)
+	var dungeon_buttons := tabs.get_child(1).find_children("*", "Button", true, false)
+	_check(
+		dungeon_buttons.size() == ScenarioCatalog.real_dungeon_ids().size(),
+		"one button per real dungeon"
+	)
+	for b in dungeon_buttons:
+		_check(b.disabled, "...greyed out: %s" % b.text)
+		_check(b.text != "DUNGEON_NORGZEVOD_FROZEN_LAKE_NAME", "...with a translated name")
+	var verdicts := 0
+	for label in tabs.get_child(1).find_children("*", "Label", true, false):
+		if label.text.begins_with(tr("UI_DEV_DUNGEON_VERDICT").split("%")[0]):
+			verdicts += 1
+	_check(verdicts == MapParser.slugs().size(), "each dungeon with maps shows the validator's verdict")
 	screen.queue_free()
 
 

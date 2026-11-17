@@ -32,6 +32,7 @@ func _ready() -> void:
 	await get_tree().process_frame
 	_check_layout_and_mechanisms()
 	_check_walls_and_teleports()
+	_check_water()
 	await _check_the_frozen_lake()
 	if _fails.is_empty():
 		print("All checks pass.")
@@ -156,7 +157,37 @@ func _check_walls_and_teleports() -> void:
 	_check(landed_inside == 0, "a random teleport never lands in a no_teleport zone")
 
 
+## Water and the `[water] emerge` rule, in a small plan: a pond tile, a plank over water, and the
+## emerge tile, all of them reaching the layout.
+func _check_water() -> void:
+	var plan := _plan_of(
+		"[floor]\ny = 0\n[grid]\n#####\n#E=.#\n#.~.#\n#####\n[legend]\n= = bridge over=water\n"
+	)
+	plan.rules = {"water": {"emerge": "B2"}}
+	var dm := DungeonManager.new()
+	add_child(dm)
+	Loader.build_plan(plan, dm)
+	var pond := Vector3i(2, 0, 2)
+	_check(dm.layout.is_water(pond) and not dm.layout.is_floor(pond), "a ~ is water, not floor")
+	_check(dm.layout.plank_over_water(Vector3i(2, 0, 1)), "a bridge over=water is a plank over water")
+	_check(dm.layout.water_tiles().size() == plan.water_tiles.size(), "every water tile is laid")
+	_check(
+		dm.layout.has_emerge_tile() and dm.layout.emerge_tile() == Vector3i(1, 0, 1),
+		"[water] emerge is the layout's emerge tile"
+	)
+	_check(not dm.layout.derive_wall_tiles().has(pond), "...and the water is not walled off")
+	var bare := DungeonManager.new()
+	add_child(bare)
+	Loader.build_plan(_plan_of("[floor]\ny = 0\n[grid]\n###\n#E#\n###\n"), bare)
+	_check(not bare.layout.has_emerge_tile(), "a dungeon with no [water] rule has no emerge tile")
+
+
 func _check_the_frozen_lake() -> void:
+	# The fixtures above are dungeons too, in the "dungeon" group, and the player would find the
+	# first of them rather than the lake's own.
+	for child in get_children():
+		if child is DungeonManager:
+			child.free()
 	ScenarioCatalog.selected_dungeon = &"norgzevod_frozen_lake"
 	var scene := EXPLORATION.instantiate()
 	add_child(scene)
@@ -193,5 +224,41 @@ func _check_the_frozen_lake() -> void:
 			hits += 1
 	_check(hits == 0, "the lake: nothing teleports into the pocket")
 	_check(dm.config == null, "the lake: no config yet, so no group appears")
+	# Water: laid, never walled off, and the emerge tile is F25 of floor 0.
+	_check(not plan.water_tiles.is_empty(), "the lake has water")
+	_check(
+		dm.layout.water_tiles().size() == plan.water_tiles.size(),
+		"the lake: every water tile is laid"
+	)
+	_check(
+		dm.layout.has_emerge_tile() and dm.layout.emerge_tile() == Vector3i(5, 0, 24),
+		"the lake: the emerge tile is F25 on floor 0"
+	)
+	_check(dm.is_floor(dm.layout.emerge_tile()), "...and it is floor")
+	var walled_water := 0
+	for w in dm.layout.derive_wall_tiles():
+		if dm.layout.is_water(w):
+			walled_water += 1
+	_check(walled_water == 0, "the lake: no water tile is walled off")
+	# A step into the lake from its shore is blocked like a wall — and, when some storey lies
+	# beneath the water, not a fall onto it. Such a shore is preferred.
+	var shore := Vector3i.ZERO
+	var pond := Vector3i.ZERO
+	var over_floor := false
+	for w in plan.water_tiles:
+		if not dm.layout.is_open_water(w):
+			continue
+		var below: bool = dm.layout.fall_landing(w) != w
+		for d in [Vector3i(1, 0, 0), Vector3i(-1, 0, 0), Vector3i(0, 0, 1), Vector3i(0, 0, -1)]:
+			if dm.is_walkable(w + d) and (shore == Vector3i.ZERO or (below and not over_floor)):
+				shore = w + d
+				pond = w
+				over_floor = below
+	_check(shore != Vector3i.ZERO, "the lake has a shore to stand on")
+	_check(over_floor, "...with floor beneath the water, which a step must not fall to")
+	player.teleport_to(shore)
+	player.face_tile(pond)
+	await player.try_move(Vector3.FORWARD)
+	_check(player.tile == shore, "the lake: a step into the water is blocked")
 	scene.queue_free()
 	ScenarioCatalog.selected_dungeon = &""

@@ -13,6 +13,8 @@ extends RefCounted
 const FLOOR_COLOR := Color(0.24, 0.24, 0.30)
 const PIT_COLOR := Color(0.12, 0.12, 0.16)
 const WALL_COLOR := Color(0.14, 0.14, 0.17)
+## Water: a flat, saturated blue that nothing else in the dungeon shares, so a pond reads as one.
+const WATER_COLOR := Color(0.12, 0.38, 0.72)
 ## A safe area's floor: the same slab, tinted green, so the player can tell where it starts.
 const SAFE_FLOOR_COLOR := Color(0.22, 0.34, 0.27)
 
@@ -32,12 +34,21 @@ static func render_grid(dm, wall_tiles: Dictionary) -> void:
 		var mat := safe_mat if dm.safe_areas.has(c) else floor_mat
 		dm.add_child(_make_slab(dm, dm.tile_to_world(c), mat))
 
+	# Water: a thin slab like a floor, its top just under the tile's floor level. A plank laid over
+	# it is a floor tile as well, drawn by whoever placed it, above the water.
+	var water_mat := _water_material()
+	for c in dm.layout.water_tiles():
+		var pos: Vector3 = dm.tile_to_world(c) + Vector3(0.0, -dm.WATER_SURFACE_DROP, 0.0)
+		dm.add_child(_make_slab(dm, pos, water_mat))
+
 	# Pits get a dark bottom slab below them ONLY when there is no real floor further down —
 	# otherwise we would hide the very ravine you are meant to be able to fall into.
 	var pit_mat := _material(PIT_COLOR)
 	for c in dm.layout.pit_tiles():
 		if dm.layout.fall_landing(c) != c:
-			continue  # a lower storey already serves as the bottom
+			continue  # a lower storey (or the water below) already serves as the bottom
+		if dm.layout.is_water(c):
+			continue  # the water of its own tile is the bottom
 		var pos: Vector3 = dm.tile_to_world(c) + Vector3(0.0, -dm.PIT_DEPTH, 0.0)
 		dm.add_child(_make_slab(dm, pos, pit_mat))
 
@@ -80,6 +91,17 @@ static func build_demo_visuals(dm, width: int, depth: int, blocked: Dictionary) 
 static func _material(color: Color) -> StandardMaterial3D:
 	var mat := StandardMaterial3D.new()
 	mat.albedo_color = color
+	return mat
+
+
+## Water's material: flat blue, a little glossy, and lit from within so that it still reads as
+## water in a dark dungeon.
+static func _water_material() -> StandardMaterial3D:
+	var mat := _material(WATER_COLOR)
+	mat.roughness = 0.2
+	mat.emission_enabled = true
+	mat.emission = WATER_COLOR
+	mat.emission_energy_multiplier = 0.35
 	return mat
 
 

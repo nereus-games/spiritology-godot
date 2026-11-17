@@ -351,7 +351,8 @@ func _advance_bridge_tile(player) -> void:
 
 
 ## Falling off the bridge: the character drops to the FLOOR below, as deep as level design made
-## it, and takes NORMAL fall damage, exactly like stepping into empty space.
+## it, and takes NORMAL fall damage, exactly like stepping into empty space. Over water the fall
+## ends in the water, which hands the character back on the emerge tile.
 func _fall_off_bridge(player) -> void:
 	# You fall from whichever tile you are closest to: the one ahead if you are past halfway AND
 	# there is genuinely empty space below it — otherwise you are already over solid floor.
@@ -360,12 +361,14 @@ func _fall_off_bridge(player) -> void:
 	if (
 		_active_bridge != null
 		and _active_bridge.balance().progress >= 0.5
-		and _dungeon.layout.fall_landing(ahead) != ahead
+		and _dungeon.layout.has_drop(ahead)
 	):
 		from_tile = ahead
 	_finish_bridge(player)
-	var landing := _dungeon.layout.fall_landing(from_tile)
-	if landing == from_tile:
+	# Water counts as a place a fall ends: the plank's own tile when it lies over water (height 0),
+	# or water further down.
+	var landing := _dungeon.layout.fall_end(from_tile)
+	if not _dungeon.layout.has_drop(from_tile):
 		# Nothing below: the bridge spans no gap at all, which is incomplete level design. Catch
 		# yourself on the plank rather than vanishing.
 		## TODO(dungeon checker): the design doc requires a narrow bridge to ALWAYS span a floor,
@@ -377,7 +380,9 @@ func _fall_off_bridge(player) -> void:
 		return
 	player.teleport_to(from_tile)
 	# Watching rivals are told by `fall_to`, through `DungeonManager.notify_level_change`.
-	await player.fall_to(landing, from_tile.y - landing.y)
+	await player.fall_to(
+		landing, from_tile.y - landing.y, _dungeon.layout.drops_into_water(from_tile)
+	)
 
 
 ## A rival steps onto the plank the player is on: both fall, land on the SAME tile, and the
@@ -387,15 +392,21 @@ func _on_bridge_collision(rival, tile: Vector3i) -> void:
 	var player := get_node_or_null("Player")
 	if player == null or not is_instance_valid(rival):
 		return
-	var landing := _dungeon.layout.fall_landing(tile)
-	if landing == tile:
+	if not _dungeon.layout.has_drop(tile):
 		return  # nothing empty under this plank: nobody falls
+	var landing := _dungeon.layout.fall_end(tile)
 	var levels := tile.y - landing.y
+	var water := _dungeon.layout.drops_into_water(tile)
 	_finish_bridge(player)  # the crossing is cut short
 	player.teleport_to(tile)
-	# The player occupies no tile, so the rival can land exactly on theirs.
-	var rival_alive: bool = rival.drop_to(landing, levels)
-	await player.fall_to(landing, levels)
+	# The player occupies no tile, so the rival can land exactly on theirs. Out of the water, both
+	# come back up together: the rival on the emerge tile (or the free one nearest), and the player
+	# on the rival's tile, for the encounter.
+	var rival_alive: bool = rival.drop_to(landing, levels, water)
+	if water and rival_alive and is_instance_valid(rival):
+		await player.fall_to(landing, levels, true, rival.tile)
+	else:
+		await player.fall_to(landing, levels, water)
 	if rival_alive and is_instance_valid(rival):
 		_dungeon.request_encounter(rival, true)
 

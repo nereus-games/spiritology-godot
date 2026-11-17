@@ -169,6 +169,8 @@ static func build(id: StringName, dm) -> Vector3i:
 			return _abilities(dm)
 		&"rivals":
 			return _rivals(dm)
+		&"water":
+			return _water(dm)
 	# Silently falling back to another scenario made an unknown id look like it "worked" for a
 	# while. Something is still built, so the game does not crash, but it is said out loud — and
 	# the checks fail on a reported error.
@@ -576,3 +578,61 @@ static func _rivals(dm) -> Vector3i:
 		dm.layout.remove_floor(pillar)
 	GameSession.add_object(&"smoke_bomb", 3)
 	return Vector3i(4, 0, 0)
+
+
+## Water, and the three ways into it. Nobody walks into water on purpose; you fall in, and come
+## back up on the emerge tile with the damage of the fall and nothing more.
+##
+##   ground (y = 0)  x 0..8, z 0..17. A pond at x 2..5, z 3..5; a channel across z 13..15 with a
+##                   plank over it at x = 4. The emerge tile is (1, 0, 1), near the start.
+##   storey 1        one landing, (7, 1, 9), between two flights of stairs at x = 7.
+##   storey 2        a platform at x 2..7, z 6..7. Its north edge is unrailed: west of x = 6 it
+##                   overhangs the pond, east of it the ground, so the same step costs the same
+##                   10 DEN and ends either in the water or on the floor.
+##
+## A revealed disarray trap sits at (6, 0, 2), just before the pond's east shore.
+static func _water(dm) -> Vector3i:
+	_floor_rect_y(dm, 0, 0, 9, 18, 0)
+	# The pond: removing the floor and declaring the water. A tile that is water is not a wall.
+	for x in range(2, 6):
+		for z in range(3, 6):
+			_water_tile(dm, Vector3i(x, 0, z))
+	# The channel, bank to bank, and the plank across it at x = 4: a bridge laid ON the water, at
+	# height 0, so falling off it costs nothing.
+	for x in range(0, 9):
+		for z in range(13, 16):
+			_water_tile(dm, Vector3i(x, 0, z))
+	for x in [-1, 9]:
+		for z in range(13, 16):
+			dm.layout.declare_wall(Vector3i(x, 0, z))  # the bank, so the channel ends in a wall
+	for z in range(13, 16):
+		var plank := Vector3i(4, 0, z)
+		dm.layout.add_floor(plank)
+		dm.layout.mark_pit(plank)
+		spawn_plank(dm, plank)
+		_place(dm, NarrowBridge, plank)
+	dm.layout.set_emerge_tile(Vector3i(1, 0, 1))
+
+	# The way up: two flights at x = 7, with a landing between them, to a platform two storeys up.
+	_floor_rect_y(dm, 2, 6, 6, 2, 2)  # x 2..7, z 6..7
+	dm.layout.add_floor(Vector3i(7, 1, 9))
+	for flight in [Vector3i(7, 0, 10), Vector3i(7, 1, 8)]:
+		var up: Vector3i = flight
+		var down: Vector3i = up + Vector3i(0, 1, 0)
+		dm.layout.remove_floor(up)  # a flight's tile is not walkable: you are carried past it
+		_place(dm, Stairs, up, {"level_delta": 1, "face_dir": Vector3i(0, 0, -1)})
+		_place(dm, Stairs, down, {"level_delta": -1, "face_dir": Vector3i(0, 0, 1)})
+
+	_place(
+		dm,
+		Trap,
+		Vector3i(6, 0, 2),
+		{"kind": Trap.Kind.DISARRAY, "revealed": true, "disarray_min": 6, "disarray_max": 8}
+	)
+	return Vector3i(4, 0, 0)
+
+
+## A water tile: not floor, and marked as water.
+static func _water_tile(dm, tile: Vector3i) -> void:
+	dm.layout.remove_floor(tile)
+	dm.layout.mark_water(tile)

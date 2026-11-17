@@ -376,6 +376,12 @@ msgstr "Rival groups: spawns, flight, the way back"
 msgid "SCENARIO_RIVALS_DESC"
 msgstr "A lone rival waits near the entrance, two groups appear on spawn points as you arrive, and another one every 12 turns. A group is drawn at random 70 % of the time (1 to 3 of ravbak, kalilk, skorpis, fliritus), otherwise it is a pack of three ravbak or a lone skorpis. In an encounter, use a smoke bomb to run away: you land 3 to 5 steps off, with the group still where it was. If only one character runs, the other carries on. In the debug view, F2 pacifies the rivals. Whatever the outcome, a group still on the map keeps the damage it took, and rests a few turns."
 
+msgid "SCENARIO_WATER_TITLE"
+msgstr "Water: pond, plank, ledge & disarray"
+
+msgid "SCENARIO_WATER_DESC"
+msgstr "Nobody walks into water on purpose: step towards the blue pond in front of you and nothing happens, with no fall and no damage. You only fall in, and you then come back up on the emerge tile near the start, with the damage of the fall and nothing more. TRY THREE WAYS IN. (1) The PLANK across the channel at the back: it lies at the level of the water, so a fall off it costs nothing. (2) The LEDGE: take the two flights of stairs on the right up to the platform, then step off its north edge. Over most of the platform that edge overhangs the pond (10 DEN, and you come back up near the start); at its east end it overhangs plain floor (the same 10 DEN, and you stay down there). (3) DISARRAY: walk onto the revealed trap just before the pond's east shore, then walk along the water; a deflected step into it makes you fall in (a fall of height 0: no damage)."
+
 msgid "DUNGEON_DEV_RIVALS_NAME"
 msgstr "Rival test room"
 

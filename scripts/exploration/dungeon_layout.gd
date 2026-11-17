@@ -44,6 +44,16 @@ var _declared_walls: Dictionary = {}
 # it. Gives the "log over a drop" look.
 var _pit: Dictionary = {}
 
+# WATER tiles: a flat surface at the tile's own floor level, never walked into on purpose. It is a
+# place to FALL into — off a narrow bridge, off a ledge, or by a deflected step under disarray —
+# and whoever falls in comes back up on the emerge tile. A tile can be water AND floor: that is a
+# plank laid over it, at height 0.
+var _water: Dictionary = {}
+
+# Where whoever fell into water comes back up, declared by level design (`[water] emerge`).
+var _emerge: Vector3i
+var _has_emerge := false
+
 # Per the design doc ("Dungeons"), you leave a dungeon by reaching an EXIT and interacting
 # with it, and "the dungeon entry counts as an exit point". These tiles are declared by level
 # design — in dev, by the test scenario. Today they serve the mechanisms that send the player
@@ -118,16 +128,88 @@ func is_bottomless(tile: Vector3i) -> bool:
 	return _hole.has(tile) and not _floor.has(tile) and fall_landing(tile) == tile
 
 
-## Where a fall from `tile` lands: the first FLOOR tile below it. Returns `tile` unchanged
-## when there is none, which means no fall at all — a wall.
+## Where a fall from `tile` lands: the first FLOOR or WATER tile below it. Returns `tile`
+## unchanged when there is none, which means no fall at all — a wall. Water counts as somewhere a
+## fall ends: see [method drops_into_water] to tell the two apart.
 func fall_landing(tile: Vector3i) -> Vector3i:
 	if _declared_walls.has(tile):
 		return tile
 	for level in range(tile.y - 1, tile.y - 12, -1):
 		var below := Vector3i(tile.x, level, tile.z)
-		if _floor.has(below):
+		if _floor.has(below) or _water.has(below):
 			return below
 	return tile
+
+
+## Where a fall from `tile` ENDS: like [method fall_landing], except that a plank laid over the
+## water of its own tile ends right there, at height 0. Returns `tile` when nothing catches the
+## fall — and also for that plank, so ask [method has_drop] before reading it as "no fall".
+func fall_end(tile: Vector3i) -> Vector3i:
+	if plank_over_water(tile):
+		return tile
+	return fall_landing(tile)
+
+
+## Whether a fall from `tile` goes anywhere: a floor or water below it, or the water under the
+## plank it stands on.
+func has_drop(tile: Vector3i) -> bool:
+	return plank_over_water(tile) or fall_landing(tile) != tile
+
+
+## Whether a fall from `tile` ends in WATER rather than on solid floor: the water under a plank
+## of its own tile, or water below with no floor of its own on the tile that catches the fall.
+func drops_into_water(tile: Vector3i) -> bool:
+	if plank_over_water(tile):
+		return true
+	var landing := fall_landing(tile)
+	return landing != tile and _water.has(landing) and not _floor.has(landing)
+
+
+# --------------------------------------------------------------------------
+# Water
+# --------------------------------------------------------------------------
+
+
+## Declares `tile` water. Its surface lies at the tile's own floor level. Nobody walks into it on
+## purpose (it is not floor), and [method derive_wall_tiles] never walls it off. A tile that is
+## ALSO floor is a plank over the water.
+func mark_water(tile: Vector3i) -> void:
+	_water[tile] = true
+
+
+func is_water(tile: Vector3i) -> bool:
+	return _water.has(tile)
+
+
+## Water tiles (tile -> true). Read-only: this is the live dictionary.
+func water_tiles() -> Dictionary:
+	return _water
+
+
+## Whether `tile` carries a plank over water of its own: floor and water at once. A fall from it
+## ends in the water at height 0.
+func plank_over_water(tile: Vector3i) -> bool:
+	return _water.has(tile) and _floor.has(tile)
+
+
+## Whether `tile` is water with nothing to stand on: what a step into it would be.
+func is_open_water(tile: Vector3i) -> bool:
+	return _water.has(tile) and not _floor.has(tile)
+
+
+## Declares where whoever falls into water comes back up. A floor tile, by level design.
+func set_emerge_tile(tile: Vector3i) -> void:
+	_emerge = tile
+	_has_emerge = true
+
+
+func has_emerge_tile() -> bool:
+	return _has_emerge
+
+
+## The emerge tile — Vector3i.ZERO while none has been declared, so check [method has_emerge_tile].
+func emerge_tile() -> Vector3i:
+	return _emerge
 
 
 # --------------------------------------------------------------------------
@@ -183,8 +265,8 @@ func derive_wall_tiles() -> Dictionary:
 	for c in _floor:
 		for d in NEIGHBOURS:
 			var n: Vector3i = c + d
-			if _hole.has(n):
-				continue  # a deliberate hole: on no account wall it off
+			if _hole.has(n) or _water.has(n):
+				continue  # a deliberate hole, or water: on no account wall it off
 			if (
 				not _floor.has(n)
 				and _dungeon.mechanisms_at(n).is_empty()
@@ -193,12 +275,13 @@ func derive_wall_tiles() -> Dictionary:
 			):
 				wall_tiles[n] = true
 	# Declared walls are drawn where floor touches them, from the side or above and below — a
-	# wall can be the ground of the storey over it. One that carries a mechanism draws itself.
+	# wall can be the ground of the storey over it — or where water does: the bank of a pond.
+	# One that carries a mechanism draws itself.
 	for w in _declared_walls:
 		if wall_tiles.has(w) or not _dungeon.mechanisms_at(w).is_empty():
 			continue
 		for d in NEIGHBOURS + [Vector3i.UP, Vector3i.DOWN]:
-			if _floor.has(w + d):
+			if _floor.has(w + d) or _water.has(w + d):
 				wall_tiles[w] = true
 				break
 	return wall_tiles

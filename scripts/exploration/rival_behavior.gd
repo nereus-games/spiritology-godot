@@ -414,6 +414,8 @@ func _open_drop_edge(toward: Vector3i) -> Vector3i:
 		var landing: Vector3i = _dungeon.layout.fall_landing(n)
 		if landing == n:
 			continue  # solid wall, or a bottomless hole
+		if _dungeon.layout.drops_into_water(n):
+			continue  # nobody throws themselves into water on purpose
 		if _dungeon.safe_areas.has(landing):
 			continue  # nobody drops into a safe area either
 		var score: int = absi(landing.x - toward.x) + absi(landing.z - toward.z)
@@ -491,26 +493,34 @@ func _use_level_link(link) -> bool:
 	return true
 
 
-## A fall from `from_tile`, chosen or not: lands on the floor below and takes the damage.
-## Returns false when the rival is devitalised by it, and therefore dissolved.
+## A fall from `from_tile`, chosen or not: lands on the floor below and takes the damage. Into
+## water, it surfaces on the dungeon's emerge tile, as the player does. Returns false when the
+## rival is devitalised by it, and therefore dissolved.
 func fall_down(from_tile: Vector3i) -> bool:
-	var landing: Vector3i = _dungeon.layout.fall_landing(from_tile)
-	if landing == from_tile:
+	if not _dungeon.layout.has_drop(from_tile):
 		# A bottomless hole (a level-design mistake): the rival vanishes into it, the way the duo
 		# would be devitalised. Otherwise nothing below means no fall is possible.
 		if _dungeon.layout.is_bottomless(from_tile):
 			queue_free()
 			return false
 		return true
-	return drop_to(landing, from_tile.y - landing.y)
+	var landing: Vector3i = _dungeon.layout.fall_end(from_tile)
+	return drop_to(landing, from_tile.y - landing.y, _dungeon.layout.drops_into_water(from_tile))
 
 
 ## Puts the rival on `target` at the end of a fall of `levels` floors and applies the damage.
 ## When `target` is occupied it lands on the nearest free tile instead: the one-occupant-per-
 ## tile invariant holds across the whole grid, and a fall is no reason to bend it. Returns
 ## false when the fall devitalises it.
-func drop_to(target: Vector3i, levels: int) -> bool:
-	var dest: Vector3i = _dungeon.tile_search.free_tile_near(target)
+##
+## `into_water`: `target` is the surface of water, which adds no damage; the rival comes back up
+## on the dungeon's emerge tile instead, or the nearest free one to it, under the same rule.
+func drop_to(target: Vector3i, levels: int, into_water := false) -> bool:
+	var dest: Vector3i
+	if into_water:
+		dest = _dungeon.emerge_destination(tile)
+	else:
+		dest = _dungeon.tile_search.free_tile_near(target)
 	_dungeon.release(tile)
 	_dungeon.reserve(dest, self)
 	tile = dest
@@ -519,7 +529,9 @@ func drop_to(target: Vector3i, levels: int) -> bool:
 	# and you never see that it fell.
 	_busy = true
 	var tween := create_tween()
-	tween.tween_property(self, "global_position", _dungeon.tile_to_world(dest), 0.35)
+	tween.tween_property(self, "global_position", _dungeon.tile_to_world(target), 0.35)
+	if dest != target:
+		tween.tween_callback(func() -> void: global_position = _dungeon.tile_to_world(dest))
 	tween.finished.connect(func() -> void: _busy = false)
 	if not apply_map_damage(DungeonManager.fall_damage(levels)):
 		return false
@@ -620,13 +632,17 @@ func remove_from_dungeon() -> void:
 ## Two rivals meet on a plank: both fall, per the design doc — the occupant onto the tile
 ## below, the newcomer onto one adjacent to it.
 func _collide_with_rival(tile: Vector3i, other: Node) -> void:
-	var landing: Vector3i = _dungeon.layout.fall_landing(tile)
-	if landing == tile:
+	if not _dungeon.layout.has_drop(tile):
 		return  # nothing empty under this plank: nobody falls
+	var landing: Vector3i = _dungeon.layout.fall_end(tile)
 	var levels: int = tile.y - landing.y
+	var water: bool = _dungeon.layout.drops_into_water(tile)
 	if other.has_method("drop_to"):
-		other.drop_to(landing, levels)
-	drop_to(_dungeon.tile_search.free_tile_near(landing), levels)
+		other.drop_to(landing, levels, water)
+	if water:
+		drop_to(landing, levels, true)  # the emerge tile is now taken: the nearest free one
+	else:
+		drop_to(_dungeon.tile_search.free_tile_near(landing), levels)
 
 
 ## End of turn: elapses poison. A rival has no DEN on the map, so the effect is only counted

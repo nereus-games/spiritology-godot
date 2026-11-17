@@ -168,6 +168,19 @@ Two details that are easy to get wrong:
   Walls and holes are currently DERIVED from the floor grid rather than declared, which is
   authoring debt recorded in `dungeon_layout.gd`.
 
+**Water** is a layout declaration too (`mark_water`, `set_emerge_tile`). Nobody walks into it on
+purpose: a chosen step into water at the same level is blocked like a wall, with no fall and no
+turn. Falling in is the only way — off a ledge or a narrow bridge, or by a step deflected into
+it under disarray — and a fall ends in water like on a floor: normal fall damage for the height
+(a plank laid at the water's own level is height 0), none for the water, and then the faller comes
+back up on the emerge tile (`DungeonManager.emerge_destination`, the nearest free tile when it is
+occupied), where that tile's mechanisms and the turn resolve. For the rivals, which the design
+doc does not cover, the conservative reading holds: they never step or jump into water on purpose
+(a deflected step into it is a bump, `_open_drop_edge` skips an edge over water, and
+`push_group_aside` never pushes a group into it); one that falls in anyway — off a plank by its own
+balance test, or two rivals meeting on one — comes back up the same way, under the same
+occupancy rule.
+
 Drawing is separate: `DungeonRenderer` turns the grid into meshes and reads the dungeon only
 through its public API, so anything the drawing needs, the model has to name.
 

@@ -136,7 +136,8 @@ func try_move(local_dir: Vector3) -> void:
 	if _busy or _dungeon == null or input_locked:
 		return
 	# Disarray: a share of moves is deflected into a DIFFERENT translation, per the design doc.
-	if affliction.consume_move():
+	var deflected := affliction.consume_move()
+	if deflected:
 		local_dir = _random_translation_except(local_dir)
 	# Direction taken from the cardinal MOVEMENT facing, which guarantees an orthogonal step and
 	# never a diagonal, even while looking at 45 degrees.
@@ -171,6 +172,13 @@ func try_move(local_dir: Vector3) -> void:
 
 	if _dungeon.is_blocked_by_mechanism(target):
 		return  # an impassable mechanism, such as a closed gateway
+	if _dungeon.layout.is_open_water(target):
+		# Water on this very level: nobody walks into it on purpose, so a chosen step is blocked
+		# like a wall, whatever lies further down. Only a DEFLECTED step — disarray — goes in, and
+		# it is a fall of height 0.
+		if deflected:
+			await fall_to(target, 0, true)
+		return
 	if not _dungeon.is_floor(target):
 		# No floor here: a fall if there is floor further down (the lip of a drop), a wall if
 		# not.
@@ -181,7 +189,7 @@ func try_move(local_dir: Vector3) -> void:
 			if _dungeon.layout.is_bottomless(target):
 				await fall_forever(target)
 			return
-		await fall_to(landing, target.y - landing.y)
+		await fall_to(landing, target.y - landing.y, _dungeon.layout.drops_into_water(target))
 		return
 	var occ := _dungeon.occupant_at(target)
 	if occ != null:
@@ -224,10 +232,18 @@ func _go_through_gate(gate: Node, toward: Vector3i) -> void:
 ## A fall to `landing`, the floor tile below: an animated descent, damage scaling with the
 ## number of levels, then the usual resolution — the tile's mechanisms, then the turn.
 ##
+## `into_water`: `landing` is the surface of water. The descent and the damage are the same, and
+## water adds nothing; the duo then comes back up on the dungeon's emerge tile (the nearest free
+## one when it is occupied), where the tile's mechanisms and the turn resolve instead.
+## `come_up_on` overrides that tile, for a player who surfaces on a rival's.
+##
 ## Public because the narrow-bridge driver ([code]exploration.gd[/code]) uses it to make a fall
 ## off a bridge exactly an ordinary fall: same depth, same damage, same turn.
-func fall_to(landing: Vector3i, levels: int) -> void:
-	_dungeon.notify_level_change(self, tile, landing)  # watching rivals can follow
+func fall_to(landing: Vector3i, levels: int, into_water := false, come_up_on = null) -> void:
+	var dest := landing
+	if into_water:
+		dest = _dungeon.emerge_destination(tile) if come_up_on == null else come_up_on
+	_dungeon.notify_level_change(self, tile, dest)  # watching rivals can follow
 	tile = landing
 	_busy = true
 	var tween := create_tween()
@@ -238,6 +254,8 @@ func fall_to(landing: Vector3i, levels: int) -> void:
 	GameSession.apply_den_damage(GameSession.PartySlot.MAIN, dmg)
 	GameSession.apply_den_damage(GameSession.PartySlot.TEAMMATE, dmg)
 	GameSession.resolve_party_wipe()
+	if dest != landing:
+		teleport_to(dest)  # back up out of the water
 	_tick_hidden_on_move()
 	_dungeon.notify_entered(tile, self)
 	_dungeon.advance_turn()

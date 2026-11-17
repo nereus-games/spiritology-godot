@@ -17,6 +17,9 @@ const FLOOR_BELOW_COLOR := Color(0.15, 0.15, 0.19)
 ## Walls on the current storey: darker than the floor but clearly above the background, so a
 ## room's OUTLINE reads. The design doc has the map show floor and walls.
 const WALL_COLOR := Color(0.20, 0.20, 0.25)
+## Water: blue, nothing like a floor or a wall, so a pond and its shore read at a glance.
+const WATER_COLOR := Color(0.16, 0.42, 0.78)
+const WATER_BELOW_COLOR := Color(0.08, 0.20, 0.38)
 const MECH_COLOR := Color(0.90, 0.65, 0.20)
 ## A SPENT mechanism — a sprung trap, an emptied chest, a rolled die, dug ground. The same rule
 ## as in 3D: what is no longer actionable must stop drawing the eye like a lead worth following.
@@ -55,7 +58,7 @@ func _draw() -> void:
 	var minz: int = floors[0].z
 	var maxx: int = minx
 	var maxz: int = minz
-	for c in floors + _dungeon.layout.wall_tiles().keys():
+	for c in floors + _dungeon.layout.wall_tiles().keys() + _dungeon.layout.water_tiles().keys():
 		minx = mini(minx, c.x)
 		minz = mini(minz, c.z)
 		maxx = maxi(maxx, c.x)
@@ -73,6 +76,15 @@ func _draw() -> void:
 				Rect2(_tile_px(c, origin, maxx, maxz), Vector2(TILE_PX - 1.0, TILE_PX - 1.0)),
 				FLOOR_BELOW_COLOR
 			)
+	# Water over the lower storeys' floors and under the current one's, so a plank laid over it
+	# (floor as well) is drawn on top: the water of lower storeys dimmed, this storey's bright.
+	for want_current in [false, true]:
+		for c in _dungeon.layout.water_tiles():
+			if c.y <= level and (c.y == level) == want_current:
+				draw_rect(
+					Rect2(_tile_px(c, origin, maxx, maxz), Vector2(TILE_PX - 1.0, TILE_PX - 1.0)),
+					WATER_COLOR if want_current else WATER_BELOW_COLOR
+				)
 	for c in floors:
 		if c.y == level:
 			draw_rect(

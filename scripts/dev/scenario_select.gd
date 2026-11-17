@@ -8,7 +8,11 @@ extends Control
 const ScenarioCatalog := preload("res://scripts/dev/scenario_catalog.gd")
 const MapParser := preload("res://scripts/dungeon/dungeon_map_parser.gd")
 const Validator := preload("res://scripts/dungeon/dungeon_validator.gd")
+const EditorLaunch := preload("res://scripts/dungeon/editor/dungeon_editor_launch.gd")
+const Util := preload("res://scripts/dungeon/editor/dungeon_editor_util.gd")
 const EXPLORATION := "res://scenes/exploration/exploration.tscn"
+## The dungeon editor: a dev tool, reached from here and from nowhere else.
+const DUNGEON_EDITOR := "res://scenes/dev/dungeon_editor.tscn"
 ## The encyclopaedia, until a menu exists to reach it from.
 const ENCYCLOPAEDIA := "res://scenes/ui/encyclopaedia.tscn"
 const EncyclopaediaSample := preload("res://scripts/dev/encyclopaedia_sample.gd")
@@ -99,6 +103,12 @@ func _scrolling_grid(tabs: TabContainer, columns: int) -> GridContainer:
 ## makes of its maps. One with maps can be entered, faults or not — they are reported beside it; one
 ## with none is greyed out with the reason — and, with no dungeon at all, a line says so.
 func _fill_dungeons(grid: GridContainer) -> void:
+	var make := Button.new()
+	make.text = tr("UI_DEV_DUNGEON_NEW")
+	make.custom_minimum_size = Vector2(460, 34)
+	make.set_meta("role", "new")
+	make.pressed.connect(_on_new_dungeon_pressed)
+	grid.add_child(make)
 	var ids := ScenarioCatalog.real_dungeon_ids()
 	if ids.is_empty():
 		var empty := Label.new()
@@ -111,14 +121,26 @@ func _fill_dungeons(grid: GridContainer) -> void:
 		entry.add_theme_constant_override("separation", 2)
 		grid.add_child(entry)
 
+		# The dungeon to walk through, and beside it, when it has maps, the editor.
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 6)
+		entry.add_child(row)
 		var button := Button.new()
 		button.text = _dungeon_name(id)
-		button.custom_minimum_size = Vector2(460, 38)
+		button.custom_minimum_size = Vector2(380, 38)
+		button.set_meta("role", "play")
 		var has_maps := MapParser.slugs().has(id)
 		button.disabled = not has_maps
 		if has_maps:
 			button.pressed.connect(_on_dungeon_chosen.bind(id))
-		entry.add_child(button)
+		row.add_child(button)
+		if has_maps:
+			var edit := Button.new()
+			edit.text = tr("UI_DEV_DUNGEON_EDIT")
+			edit.custom_minimum_size = Vector2(74, 38)
+			edit.set_meta("role", "edit")
+			edit.pressed.connect(_on_dungeon_edit.bind(id))
+			row.add_child(edit)
 
 		if not has_maps:
 			entry.add_child(_dim_label(tr("UI_DEV_DUNGEON_NO_MAPS")))
@@ -130,6 +152,52 @@ func _fill_dungeons(grid: GridContainer) -> void:
 			entry.add_child(
 				_dim_label(tr("UI_DEV_DUNGEON_VERDICT") % [errors, issues.size() - errors])
 			)
+
+
+func _on_dungeon_edit(id: StringName) -> void:
+	EditorLaunch.edit(id)
+	TransitionManager.change_scene(DUNGEON_EDITOR)
+
+
+## Asks for the name of a new dungeon, which is the folder it will live in, then opens the editor
+## on an empty one. The name is checked as it is typed: the button stays off until it is usable.
+func _on_new_dungeon_pressed() -> void:
+	var dialog := ConfirmationDialog.new()
+	dialog.name = "NewDungeonDialog"
+	dialog.title = tr("UI_DEV_DUNGEON_NEW")
+	dialog.ok_button_text = tr("UI_DEV_DUNGEON_NEW_CREATE")
+	dialog.cancel_button_text = tr("UI_DEV_EDITOR_CANCEL")
+	var box := VBoxContainer.new()
+	dialog.add_child(box)
+	var prompt := Label.new()
+	prompt.text = tr("UI_DEV_DUNGEON_NEW_PROMPT")
+	prompt.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	prompt.custom_minimum_size = Vector2(420, 0)
+	box.add_child(prompt)
+	var field := LineEdit.new()
+	field.name = "SlugField"
+	box.add_child(field)
+	var problem := _dim_label("")
+	box.add_child(problem)
+	var check := func(text: String) -> void:
+		var taken := ScenarioCatalog.real_dungeon_ids().has(StringName(text))
+		var bad := not Util.valid_slug(text)
+		problem.text = (
+			tr("UI_DEV_DUNGEON_NEW_TAKEN")
+			if taken
+			else (tr("UI_DEV_DUNGEON_NEW_BAD") if bad and text != "" else "")
+		)
+		dialog.get_ok_button().disabled = bad or taken
+	field.text_changed.connect(check)
+	dialog.confirmed.connect(
+		func() -> void:
+			EditorLaunch.new_dungeon(StringName(field.text))
+			TransitionManager.change_scene(DUNGEON_EDITOR)
+	)
+	add_child(dialog)
+	dialog.popup_centered()
+	check.call("")
+	field.grab_focus()
 
 
 ## The dungeon's translated name, or its id while it has none.

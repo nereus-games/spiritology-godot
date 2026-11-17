@@ -25,7 +25,7 @@ const Kinds := preload("res://scripts/dungeon/dungeon_kinds.gd")
 
 const UP_CHAR := {"N": "^", "E": ">", "S": "v", "W": "<"}
 const DOWN_CHAR := {"N": "n", "E": "e", "S": "s", "W": "w"}
-const DEFAULT_NOTE_LINE := "# Written by the dungeon editor; edit freely, saving rewrites this layout."
+const DEFAULT_NOTE_LINE := "# Written by the dungeon editor; edit freely, a save keeps the layout."
 ## The order the common properties are written in, after the kind's own.
 const COMMON_ORDER: Array[String] = ["exit_edge", "facing", "tags", "asset", "note"]
 ## A zone's pieces: how many lone tiles go on one line.
@@ -41,7 +41,11 @@ static func file_name(y: int) -> String:
 static func floors_of(plan) -> Array[int]:
 	var seen := {}
 	for dict in [
-		plan.floor_tiles, plan.hole_tiles, plan.pit_tiles, plan.wall_tiles, plan.water_tiles,
+		plan.floor_tiles,
+		plan.hole_tiles,
+		plan.pit_tiles,
+		plan.wall_tiles,
+		plan.water_tiles,
 		plan.tile_props
 	]:
 		for tile in dict:
@@ -68,7 +72,11 @@ static func content_bounds(plan) -> Vector2i:
 	var d := 1
 	var tiles: Array = []
 	for dict in [
-		plan.floor_tiles, plan.hole_tiles, plan.pit_tiles, plan.wall_tiles, plan.water_tiles,
+		plan.floor_tiles,
+		plan.hole_tiles,
+		plan.pit_tiles,
+		plan.wall_tiles,
+		plan.water_tiles,
 		plan.tile_props
 	]:
 		tiles.append(dict.keys())
@@ -139,8 +147,13 @@ static func write_floor(plan, y: int, opts: Dictionary = {}) -> String:
 			continue
 		order += 1
 		rest.append(
-			[_tile_group(plan, tile, stairs_chars), tile.z, tile.x, order,
-			"%s %s" % [cell_name(tile.x, tile.z), text]]
+			[
+				_tile_group(plan, tile, stairs_chars),
+				tile.z,
+				tile.x,
+				order,
+				"%s %s" % [cell_name(tile.x, tile.z), text]
+			]
 		)
 	rest.sort_custom(_before)
 
@@ -412,9 +425,10 @@ static func _zone_pieces(rows: Dictionary, y: int) -> Array[String]:
 			singles.append(tile_ref(Vector3i(r[0], y, r[2]), y))
 		else:
 			pieces.append(
-				"rect=%s:%s" % [
-					tile_ref(Vector3i(r[0], y, r[2]), y), tile_ref(Vector3i(r[1], y, r[3]), y)
-				]
+				(
+					"rect=%s:%s"
+					% [tile_ref(Vector3i(r[0], y, r[2]), y), tile_ref(Vector3i(r[1], y, r[3]), y)]
+				)
 			)
 	var at := 0
 	while at < singles.size():

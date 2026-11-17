@@ -305,6 +305,547 @@ msgstr "Validateur : %d erreur(s), %d avertissement(s)"
 msgid "UI_DEV_DUNGEON_NO_MAPS"
 msgstr "Pas encore de cartes : rien à parcourir."
 
+# --- The dungeon editor ---------------------------------------------------------------
+# A DEV tool (the Dungeons tab of the scenario picker, Edit and New dungeon). Translated like
+# the rest, so that the rule on displayed text has no exception. The names of kinds,
+# properties and tags are the format's own identifiers and are shown as the files spell them.
+msgid "UI_DEV_DUNGEON_EDIT"
+msgstr "Modifier"
+
+msgid "UI_DEV_DUNGEON_NEW"
+msgstr "Nouveau donjon"
+
+msgid "UI_DEV_DUNGEON_NEW_PROMPT"
+msgstr "Nom du nouveau donjon : lettres minuscules, chiffres et tirets bas (c'est le nom du dossier dans data/dungeons/)."
+
+msgid "UI_DEV_DUNGEON_NEW_BAD"
+msgstr "Uniquement des lettres minuscules, des chiffres et des tirets bas."
+
+msgid "UI_DEV_DUNGEON_NEW_TAKEN"
+msgstr "Un donjon porte déjà ce nom."
+
+msgid "UI_DEV_DUNGEON_NEW_CREATE"
+msgstr "Créer"
+
+# %s = the dungeon's title, %s = its folder name.
+msgid "UI_DEV_EDITOR_TITLE"
+msgstr "Éditeur de donjon : %s (%s)"
+
+msgid "UI_DEV_EDITOR_DIRTY"
+msgstr "   modifications non enregistrées"
+
+msgid "UI_DEV_EDITOR_BACK"
+msgstr "Retour"
+
+msgid "UI_DEV_EDITOR_SAVE"
+msgstr "Enregistrer"
+
+msgid "UI_DEV_EDITOR_UNDO"
+msgstr "Annuler"
+
+msgid "UI_DEV_EDITOR_REDO"
+msgstr "Rétablir"
+
+msgid "UI_DEV_EDITOR_VALIDATE"
+msgstr "Valider"
+
+msgid "UI_DEV_EDITOR_LIVE"
+msgstr "en continu"
+
+msgid "UI_DEV_EDITOR_FIT"
+msgstr "Cadrer"
+
+msgid "UI_DEV_EDITOR_CANCEL"
+msgstr "Annuler"
+
+msgid "UI_DEV_EDITOR_LEAVE_TITLE"
+msgstr "Modifications non enregistrées"
+
+msgid "UI_DEV_EDITOR_LEAVE_TEXT"
+msgstr "Le donjon a des modifications qui ne sont pas enregistrées."
+
+msgid "UI_DEV_EDITOR_LEAVE_DISCARD"
+msgstr "Les abandonner"
+
+msgid "UI_DEV_EDITOR_LEAVE_SAVE"
+msgstr "Enregistrer et quitter"
+
+# %s = the files written.
+msgid "UI_DEV_EDITOR_SAVED"
+msgstr "Enregistré : %s"
+
+msgid "UI_DEV_EDITOR_NOTHING_TO_SAVE"
+msgstr "Rien à enregistrer : les fichiers sont à jour."
+
+msgid "UI_DEV_EDITOR_SAVE_FAILED"
+msgstr "Échec de l'enregistrement (erreur %d)."
+
+msgid "UI_DEV_EDITOR_LOAD_ISSUES"
+msgstr "Les fichiers contenaient %d problème(s), listés à droite ; l'enregistrement écrit ce qui a pu être lu."
+
+msgid "UI_DEV_EDITOR_FLOOR"
+msgstr "Étage %d"
+
+msgid "UI_DEV_EDITOR_FLOOR_ADD_ABOVE"
+msgstr "+ au-dessus"
+
+msgid "UI_DEV_EDITOR_FLOOR_ADD_BELOW"
+msgstr "+ en dessous"
+
+msgid "UI_DEV_EDITOR_FLOOR_DELETE"
+msgstr "Supprimer l'étage"
+
+msgid "UI_DEV_EDITOR_FLOOR_DELETE_TEXT"
+msgstr "Supprimer l'étage %d et tout ce qu'il contient ?"
+
+msgid "UI_DEV_EDITOR_SHOW_BELOW"
+msgstr "Étage du dessous"
+
+msgid "UI_DEV_EDITOR_SHOW_ZONES"
+msgstr "Zones"
+
+msgid "UI_DEV_EDITOR_SHOW_GRID"
+msgstr "Grille"
+
+msgid "UI_DEV_EDITOR_SECTION_TOOLS"
+msgstr "OUTILS"
+
+msgid "UI_DEV_EDITOR_SECTION_TERRAIN"
+msgstr "TERRAIN"
+
+msgid "UI_DEV_EDITOR_SECTION_ENTRANCE"
+msgstr "ENTRÉE ET SORTIES"
+
+msgid "UI_DEV_EDITOR_SECTION_PLACEMENTS"
+msgstr "ÉLÉMENTS"
+
+msgid "UI_DEV_EDITOR_SECTION_ZONES"
+msgstr "ZONES"
+
+msgid "UI_DEV_EDITOR_SECTION_WATER"
+msgstr "EAU"
+
+msgid "UI_DEV_EDITOR_TOOL_SELECT"
+msgstr "Sélectionner"
+
+msgid "UI_DEV_EDITOR_TOOL_ERASE"
+msgstr "Effacer"
+
+msgid "UI_DEV_EDITOR_TOOL_ENTRANCE"
+msgstr "Entrée"
+
+msgid "UI_DEV_EDITOR_TOOL_EXIT"
+msgstr "Ajouter une sortie"
+
+msgid "UI_DEV_EDITOR_TOOL_EXIT_REMOVE"
+msgstr "Retirer une sortie"
+
+msgid "UI_DEV_EDITOR_TOOL_ZONE_PAINT"
+msgstr "Peindre une zone"
+
+msgid "UI_DEV_EDITOR_TOOL_ZONE_ERASE"
+msgstr "Retirer de la zone"
+
+msgid "UI_DEV_EDITOR_TOOL_EMERGE"
+msgstr "Case de sortie de l'eau"
+
+msgid "UI_DEV_EDITOR_TERRAIN_FLOOR"
+msgstr "Sol"
+
+msgid "UI_DEV_EDITOR_TERRAIN_ICE"
+msgstr "Glace"
+
+msgid "UI_DEV_EDITOR_TERRAIN_WATER"
+msgstr "Eau"
+
+msgid "UI_DEV_EDITOR_TERRAIN_WALL"
+msgstr "Mur"
+
+msgid "UI_DEV_EDITOR_TERRAIN_EMPTY"
+msgstr "Vide"
+
+msgid "UI_DEV_EDITOR_TERRAIN_HOLE"
+msgstr "Trou"
+
+# The name of each kind of placement of dungeon_kinds.gd; a kind with no key here is shown by its identifier.
+msgid "UI_DEV_EDITOR_KIND_TRAP"
+msgstr "Piège"
+
+msgid "UI_DEV_EDITOR_KIND_CHEST"
+msgstr "Coffre"
+
+msgid "UI_DEV_EDITOR_KIND_GATE"
+msgstr "Porte"
+
+msgid "UI_DEV_EDITOR_KIND_STAIRS"
+msgstr "Escalier"
+
+msgid "UI_DEV_EDITOR_KIND_LIFT"
+msgstr "Ascenseur"
+
+msgid "UI_DEV_EDITOR_KIND_BRIDGE"
+msgstr "Pont"
+
+msgid "UI_DEV_EDITOR_KIND_GUARDRAIL"
+msgstr "Garde-corps"
+
+msgid "UI_DEV_EDITOR_KIND_CRUMBLY"
+msgstr "Sol friable"
+
+msgid "UI_DEV_EDITOR_KIND_LITTER"
+msgstr "Détritus"
+
+msgid "UI_DEV_EDITOR_KIND_CRYSTAL"
+msgstr "Cristal"
+
+msgid "UI_DEV_EDITOR_KIND_DIEVERTING"
+msgstr "Dieverting"
+
+msgid "UI_DEV_EDITOR_KIND_CRACKED_WALL"
+msgstr "Mur fissuré"
+
+msgid "UI_DEV_EDITOR_KIND_RIVAL_SPAWN"
+msgstr "Apparition de rival"
+
+msgid "UI_DEV_EDITOR_KIND_SPECIAL_SPAWN"
+msgstr "Apparition spéciale"
+
+msgid "UI_DEV_EDITOR_KIND_SCENERY"
+msgstr "Élément de décor"
+
+msgid "UI_DEV_EDITOR_KIND_DECOR"
+msgstr "Décoration"
+
+msgid "UI_DEV_EDITOR_HINT_SELECT"
+msgstr "Cliquer sur une case pour l'inspecter ; cliquer encore pour parcourir ce qui s'y empile. Le clic droit sélectionne depuis n'importe quel outil."
+
+msgid "UI_DEV_EDITOR_HINT_ERASE"
+msgstr "Cliquer ou glisser pour retirer l'élément du dessus d'une case, ou une sortie."
+
+msgid "UI_DEV_EDITOR_HINT_TERRAIN"
+msgstr "Cliquer ou glisser pour peindre ; maintenir Maj et glisser pour remplir un rectangle."
+
+msgid "UI_DEV_EDITOR_HINT_ENTRANCE"
+msgstr "Cliquer sur une case pour y placer l'entrée, avec le regard et le côté de sortie réglés ci-dessous."
+
+msgid "UI_DEV_EDITOR_HINT_EXIT"
+msgstr "Cliquer sur une case pour en faire une sortie, qui se franchit par le côté réglé ci-dessous."
+
+msgid "UI_DEV_EDITOR_HINT_EXIT_REMOVE"
+msgstr "Cliquer sur une sortie pour l'enlever."
+
+msgid "UI_DEV_EDITOR_HINT_KIND"
+msgstr "Cliquer sur une case pour y placer cet élément, avec les propriétés ci-dessous. Les propriétés non définies ne sont pas écrites dans le fichier."
+
+msgid "UI_DEV_EDITOR_HINT_STAIRS"
+msgstr "Cliquer sur une case pour poser un escalier ; la flèche montre son orientation, claire s'il monte, sombre s'il descend. Case cochée, l'escalier correspondant est posé à l'étage voisin."
+
+msgid "UI_DEV_EDITOR_HINT_ZONE_PAINT"
+msgstr "Choisir ou créer une zone, puis cliquer ou glisser pour y peindre des cases ; Maj et glisser remplit un rectangle."
+
+msgid "UI_DEV_EDITOR_HINT_ZONE_ERASE"
+msgstr "Cliquer ou glisser pour retirer des cases de la zone choisie."
+
+msgid "UI_DEV_EDITOR_HINT_EMERGE"
+msgstr "Cliquer sur une case : le joueur y ressort après une chute dans l'eau. L'enregistrement ne modifie que cette clé de rules.cfg."
+
+msgid "UI_DEV_EDITOR_FACING"
+msgstr "Regard"
+
+msgid "UI_DEV_EDITOR_EXIT_EDGE"
+msgstr "Côté de sortie"
+
+msgid "UI_DEV_EDITOR_ENTRANCE_SET"
+msgstr "Entrée placée en %s."
+
+msgid "UI_DEV_EDITOR_EMERGE_SET"
+msgstr "Case de sortie de l'eau placée en %s ; rules.cfg est modifié à l'enregistrement."
+
+msgid "UI_DEV_EDITOR_EMERGE_CURRENT"
+msgstr "Case de sortie de l'eau actuelle : %s"
+
+msgid "UI_DEV_EDITOR_EMERGE_NONE"
+msgstr "aucune"
+
+msgid "UI_DEV_EDITOR_STAIRS_PARTNER"
+msgstr "Poser aussi l'escalier correspondant à l'étage voisin"
+
+msgid "UI_DEV_EDITOR_PARTNER_PLACED"
+msgstr "L'escalier correspondant est à l'étage %d."
+
+msgid "UI_DEV_EDITOR_PARTNER_MISSING"
+msgstr "L'étage %d n'existe pas : l'ajouter, puis reposer l'escalier pour obtenir la paire."
+
+msgid "UI_DEV_EDITOR_NOTHING_SELECTED"
+msgstr "Rien de sélectionné. Cliquer sur une case avec l'outil Sélectionner."
+
+# %s = cell name (AB24), %d = floor, %s = terrain.
+msgid "UI_DEV_EDITOR_TILE"
+msgstr "Case %s  ·  étage %d  ·  %s"
+
+msgid "UI_DEV_EDITOR_TILE_PROPS"
+msgstr "Propriétés de la case"
+
+msgid "UI_DEV_EDITOR_ZONES_HERE"
+msgstr "Zones ici : %s"
+
+msgid "UI_DEV_EDITOR_REMOVE"
+msgstr "Retirer"
+
+msgid "UI_DEV_EDITOR_REMOVE_BOTH"
+msgstr "Retirer avec son pendant"
+
+msgid "UI_DEV_EDITOR_PROP_CLEAR"
+msgstr "Effacer cette propriété"
+
+msgid "UI_DEV_EDITOR_PROP_PICK"
+msgstr "Choisir sur la carte"
+
+msgid "UI_DEV_EDITOR_PICKING"
+msgstr "Cliquer sur une case de la carte pour %s (Échap annule)."
+
+msgid "UI_DEV_EDITOR_CUSTOM_NAME"
+msgstr "nom personnalisé"
+
+msgid "UI_DEV_EDITOR_CUSTOM_VALUE"
+msgstr "valeur"
+
+msgid "UI_DEV_EDITOR_CUSTOM_ADD"
+msgstr "Ajouter une propriété custom.<nom>"
+
+msgid "UI_DEV_EDITOR_ZONE_NONE"
+msgstr "(aucune zone)"
+
+msgid "UI_DEV_EDITOR_ZONE_NAME"
+msgstr "nom d'une nouvelle zone"
+
+msgid "UI_DEV_EDITOR_ZONE_NEW"
+msgstr "Créer"
+
+msgid "UI_DEV_EDITOR_ZONE_TAGS"
+msgstr "étiquettes, séparées par des virgules"
+
+msgid "UI_DEV_EDITOR_ZONE_NOTE"
+msgstr "note"
+
+msgid "UI_DEV_EDITOR_ZONE_DELETE"
+msgstr "Supprimer cette zone"
+
+msgid "UI_DEV_EDITOR_ZONE_TILES"
+msgstr "%d case(s)"
+
+msgid "UI_DEV_EDITOR_ZONE_EMPTY"
+msgstr "(vide : elle n'est pas enregistrée)"
+
+msgid "UI_DEV_EDITOR_HOVER_ENTRANCE"
+msgstr "entrée"
+
+msgid "UI_DEV_EDITOR_HOVER_EXIT"
+msgstr "sortie"
+
+msgid "UI_DEV_EDITOR_HOVER_ZONE"
+msgstr "zone : %s"
+
+msgid "UI_DEV_EDITOR_HOVER_NOTE"
+msgstr "note : %s"
+
+msgid "UI_DEV_EDITOR_ISSUES"
+msgstr "Problèmes : %d erreur(s), %d avertissement(s)"
+
+msgid "UI_DEV_EDITOR_ISSUES_NONE"
+msgstr "Aucun problème."
+
+msgid "UI_DEV_EDITOR_SEVERITY_ERROR"
+msgstr "erreur"
+
+msgid "UI_DEV_EDITOR_SEVERITY_WARNING"
+msgstr "avertissement"
+
+msgid "UI_DEV_EDITOR_SEVERITY_WAIVED"
+msgstr "toléré"
+
+# %s = the reason written in rules.cfg.
+msgid "UI_DEV_EDITOR_ISSUE_WAIVED"
+msgstr "toléré : %s"
+
+msgid "UI_DEV_EDITOR_ERR_BAD_PROP"
+msgstr "La valeur de %s ne convient pas."
+
+msgid "UI_DEV_EDITOR_ERR_OUT_OF_GRID"
+msgstr "Les cases commencent en A1 : pas de position négative."
+
+msgid "UI_DEV_EDITOR_ERR_ZONE_EXISTS"
+msgstr "Une zone porte déjà ce nom."
+
+msgid "UI_DEV_EDITOR_ERR_BAD_ZONE_NAME"
+msgstr "Le nom d'une zone ne contient ni espace, ni guillemet, ni « = », « : » ou « # »."
+
+msgid "UI_DEV_EDITOR_ERR_NO_SUCH_ZONE"
+msgstr "Choisir ou créer une zone d'abord."
+
+msgid "UI_DEV_EDITOR_ERR_FLOOR_EXISTS"
+msgstr "Cet étage existe déjà."
+
+msgid "UI_DEV_EDITOR_ERR_NO_SUCH_FLOOR"
+msgstr "Un donjon garde au moins un étage."
+
+msgid "UI_DEV_EDITOR_ERR_NO_SUCH_PLACEMENT"
+msgstr "Cet élément n'existe plus."
+
+msgid "UI_DEV_EDITOR_ERR_NO_SUCH_EXIT"
+msgstr "Il n'y a pas de sortie ici."
+
+msgid "UI_DEV_EDITOR_ERR_UNKNOWN_KIND"
+msgstr "Ce type n'est pas dans la table des types."
+
+msgid "UI_DEV_EDITOR_ERR_UNKNOWN_TERRAIN"
+msgstr "Ce terrain n'existe pas."
+
+msgid "UI_DEV_EDITOR_ERR_GENERIC"
+msgstr "Refusé (%s)."
+
+# One per code of DungeonValidator.MESSAGES; the arguments are the same, in the same order.
+msgid "UI_DEV_ISSUE_NO_DIRECTORY"
+msgstr "aucun dossier pour ce donjon : %s"
+
+msgid "UI_DEV_ISSUE_NO_MAP_FILES"
+msgstr "aucun fichier floor_*.map dans %s"
+
+msgid "UI_DEV_ISSUE_UNKNOWN_SECTION"
+msgstr "section inconnue [%s]"
+
+msgid "UI_DEV_ISSUE_LINE_OUTSIDE_SECTION"
+msgstr "ligne en dehors de toute section : %s"
+
+msgid "UI_DEV_ISSUE_MISSING_FLOOR_Y"
+msgstr "pas de `y = N` dans [floor]"
+
+msgid "UI_DEV_ISSUE_BAD_LINE"
+msgstr "ligne illisible : %s"
+
+msgid "UI_DEV_ISSUE_BAD_TILE"
+msgstr "pas une case : %s"
+
+msgid "UI_DEV_ISSUE_BAD_VALUE"
+msgstr "valeur incorrecte : %s"
+
+msgid "UI_DEV_ISSUE_UNCLOSED_QUOTE"
+msgstr "guillemet non fermé : %s"
+
+msgid "UI_DEV_ISSUE_LEGEND_CORE_CHAR"
+msgstr "« %s » est un caractère de la grille et ne peut pas être redéfini"
+
+msgid "UI_DEV_ISSUE_UNKNOWN_KIND"
+msgstr "type inconnu « %s »"
+
+msgid "UI_DEV_ISSUE_UNKNOWN_CHAR"
+msgstr "« %s » n'est pas dans la légende"
+
+msgid "UI_DEV_ISSUE_DUPLICATE_ENTRANCE"
+msgstr "une seconde entrée (E)"
+
+msgid "UI_DEV_ISSUE_NO_ENTRANCE"
+msgstr "le donjon n'a pas d'entrée (E)"
+
+msgid "UI_DEV_ISSUE_UNKNOWN_PROP"
+msgstr "le type « %s » n'a pas de propriété « %s » (utiliser custom.<nom> pour un cas particulier)"
+
+msgid "UI_DEV_ISSUE_ASSET_MISSING"
+msgstr "la ressource n'existe pas : %s"
+
+msgid "UI_DEV_ISSUE_BOTTOMLESS_HOLE"
+msgstr "un trou sans rien en dessous"
+
+msgid "UI_DEV_ISSUE_STAIRS_APPROACH"
+msgstr "la case avant l'escalier n'est pas du sol"
+
+msgid "UI_DEV_ISSUE_STAIRS_DESTINATION"
+msgstr "l'escalier mène en %s, qui n'est pas du sol"
+
+msgid "UI_DEV_ISSUE_STAIRS_ABOVE"
+msgstr "la case juste au-dessus de l'escalier est du sol"
+
+msgid "UI_DEV_ISSUE_STAIRS_FACE"
+msgstr "un escalier a besoin de `face=N|E|S|W`"
+
+msgid "UI_DEV_ISSUE_BRIDGE_NOT_PIT"
+msgstr "une planche de pont sur une case qui n'est pas une fosse"
+
+msgid "UI_DEV_ISSUE_BRIDGE_NO_GAP"
+msgstr "un pont au-dessus de rien : ni sol ni eau en dessous"
+
+msgid "UI_DEV_ISSUE_BRIDGE_NOT_OVER_WATER"
+msgstr "le pont indique `over=water` mais la case n'a pas d'eau"
+
+msgid "UI_DEV_ISSUE_WATER_NO_EMERGE"
+msgstr "il y a de l'eau mais pas de case `[water] emerge` dans rules.cfg"
+
+msgid "UI_DEV_ISSUE_WATER_EMERGE_NOT_FLOOR"
+msgstr "la case où le joueur ressort (%s) n'est pas du sol"
+
+msgid "UI_DEV_ISSUE_WATER_NO_WAY_BACK"
+msgstr "après une chute dans l'eau, aucun chemin ne ramène à l'entrée"
+
+msgid "UI_DEV_ISSUE_WAIVER_UNUSED"
+msgstr "la dérogation « %s » ne correspond plus à aucune faute : la retirer de rules.cfg"
+
+msgid "UI_DEV_ISSUE_EXIT_NO_EDGE"
+msgstr "une sortie ou une entrée sans `exit_edge` : on ne sait pas de quel côté partir"
+
+msgid "UI_DEV_ISSUE_EXIT_EDGE_INSIDE"
+msgstr "la sortie traverse `exit_edge` vers %s, qui est du sol et non l'extérieur"
+
+msgid "UI_DEV_ISSUE_ENTRANCE_NO_FACING"
+msgstr "l'entrée n'a pas de `facing`"
+
+msgid "UI_DEV_ISSUE_BAD_RULES_FILE"
+msgstr "rules.cfg est illisible (erreur %d)"
+
+msgid "UI_DEV_ISSUE_SPAWN_POINTS_SHORT"
+msgstr "%d rivaux apparaissent à l'entrée mais il n'existe que %d points d'apparition de rivaux basiques"
+
+msgid "UI_DEV_ISSUE_BRIDGE_NO_WAY_BACK"
+msgstr "après une chute de ce pont, aucun chemin ne ramène à l'entrée"
+
+msgid "UI_DEV_ISSUE_LIFT_NO_PATH"
+msgstr "un ascenseur sans `path`"
+
+msgid "UI_DEV_ISSUE_LIFT_END_NOT_FLOOR"
+msgstr "l'autre bout de l'ascenseur (%s) n'est pas du sol"
+
+msgid "UI_DEV_ISSUE_GATE_NO_ARRIVAL"
+msgstr "une porte de téléportation sans `arrival`"
+
+msgid "UI_DEV_ISSUE_GATE_ARRIVAL_NOT_FLOOR"
+msgstr "la porte de téléportation arrive en %s, qui n'est pas du sol"
+
+msgid "UI_DEV_ISSUE_GATE_NO_EDGE"
+msgstr "une porte ou un garde-corps a besoin de `edge=N|E|S|W`"
+
+msgid "UI_DEV_ISSUE_TELEPORT_INTO_RESTRICTED"
+msgstr "une téléportation arrive en %s, dans une zone no_teleport"
+
+msgid "UI_DEV_ISSUE_SAFE_NO_FLOOR"
+msgstr "une case sûre sans sol"
+
+msgid "UI_DEV_ISSUE_SAFE_HAZARD"
+msgstr "un danger (%s) dans une zone sûre"
+
+msgid "UI_DEV_ISSUE_SAFE_LEDGE"
+msgstr "une case sûre a un rebord sans garde-corps vers %s"
+
+msgid "UI_DEV_ISSUE_SPAWN_NOT_FLOOR"
+msgstr "%s : pas une case de sol"
+
+msgid "UI_DEV_ISSUE_SPAWN_IN_SAFE_AREA"
+msgstr "%s : dans une zone sûre"
+
+msgid "UI_DEV_ISSUE_EXIT_UNREACHABLE"
+msgstr "une sortie inaccessible depuis l'entrée"
+
+msgid "UI_DEV_ISSUE_UNREACHABLE"
+msgstr "%d case(s) de sol inaccessible(s) depuis l'entrée (à partir de %s)"
+
 # --- The exploration test scenarios ---------------------------------------------------
 # One title and one instruction sheet per `data/scenarios/*.tres`. The .tres carries only
 # the id and the rank in the list; this is where the text lives.

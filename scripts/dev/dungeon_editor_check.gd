@@ -1,5 +1,5 @@
-## Headless check of the dungeon editor: the map writer, the model with its undo stack, and the
-## editor screen driven through its public methods and input events.
+## Headless check of the dungeon editor's two logic layers: the map writer and the model with
+## its undo stack. The screen has its own, `dungeon_editor_gui_check`.
 ##
 ## The writer's promises are that its text parses back to the same plan and that writing is a
 ## fixed point; the model's, that every operation is one command and that undo and redo put the
@@ -15,6 +15,7 @@ const Plan := preload("res://scripts/dungeon/dungeon_plan.gd")
 const Parser := preload("res://scripts/dungeon/dungeon_map_parser.gd")
 const Writer := preload("res://scripts/dungeon/dungeon_map_writer.gd")
 const Model := preload("res://scripts/dungeon/editor/dungeon_editor_model.gd")
+const Util := preload("res://scripts/dungeon/editor/dungeon_editor_util.gd")
 
 const LAKE := &"norgzevod_frozen_lake"
 const TEMP := "user://dungeon_editor_check/"
@@ -66,9 +67,10 @@ func _state(m: Model) -> String:
 	var zones := []
 	for name in m.plan.zones:
 		zones.append([name, m.plan.zones[name]["tags"], m.plan.zones[name]["props"]])
-	return "%s\n%s\n%s\n%s" % [
-		Model.canonical(m.plan), str(m.floors), m.plan.rule("water", "emerge", ""), str(zones)
-	]
+	return (
+		"%s\n%s\n%s\n%s"
+		% [Util.canonical(m.plan), str(m.floors), m.plan.rule("water", "emerge", ""), str(zones)]
+	)
 
 
 ## Runs `op`, then checks that it changed something, that undo restores the state exactly and
@@ -158,7 +160,7 @@ func _inline_model() -> Model:
 	m.set_tile_prop(Vector3i(5, 0, 5), "note", "a note on ice")
 	m.set_tile_prop(Vector3i(3, 0, 2), "custom.thing", "x")
 	m.create_zone("hall", ["safe", "no_teleport"])
-	m.zone_paint("hall", Model.rect_tiles(Vector3i(2, 0, 2), Vector3i(4, 0, 3)))
+	m.zone_paint("hall", Util.rect_tiles(Vector3i(2, 0, 2), Vector3i(4, 0, 3)))
 	m.zone_paint("hall", [Vector3i(9, 0, 9), Vector3i(10, 1, 9), Vector3i(10, 1, 10)])
 	m.set_zone_prop("hall", "note", "the safe hall")
 	m.create_zone("odd")
@@ -181,7 +183,9 @@ func _check_writer_helpers() -> void:
 	_check(Writer.cell_name(701, 0) == "ZZ1", "cell ZZ1")
 	_check(Writer.cell_name(702, 0) == "AAA1", "cell AAA1")
 	for x in [0, 1, 25, 26, 27, 51, 52, 700, 701, 702, 1000]:
-		_check(Kinds.cell_tile(Writer.cell_name(x, 4)) == Vector2i(x, 4), "cell name %d reads back" % x)
+		_check(
+			Kinds.cell_tile(Writer.cell_name(x, 4)) == Vector2i(x, 4), "cell name %d reads back" % x
+		)
 	_check(Writer.tile_ref(Vector3i(0, 0, 0), 0) == "A1", "a tile of the file's storey")
 	_check(Writer.tile_ref(Vector3i(1, -2, 1), 0) == "B2@-2", "a tile of another storey")
 	_check(Writer.dir_letter(Vector3i(0, 0, -1)) == "N", "north is -z")
@@ -192,17 +196,17 @@ func _check_writer_helpers() -> void:
 	_check(Writer.stairs_char(up) == ">", "stairs that climb east are >")
 	_check(Writer.stairs_char(down) == "s", "stairs that descend south are s")
 	_check(Writer.stairs_char(noted) == "", "stairs with a note go to [tiles]")
-	var rules := "[a]\nx=1\n\n[water]\nemerge=\"F25@0\"\n; keep\n[b]\ny=2\n"
+	var rules := '[a]\nx=1\n\n[water]\nemerge="F25@0"\n; keep\n[b]\ny=2\n'
 	_check(
 		Writer.patch_emerge(rules, "A1@2") == rules.replace('"F25@0"', '"A1@2"'),
 		"the emerge line is replaced and nothing else"
 	)
 	_check(
-		Writer.patch_emerge("[water]\nfoo=1\n", "A1@0") == "[water]\nemerge=\"A1@0\"\nfoo=1\n",
+		Writer.patch_emerge("[water]\nfoo=1\n", "A1@0") == '[water]\nemerge="A1@0"\nfoo=1\n',
 		"the key is added under an existing [water]"
 	)
 	_check(
-		Writer.patch_emerge("[a]\nx=1\n", "A1@0") == "[a]\nx=1\n\n[water]\nemerge=\"A1@0\"\n",
+		Writer.patch_emerge("[a]\nx=1\n", "A1@0") == '[a]\nx=1\n\n[water]\nemerge="A1@0"\n',
 		"a [water] section is appended when there is none"
 	)
 	var cfg := ConfigFile.new()
@@ -219,14 +223,16 @@ func _check_writer_inline() -> void:
 	_check(texts.size() == 2, "one text per storey")
 	var plan2 := _parse_texts(texts)
 	_check(plan2.issues.is_empty(), "the text parses without an issue: %s" % [plan2.issues])
-	_check(Model.canonical(plan2) == Model.canonical(m.plan), "write then parse: the same plan")
+	_check(Util.canonical(plan2) == Util.canonical(m.plan), "write then parse: the same plan")
 	var texts2 := Writer.write_all(plan2, m.floors, opts)
 	_check(texts2 == texts, "write(parse(write(plan))) == write(plan)")
 	var plan3 := _parse_texts(texts2)
-	_check(Model.canonical(plan3) == Model.canonical(m.plan), "...and once more")
+	_check(Util.canonical(plan3) == Util.canonical(m.plan), "...and once more")
 	var text: String = texts[0]
 	_check(text.contains("[legend]") and text.contains("^ = stairs dir=up face=N"), "a legend")
-	_check(text.contains("\n^") or text.contains("^\n") or text.contains("^."), "stairs in the grid")
+	_check(
+		text.contains("\n^") or text.contains("^\n") or text.contains("^."), "stairs in the grid"
+	)
 	_check(text.contains("# trap\n"), "tiles are grouped under a heading")
 	_check(text.contains('note="a b"'.replace("a b", "n 0")), "values with a space are quoted")
 	_check(text.ends_with("\n") and not text.ends_with("\n\n"), "one newline ends the file")
@@ -250,7 +256,7 @@ func _check_writer_inline() -> void:
 	odd.floor_tiles[v] = true
 	odd.add_placement(&"chest", v, {"trapped": true, "weird": "yes", "custom.k": "1 2"}, "")
 	var back := _parse_texts({0: Writer.write_floor(odd, 0)})
-	_check(Model.canonical(back) == Model.canonical(odd), "unknown and custom properties survive")
+	_check(Util.canonical(back) == Util.canonical(odd), "unknown and custom properties survive")
 
 
 func _count_y(dict: Dictionary, y: int) -> int:
@@ -271,10 +277,8 @@ func _check_writer_lake() -> void:
 	var texts := Writer.write_all(m.plan, m.floors, opts)
 	var plan2 := _parse_texts(texts, LAKE)
 	_check(plan2.issues.is_empty(), "the lake's text parses cleanly")
-	_check(Model.canonical(plan2) == Model.canonical(m.plan), "the lake: write then parse, same plan")
-	_check(
-		Writer.write_all(plan2, m.floors, opts) == texts, "the lake: writing is a fixed point"
-	)
+	_check(Util.canonical(plan2) == Util.canonical(m.plan), "the lake: write then parse, same plan")
+	_check(Writer.write_all(plan2, m.floors, opts) == texts, "the lake: writing is a fixed point")
 	# The committed files are the writer's own output: saving an unedited lake changes nothing.
 	for y in m.floors:
 		var committed := FileAccess.get_file_as_string(
@@ -307,16 +311,22 @@ func _check_terrain() -> void:
 		m.paint([t], terrain)
 		_check(m.terrain_of(t) == terrain, "the tile reads back as %s" % terrain)
 		m.paint([t], &"floor")
-	_undoable(m, "paint a rectangle", func(): m.paint_rect(Vector3i(3, 0, 3), Vector3i(6, 0, 5), &"wall"))
+	_undoable(
+		m, "paint a rectangle", func(): m.paint_rect(Vector3i(3, 0, 3), Vector3i(6, 0, 5), &"wall")
+	)
 	m.paint_rect(Vector3i(3, 0, 3), Vector3i(6, 0, 5), &"wall")
-	_check(m.terrain_of(Vector3i(6, 0, 5)) == &"wall" and m.terrain_of(Vector3i(7, 0, 5)) == &"floor",
-		"a rectangle is inclusive")
+	_check(
+		m.terrain_of(Vector3i(6, 0, 5)) == &"wall" and m.terrain_of(Vector3i(7, 0, 5)) == &"floor",
+		"a rectangle is inclusive"
+	)
 	_check(not m.paint([t], &"lava") and m.last_error == "UNKNOWN_TERRAIN", "an unknown terrain")
 	m.paint([Vector3i(-1, 0, 0)], &"wall")
 	_check(not m.plan.wall_tiles.has(Vector3i(-1, 0, 0)), "nothing is painted at a negative tile")
 	# What cannot stand on the new terrain goes with it.
 	var trap := m.place(&"trap", Vector3i(1, 0, 1), {"type": "poison"})
-	var gate := m.place(&"gate", Vector3i(1, 0, 1), {"type": "automated", "edge": Kinds.DIRECTIONS["N"]})
+	var gate := m.place(
+		&"gate", Vector3i(1, 0, 1), {"type": "automated", "edge": Kinds.DIRECTIONS["N"]}
+	)
 	m.paint([Vector3i(1, 0, 1)], &"wall")
 	_check(m.placement(trap).is_empty(), "painting a wall removes the trap")
 	_check(not m.placement(gate).is_empty(), "...and leaves the gate")
@@ -352,7 +362,10 @@ func _check_placements() -> void:
 		if floor_rule == "yes":
 			_check(m.plan.floor_tiles.has(tile), "%s makes its tile floor" % kind)
 		if kind == &"cracked_wall":
-			_check(m.plan.wall_tiles.has(tile) and not m.plan.floor_tiles.has(tile), "a cracked wall is wall")
+			_check(
+				m.plan.wall_tiles.has(tile) and not m.plan.floor_tiles.has(tile),
+				"a cracked wall is wall"
+			)
 		n += 1
 	var tile := Vector3i(2, 0, 7)
 	_check(m.place(&"nonsense", tile) == -1 and m.last_error == "UNKNOWN_KIND", "an unknown kind")
@@ -360,11 +373,16 @@ func _check_placements() -> void:
 	_check(m.last_error == "BAD_PROP:type", "...and says which property")
 	_check(m.place(&"trap", tile, {"poison_turns": "three"}) == -1, "an int that is not one")
 	_check(m.place(&"trap", tile, {"bogus": 1}) == -1, "a property the kind does not have")
-	_check(m.place(&"trap", tile, {"custom.x": "ok", "note": "n"}) >= 0, "custom and common ones pass")
+	_check(
+		m.place(&"trap", tile, {"custom.x": "ok", "note": "n"}) >= 0, "custom and common ones pass"
+	)
 	_check(m.place(&"trap", Vector3i(-1, 0, 0)) == -1, "no tile at a negative coordinate")
 	# A bridge is a floor over a pit, over water when it says so; removing it takes that back.
 	var b := m.place(&"bridge", Vector3i(7, 0, 7), {"over": "water"})
-	_check(m.plan.pit_tiles.has(Vector3i(7, 0, 7)) and m.plan.water_tiles.has(Vector3i(7, 0, 7)), "a bridge over water")
+	_check(
+		m.plan.pit_tiles.has(Vector3i(7, 0, 7)) and m.plan.water_tiles.has(Vector3i(7, 0, 7)),
+		"a bridge over water"
+	)
 	_undoable(m, "edit a bridge", func(): m.edit_placement(b, {"over": "void"}))
 	_check(not m.plan.water_tiles.has(Vector3i(7, 0, 7)), "...over void instead: no water")
 	_undoable(m, "remove a bridge", func(): m.remove_placement(b))
@@ -390,17 +408,33 @@ func _check_stairs() -> void:
 	var t := Vector3i(4, 0, 4)
 	var partner := m.stairs_partner(t, {"dir": "up", "face": Kinds.DIRECTIONS["N"]})
 	_check(partner["tile"] == Vector3i(4, 1, 4), "a flight that climbs meets one above")
-	_check(partner["props"]["dir"] == "down" and partner["props"]["face"] == Kinds.DIRECTIONS["S"], "...that descends, facing back")
+	_check(
+		partner["props"]["dir"] == "down" and partner["props"]["face"] == Kinds.DIRECTIONS["S"],
+		"...that descends, facing back"
+	)
 	partner = m.stairs_partner(t, {"dir": "down", "face": Kinds.DIRECTIONS["E"]})
-	_check(partner["tile"] == Vector3i(4, -1, 4) and partner["props"]["face"] == Kinds.DIRECTIONS["W"], "one that descends meets one below")
-	_check(m.stairs_partner(Vector3i(4, 1, 4), {"dir": "up", "face": Kinds.DIRECTIONS["N"]}).is_empty(), "no storey above, no partner")
+	_check(
+		partner["tile"] == Vector3i(4, -1, 4) and partner["props"]["face"] == Kinds.DIRECTIONS["W"],
+		"one that descends meets one below"
+	)
+	_check(
+		(
+			m
+			. stairs_partner(Vector3i(4, 1, 4), {"dir": "up", "face": Kinds.DIRECTIONS["N"]})
+			. is_empty()
+		),
+		"no storey above, no partner"
+	)
 	var box := [-1]
 	_undoable(m, "place a flight with its partner", func(): box[0] = m.place_stairs(t, "up", "N"))
 	var uid: int = box[0]
 	var partner_uid: int = m.last_partner_uid
 	_check(uid >= 0 and partner_uid >= 0, "both ends were placed")
 	var up := m.placement(partner_uid)
-	_check(up["tile"] == Vector3i(4, 1, 4) and up["props"]["dir"] == "down", "the other end is on the next storey")
+	_check(
+		up["tile"] == Vector3i(4, 1, 4) and up["props"]["dir"] == "down",
+		"the other end is on the next storey"
+	)
 	_check(not m.plan.floor_tiles.has(t), "stairs are not floor")
 	# Placing again replaces rather than piles up.
 	m.place_stairs(t, "up", "E")
@@ -412,10 +446,16 @@ func _check_stairs() -> void:
 	_check(m.place_stairs(t, "sideways", "N") == -1, "a direction that is neither up nor down")
 	_check(m.place_stairs(t, "up", "Q") == -1, "a face that is not N, E, S or W")
 	m.place_stairs(Vector3i(6, 0, 6), "up", "N", false)
-	_check(m.last_partner_uid == -1 and m.placements_at(Vector3i(6, 1, 6)).is_empty(), "no partner when not asked")
+	_check(
+		m.last_partner_uid == -1 and m.placements_at(Vector3i(6, 1, 6)).is_empty(),
+		"no partner when not asked"
+	)
 	uid = m.placements_at(t)[0]["uid"]
 	_undoable(m, "remove a flight with its partner", func(): m.remove_placement(uid, true))
-	_check(m.placements_at(Vector3i(4, 1, 4)).is_empty() and m.plan.floor_tiles.has(t), "both ends are gone, floor left")
+	_check(
+		m.placements_at(Vector3i(4, 1, 4)).is_empty() and m.plan.floor_tiles.has(t),
+		"both ends are gone, floor left"
+	)
 
 
 func _check_entrance_and_exits() -> void:
@@ -439,7 +479,10 @@ func _check_entrance_and_exits() -> void:
 	_check(not m.remove_exit(Vector3i(3, 0, 3)), "removing what is not an exit")
 	m.paint([Vector3i(3, 0, 3)], &"wall")
 	m.set_entrance(Vector3i(3, 0, 3), "N")
-	_check(m.plan.floor_tiles.has(Vector3i(3, 0, 3)) and not m.plan.wall_tiles.has(Vector3i(3, 0, 3)), "an entrance on a wall makes it floor")
+	_check(
+		m.plan.floor_tiles.has(Vector3i(3, 0, 3)) and not m.plan.wall_tiles.has(Vector3i(3, 0, 3)),
+		"an entrance on a wall makes it floor"
+	)
 
 
 func _check_tile_props() -> void:
@@ -473,7 +516,7 @@ func _check_zones() -> void:
 	_check(not m.create_zone("hall"), "a name is taken once")
 	_check(not m.create_zone("bad name"), "a name with a space")
 	_check(not m.create_zone(""), "an empty name")
-	var tiles := Model.rect_tiles(Vector3i(1, 0, 1), Vector3i(3, 0, 2))
+	var tiles := Util.rect_tiles(Vector3i(1, 0, 1), Vector3i(3, 0, 2))
 	_undoable(m, "paint a zone", func(): m.zone_paint("hall", tiles))
 	_check(m.plan.zones["hall"]["tiles"].size() == 6, "six tiles")
 	_check(m.zones_at(Vector3i(2, 0, 2)) == ["hall"], "zones_at")
@@ -509,7 +552,14 @@ func _check_floors() -> void:
 	m.set_tile_prop(Vector3i(0, 1, 0), "note", "x")
 	_undoable(m, "delete a storey", func(): m.delete_floor(1))
 	_check(m.floors == [-3, 0], "the storey is gone")
-	_check(_count_y(m.plan.floor_tiles, 1) == 0 and not m.plan.has_entrance and m.plan.exits.is_empty(), "with everything on it")
+	_check(
+		(
+			_count_y(m.plan.floor_tiles, 1) == 0
+			and not m.plan.has_entrance
+			and m.plan.exits.is_empty()
+		),
+		"with everything on it"
+	)
 	_check(m.plan.zones["z"]["tiles"].size() == 1, "...and its part of a zone")
 	_check(not m.delete_floor(7), "no such storey")
 	var solo := Model.new()
@@ -619,7 +669,7 @@ func _check_validation() -> void:
 			unreachable = i
 	_check(unreachable != null and unreachable["severity"] == "error", "an island is unreachable")
 	n.create_zone("island", ["unreachable_ok"])
-	n.zone_paint("island", Model.rect_tiles(Vector3i(8, 0, 8), Vector3i(9, 0, 9)))
+	n.zone_paint("island", Util.rect_tiles(Vector3i(8, 0, 8), Vector3i(9, 0, 9)))
 	var still := false
 	for i in n.validate():
 		still = still or i["code"] == "UNREACHABLE"
@@ -640,7 +690,7 @@ func _check_save_and_load() -> void:
 	m.slug = &"saved"
 	m.plan.slug = &"saved"
 	m.root = TEMP
-	var before := Model.canonical(m.plan)
+	var before := Util.canonical(m.plan)
 	_check(m.save() == OK, "save")
 	_check(m.last_written.size() == 2, "one file per storey: %s" % [m.last_written])
 	_check(not m.dirty, "clean after saving")
@@ -649,7 +699,7 @@ func _check_save_and_load() -> void:
 	var n := Model.new()
 	n.load_dungeon(&"saved", TEMP)
 	_check(n.floors == [0, 1], "the storeys come back")
-	_check(Model.canonical(n.plan) == before, "load(save(plan)) is the same plan")
+	_check(Util.canonical(n.plan) == before, "load(save(plan)) is the same plan")
 	_check(n.load_issues.is_empty(), "with no issue")
 	_check(n.grid_size == m.extent(), "and the same grid")
 	_check(n.save() == OK and n.last_written.is_empty(), "a loaded dungeon saves byte for byte")
@@ -659,7 +709,9 @@ func _check_save_and_load() -> void:
 	_check(n.last_written == ["floor_0.map"], "only the edited storey is written")
 	n.delete_floor(1)
 	n.save()
-	_check(not FileAccess.file_exists(TEMP + "saved/floor_1.map"), "a removed storey's file is deleted")
+	_check(
+		not FileAccess.file_exists(TEMP + "saved/floor_1.map"), "a removed storey's file is deleted"
+	)
 	_check("-floor_1.map" in n.last_written, "...and reported")
 	var o := Model.new()
 	o.load_dungeon(&"saved", TEMP)
@@ -680,9 +732,16 @@ func _check_save_and_load() -> void:
 	var q := Model.new()
 	q.new_dungeon(&"brand_new", TEMP)
 	q.paint([Vector3i(1, 0, 1)], &"floor")
-	_check(q.save() == OK and FileAccess.file_exists(TEMP + "brand_new/floor_0.map"), "a new dungeon saves")
-	_check(not FileAccess.file_exists(TEMP + "brand_new/rules.cfg"), "...with no rules.cfg of its own")
-	_check(Model.valid_slug("a_b2") and not Model.valid_slug("A b") and not Model.valid_slug(""), "slugs")
+	_check(
+		q.save() == OK and FileAccess.file_exists(TEMP + "brand_new/floor_0.map"),
+		"a new dungeon saves"
+	)
+	_check(
+		not FileAccess.file_exists(TEMP + "brand_new/rules.cfg"), "...with no rules.cfg of its own"
+	)
+	_check(
+		Util.valid_slug("a_b2") and not Util.valid_slug("A b") and not Util.valid_slug(""), "slugs"
+	)
 	# Never into data/ by accident: the default root is only used when asked for.
 	_check(m.root == TEMP, "the check saves under the temporary root")
 
@@ -705,7 +764,9 @@ func _check_emerge() -> void:
 	_check(m.emerge_tile() == Vector3i(7, 0, 8), "the plan knows it")
 	_check(m.save() == OK and m.last_written.has("rules.cfg"), "a save writes rules.cfg")
 	var patched := FileAccess.get_file_as_string(TEMP + "lake/rules.cfg")
-	_check(patched == real.replace('emerge="F25@0"', 'emerge="H9@0"'), "...changing only that one line")
+	_check(
+		patched == real.replace('emerge="F25@0"', 'emerge="H9@0"'), "...changing only that one line"
+	)
 	_check(m.save() == OK and m.last_written.is_empty(), "and only once")
 
 

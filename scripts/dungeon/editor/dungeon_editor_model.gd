@@ -14,24 +14,19 @@
 ## so), so that the plan the editor holds is the plan the written files give back.
 ##
 ## No `class_name` (the CLI class-cache trap): referenced by `preload`.
-extends RefCounted
-
-signal changed
+extends "res://scripts/dungeon/editor/dungeon_editor_journal.gd"
 
 const Kinds := preload("res://scripts/dungeon/dungeon_kinds.gd")
-const Plan := preload("res://scripts/dungeon/dungeon_plan.gd")
 const Parser := preload("res://scripts/dungeon/dungeon_map_parser.gd")
 const Writer := preload("res://scripts/dungeon/dungeon_map_writer.gd")
 const Validator := preload("res://scripts/dungeon/dungeon_validator.gd")
+const Util := preload("res://scripts/dungeon/editor/dungeon_editor_util.gd")
 
 const DEFAULT_ROOT := "res://data/dungeons/"
 const TERRAINS: Array[StringName] = [&"floor", &"ice", &"water", &"wall", &"empty", &"hole"]
 ## The grid a new dungeon starts with.
 const NEW_SIZE := Vector2i(24, 24)
 
-enum _Entry { DICT, FIELD }
-
-var plan = Plan.new()
 var slug: StringName = &""
 var root := DEFAULT_ROOT
 ## The header's name of the dungeon, as the files have it.
@@ -51,15 +46,9 @@ var last_written: Array[String] = []
 ## The uid of the matching stairs `place_stairs` put on the next storey, or -1.
 var last_partner_uid := -1
 
-var _undo: Array = []
-var _redo: Array = []
-var _saved_at := 0
-var _open = null
-var _depth := 0
 var _next_uid := 1
 var _emerge_loaded := ""
 var _rules_text_loaded := ""
-
 
 # --------------------------------------------------------------------------
 # Loading, saving
@@ -105,9 +94,9 @@ func load_dungeon(load_slug: StringName, load_root: String = DEFAULT_ROOT) -> vo
 			if stem.is_valid_int():
 				ys[stem.to_int()] = true
 			var text := FileAccess.get_file_as_string(dir_path.path_join(f))
-			grid_size = grid_size.max(_grid_extent(text))
+			grid_size = grid_size.max(Util.grid_extent(text))
 			if first:
-				title = _title_of(text, title)
+				title = Util.title_of(text, title)
 				header_note = text.get_slice("\n", 1).strip_edges()
 				if not header_note.begins_with("# ") or header_note.contains("Cell names"):
 					header_note = ""
@@ -149,7 +138,7 @@ func save(target_root: String = "") -> Error:
 		var path := dir_path.path_join(name)
 		if FileAccess.file_exists(path) and FileAccess.get_file_as_string(path) == text:
 			continue
-		err = _write_text(path, text)
+		err = Util.write_text(path, text)
 		if err != OK:
 			return err
 		last_written.append(name)
@@ -164,7 +153,7 @@ func save(target_root: String = "") -> Error:
 		var current := ""
 		if FileAccess.file_exists(rules_path):
 			current = FileAccess.get_file_as_string(rules_path)
-		err = _write_text(rules_path, Writer.patch_emerge(current, emerge))
+		err = Util.write_text(rules_path, Writer.patch_emerge(current, emerge))
 		if err != OK:
 			return err
 		last_written.append("rules.cfg")
@@ -173,47 +162,6 @@ func save(target_root: String = "") -> Error:
 	load_issues = []
 	changed.emit()
 	return OK
-
-
-static func _write_text(path: String, text: String) -> Error:
-	var file := FileAccess.open(path, FileAccess.WRITE)
-	if file == null:
-		return FileAccess.get_open_error()
-	file.store_string(text)
-	file.close()
-	return OK
-
-
-## Columns and rows of the `[grid]` of a map file's text.
-static func _grid_extent(text: String) -> Vector2i:
-	var in_grid := false
-	var rows := 0
-	var width := 0
-	var pending := 0
-	for raw in text.split("\n"):
-		var line := raw.trim_suffix("\r")
-		if in_grid and line.strip_edges().begins_with("["):
-			break
-		if line.strip_edges() == "[grid]":
-			in_grid = true
-			continue
-		if in_grid:
-			if line.strip_edges().is_empty():
-				pending += 1
-				continue
-			rows += 1 + pending
-			pending = 0
-			width = maxi(width, line.length())
-	return Vector2i(width, rows)
-
-
-## The name in a file's first comment, `# <title> - floor <y>`, or `fallback`.
-static func _title_of(text: String, fallback: String) -> String:
-	var first := text.get_slice("\n", 0).strip_edges()
-	var at := first.rfind(" - floor ")
-	if first.begins_with("# ") and at > 2:
-		return first.substr(2, at - 2)
-	return fallback
 
 
 func _reset() -> void:
@@ -232,188 +180,6 @@ func _reset() -> void:
 	grid_size = NEW_SIZE
 	header_note = ""
 	floors = [0]
-
-
-static func valid_slug(text: String) -> bool:
-	if text.is_empty():
-		return false
-	for ch in text:
-		if not ((ch >= "a" and ch <= "z") or (ch >= "0" and ch <= "9") or ch == "_"):
-			return false
-	return true
-
-
-# --------------------------------------------------------------------------
-# Undo, redo, dirty
-# --------------------------------------------------------------------------
-
-
-var dirty: bool:
-	get:
-		return _saved_at != _undo.size()
-
-
-func can_undo() -> bool:
-	return _undo.is_empty() == false
-
-
-func can_redo() -> bool:
-	return _redo.is_empty() == false
-
-
-## The label of the command `undo` would revert, or "".
-func undo_label() -> String:
-	return _undo[-1]["label"] if not _undo.is_empty() else ""
-
-
-func redo_label() -> String:
-	return _redo[-1]["label"] if not _redo.is_empty() else ""
-
-
-func undo() -> bool:
-	if _open != null or _undo.is_empty():
-		return false
-	var cmd: Dictionary = _undo.pop_back()
-	var entries: Array = cmd["entries"]
-	for i in range(entries.size() - 1, -1, -1):
-		_swap(entries[i])
-	_redo.append(cmd)
-	_reindex()
-	changed.emit()
-	return true
-
-
-func redo() -> bool:
-	if _open != null or _redo.is_empty():
-		return false
-	var cmd: Dictionary = _redo.pop_back()
-	for entry in cmd["entries"]:
-		_swap(entry)
-	_undo.append(cmd)
-	_reindex()
-	changed.emit()
-	return true
-
-
-## Opens a command that the operations that follow all belong to, until the matching `commit`.
-## Nesting is fine: only the outermost pair counts.
-func begin(label: String) -> void:
-	if _depth == 0:
-		_open = {"label": label, "entries": [], "seen": {}}
-	_depth += 1
-
-
-func commit() -> void:
-	_depth -= 1
-	if _depth > 0:
-		return
-	_depth = 0
-	var cmd = _open
-	_open = null
-	if cmd == null:
-		return
-	cmd.erase("seen")
-	cmd["entries"] = _net_entries(cmd["entries"])
-	if cmd["entries"].is_empty():
-		return
-	if _saved_at > _undo.size():
-		_saved_at = -1  # the saved state was in the redo branch, now gone
-	_undo.append(cmd)
-	_redo.clear()
-	_reindex()
-	changed.emit()
-
-
-## The entries of a command that changed something in the end: writing a key and writing back
-## what it held is nothing.
-func _net_entries(entries: Array) -> Array:
-	var out: Array = []
-	for entry in entries:
-		if entry[0] == _Entry.DICT:
-			var dict: Dictionary = entry[1]
-			if entry[3] == dict.has(entry[2]) and (not entry[3] or entry[4] == dict[entry[2]]):
-				continue
-		elif entry[4] == entry[1].get(entry[2]):
-			continue
-		out.append(entry)
-	return out
-
-
-func _swap(entry: Array) -> void:
-	if entry[0] == _Entry.DICT:
-		var dict: Dictionary = entry[1]
-		var key = entry[2]
-		var had := dict.has(key)
-		var current = _copy(dict.get(key))
-		if entry[3]:
-			dict[key] = entry[4]
-		else:
-			dict.erase(key)
-		entry[3] = had
-		entry[4] = current
-	else:
-		var current = _copy(entry[1].get(entry[2]))
-		entry[1].set(entry[2], entry[4])
-		entry[4] = current
-
-
-static func _copy(value):
-	if value is Dictionary or value is Array:
-		return value.duplicate(true)
-	return value
-
-
-## Which of the plan's own dictionaries `dict` is, so that a command logs a key once.
-func _container_id(dict: Dictionary) -> int:
-	var all := [
-		plan.floor_tiles, plan.hole_tiles, plan.pit_tiles, plan.wall_tiles, plan.water_tiles,
-		plan.tile_props, plan.zones, plan.rules
-	]
-	for i in all.size():
-		if is_same(all[i], dict):
-			return i
-	return -1
-
-
-func _log_dict(dict: Dictionary, key) -> void:
-	var token := "d%d|%s" % [_container_id(dict), str(key)]
-	if _open["seen"].has(token):
-		return
-	_open["seen"][token] = true
-	_open["entries"].append([_Entry.DICT, dict, key, dict.has(key), _copy(dict.get(key))])
-
-
-func _put(dict: Dictionary, key, value) -> void:
-	_log_dict(dict, key)
-	dict[key] = value
-
-
-func _erase(dict: Dictionary, key) -> void:
-	if dict.has(key):
-		_log_dict(dict, key)
-		dict.erase(key)
-
-
-func _field(obj, name: String, value) -> void:
-	var token := "f%d|%s" % [obj.get_instance_id(), name]
-	if not _open["seen"].has(token):
-		_open["seen"][token] = true
-		_open["entries"].append([_Entry.FIELD, obj, name, true, _copy(obj.get(name))])
-	obj.set(name, value)
-
-
-func _set_placements(list: Array) -> void:
-	_field(plan, "placements", list)
-	_reindex()
-
-
-func _reindex() -> void:
-	var index := {}
-	for p in plan.placements:
-		if not index.has(p["tile"]):
-			index[p["tile"]] = []
-		index[p["tile"]].append(p)
-	plan.set("_by_tile", index)
 
 
 # --------------------------------------------------------------------------
@@ -510,15 +276,7 @@ func paint(tiles: Array, terrain: StringName) -> bool:
 
 ## Paints the rectangle between two tiles of one storey.
 func paint_rect(a: Vector3i, b: Vector3i, terrain: StringName) -> bool:
-	return paint(rect_tiles(a, b), terrain)
-
-
-static func rect_tiles(a: Vector3i, b: Vector3i) -> Array:
-	var out: Array = []
-	for z in range(mini(a.z, b.z), maxi(a.z, b.z) + 1):
-		for x in range(mini(a.x, b.x), maxi(a.x, b.x) + 1):
-			out.append(Vector3i(x, a.y, z))
-	return out
+	return paint(Util.rect_tiles(a, b), terrain)
 
 
 func _paint_tile(tile: Vector3i, terrain: StringName, drop: Dictionary) -> void:
@@ -537,7 +295,9 @@ func _paint_tile(tile: Vector3i, terrain: StringName, drop: Dictionary) -> void:
 		&"hole":
 			_put(plan.hole_tiles, tile, true)
 	for p in plan.placements_at(tile):
-		var floor_rule: String = Kinds.KINDS[p["kind"]]["floor"] if Kinds.has_kind(p["kind"]) else ""
+		var floor_rule: String = (
+			Kinds.KINDS[p["kind"]]["floor"] if Kinds.has_kind(p["kind"]) else ""
+		)
 		if walkable and (floor_rule == "no" or p["kind"] == &"bridge"):
 			drop[p["uid"]] = true
 		elif not walkable and floor_rule != "any":
@@ -593,7 +353,7 @@ func place(kind: StringName, tile: Vector3i, props: Dictionary = {}) -> int:
 	if tile.x < 0 or tile.z < 0:
 		_refuse("OUT_OF_GRID")
 		return -1
-	var bad := check_props(kind, props)
+	var bad := Util.check_props(kind, props)
 	if bad != "":
 		_refuse("BAD_PROP:" + bad)
 		return -1
@@ -603,7 +363,9 @@ func place(kind: StringName, tile: Vector3i, props: Dictionary = {}) -> int:
 	var uid := _next_uid
 	_next_uid += 1
 	var list: Array = plan.placements.duplicate()
-	list.append({"kind": kind, "tile": tile, "props": props.duplicate(true), "source": "", "uid": uid})
+	list.append(
+		{"kind": kind, "tile": tile, "props": props.duplicate(true), "source": "", "uid": uid}
+	)
 	_set_placements(list)
 	_drop_placements(drop, uid)
 	commit()
@@ -655,7 +417,7 @@ func edit_placement(uid: int, props: Dictionary) -> bool:
 	var p := placement(uid)
 	if p.is_empty():
 		return _refuse("NO_SUCH_PLACEMENT")
-	var bad := check_props(p["kind"], props)
+	var bad := Util.check_props(p["kind"], props)
 	if bad != "":
 		return _refuse("BAD_PROP:" + bad)
 	begin("edit")
@@ -663,8 +425,13 @@ func edit_placement(uid: int, props: Dictionary) -> bool:
 	for q in plan.placements:
 		if q["uid"] == uid:
 			list.append(
-				{"kind": q["kind"], "tile": q["tile"], "props": props.duplicate(true),
-				"source": q["source"], "uid": uid}
+				{
+					"kind": q["kind"],
+					"tile": q["tile"],
+					"props": props.duplicate(true),
+					"source": q["source"],
+					"uid": uid
+				}
 			)
 		else:
 			list.append(q)
@@ -773,48 +540,6 @@ func stairs_partner(tile: Vector3i, props: Dictionary) -> Dictionary:
 	}
 
 
-## "" when `props` fit `kind`'s table, else the name of the first property that does not.
-static func check_props(kind: StringName, props: Dictionary) -> String:
-	for name in props:
-		var type := Kinds.prop_type(kind, name)
-		if type == "" or not value_ok(type, props[name]):
-			return String(name)
-	return ""
-
-
-static func value_ok(type: String, value) -> bool:
-	if type.begins_with("enum:"):
-		return value is String and type.substr(5).split("|").has(value)
-	match type:
-		"bool":
-			return value is bool
-		"int":
-			return typeof(value) == TYPE_INT
-		"float":
-			return typeof(value) == TYPE_INT or typeof(value) == TYPE_FLOAT
-		"str":
-			return value is String and not value.contains('"')
-		"list":
-			if not value is Array:
-				return false
-			for item in value:
-				if not item is String or item.contains('"') or item.contains(","):
-					return false
-			return true
-		"dir":
-			return value is Vector3i and Kinds.DIRECTIONS.values().has(value)
-		"tile":
-			return value is Vector3i
-		"tiles":
-			if not value is Array:
-				return false
-			for item in value:
-				if not item is Vector3i:
-					return false
-			return true
-	return false
-
-
 # --------------------------------------------------------------------------
 # Entrance and exits, tile properties
 # --------------------------------------------------------------------------
@@ -892,7 +617,7 @@ func set_tile_prop(tile: Vector3i, name: String, value) -> bool:
 		value = Kinds.DIRECTIONS.get(value)
 	var empty: bool = value == null or (value is String and value == "")
 	empty = empty or (value is Array and value.is_empty())
-	if not empty and not value_ok(type, value):
+	if not empty and not Util.value_ok(type, value):
 		return _refuse("BAD_PROP:" + name)
 	begin("tile")
 	_set_tile_prop_raw(tile, name, null if empty else value)
@@ -920,17 +645,8 @@ func _set_tile_prop_raw(tile: Vector3i, name: String, value) -> void:
 # --------------------------------------------------------------------------
 
 
-static func valid_zone_name(text: String) -> bool:
-	if text.is_empty():
-		return false
-	for ch in text:
-		if ch == " " or ch == "=" or ch == '"' or ch == "#" or ch == "\t" or ch == ":":
-			return false
-	return true
-
-
 func create_zone(name: String, tags: Array = []) -> bool:
-	if not valid_zone_name(name):
+	if not Util.valid_zone_name(name):
 		return _refuse("BAD_ZONE_NAME")
 	if plan.zones.has(name):
 		return _refuse("ZONE_EXISTS")
@@ -1029,7 +745,11 @@ func delete_floor(y: int) -> bool:
 		return _refuse("NO_SUCH_FLOOR")
 	begin("floor")
 	for dict in [
-		plan.floor_tiles, plan.hole_tiles, plan.pit_tiles, plan.wall_tiles, plan.water_tiles,
+		plan.floor_tiles,
+		plan.hole_tiles,
+		plan.pit_tiles,
+		plan.wall_tiles,
+		plan.water_tiles,
 		plan.tile_props
 	]:
 		for tile in dict.keys():
@@ -1082,47 +802,6 @@ func _refuse(code: String) -> bool:
 	last_error = code
 	return false
 
-
 # --------------------------------------------------------------------------
 # Comparing plans
 # --------------------------------------------------------------------------
-
-
-## A text that is the same for two plans that say the same thing: terrain, entrance and exits,
-## placements with their properties, tile properties and zones. Not the sources, the uids, the
-## order, nor zones with no tile (a file cannot hold one).
-static func canonical(p) -> String:
-	var lines: Array[String] = []
-	for pair in [
-		["floor", p.floor_tiles], ["hole", p.hole_tiles], ["pit", p.pit_tiles],
-		["wall", p.wall_tiles], ["water", p.water_tiles]
-	]:
-		for tile in pair[1]:
-			lines.append("%s %s" % [pair[0], _tile_text(tile)])
-	if p.has_entrance:
-		lines.append("entrance %s" % _tile_text(p.entrance))
-	for tile in p.exits:
-		lines.append("exit %s" % _tile_text(tile))
-	for q in p.placements:
-		lines.append(
-			"place %s %s %s" % [q["kind"], _tile_text(q["tile"]),
-			Writer.format_props(q["kind"], q["props"], 0)]
-		)
-	for tile in p.tile_props:
-		lines.append("props %s %s" % [_tile_text(tile), Writer.format_props(&"", p.tile_props[tile], 0)])
-	for name in p.zones:
-		var z: Dictionary = p.zones[name]
-		if z["tiles"].is_empty():
-			continue
-		lines.append(
-			"zone %s %s %s" % [name, ",".join(PackedStringArray(z["tags"])),
-			Writer.format_props(&"", z["props"], 0)]
-		)
-		for tile in z["tiles"]:
-			lines.append("zonetile %s %s" % [name, _tile_text(tile)])
-	lines.sort()
-	return "\n".join(lines)
-
-
-static func _tile_text(tile: Vector3i) -> String:
-	return "%d,%d,%d" % [tile.x, tile.y, tile.z]

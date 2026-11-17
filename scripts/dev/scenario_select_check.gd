@@ -68,22 +68,76 @@ func _check_tabs() -> void:
 	for b in tabs.get_child(0).find_children("*", "Button", true, false):
 		buttons += 1
 	_check(buttons == ScenarioCatalog.list().size(), "one button per test scenario")
-	var dungeon_buttons := tabs.get_child(1).find_children("*", "Button", true, false)
+	var play: Array = []
+	var edit: Array = []
+	var make: Array = []
+	for b in tabs.get_child(1).find_children("*", "Button", true, false):
+		match b.get_meta("role", ""):
+			"play":
+				play.append(b)
+			"edit":
+				edit.append(b)
+			"new":
+				make.append(b)
 	_check(
-		dungeon_buttons.size() == ScenarioCatalog.real_dungeon_ids().size(),
-		"one button per real dungeon"
+		play.size() == ScenarioCatalog.real_dungeon_ids().size(), "one play button per real dungeon"
 	)
-	for b in dungeon_buttons:
-		_check(b.text != "DUNGEON_NORGZEVOD_FROZEN_LAKE_NAME", "...with a translated name: %s" % b.text)
+	for b in play:
+		_check(
+			b.text != "DUNGEON_NORGZEVOD_FROZEN_LAKE_NAME", "...with a translated name: %s" % b.text
+		)
 		_check(
 			b.disabled != (b.pressed.get_connections().size() == 1),
 			"...enabled and wired when it has maps, greyed out when not"
 		)
+	_check(
+		edit.size() == MapParser.slugs().size(),
+		"an Edit button for each dungeon with maps, and only those"
+	)
+	for b in edit:
+		_check(
+			b.text == tr("UI_DEV_DUNGEON_EDIT") and b.text != "UI_DEV_DUNGEON_EDIT", "...translated"
+		)
+		_check(b.pressed.get_connections().size() == 1, "...and wired")
+		_check(not b.disabled, "...and enabled")
+	_check(
+		edit.size() > 0 and edit[0].get_parent().get_child(0).get_meta("role") == "play",
+		"the Edit button sits beside the dungeon's own button"
+	)
+	_check(make.size() == 1, "one New dungeon button")
+	_check(
+		(
+			make.size() == 1
+			and make[0].text == tr("UI_DEV_DUNGEON_NEW")
+			and make[0].text != "UI_DEV_DUNGEON_NEW"
+		),
+		"...translated"
+	)
+	if make.size() == 1:
+		make[0].pressed.emit()
+		await get_tree().process_frame
+		var dialog: ConfirmationDialog = screen.get_node_or_null("NewDungeonDialog")
+		_check(dialog != null, "it asks for a name")
+		if dialog != null:
+			var field: LineEdit = dialog.find_child("SlugField", true, false)
+			_check(dialog.get_ok_button().disabled, "...and refuses an empty one")
+			field.text = "Bad Name"
+			field.text_changed.emit(field.text)
+			_check(dialog.get_ok_button().disabled, "...a name with capitals or spaces")
+			field.text = "norgzevod_frozen_lake"
+			field.text_changed.emit(field.text)
+			_check(dialog.get_ok_button().disabled, "...and one that is taken")
+			field.text = "a_fresh_one"
+			field.text_changed.emit(field.text)
+			_check(not dialog.get_ok_button().disabled, "...and accepts a good one")
+			dialog.queue_free()
 	var verdicts := 0
 	for label in tabs.get_child(1).find_children("*", "Label", true, false):
 		if label.text.begins_with(tr("UI_DEV_DUNGEON_VERDICT").split("%")[0]):
 			verdicts += 1
-	_check(verdicts == MapParser.slugs().size(), "each dungeon with maps shows the validator's verdict")
+	_check(
+		verdicts == MapParser.slugs().size(), "each dungeon with maps shows the validator's verdict"
+	)
 	screen.queue_free()
 
 

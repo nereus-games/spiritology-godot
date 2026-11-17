@@ -301,6 +301,547 @@ msgstr "Validator: %d error(s), %d warning(s)"
 msgid "UI_DEV_DUNGEON_NO_MAPS"
 msgstr "No maps yet: nothing to walk through."
 
+# --- The dungeon editor ---------------------------------------------------------------
+# A DEV tool (the Dungeons tab of the scenario picker, Edit and New dungeon). Translated like
+# the rest, so that the rule on displayed text has no exception. The names of kinds,
+# properties and tags are the format's own identifiers and are shown as the files spell them.
+msgid "UI_DEV_DUNGEON_EDIT"
+msgstr "Edit"
+
+msgid "UI_DEV_DUNGEON_NEW"
+msgstr "New dungeon"
+
+msgid "UI_DEV_DUNGEON_NEW_PROMPT"
+msgstr "Name of the new dungeon: lowercase letters, digits and underscores (it becomes the folder under data/dungeons/)."
+
+msgid "UI_DEV_DUNGEON_NEW_BAD"
+msgstr "Use lowercase letters, digits and underscores only."
+
+msgid "UI_DEV_DUNGEON_NEW_TAKEN"
+msgstr "A dungeon with this name exists already."
+
+msgid "UI_DEV_DUNGEON_NEW_CREATE"
+msgstr "Create"
+
+# %s = the dungeon's title, %s = its folder name.
+msgid "UI_DEV_EDITOR_TITLE"
+msgstr "Dungeon editor: %s (%s)"
+
+msgid "UI_DEV_EDITOR_DIRTY"
+msgstr "   unsaved changes"
+
+msgid "UI_DEV_EDITOR_BACK"
+msgstr "Back"
+
+msgid "UI_DEV_EDITOR_SAVE"
+msgstr "Save"
+
+msgid "UI_DEV_EDITOR_UNDO"
+msgstr "Undo"
+
+msgid "UI_DEV_EDITOR_REDO"
+msgstr "Redo"
+
+msgid "UI_DEV_EDITOR_VALIDATE"
+msgstr "Validate"
+
+msgid "UI_DEV_EDITOR_LIVE"
+msgstr "as I edit"
+
+msgid "UI_DEV_EDITOR_FIT"
+msgstr "Fit"
+
+msgid "UI_DEV_EDITOR_CANCEL"
+msgstr "Cancel"
+
+msgid "UI_DEV_EDITOR_LEAVE_TITLE"
+msgstr "Unsaved changes"
+
+msgid "UI_DEV_EDITOR_LEAVE_TEXT"
+msgstr "The dungeon has changes that are not saved."
+
+msgid "UI_DEV_EDITOR_LEAVE_DISCARD"
+msgstr "Discard them"
+
+msgid "UI_DEV_EDITOR_LEAVE_SAVE"
+msgstr "Save and leave"
+
+# %s = the files written.
+msgid "UI_DEV_EDITOR_SAVED"
+msgstr "Saved: %s"
+
+msgid "UI_DEV_EDITOR_NOTHING_TO_SAVE"
+msgstr "Nothing to save: the files are up to date."
+
+msgid "UI_DEV_EDITOR_SAVE_FAILED"
+msgstr "Saving failed (error %d)."
+
+msgid "UI_DEV_EDITOR_LOAD_ISSUES"
+msgstr "The files had %d problem(s), listed on the right; saving writes what could be read."
+
+msgid "UI_DEV_EDITOR_FLOOR"
+msgstr "Floor %d"
+
+msgid "UI_DEV_EDITOR_FLOOR_ADD_ABOVE"
+msgstr "+ above"
+
+msgid "UI_DEV_EDITOR_FLOOR_ADD_BELOW"
+msgstr "+ below"
+
+msgid "UI_DEV_EDITOR_FLOOR_DELETE"
+msgstr "Delete floor"
+
+msgid "UI_DEV_EDITOR_FLOOR_DELETE_TEXT"
+msgstr "Delete floor %d and everything on it?"
+
+msgid "UI_DEV_EDITOR_SHOW_BELOW"
+msgstr "Floor below"
+
+msgid "UI_DEV_EDITOR_SHOW_ZONES"
+msgstr "Zones"
+
+msgid "UI_DEV_EDITOR_SHOW_GRID"
+msgstr "Grid"
+
+msgid "UI_DEV_EDITOR_SECTION_TOOLS"
+msgstr "TOOLS"
+
+msgid "UI_DEV_EDITOR_SECTION_TERRAIN"
+msgstr "TERRAIN"
+
+msgid "UI_DEV_EDITOR_SECTION_ENTRANCE"
+msgstr "ENTRANCE AND EXITS"
+
+msgid "UI_DEV_EDITOR_SECTION_PLACEMENTS"
+msgstr "PLACEMENTS"
+
+msgid "UI_DEV_EDITOR_SECTION_ZONES"
+msgstr "ZONES"
+
+msgid "UI_DEV_EDITOR_SECTION_WATER"
+msgstr "WATER"
+
+msgid "UI_DEV_EDITOR_TOOL_SELECT"
+msgstr "Select"
+
+msgid "UI_DEV_EDITOR_TOOL_ERASE"
+msgstr "Erase"
+
+msgid "UI_DEV_EDITOR_TOOL_ENTRANCE"
+msgstr "Entrance"
+
+msgid "UI_DEV_EDITOR_TOOL_EXIT"
+msgstr "Add an exit"
+
+msgid "UI_DEV_EDITOR_TOOL_EXIT_REMOVE"
+msgstr "Remove an exit"
+
+msgid "UI_DEV_EDITOR_TOOL_ZONE_PAINT"
+msgstr "Paint a zone"
+
+msgid "UI_DEV_EDITOR_TOOL_ZONE_ERASE"
+msgstr "Take out of the zone"
+
+msgid "UI_DEV_EDITOR_TOOL_EMERGE"
+msgstr "Emerge tile"
+
+msgid "UI_DEV_EDITOR_TERRAIN_FLOOR"
+msgstr "Floor"
+
+msgid "UI_DEV_EDITOR_TERRAIN_ICE"
+msgstr "Ice"
+
+msgid "UI_DEV_EDITOR_TERRAIN_WATER"
+msgstr "Water"
+
+msgid "UI_DEV_EDITOR_TERRAIN_WALL"
+msgstr "Wall"
+
+msgid "UI_DEV_EDITOR_TERRAIN_EMPTY"
+msgstr "Empty"
+
+msgid "UI_DEV_EDITOR_TERRAIN_HOLE"
+msgstr "Hole"
+
+# The name of each kind of placement of dungeon_kinds.gd; a kind with no key here is shown by its identifier.
+msgid "UI_DEV_EDITOR_KIND_TRAP"
+msgstr "Trap"
+
+msgid "UI_DEV_EDITOR_KIND_CHEST"
+msgstr "Chest"
+
+msgid "UI_DEV_EDITOR_KIND_GATE"
+msgstr "Gate"
+
+msgid "UI_DEV_EDITOR_KIND_STAIRS"
+msgstr "Stairs"
+
+msgid "UI_DEV_EDITOR_KIND_LIFT"
+msgstr "Lift"
+
+msgid "UI_DEV_EDITOR_KIND_BRIDGE"
+msgstr "Bridge"
+
+msgid "UI_DEV_EDITOR_KIND_GUARDRAIL"
+msgstr "Guardrail"
+
+msgid "UI_DEV_EDITOR_KIND_CRUMBLY"
+msgstr "Crumbly ground"
+
+msgid "UI_DEV_EDITOR_KIND_LITTER"
+msgstr "Litter"
+
+msgid "UI_DEV_EDITOR_KIND_CRYSTAL"
+msgstr "Crystal"
+
+msgid "UI_DEV_EDITOR_KIND_DIEVERTING"
+msgstr "Dieverting"
+
+msgid "UI_DEV_EDITOR_KIND_CRACKED_WALL"
+msgstr "Cracked wall"
+
+msgid "UI_DEV_EDITOR_KIND_RIVAL_SPAWN"
+msgstr "Rival spawn"
+
+msgid "UI_DEV_EDITOR_KIND_SPECIAL_SPAWN"
+msgstr "Special spawn"
+
+msgid "UI_DEV_EDITOR_KIND_SCENERY"
+msgstr "Scenery"
+
+msgid "UI_DEV_EDITOR_KIND_DECOR"
+msgstr "Decor"
+
+msgid "UI_DEV_EDITOR_HINT_SELECT"
+msgstr "Click a tile to inspect it; click again to walk through what is stacked on it. A right click selects from any tool."
+
+msgid "UI_DEV_EDITOR_HINT_ERASE"
+msgstr "Click or drag to remove the topmost placement of a tile, or an exit."
+
+msgid "UI_DEV_EDITOR_HINT_TERRAIN"
+msgstr "Click or drag to paint; hold Shift and drag to fill a rectangle."
+
+msgid "UI_DEV_EDITOR_HINT_ENTRANCE"
+msgstr "Click a tile to put the entrance there, looking and leaving the way set below."
+
+msgid "UI_DEV_EDITOR_HINT_EXIT"
+msgstr "Click a tile to make it an exit, leaving across the edge set below."
+
+msgid "UI_DEV_EDITOR_HINT_EXIT_REMOVE"
+msgstr "Click an exit to take it away."
+
+msgid "UI_DEV_EDITOR_HINT_KIND"
+msgstr "Click a tile to place this, with the properties below. Unset properties are left out of the file."
+
+msgid "UI_DEV_EDITOR_HINT_STAIRS"
+msgstr "Click a tile to place a flight of stairs; the arrow shows the way it faces, bright for a flight that climbs, dark for one that descends. With the box ticked, the matching flight goes on the next floor."
+
+msgid "UI_DEV_EDITOR_HINT_ZONE_PAINT"
+msgstr "Pick or create a zone, then click or drag to paint tiles into it; Shift and drag fills a rectangle."
+
+msgid "UI_DEV_EDITOR_HINT_ZONE_ERASE"
+msgstr "Click or drag to take tiles out of the selected zone."
+
+msgid "UI_DEV_EDITOR_HINT_EMERGE"
+msgstr "Click a tile: the player comes up there after falling into water. Saving patches that one key of rules.cfg and nothing else."
+
+msgid "UI_DEV_EDITOR_FACING"
+msgstr "Facing"
+
+msgid "UI_DEV_EDITOR_EXIT_EDGE"
+msgstr "Exit edge"
+
+msgid "UI_DEV_EDITOR_ENTRANCE_SET"
+msgstr "Entrance set on %s."
+
+msgid "UI_DEV_EDITOR_EMERGE_SET"
+msgstr "Emerge tile set on %s; rules.cfg is patched when you save."
+
+msgid "UI_DEV_EDITOR_EMERGE_CURRENT"
+msgstr "Emerge tile now: %s"
+
+msgid "UI_DEV_EDITOR_EMERGE_NONE"
+msgstr "none"
+
+msgid "UI_DEV_EDITOR_STAIRS_PARTNER"
+msgstr "Also place the matching stairs on the next floor"
+
+msgid "UI_DEV_EDITOR_PARTNER_PLACED"
+msgstr "The matching stairs are on floor %d."
+
+msgid "UI_DEV_EDITOR_PARTNER_MISSING"
+msgstr "Floor %d does not exist: add it, then place the stairs again to get the pair."
+
+msgid "UI_DEV_EDITOR_NOTHING_SELECTED"
+msgstr "Nothing selected. Click a tile with the Select tool."
+
+# %s = cell name (AB24), %d = floor, %s = terrain.
+msgid "UI_DEV_EDITOR_TILE"
+msgstr "Tile %s  ·  floor %d  ·  %s"
+
+msgid "UI_DEV_EDITOR_TILE_PROPS"
+msgstr "Properties of the tile"
+
+msgid "UI_DEV_EDITOR_ZONES_HERE"
+msgstr "Zones here: %s"
+
+msgid "UI_DEV_EDITOR_REMOVE"
+msgstr "Remove"
+
+msgid "UI_DEV_EDITOR_REMOVE_BOTH"
+msgstr "Remove with its partner"
+
+msgid "UI_DEV_EDITOR_PROP_CLEAR"
+msgstr "Clear this property"
+
+msgid "UI_DEV_EDITOR_PROP_PICK"
+msgstr "Pick on the map"
+
+msgid "UI_DEV_EDITOR_PICKING"
+msgstr "Click a tile on the map for %s (Esc cancels)."
+
+msgid "UI_DEV_EDITOR_CUSTOM_NAME"
+msgstr "custom name"
+
+msgid "UI_DEV_EDITOR_CUSTOM_VALUE"
+msgstr "value"
+
+msgid "UI_DEV_EDITOR_CUSTOM_ADD"
+msgstr "Add a custom.<name> property"
+
+msgid "UI_DEV_EDITOR_ZONE_NONE"
+msgstr "(no zone)"
+
+msgid "UI_DEV_EDITOR_ZONE_NAME"
+msgstr "name of a new zone"
+
+msgid "UI_DEV_EDITOR_ZONE_NEW"
+msgstr "Create"
+
+msgid "UI_DEV_EDITOR_ZONE_TAGS"
+msgstr "tags, comma-separated"
+
+msgid "UI_DEV_EDITOR_ZONE_NOTE"
+msgstr "note"
+
+msgid "UI_DEV_EDITOR_ZONE_DELETE"
+msgstr "Delete this zone"
+
+msgid "UI_DEV_EDITOR_ZONE_TILES"
+msgstr "%d tile(s)"
+
+msgid "UI_DEV_EDITOR_ZONE_EMPTY"
+msgstr "(empty: it is not saved)"
+
+msgid "UI_DEV_EDITOR_HOVER_ENTRANCE"
+msgstr "entrance"
+
+msgid "UI_DEV_EDITOR_HOVER_EXIT"
+msgstr "exit"
+
+msgid "UI_DEV_EDITOR_HOVER_ZONE"
+msgstr "zone: %s"
+
+msgid "UI_DEV_EDITOR_HOVER_NOTE"
+msgstr "note: %s"
+
+msgid "UI_DEV_EDITOR_ISSUES"
+msgstr "Issues: %d error(s), %d warning(s)"
+
+msgid "UI_DEV_EDITOR_ISSUES_NONE"
+msgstr "No issue."
+
+msgid "UI_DEV_EDITOR_SEVERITY_ERROR"
+msgstr "error"
+
+msgid "UI_DEV_EDITOR_SEVERITY_WARNING"
+msgstr "warning"
+
+msgid "UI_DEV_EDITOR_SEVERITY_WAIVED"
+msgstr "waived"
+
+# %s = the reason written in rules.cfg.
+msgid "UI_DEV_EDITOR_ISSUE_WAIVED"
+msgstr "waived: %s"
+
+msgid "UI_DEV_EDITOR_ERR_BAD_PROP"
+msgstr "The value of %s does not fit."
+
+msgid "UI_DEV_EDITOR_ERR_OUT_OF_GRID"
+msgstr "Tiles start at A1: no negative position."
+
+msgid "UI_DEV_EDITOR_ERR_ZONE_EXISTS"
+msgstr "A zone with this name exists already."
+
+msgid "UI_DEV_EDITOR_ERR_BAD_ZONE_NAME"
+msgstr "A zone's name has no space, quote, '=', ':' or '#'."
+
+msgid "UI_DEV_EDITOR_ERR_NO_SUCH_ZONE"
+msgstr "Pick or create a zone first."
+
+msgid "UI_DEV_EDITOR_ERR_FLOOR_EXISTS"
+msgstr "This floor exists already."
+
+msgid "UI_DEV_EDITOR_ERR_NO_SUCH_FLOOR"
+msgstr "A dungeon keeps at least one floor."
+
+msgid "UI_DEV_EDITOR_ERR_NO_SUCH_PLACEMENT"
+msgstr "That element is gone."
+
+msgid "UI_DEV_EDITOR_ERR_NO_SUCH_EXIT"
+msgstr "There is no exit there."
+
+msgid "UI_DEV_EDITOR_ERR_UNKNOWN_KIND"
+msgstr "This kind is not in the kinds table."
+
+msgid "UI_DEV_EDITOR_ERR_UNKNOWN_TERRAIN"
+msgstr "This terrain does not exist."
+
+msgid "UI_DEV_EDITOR_ERR_GENERIC"
+msgstr "Refused (%s)."
+
+# One per code of DungeonValidator.MESSAGES; the arguments are the same, in the same order.
+msgid "UI_DEV_ISSUE_NO_DIRECTORY"
+msgstr "no directory for this dungeon: %s"
+
+msgid "UI_DEV_ISSUE_NO_MAP_FILES"
+msgstr "no floor_*.map file in %s"
+
+msgid "UI_DEV_ISSUE_UNKNOWN_SECTION"
+msgstr "unknown section [%s]"
+
+msgid "UI_DEV_ISSUE_LINE_OUTSIDE_SECTION"
+msgstr "line outside any section: %s"
+
+msgid "UI_DEV_ISSUE_MISSING_FLOOR_Y"
+msgstr "no `y = N` in [floor]"
+
+msgid "UI_DEV_ISSUE_BAD_LINE"
+msgstr "cannot read this line: %s"
+
+msgid "UI_DEV_ISSUE_BAD_TILE"
+msgstr "not a tile: %s"
+
+msgid "UI_DEV_ISSUE_BAD_VALUE"
+msgstr "bad value: %s"
+
+msgid "UI_DEV_ISSUE_UNCLOSED_QUOTE"
+msgstr "unclosed quote: %s"
+
+msgid "UI_DEV_ISSUE_LEGEND_CORE_CHAR"
+msgstr "'%s' is a grid character and cannot be redefined"
+
+msgid "UI_DEV_ISSUE_UNKNOWN_KIND"
+msgstr "unknown kind '%s'"
+
+msgid "UI_DEV_ISSUE_UNKNOWN_CHAR"
+msgstr "'%s' is not in the legend"
+
+msgid "UI_DEV_ISSUE_DUPLICATE_ENTRANCE"
+msgstr "a second entrance (E)"
+
+msgid "UI_DEV_ISSUE_NO_ENTRANCE"
+msgstr "the dungeon has no entrance (E)"
+
+msgid "UI_DEV_ISSUE_UNKNOWN_PROP"
+msgstr "kind '%s' has no property '%s' (use custom.<name> for a special case)"
+
+msgid "UI_DEV_ISSUE_ASSET_MISSING"
+msgstr "asset does not exist: %s"
+
+msgid "UI_DEV_ISSUE_BOTTOMLESS_HOLE"
+msgstr "a hole with nothing below it"
+
+msgid "UI_DEV_ISSUE_STAIRS_APPROACH"
+msgstr "the tile before the stairs is not floor"
+
+msgid "UI_DEV_ISSUE_STAIRS_DESTINATION"
+msgstr "the stairs lead to %s, which is not floor"
+
+msgid "UI_DEV_ISSUE_STAIRS_ABOVE"
+msgstr "the tile directly above the stairs is floor"
+
+msgid "UI_DEV_ISSUE_STAIRS_FACE"
+msgstr "stairs need `face=N|E|S|W`"
+
+msgid "UI_DEV_ISSUE_BRIDGE_NOT_PIT"
+msgstr "a bridge plank on a tile that is not a pit"
+
+msgid "UI_DEV_ISSUE_BRIDGE_NO_GAP"
+msgstr "a bridge over nothing: no floor or water below"
+
+msgid "UI_DEV_ISSUE_BRIDGE_NOT_OVER_WATER"
+msgstr "the bridge says `over=water` but the tile has no water"
+
+msgid "UI_DEV_ISSUE_WATER_NO_EMERGE"
+msgstr "there is water but no `[water] emerge` tile in rules.cfg"
+
+msgid "UI_DEV_ISSUE_WATER_EMERGE_NOT_FLOOR"
+msgstr "the tile the player emerges on (%s) is not floor"
+
+msgid "UI_DEV_ISSUE_WATER_NO_WAY_BACK"
+msgstr "after falling into the water there is no way back to the entrance"
+
+msgid "UI_DEV_ISSUE_WAIVER_UNUSED"
+msgstr "the waiver '%s' matches no fault any more: remove it from rules.cfg"
+
+msgid "UI_DEV_ISSUE_EXIT_NO_EDGE"
+msgstr "an exit or entrance with no `exit_edge`: nobody knows which way to leave"
+
+msgid "UI_DEV_ISSUE_EXIT_EDGE_INSIDE"
+msgstr "the exit leads across `exit_edge` onto %s, which is floor, not outside"
+
+msgid "UI_DEV_ISSUE_ENTRANCE_NO_FACING"
+msgstr "the entrance has no `facing`"
+
+msgid "UI_DEV_ISSUE_BAD_RULES_FILE"
+msgstr "rules.cfg cannot be read (error %d)"
+
+msgid "UI_DEV_ISSUE_SPAWN_POINTS_SHORT"
+msgstr "%d rivals spawn at entry but only %d basic rival spawn points exist"
+
+msgid "UI_DEV_ISSUE_BRIDGE_NO_WAY_BACK"
+msgstr "after a fall from this bridge there is no way back to the entrance"
+
+msgid "UI_DEV_ISSUE_LIFT_NO_PATH"
+msgstr "a lift with no `path`"
+
+msgid "UI_DEV_ISSUE_LIFT_END_NOT_FLOOR"
+msgstr "the lift's far end %s is not floor"
+
+msgid "UI_DEV_ISSUE_GATE_NO_ARRIVAL"
+msgstr "a teleport gate with no `arrival`"
+
+msgid "UI_DEV_ISSUE_GATE_ARRIVAL_NOT_FLOOR"
+msgstr "the teleport gate arrives on %s, which is not floor"
+
+msgid "UI_DEV_ISSUE_GATE_NO_EDGE"
+msgstr "a gate or guardrail needs `edge=N|E|S|W`"
+
+msgid "UI_DEV_ISSUE_TELEPORT_INTO_RESTRICTED"
+msgstr "a teleport lands on %s, in a no_teleport zone"
+
+msgid "UI_DEV_ISSUE_SAFE_NO_FLOOR"
+msgstr "a safe tile with no floor"
+
+msgid "UI_DEV_ISSUE_SAFE_HAZARD"
+msgstr "a hazard (%s) in a safe area"
+
+msgid "UI_DEV_ISSUE_SAFE_LEDGE"
+msgstr "a safe tile has an unrailed ledge towards %s"
+
+msgid "UI_DEV_ISSUE_SPAWN_NOT_FLOOR"
+msgstr "%s: not a floor tile"
+
+msgid "UI_DEV_ISSUE_SPAWN_IN_SAFE_AREA"
+msgstr "%s: inside a safe area"
+
+msgid "UI_DEV_ISSUE_EXIT_UNREACHABLE"
+msgstr "an exit that cannot be reached from the entrance"
+
+msgid "UI_DEV_ISSUE_UNREACHABLE"
+msgstr "%d floor tile(s) cannot be reached from the entrance (from %s)"
+
 # --- The exploration test scenarios ---------------------------------------------------
 # One title and one instruction sheet per `data/scenarios/*.tres`. The .tres carries only
 # the id and the rank in the list; this is where the text lives.

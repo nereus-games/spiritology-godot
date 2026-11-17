@@ -289,6 +289,22 @@ msgstr "  — L (fin)"
 msgid "UI_DEV_RIVAL_DEN_TOOLTIP"
 msgstr "Ordre de grandeur de la doc de design"
 
+msgid "UI_DEV_TAB_SCENARIOS"
+msgstr "Scénarios de test"
+
+msgid "UI_DEV_TAB_DUNGEONS"
+msgstr "Donjons"
+
+msgid "UI_DEV_DUNGEONS_EMPTY"
+msgstr "Aucun donjon pour l'instant. Les scénarios de test couvrent les mécanismes un par un ; un vrai donjon apparaîtra ici dès qu'il existera dans data/dungeons/."
+
+# %d = errors, %d = warnings, as the dungeon validator counts them.
+msgid "UI_DEV_DUNGEON_VERDICT"
+msgstr "Validateur : %d erreur(s), %d avertissement(s)"
+
+msgid "UI_DEV_DUNGEON_NO_MAPS"
+msgstr "Pas encore de cartes : rien à parcourir."
+
 # --- The exploration test scenarios ---------------------------------------------------
 # One title and one instruction sheet per `data/scenarios/*.tres`. The .tres carries only
 # the id and the rank in the list; this is where the text lives.
@@ -366,6 +382,9 @@ msgstr "Un rival seul attend près de l'entrée, deux groupes apparaissent sur d
 
 msgid "DUNGEON_DEV_RIVALS_NAME"
 msgstr "Salle de test des rivaux"
+
+msgid "DUNGEON_NORGZEVOD_FROZEN_LAKE_NAME"
+msgstr "Lac gelé de Norgzévod"
 
 # --- The encounter log ---------------------------------------------------------------
 # One line per thing an action or an ability effect does, as the LOG panel shows it. The

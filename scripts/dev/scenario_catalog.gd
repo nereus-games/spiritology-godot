@@ -30,10 +30,15 @@ const Guardrail := preload("res://scripts/exploration/mechanisms/guardrail.gd")
 const AbilityCatalog := preload(
 	"res://scripts/exploration/abilities/exploration_ability_catalog.gd"
 )
+const MapParser := preload("res://scripts/dungeon/dungeon_map_parser.gd")
 const RIVAL_SCENE := preload("res://scenes/exploration/rival/rival.tscn")
 
 ## The scenario picked on the selection screen; the first one by default.
 static var selected_id: StringName = &"movement"
+
+## The real dungeon picked on the selection screen's second tab, or empty when it is a scenario
+## that was. `exploration.gd` builds this one in preference.
+static var selected_dungeon: StringName = &""
 
 ## The species the mini personality quiz can give the MAIN CHARACTER (the design doc's
 ## "Introduction / Mini Personality Quiz", Available Results).
@@ -103,10 +108,40 @@ static func find(id: StringName) -> ScenarioData:
 	return null
 
 
+## The REAL dungeons, for the selection screen's second tab: every [DungeonConfig] that no test
+## scenario runs under. `dev_rivals` belongs to the "rivals" scenario, so it is a test fixture
+## and stays out; whatever is left in `data/dungeons/` is a dungeon proper. Sorted by id so the
+## list does not depend on the order the directory was read in.
+static func real_dungeons() -> Array:
+	var owned := {}
+	for scenario in list():
+		if scenario.dungeon != null:
+			owned[scenario.dungeon.id] = true
+	var out: Array = []
+	for config in GameData.all_dungeons():
+		if not owned.has(config.id):
+			out.append(config)
+	out.sort_custom(func(a, b) -> bool: return String(a.id) < String(b.id))
+	return out
+
+
+## The ids of every real dungeon, from either source: a [DungeonConfig] no scenario runs under, or
+## a folder of maps in `data/dungeons/`. A dungeon can be one, the other, or both. Sorted.
+static func real_dungeon_ids() -> Array:
+	var ids := {}
+	for config in real_dungeons():
+		ids[config.id] = true
+	for slug in MapParser.slugs():
+		ids[slug] = true
+	var out: Array = ids.keys()
+	out.sort()
+	return out
+
+
 ## Builds the scenario into `dm` and returns the player's starting tile. A scenario that runs
 ## under a [DungeonConfig] hands it to `dm`, where exploration picks it up.
 static func build(id: StringName, dm) -> Vector3i:
-	_reset_session()
+	reset_session()
 	var record := find(id)
 	dm.config = record.dungeon if record != null else null
 	match id:
@@ -146,7 +181,9 @@ static func build(id: StringName, dm) -> Vector3i:
 # --------------------------------------------------------------------------
 
 
-static func _reset_session() -> void:
+## Puts the session in the state a dungeon visit starts from: empty bag, fresh abilities, full
+## DEN and ETH, and the duo picked on the selection screen.
+static func reset_session() -> void:
 	GameSession.inventory.clear()
 	GameSession.used_exploration_abilities.clear()
 	GameSession.begin_dungeon_visit()
@@ -174,6 +211,11 @@ static func _floor_rect_y(dm, x0: int, z0: int, w: int, d: int, y: int) -> void:
 	for x in range(x0, x0 + w):
 		for z in range(z0, z0 + d):
 			dm.layout.add_floor(Vector3i(x, y, z))
+
+
+## Public face of [method _place], for the dungeon loader.
+static func place(dm, script, tile: Vector3i, props: Dictionary = {}) -> Node:
+	return _place(dm, script, tile, props)
 
 
 ## Instantiates a mechanism, applies `props`, puts it on `tile` and adds it to the dungeon.
@@ -330,7 +372,7 @@ static func _build_bridge_map(dm, disarray_trap: bool = true) -> Vector3i:
 		var c := Vector3i(1, 2, z)
 		dm.layout.add_floor(c)
 		dm.layout.mark_pit(c)
-		_spawn_plank(dm, c)
+		spawn_plank(dm, c)
 		_place(dm, NarrowBridge, c)
 	# Floor of the ravine, 2 storeys down, catching a fall along the whole length of the bridge.
 	_floor_rect_y(dm, 0, 2, 4, 5, 0)  # x 0..3, z 2..6
@@ -363,10 +405,10 @@ static func _build_bridge_map(dm, disarray_trap: bool = true) -> Vector3i:
 
 ## A bridge plank: a narrow brown box along the direction of travel, its top face level with the
 ## tile's floor — which the pit marking left empty.
-static func _spawn_plank(dm, tile: Vector3i) -> void:
+static func spawn_plank(dm, tile: Vector3i, along_x := false) -> void:
 	var mi := MeshInstance3D.new()
 	var box := BoxMesh.new()
-	box.size = Vector3(0.35, 0.1, dm.TILE_SIZE)
+	box.size = Vector3(dm.TILE_SIZE, 0.1, 0.35) if along_x else Vector3(0.35, 0.1, dm.TILE_SIZE)
 	mi.mesh = box
 	var mat := StandardMaterial3D.new()
 	mat.albedo_color = Color(0.52, 0.38, 0.24)

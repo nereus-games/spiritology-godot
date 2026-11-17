@@ -1,0 +1,153 @@
+# Norgzévod frozen lake – top down layout - floor 0
+# Started by tools/import_mapper.py; edit freely, a second import overwrites it.
+# Cell names (AB24) are the viewer's; columns A.. left to right, rows 1.. top to bottom.
+
+[floor]
+y = 0
+
+[grid]
+_______________________________
+___##~~#######################_
+___##~~#######################_
+_####~~~~~~~~#################_
+#####~~~iii~~#################_
+####Xi~.####~~################_
+#####~~#####~~~###############_
+####~~~######~~~######~~~~~~##_
+~##~~~###^####~~~~~~~~~....###_
+~~#~~i##..##<.#######...##.###_
+#~~~~i##..#.........#.########_
+##~~~i##.._...v.......##..####_
+###~~~#..#._.>#<..._...##.##___
+###~~~...#................##___
+###~~i##.#..~~~~~~......####___
+###~~i##.#i.~~~~~~~......###___
+###~~i^...iii~~~~~~.......##___
+###~~iiiiiiiii#iii........##___
+###~~i...#..iiiiii..i.....##___
+###~~i..#####ii~~~~~i.....##___
+###~~i#.>####i~~~~~ii.....###__
+###~~i#..####i~##~~ii....####__
+###~~i#.>####i~##~~~i....####__
+###~~i#.#####i~##~~~i....##X#__
+###~~i#....##i~##~~~ii#..##.#__
+###~~~#....##.~##~~~i.#..##i#__
+###~~i###s###.i##~~~ii#..##i#__
+###~~~###_##..i^^~~~ii#..#ii#__
+###~~~###_###.iii~~~i##..####__
+####~~#######.....~~~##..####__
+####~~########.......#..#####__
+_####~#########........######__
+__###~#########...###.#######__
+__###_##########.####.###______
+_____________##.......##_______
+_____________##...######_______
+_____________##...######_______
+_____________####X##___________
+_____________#######___________
+
+[legend]
+# stairs: ^ > v < climb north/east/south/west, n e s w descend
+< = stairs dir=up face=W
+> = stairs dir=up face=E
+^ = stairs dir=up face=N
+s = stairs dir=down face=S
+v = stairs dir=up face=S
+
+[tiles]
+# P28 and Q28 climb to floor 1; the mapper draws only the way down, from floor 1 (the designers
+# forgot the floor 0 icons), so these two are added by hand.
+P28 note="climbs to floor 1; added by hand, missing from the mapper"
+Q28 note="climbs to floor 1; added by hand, missing from the mapper"
+# F27 is decor: a lone ice tile cut off by water, never meant to be reached.
+F27 tags=unreachable_ok note="decor only"
+# bridge
+G6 bridge over=water
+K12 bridge over=void
+F13 bridge over=water
+L13 bridge over=void
+F14 bridge over=water
+U30 bridge over=water
+# chest
+Z9 chest
+AB25 chest
+Y30 chest
+# cracked
+W27 cracked_wall axis=ew
+Z28 cracked_wall axis=ew
+# crumbly
+AA9 crumbly
+G20 crumbly
+I22 crumbly
+Q35 crumbly
+# crystal
+Y12 crystal
+W24 crystal
+# decor
+G15 decor type=gooey_marks
+K15 decor type=scratch_marks
+J25 decor type=scratch_marks
+N26 decor type=scratch_marks
+X29 decor type=scratch_marks
+# exit
+E6 exit_edge=W
+AB24 exit_edge=N tags=side_exit
+R38 exit_edge=S tags=side_exit
+# gate
+I15 gate type=meditation edge=N
+Q34 gate type=automated edge=N
+# litter
+AA10 litter
+N30 litter
+# scenery
+K11 scenery type=stone_tree
+R12 scenery type=column corner=true
+G15 scenery type=stone_tree
+H15 scenery type=stone_tree
+W15 scenery type=column corner=true
+H16 scenery type=stone_tree
+V16 scenery type=column corner=true
+O18 scenery type=submarine
+U18 scenery type=column corner=true
+J19 scenery type=stone_tree
+U19 scenery type=column corner=true
+X22 scenery type=column corner=true
+Y22 scenery type=column corner=true
+I24 scenery type=stone_tree
+I26 scenery type=column corner=true
+Y27 scenery type=column corner=true
+Y29 scenery type=column corner=true
+Y30 scenery type=column corner=true
+R31 scenery type=column corner=true
+T32 scenery type=column corner=true
+Q33 scenery type=column corner=true
+Q37 scenery type=column corner=true
+# spawn
+I10 rival_spawn
+N10 rival_spawn
+V12 special_spawn faction=coal_vetch
+I13 special_spawn faction=coal_vetch
+W16 rival_spawn
+I17 special_spawn faction=coal_vetch
+N18 rival_spawn
+X18 rival_spawn
+Q19 rival_spawn
+W21 rival_spawn
+H24 rival_spawn
+I26 rival_spawn
+N28 rival_spawn
+Q31 special_spawn faction=coal_vetch
+T35 rival_spawn
+R36 special_spawn faction=coal_vetch
+# trap
+Y9 trap type=teleport
+M12 trap type=disarray
+S13 trap type=teleport
+X28 trap type=disarray
+V32 trap type=disarray
+
+[zones]
+# "TP TRAP DO NOT TELEPORT TO THIS AREA": the pocket of the east side exit.
+east_pocket tags=no_teleport note="no teleport trap may send the player here" rect=AB24:AB28
+east_pocket tags=no_teleport tiles=AA28
+event_area tags=event_area custom.event=shadako_gives_encyclopaedia custom.event_steps=4 note="event area (hatched on the map)" tiles=H24;H25;I25;J25;K25;H26;I26;J26;K26

@@ -2,6 +2,7 @@
 ## on scale, walls and gateways from the command line.
 ##
 ## Run with: Godot --path . res://scenes/dev/screenshot.tscn -- <scenario> <path.png> [view]
+## `scenario` is a test scenario, or `dungeon:<id>` for a dungeon built from its maps.
 ## `view` is optional:
 ##   - `top`        : an overhead camera instead of the first-person view;
 ##   - `x,y,z@yaw`  : first place the player on that tile, turned `yaw` degrees (0 faces -z),
@@ -21,7 +22,10 @@ func _run() -> void:
 	var args := OS.get_cmdline_user_args()
 	var id: StringName = StringName(args[0]) if args.size() > 0 else &"gates"
 	var out: String = args[1] if args.size() > 1 else "/tmp/shot.png"
-	ScenarioCatalog.selected_id = id
+	if String(id).begins_with("dungeon:"):
+		ScenarioCatalog.selected_dungeon = StringName(String(id).trim_prefix("dungeon:"))
+	else:
+		ScenarioCatalog.selected_id = id
 	await get_tree().process_frame  # let the root finish installing its children
 	var scene = EXPLORATION.instantiate()
 	get_tree().root.add_child(scene)

@@ -34,6 +34,11 @@ var _walls: Dictionary = {}
 # around the outside of a room.
 var _hole: Dictionary = {}
 
+# Walls DECLARED by level design (the `#` of a map file), as opposed to the ones the grid implies.
+# A declared wall is a wall whatever lies below it: nobody falls into it, and it is drawn when
+# floor touches it. Empty in the code-built test scenarios.
+var _declared_walls: Dictionary = {}
+
 # Pit tiles (a floor set LOWER, a ravine): rendered as a lowered dark slab, never as a wall,
 # and with no normal slab when the tile is walkable too — that is the bridge plank laid over
 # it. Gives the "log over a drop" look.
@@ -116,6 +121,8 @@ func is_bottomless(tile: Vector3i) -> bool:
 ## Where a fall from `tile` lands: the first FLOOR tile below it. Returns `tile` unchanged
 ## when there is none, which means no fall at all — a wall.
 func fall_landing(tile: Vector3i) -> Vector3i:
+	if _declared_walls.has(tile):
+		return tile
 	for level in range(tile.y - 1, tile.y - 12, -1):
 		var below := Vector3i(tile.x, level, tile.z)
 		if _floor.has(below):
@@ -135,6 +142,16 @@ func remember_walls() -> Dictionary:
 	return _walls
 
 
+## Declares `tile` a wall. Unlike the walls [method derive_wall_tiles] infers, it stays one with
+## floor below it, which is how a wall on an upper storey is told from open air.
+func declare_wall(tile: Vector3i) -> void:
+	_declared_walls[tile] = true
+
+
+func is_declared_wall(tile: Vector3i) -> bool:
+	return _declared_walls.has(tile)
+
+
 ## Tiles rendered as wall blocks. Empty until [method remember_walls] has run.
 func wall_tiles() -> Dictionary:
 	return _walls
@@ -144,8 +161,10 @@ func is_wall(tile: Vector3i) -> bool:
 	return _walls.has(tile)
 
 
-## TODO (2026-09-02) — AUTHORING DEBT. Walls and holes are today DERIVED from the floor grid
-## alone: a wall is "nothing here, and nothing below", and an outright hole only exists if
+## TODO (2026-09-02) — AUTHORING DEBT, partly paid: walls can now be declared
+## ([method declare_wall]), and a map file's `#` does. Holes still cannot, and the derived walls
+## stay for the code-built scenarios. Walls and holes were, and for a scenario still are, DERIVED
+## from the floor grid alone: a wall is "nothing here, and nothing below", and an outright hole only exists if
 ## someone calls [method mark_hole] — nobody does, outside the headless check. Two rules from
 ## the design doc therefore rest on inference rather than declaration:
 ##  - "a wall can serve as ground on the floor above it" (no slab above a wall);
@@ -173,6 +192,15 @@ func derive_wall_tiles() -> Dictionary:
 				and fall_landing(n) == n
 			):
 				wall_tiles[n] = true
+	# Declared walls are drawn where floor touches them, from the side or above and below — a
+	# wall can be the ground of the storey over it. One that carries a mechanism draws itself.
+	for w in _declared_walls:
+		if wall_tiles.has(w) or not _dungeon.mechanisms_at(w).is_empty():
+			continue
+		for d in NEIGHBOURS + [Vector3i.UP, Vector3i.DOWN]:
+			if _floor.has(w + d):
+				wall_tiles[w] = true
+				break
 	return wall_tiles
 
 

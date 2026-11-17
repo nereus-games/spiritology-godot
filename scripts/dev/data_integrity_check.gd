@@ -15,6 +15,8 @@
 ## be produced stops signalling regressions.
 extends Node
 
+const Parser := preload("res://scripts/dungeon/dungeon_map_parser.gd")
+
 const SPECIES_DIR := "res://data/species/"
 const ABILITIES_DIR := "res://data/abilities/"
 const OBJECTS_DIR := "res://data/objects/"
@@ -465,8 +467,17 @@ func _check_translations() -> void:
 			only_fr.append(k)
 	_check_empty(only_en + only_fr, "en.po and fr.po carry the same keys")
 
-	# Every piece of data has its name translated, in both languages.
+	# Every piece of data has its name translated, in both languages. A dungeon that exists only as
+	# a folder of maps (no DungeonConfig yet) counts too.
+	var map_names: Array = []
+	for slug in Parser.slugs():
+		if not _dungeons.has(slug):
+			map_names.append("DUNGEON_%s_NAME" % GameEnums.key_token(slug))
 	var missing: Array = []
+	for key in map_names:
+		for po in [["en", en], ["fr", fr]]:
+			if not po[1]["keys"].has(key):
+				missing.append("%s (%s)" % [key, po[0]])
 	for registry in [_species, _abilities, _talents, _objects, _dungeons, _scenarios]:
 		for id in registry:
 			var key: String = registry[id].name_key()
@@ -478,6 +489,8 @@ func _check_translations() -> void:
 	# The converse: an orphaned data key outlives the data it belonged to and stays invisible.
 	# With no idempotent generator to rewrite the .po files, this is the only way to see it.
 	var expected := {}
+	for key in map_names:
+		expected[key] = true
 	for registry in [_species, _abilities, _talents, _objects, _dungeons, _scenarios]:
 		for id in registry:
 			var res = registry[id]

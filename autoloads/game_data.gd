@@ -89,6 +89,11 @@ func dungeon(id: StringName) -> DungeonConfig:
 	return _dungeons.get(id)
 
 
+## Every dungeon configuration, in no particular order.
+func all_dungeons() -> Array:
+	return _dungeons.values()
+
+
 func object(id: StringName) -> ObjectData:
 	return _objects.get(id)
 

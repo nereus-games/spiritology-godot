@@ -131,9 +131,10 @@ The dungeon is a **logical grid** and it is the source of truth — floor tiles,
 occupants, edges. Nothing is decided by raycasting. `DungeonManager` holds it, in three parts:
 
 - the **layout** (`dungeon_layout.gd`, `dungeon_manager.layout`) is what level design lays down
-  and the game does not change: floor, holes, pits, the walls the grid implies, the entrance
-  and the exits. It is what a dungeon authoring format will fill, and what a validator will
-  check;
+  and the game does not change: floor, holes, pits, the walls (declared, or implied by the grid),
+  the entrance and the exits. A real dungeon fills it from its map files through
+  `dungeon_loader.gd`, and the validator checks the same files first
+  ([dungeon-tooling.md](dungeon-tooling.md));
 - the **tile searches** (`tile_search.gd`, `dungeon_manager.tile_search`) answer "a free tile
   near here", "what can be reached on foot", "a random tile to teleport to", and "make room
   here" (`push_group_aside`, which moves rivals through the manager's own `release`/`reserve`);

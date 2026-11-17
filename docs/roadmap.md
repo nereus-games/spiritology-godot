@@ -94,7 +94,8 @@ unblock.
   nothing directly above, a narrow bridge always spans a floor, no bottomless hole — are
   checked only on the dev scenario, and caught at runtime otherwise. Safe areas already report
   their own faults (`safe_areas.violations()`), but only a check calls it. Becomes urgent with
-  the first real dungeon. (`dungeon_layout.gd`, `stairs.gd`, `exploration.gd`,
+  the first real dungeon. A plan — format, validator, tools, editor — is in
+  [dungeon-tooling.md](dungeon-tooling.md). (`dungeon_layout.gd`, `stairs.gd`, `exploration.gd`,
   `player_controller.gd` — tagged `TODO(dungeon checker)`)
 - **Rivals carrying objects.** Examine should "reveal objects they carry", Steal has nothing to
   take, Altruism has nothing to destroy, and Misty Secret's weight on using objects acts on no

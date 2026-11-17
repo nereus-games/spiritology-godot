@@ -55,12 +55,6 @@ s = stairs dir=down face=S
 v = stairs dir=up face=S
 
 [tiles]
-# P28 and Q28 climb to floor 1; the mapper draws only the way down, from floor 1 (the designers
-# forgot the floor 0 icons), so these two are added by hand.
-P28 note="climbs to floor 1; added by hand, missing from the mapper"
-Q28 note="climbs to floor 1; added by hand, missing from the mapper"
-# F27 is decor: a lone ice tile cut off by water, never meant to be reached.
-F27 tags=unreachable_ok note="decor only"
 # bridge
 G6 bridge over=water
 K12 bridge over=void
@@ -99,6 +93,8 @@ Q34 gate type=automated edge=N
 # litter
 AA10 litter
 N30 litter
+# notes
+F27 tags=unreachable_ok note="decor only: a lone ice tile cut off by water, never meant to be reached"
 # scenery
 K11 scenery type=stone_tree
 R12 scenery type=column corner=true
@@ -139,6 +135,9 @@ N28 rival_spawn
 Q31 special_spawn faction=coal_vetch
 T35 rival_spawn
 R36 special_spawn faction=coal_vetch
+# stairs
+P28 note="climbs to floor 1; added by hand, missing from the mapper (the mapper draws only the way down, from floor 1: the designers forgot the floor 0 icons)"
+Q28 note="climbs to floor 1; added by hand, missing from the mapper (the mapper draws only the way down, from floor 1: the designers forgot the floor 0 icons)"
 # trap
 Y9 trap type=teleport
 M12 trap type=disarray
@@ -147,7 +146,7 @@ X28 trap type=disarray
 V32 trap type=disarray
 
 [zones]
-# "TP TRAP DO NOT TELEPORT TO THIS AREA": the pocket of the east side exit.
-east_pocket tags=no_teleport note="no teleport trap may send the player here" rect=AB24:AB28
-east_pocket tags=no_teleport tiles=AA28
-event_area tags=event_area custom.event=shadako_gives_encyclopaedia custom.event_steps=4 note="event area (hatched on the map)" tiles=H24;H25;I25;J25;K25;H26;I26;J26;K26
+east_pocket tags=no_teleport note="'TP TRAP DO NOT TELEPORT TO THIS AREA' on the designers' map: the pocket of the east side exit, no teleport trap may send the player here" rect=AB24:AB27
+east_pocket tags=no_teleport rect=AA28:AB28
+event_area tags=event_area note="event area (hatched on the map)" custom.event=shadako_gives_encyclopaedia custom.event_steps=4 rect=H25:K26
+event_area tags=event_area tiles=H24

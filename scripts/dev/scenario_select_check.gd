@@ -74,8 +74,11 @@ func _check_tabs() -> void:
 		"one button per real dungeon"
 	)
 	for b in dungeon_buttons:
-		_check(b.disabled, "...greyed out: %s" % b.text)
-		_check(b.text != "DUNGEON_NORGZEVOD_FROZEN_LAKE_NAME", "...with a translated name")
+		_check(b.text != "DUNGEON_NORGZEVOD_FROZEN_LAKE_NAME", "...with a translated name: %s" % b.text)
+		_check(
+			b.disabled != (b.pressed.get_connections().size() == 1),
+			"...enabled and wired when it has maps, greyed out when not"
+		)
 	var verdicts := 0
 	for label in tabs.get_child(1).find_children("*", "Label", true, false):
 		if label.text.begins_with(tr("UI_DEV_DUNGEON_VERDICT").split("%")[0]):

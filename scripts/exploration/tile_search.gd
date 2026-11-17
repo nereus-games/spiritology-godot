@@ -69,13 +69,25 @@ func walking_distances(from: Vector3i, max_steps: int) -> Dictionary:
 	return steps
 
 
+## Tiles a random teleport never picks, whoever teleports: level design's "do not teleport to
+## this area". Tile -> true. See [method forbid_teleport_to].
+var no_teleport: Dictionary = {}
+
+
+func forbid_teleport_to(tiles: Array) -> void:
+	for c in tiles:
+		no_teleport[c] = true
+
+
 ## A random walkable floor tile other than `exclude`, outside every safe area when
-## `avoid_safe` — where a random teleport may drop a rival. Returns `exclude` when there is none.
+## `avoid_safe` — where a random teleport may drop a rival — and never in a no-teleport area.
+## Returns `exclude` when there is none.
 func random_floor_tile(exclude: Vector3i, avoid_safe := false) -> Vector3i:
 	var candidates: Array = []
 	for c in _dungeon.layout.floor_tiles():
 		if (
 			c != exclude
+			and not no_teleport.has(c)
 			and _dungeon.is_walkable(c)
 			and not (avoid_safe and _dungeon.safe_areas.has(c))
 		):

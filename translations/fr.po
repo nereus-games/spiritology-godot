@@ -302,8 +302,8 @@ msgstr "Aucun donjon pour l'instant. Les scénarios de test couvrent les mécani
 msgid "UI_DEV_DUNGEON_VERDICT"
 msgstr "Validateur : %d erreur(s), %d avertissement(s)"
 
-msgid "UI_DEV_DUNGEON_NOT_PLAYABLE"
-msgstr "Pas encore jouable : rien ne charge encore les cartes en donjon."
+msgid "UI_DEV_DUNGEON_NO_MAPS"
+msgstr "Pas encore de cartes : rien à parcourir."
 
 # --- The exploration test scenarios ---------------------------------------------------
 # One title and one instruction sheet per `data/scenarios/*.tres`. The .tres carries only

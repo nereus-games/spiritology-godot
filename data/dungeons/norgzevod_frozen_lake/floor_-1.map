@@ -52,4 +52,4 @@ _______________________________
 
 [tiles]
 # start
-J29 facing=N note="facing guessed: the export gives no arrow"
+J29 exit_edge=S facing=N note="faces north (the view cone) and leaves to the south (the green line under ENTRY), per the designers"

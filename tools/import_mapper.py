@@ -152,6 +152,29 @@ def pink_diamond(region: np.ndarray) -> np.ndarray:
     return (r > 200) & (g > 100) & (g < 200) & (b > 90) & (b < 190) & (r - g > 40)
 
 
+def exit_edge(img: np.ndarray, x: int, z: int):
+    """The border of the cell along which the green exit line runs, or None.
+
+    Counts green pixels in a thin strip along each of the four borders; the line is the one with
+    clearly the most. The green view cone on a start tile sits inside the cell, not on a border.
+    """
+    x0, y0, x1, y1 = pixel_rect(x, z)
+    region = crop(img, (x0 - 8, y0 - 8, x1 + 8, y1 + 8)).astype(int)
+    r, g, b = region[..., 0], region[..., 1], region[..., 2]
+    mask = (g > 150) & (r < 120) & (b < 120)
+    n = CELL + 16
+    strips = {
+        "N": mask[3:12, 8:-8].sum(),
+        "S": mask[n - 12 : n - 3, 8:-8].sum(),
+        "W": mask[8:-8, 3:12].sum(),
+        "E": mask[8:-8, n - 12 : n - 3].sum(),
+    }
+    ranked = sorted(strips.items(), key=lambda kv: -kv[1])
+    if ranked[0][1] < 12 or ranked[0][1] < 2 * ranked[1][1]:
+        return None
+    return ranked[0][0]
+
+
 def hatched_cells(img: np.ndarray, near: tuple[int, int, int, int]):
     """Cells inside the rectangle (x0, z0, x1, z1) whose ground carries the red stripes."""
     out = []
@@ -211,15 +234,18 @@ def main(source: str, out_dir: Path) -> None:
             line = None
             if t == "stairs":
                 continue
-            elif t == "exit":
-                grids[f][z][x] = "X"
-            elif t == "side_exit":
-                grids[f][z][x] = "X"
-                line = ("exit", "tags=side_exit")
-            elif t == "start_tile":
-                grids[f][z][x] = "E"
-                line = ("start", 'facing=N note="facing guessed: the export gives no arrow"')
-                warn(f"floor {f} {e['cell']}: start tile facing guessed as N")
+            elif t in ("exit", "side_exit", "start_tile"):
+                grids[f][z][x] = "E" if t == "start_tile" else "X"
+                edge = exit_edge(images[f], x, z)
+                if edge is None:
+                    warn(f"floor {f} {e['cell']}: no green exit line found on a border")
+                props = [f"exit_edge={edge}"] if edge else []
+                if t == "side_exit":
+                    props.append("tags=side_exit")
+                if t == "start_tile":
+                    props.append('facing=N note="facing guessed: the export gives no arrow"')
+                    warn(f"floor {f} {e['cell']}: start tile facing guessed as N")
+                line = ("exit" if t != "start_tile" else "start", " ".join(props))
             elif t == "trap_disarray":
                 line = ("trap", "trap type=disarray")
             elif t == "trap_teleport":

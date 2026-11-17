@@ -21,6 +21,7 @@ const COMMON := {
 	"asset": "str",  # a specific visual, as a `res://` path
 	"tags": "list",  # free tags; `unreachable_ok`, `no_teleport` and `safe` mean something to the validator
 	"facing": "dir",  # which way the player looks on arriving, for the entrance
+	"exit_edge": "dir",  # the border of an exit (or the entrance) the player leaves the dungeon across
 }
 
 ## `floor`: "yes" — the tile is floor; "no" — it is not (a staircase is carried past, a cracked

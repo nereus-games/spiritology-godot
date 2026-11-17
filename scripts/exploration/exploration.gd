@@ -9,6 +9,7 @@ extends Node3D
 const ScenarioCatalog := preload("res://scripts/dev/scenario_catalog.gd")
 const Trap := preload("res://scripts/exploration/mechanisms/trap.gd")
 const RivalSpawner := preload("res://scripts/exploration/rival_spawner.gd")
+const DungeonLoader := preload("res://scripts/dungeon/dungeon_loader.gd")
 
 ## How many traps Reveal Traps shows on entering a level.
 const REVEAL_TRAPS_COUNT := 3
@@ -48,7 +49,16 @@ func _ready() -> void:
 	# DEV: builds the chosen test scenario (populating the grid and the session) and places the
 	# player. Done LAST so that the state the scenario sets — objects, abilities marked as used —
 	# is not wiped by the dungeon-entry logic above.
-	var start: Vector3i = ScenarioCatalog.build(ScenarioCatalog.selected_id, _dungeon)
+	var start: Vector3i
+	# The scenarios extend towards +z, so the player starts facing it; a real dungeon says which
+	# way its entrance faces.
+	var yaw := PI
+	if ScenarioCatalog.selected_dungeon != &"":
+		var built: Dictionary = DungeonLoader.build(ScenarioCatalog.selected_dungeon, _dungeon)
+		start = built["start"]
+		yaw = built["yaw"]
+	else:
+		start = ScenarioCatalog.build(ScenarioCatalog.selected_id, _dungeon)
 	# DEV: the player starts where they would enter the dungeon, which makes that tile the
 	# entrance — and, per the design doc, an exit too. Mechanisms that send them back there, like
 	# dieverting, then have a real destination instead of a random fallback.
@@ -57,10 +67,10 @@ func _ready() -> void:
 	var player := get_node_or_null("Player")
 	if player != null and player.has_method("teleport_to"):
 		player.teleport_to(start)
-		# The scenarios extend towards +z, while the player looks towards -z by default — at the
-		# wall behind them. Turn them towards the dungeon, body and yaw target alike.
+		# The player looks towards -z by default, at the wall behind them in a scenario. Turn
+		# them towards the dungeon, body and yaw target alike.
 		if player.has_method("set_start_yaw"):
-			player.set_start_yaw(PI)
+			player.set_start_yaw(yaw)
 	# Reveal Traps (razél): "when entering a dungeon level, reveals the position of the 3 closest
 	# traps". Asked of the reveal phase, which is run at once so the map shows them from the start.
 	if GameSession.party_has_talent(&"reveal_traps"):

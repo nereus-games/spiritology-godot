@@ -50,6 +50,9 @@ const MESSAGES := {
 	"WATER_EMERGE_NOT_FLOOR": "the tile the player emerges on (%s) is not floor",
 	"WATER_NO_WAY_BACK": "after falling into the water there is no way back to the entrance",
 	"WAIVER_UNUSED": "the waiver '%s' matches no fault any more: remove it from rules.cfg",
+	"EXIT_NO_EDGE": "an exit or entrance with no `exit_edge`: nobody knows which way to leave",
+	"EXIT_EDGE_INSIDE": "the exit leads across `exit_edge` onto %s, which is floor, not outside",
+	"ENTRANCE_NO_FACING": "the entrance has no `facing`",
 	"BAD_RULES_FILE": "rules.cfg cannot be read (error %d)",
 	"SPAWN_POINTS_SHORT": "%d rivals spawn at entry but only %d basic rival spawn points exist",
 	"BRIDGE_NO_WAY_BACK": "after a fall from this bridge there is no way back to the entrance",
@@ -96,6 +99,7 @@ func validate(plan, config = null) -> Array:
 	_check_lifts()
 	_check_gates()
 	_check_reachability()
+	_check_exits()
 	_check_safe_areas()
 	_check_config()
 	_apply_waivers()
@@ -368,6 +372,22 @@ func _check_reachability() -> void:
 			_add(
 				"error", "UNREACHABLE", start, [count, "%d,%d,%d" % [start.x, start.y, start.z]]
 			)
+
+
+## The entrance and the exits are left across a border, and the border opens onto outside.
+func _check_exits() -> void:
+	var places: Array = _plan.exits.duplicate()
+	if _plan.has_entrance:
+		places.append(_plan.entrance)
+		if not _plan.tile_props.get(_plan.entrance, {}).has("facing"):
+			_add("warning", "ENTRANCE_NO_FACING", _plan.entrance)
+	for tile in places:
+		var props: Dictionary = _plan.tile_props.get(tile, {})
+		if not props.has("exit_edge"):
+			_add("warning", "EXIT_NO_EDGE", tile)
+		elif _plan.is_floor(tile + props["exit_edge"]):
+			var n: Vector3i = tile + props["exit_edge"]
+			_add("warning", "EXIT_EDGE_INSIDE", tile, ["%d,%d,%d" % [n.x, n.y, n.z]])
 
 
 ## A safe area holds no hazard and no unrailed ledge (`safe_areas.gd`).

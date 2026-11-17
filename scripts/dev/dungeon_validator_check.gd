@@ -33,6 +33,7 @@ func _ready() -> void:
 	_check_assets_and_props()
 	_check_terrain_and_cells()
 	_check_water()
+	_check_exits()
 	_check_waivers_and_rules()
 	_check_committed_dungeons()
 	if _fails.is_empty():
@@ -82,7 +83,13 @@ func _has(floors: Array, code: String, rules: Dictionary = {}) -> bool:
 
 
 func _check_sound() -> void:
-	var sound := [_floor(0, ["#######", "#E...X#", "#######"])]
+	var sound := [
+		_floor(
+			0,
+			["#######", "#E...X#", "#######"],
+			"[tiles]\nB2 facing=E exit_edge=W\nF2 exit_edge=E\n"
+		)
+	]
 	_check(_issues(sound).is_empty(), "a sound map reports nothing")
 	_check(
 		Validator.error_count([{"severity": "error"}, {"severity": "warning"}]) == 1,
@@ -191,7 +198,10 @@ func _check_stairs() -> void:
 		_floor(0, ["#######", "#E.^###", "#######"], legend),
 		_floor(1, ["#######", "#   ..#", "#######"]),
 	]
-	_check(_codes(open_above).is_empty(), "stairs with headroom and a landing report nothing")
+	var faults := _codes(open_above)
+	faults.erase("EXIT_NO_EDGE")
+	faults.erase("ENTRANCE_NO_FACING")
+	_check(faults.is_empty(), "stairs with headroom and a landing report nothing")
 	var no_landing := [
 		_floor(0, ["#######", "#E.^###", "#######"], legend),
 		_floor(1, ["#######", "#    .#", "#######"]),
@@ -330,6 +340,22 @@ func _check_water() -> void:
 		_floor(1, ["#######", "#.E=.##", "#######"], "[legend]\n= = bridge over=void\n"),
 	]
 	_check(not _has(above, "BRIDGE_NO_GAP", {"water": {"emerge": "B2@0"}}), "a bridge over water on the floor below")
+
+
+func _check_exits() -> void:
+	var bare := [_floor(0, ["#####", "#E.X#", "#####"])]
+	_check(_has(bare, "EXIT_NO_EDGE"), "an exit with no edge is reported")
+	_check(_has(bare, "ENTRANCE_NO_FACING"), "an entrance with no facing too")
+	var good := [
+		_floor(
+			0,
+			["#####", "#E.X#", "#####"],
+			"[tiles]\nB2 facing=E exit_edge=W\nD2 exit_edge=E\n"
+		)
+	]
+	_check(_codes(good).is_empty(), "an exit across a wall is fine")
+	var inside := [_floor(0, ["#####", "#E.X#", "#####"], "[tiles]\nB2 facing=E exit_edge=E\nD2 exit_edge=E\n")]
+	_check(_has(inside, "EXIT_EDGE_INSIDE"), "an exit that leads onto floor is not an exit")
 
 
 func _check_waivers_and_rules() -> void:

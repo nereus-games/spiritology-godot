@@ -33,7 +33,7 @@ _####~~~~~~~~#################_
 ###~~i#....##i~##~~~ii#..##.#__
 ###~~~#....##.~##~~~i.#..##i#__
 ###~~i###s###.i##~~~ii#..##i#__
-###~~~###_##..i..~~~ii#..#ii#__
+###~~~###_##..i^^~~~ii#..#ii#__
 ###~~~###_###.iii~~~i##..####__
 ####~~#######.....~~~##..####__
 ####~~########.......#..#####__
@@ -55,6 +55,12 @@ s = stairs dir=down face=S
 v = stairs dir=up face=S
 
 [tiles]
+# P28 and Q28 climb to floor 1; the mapper draws only the way down, from floor 1 (the designers
+# forgot the floor 0 icons), so these two are added by hand.
+P28 note="climbs to floor 1; added by hand, missing from the mapper"
+Q28 note="climbs to floor 1; added by hand, missing from the mapper"
+# F27 is decor: a lone ice tile cut off by water, never meant to be reached.
+F27 tags=unreachable_ok note="decor only"
 # bridge
 G6 bridge over=water
 K12 bridge over=void
@@ -84,8 +90,9 @@ J25 decor type=scratch_marks
 N26 decor type=scratch_marks
 X29 decor type=scratch_marks
 # exit
-AB24 tags=side_exit
-R38 tags=side_exit
+E6 exit_edge=W
+AB24 exit_edge=N tags=side_exit
+R38 exit_edge=S tags=side_exit
 # gate
 I15 gate type=meditation edge=N
 Q34 gate type=automated edge=N

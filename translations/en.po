@@ -298,8 +298,8 @@ msgstr "No dungeon yet. Test scenarios cover the mechanisms one at a time; a dun
 msgid "UI_DEV_DUNGEON_VERDICT"
 msgstr "Validator: %d error(s), %d warning(s)"
 
-msgid "UI_DEV_DUNGEON_NOT_PLAYABLE"
-msgstr "Cannot be entered yet: nothing loads maps into a dungeon."
+msgid "UI_DEV_DUNGEON_NO_MAPS"
+msgstr "No maps yet: nothing to walk through."
 
 # --- The exploration test scenarios ---------------------------------------------------
 # One title and one instruction sheet per `data/scenarios/*.tres`. The .tres carries only

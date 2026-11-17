@@ -103,11 +103,21 @@ console whatever it had to guess. It is a bootstrap: a second run overwrites the
 ## Status
 
 Built: the format's parser (`dungeon_map_parser.gd`), the plan it fills (`dungeon_plan.gd`),
-the validator (`dungeon_validator.gd`) with its checks (`dungeon_validator_check`),
-`tools/validate_dungeons.sh`, which CI runs on every push and pull request, the importer, and
-the *Dungeons* tab, which lists every dungeon with the validator's verdict. One real dungeon is
-in: `norgzevod_frozen_lake`, imported from the mapper and then edited. Not built: the loader
-that turns a plan into a playable dungeon, the other command-line tools, and the editor.
+the validator (`dungeon_validator.gd`), `tools/validate_dungeons.sh`, which CI runs on every push
+and pull request, the importer, and the **loader** (`dungeon_loader.gd`), which builds a plan into
+a [DungeonManager] the way `ScenarioCatalog.build` does for a scenario. The *Dungeons* tab lists
+every dungeon with the validator's verdict, and enters one with maps. One real dungeon is in:
+`norgzevod_frozen_lake`, imported from the mapper and then edited.
+
+The loader brought two engine changes: walls can be **declared** (`DungeonLayout.declare_wall`,
+a map's `#`), so a wall on an upper storey is not mistaken for open air, and a **no-teleport** set
+(`TileSearch.forbid_teleport_to`, a zone tagged `no_teleport`) that random teleports respect.
+
+What the loader does not do yet, and says so on the console: **water** (the engine has none: it is
+left as wall where floor touches it), **scenery** (columns, stone trees, a submarine: not drawn),
+the spawn rules of `rules.cfg` beyond the rivals at entry, and the **event area**. A dungeon with
+no `DungeonConfig` has no rival groups: the lake needs one, with its species, and then takes its
+spawn points from the map. Not built: the other command-line tools, and the editor.
 
 ## Proposed work, in order
 
@@ -178,15 +188,17 @@ and everything before it is useful with a text editor alone.
 
 ## Still open
 
-1. **Stairs.** The lake's staircases are read as drawn on both storeys they join. Two on
-   floor 1 (P28, Q28) have no counterpart on floor 0, so nothing climbs them: waived for now.
-2. **The underground** of the lake is work in progress, and its faults are waived with a note.
-3. **Design-doc rules beyond the ones implemented.** The doc is in Notion and there is no
+1. **The underground** of the lake is work in progress, and its fault is waived with a note.
+2. **The lake's species and rules.** Which spirimonsters live there, and the spawn limits, are
+   a `DungeonConfig` still to write; without it no group appears.
+3. **Water.** Falling in (off a plank, or from a floor above) should come back up on the
+   `[water] emerge` tile with the fall damage and nothing more; the engine has no water, so for
+   now it is wall.
+4. **Design-doc rules beyond the ones implemented.** The doc is in Notion and there is no
    `notion-export/` in this clone. A second pass from a clone that has it should check the
    validator's rules, and the property names in `dungeon_kinds.gd`, against it.
-4. **Things the format carries but nothing uses yet:** the spawn rules in `rules.cfg` (decor
-   and traps at entry, the conditions on the encyclopaedia and on the first visit) and the
-   event area. The validator checks only that enough rival spawn points exist.
+5. **Things the format carries but nothing uses yet:** the decor and traps at entry, the
+   conditions on the encyclopaedia and on the first visit, the event area.
 
 Settled: unreachable tiles are errors unless a tag or a waiver says otherwise; storeys are
 linked implicitly; there is no size limit; the editor is a dev tool reached from the test

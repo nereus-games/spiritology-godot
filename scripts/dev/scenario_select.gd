@@ -96,8 +96,8 @@ func _scrolling_grid(tabs: TabContainer, columns: int) -> GridContainer:
 
 
 ## The real dungeons ([method ScenarioCatalog.real_dungeon_ids]), each with what the validator
-## makes of its maps. None can be entered yet: nothing loads a map into a dungeon, so every entry
-## is greyed out with the reason — and, with no dungeon at all, a line says so.
+## makes of its maps. One with maps can be entered, faults or not — they are reported beside it; one
+## with none is greyed out with the reason — and, with no dungeon at all, a line says so.
 func _fill_dungeons(grid: GridContainer) -> void:
 	var ids := ScenarioCatalog.real_dungeon_ids()
 	if ids.is_empty():
@@ -114,11 +114,15 @@ func _fill_dungeons(grid: GridContainer) -> void:
 		var button := Button.new()
 		button.text = _dungeon_name(id)
 		button.custom_minimum_size = Vector2(460, 38)
-		button.disabled = true
+		var has_maps := MapParser.slugs().has(id)
+		button.disabled = not has_maps
+		if has_maps:
+			button.pressed.connect(_on_dungeon_chosen.bind(id))
 		entry.add_child(button)
 
-		entry.add_child(_dim_label(tr("UI_DEV_DUNGEON_NOT_PLAYABLE")))
-		if MapParser.slugs().has(id):
+		if not has_maps:
+			entry.add_child(_dim_label(tr("UI_DEV_DUNGEON_NO_MAPS")))
+		else:
 			var issues: Array = Validator.new().validate(
 				MapParser.load_slug(id), GameData.dungeon(id)
 			)
@@ -286,6 +290,12 @@ func _den_label(v: int) -> String:
 	return tr("UI_DEV_RIVAL_DEN") % [v, tag]
 
 
+func _on_dungeon_chosen(id: StringName) -> void:
+	ScenarioCatalog.selected_dungeon = id
+	TransitionManager.change_scene(EXPLORATION)
+
+
 func _on_scenario_chosen(id: StringName) -> void:
+	ScenarioCatalog.selected_dungeon = &""
 	ScenarioCatalog.selected_id = id
 	TransitionManager.change_scene(EXPLORATION)

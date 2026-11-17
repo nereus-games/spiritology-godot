@@ -53,6 +53,23 @@ jobs:
       - name: Validate the dungeons
         run: ./tools/validate_dungeons.sh
 
+      # A picture of every dungeon, the validator's issues marked on it, for whoever reviews a
+      # change to a map: download the dungeon-previews artifact.
+      - name: Render the dungeon previews
+        run: |
+          set -euo pipefail
+          for dir in data/dungeons/*/; do
+            slug="$(basename "$dir")"
+            ./tools/dungeon_preview.sh png "$slug" --out "dungeon-previews/$slug" --issues
+          done
+
+      - name: Upload the dungeon previews
+        uses: actions/upload-artifact@v4
+        with:
+          name: dungeon-previews
+          path: dungeon-previews
+          if-no-files-found: ignore
+
   reuse:
     name: REUSE compliance (dual licence)
     runs-on: ubuntu-latest

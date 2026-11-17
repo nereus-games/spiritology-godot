@@ -106,6 +106,20 @@ func validate(plan, config = null) -> Array:
 	return _issues
 
 
+## Every tile the validator's model reaches from the entrance of `plan` (Vector3i -> true), empty
+## when there is none. Read-only, and independent of [method validate]: the preview tools use it to
+## count the reachable tiles and to compare the model with the engine's own walk.
+func reachable_from_entrance(plan) -> Dictionary:
+	_plan = plan
+	_links.clear()
+	_blocked_edges.clear()
+	var kept := _issues
+	_issues = []
+	_index_edges_and_links()
+	_issues = kept
+	return _reach(plan.entrance) if plan.has_entrance else {}
+
+
 ## Faults the dungeon's own `rules.cfg` says to tolerate for now, under `[waive]`: a key is an issue
 ## code, or `CODE:tile` (`UNREACHABLE:F27@0`) for one place only, and its value is the reason, which
 ## is required. A waived error is still reported, as a warning that carries the reason, so that it
@@ -366,7 +380,7 @@ func _check_reachability() -> void:
 		var region := _region(start, seen, reached)
 		var count := 0
 		for t in region:
-			if not _plan.has_tag(t, "unreachable_ok"):
+			if not _plan.has_tag(t, "unreachable_ok") and not _is_obstacle(t):
 				count += 1
 		if count > 0:
 			_add(
@@ -488,7 +502,10 @@ func _moves(tile: Vector3i) -> Array[Vector3i]:
 		if _blocked_edges.has(_edge_key(tile, n)):
 			continue
 		if _plan.is_floor(n):
-			out.append(n)
+			# A refresh crystal is an indestructible obstacle (`refresh_crystal.gd`): nobody
+			# stands on its tile, so it is never a step. Found by `dungeon_walk.gd`.
+			if not _is_obstacle(n):
+				out.append(n)
 			continue
 		# Water at the same level is never entered on purpose, and a wall is a wall.
 		if _plan.water_tiles.has(n) or _plan.wall_tiles.has(n):
@@ -502,6 +519,14 @@ func _moves(tile: Vector3i) -> Array[Vector3i]:
 		if _plan.is_floor(target):
 			out.append(target)
 	return out
+
+
+## A tile nobody can stand on though it is floor: a refresh crystal.
+func _is_obstacle(tile: Vector3i) -> bool:
+	for p in _plan.placements_at(tile):
+		if p["kind"] == &"crystal":
+			return true
+	return false
 
 
 func _is_solid_mechanism(tile: Vector3i) -> bool:

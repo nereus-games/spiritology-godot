@@ -391,14 +391,12 @@ func _check_walk_small() -> void:
 		"walk: the report says so"
 	)
 	await _discard(dm)
-	# Water the engine cannot enter is skipped and counted, and nobody objects.
+	# Water nobody walks into is no way anywhere, and nobody objects.
 	var wet := _plan_of(["[floor]\ny = 0\n[grid]\n#####\n#E.~#\n#####\n"], &"wet")
 	var wet_dm := _build(wet)
 	var wet_report := Walk.walk(wet, wet_dm)
 	_check(wet_report["disagreements"] == 0, "walk: a pool beside the path is no disagreement")
-	_check(
-		wet_report["skipped"].size() > 0, "walk: ...and the moves into it are counted as skipped"
-	)
+	_check(wet_report["skipped"].is_empty(), "walk: ...and a step into it is no move, so none is skipped")
 	await _discard(wet_dm)
 
 

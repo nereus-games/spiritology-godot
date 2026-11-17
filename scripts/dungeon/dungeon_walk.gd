@@ -13,9 +13,8 @@
 ## open when needed, the cranny ability is available whenever a cracked wall asks for it, a lift
 ## can be ridden back and forth, litter gets recycled. Traps, rivals and occupancy are ignored.
 ##
-## Water: the engine has no water API in this build, so a step into water and a fall that ends in
-## water are SKIPPED and counted, and the plan says which tiles are water. If the layout gets an
-## `is_water(tile)` it is used instead of the plan.
+## Water: a step into open water is no move; a fall that ends in water comes up on the layout's
+## emerge tile.
 ##
 ## Needs a [DungeonManager] already built from the plan, inside the tree (the mechanisms register
 ## themselves when they enter it). No `class_name` (the CLI class-cache trap): referenced by
@@ -97,7 +96,7 @@ static func moves(plan, dm, tile: Vector3i, lifts: Array, skipped: Array) -> Arr
 		if _blocked(dm, n):
 			continue
 		if not dm.is_floor(n):
-			_fall(plan, dm, tile, n, out, skipped)
+			_fall(dm, tile, n, out, skipped)
 			continue
 		var ride = _mechanism(dm, n, "far_end")
 		if ride != null and dm.is_floor(ride.far_end()) and ride.far_end() != n:
@@ -110,29 +109,27 @@ static func moves(plan, dm, tile: Vector3i, lifts: Array, skipped: Array) -> Arr
 			out.append({"to": lift.tile, "touched": []})
 	# On a plank: a fall off it.
 	if dm.is_narrow_bridge(tile):
-		_fall(plan, dm, tile, tile, out, skipped)
+		_fall(dm, tile, tile, out, skipped)
 	return out
 
 
-## A fall out of `from` into `air` (the same tile for a plank): to the floor below, unless that
-## is water, which the engine cannot model, or there is nothing below.
-static func _fall(plan, dm, from: Vector3i, air: Vector3i, out: Array, skipped: Array) -> void:
-	if _is_water(plan, dm, air):
-		skipped.append({"from": from, "to": air, "why": "water"})
+## A fall out of `from` into `air` (the same tile for a plank): to the floor below, or, when what
+## catches it is water, to the tile the player comes back up on. A step into open water at the
+## same level is no move at all, and a fall that ends in water with no emerge tile declared is
+## skipped and counted: the validator reports that missing tile, and the engine has nowhere to go.
+static func _fall(dm, from: Vector3i, air: Vector3i, out: Array, skipped: Array) -> void:
+	if dm.layout.is_open_water(air):
+		return
+	if dm.layout.drops_into_water(air):
+		if dm.layout.has_emerge_tile():
+			out.append({"to": dm.layout.emerge_tile(), "touched": []})
+		else:
+			skipped.append({"from": from, "to": air, "why": "a fall into water, no emerge tile"})
 		return
 	var landing: Vector3i = dm.layout.fall_landing(air)
 	if landing == air:
 		return  # a wall, or a bottomless hole: not a way anywhere
-	if _is_water(plan, dm, plan.fall_landing(air)):
-		skipped.append({"from": from, "to": air, "why": "a fall into water"})
-		return
 	out.append({"to": landing, "touched": []})
-
-
-static func _is_water(plan, dm, tile: Vector3i) -> bool:
-	if dm.layout.has_method("is_water"):
-		return dm.layout.is_water(tile)
-	return plan.water_tiles.has(tile)
 
 
 ## The edge is barred for good: a guardrail. A gate that is merely closed is assumed to open.
@@ -276,7 +273,7 @@ static func format_report(plan, report: Dictionary) -> String:
 	var skipped: Array = report["skipped"]
 	if not skipped.is_empty():
 		out += (
-			"\nskipped %d move(s) into water: the engine has no water API in this build\n"
+			"\nskipped %d fall(s) into water: no emerge tile is declared\n"
 			% skipped.size()
 		)
 	out += "\nassumed: gates open, the cranny ability is always available, lifts ride both ways\n"

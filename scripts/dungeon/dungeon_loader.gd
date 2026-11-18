@@ -6,8 +6,6 @@
 ## becomes a mechanism script here, with its properties translated into the script's own.
 ##
 ## What is not built yet, said out loud rather than dropped silently:
-##  - WATER. The engine has no water, so a water tile is left as nothing: wall where floor touches
-##    it, and a fall off a plank over it is caught by the bridge's own guardrail.
 ##  - SCENERY (columns, stone trees, a submarine): cosmetic, not drawn.
 ##  - The spawn rules of `rules.cfg` other than the groups at entry, which come from the dungeon's
 ##    [DungeonConfig] when it has one.
@@ -93,8 +91,12 @@ static func _lay_out(plan, dm) -> void:
 		dm.layout.mark_hole(tile)
 	for tile in plan.wall_tiles:
 		dm.layout.declare_wall(tile)
-	if not plan.water_tiles.is_empty():
-		push_warning("[DungeonLoader] %s has water, which the engine cannot draw yet." % plan.slug)
+	for tile in plan.water_tiles:
+		dm.layout.mark_water(tile)
+	# `[water] emerge = "F25@0"`: where whoever falls into the water comes back up.
+	var emerge = Kinds.parse_tile(String(plan.rule("water", "emerge", "")), 0)
+	if emerge != null:
+		dm.layout.set_emerge_tile(emerge)
 
 
 ## The dungeon's rules: its [DungeonConfig] when it has one, with the map's rival spawn points

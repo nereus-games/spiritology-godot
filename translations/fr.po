@@ -921,6 +921,12 @@ msgstr "Groupes de rivaux : apparitions, fuite, retour"
 msgid "SCENARIO_RIVALS_DESC"
 msgstr "Un rival seul attend près de l'entrée, deux groupes apparaissent sur des points d'apparition à ton arrivée, puis un autre tous les 12 tours. Un groupe est tiré au hasard 70 % du temps (1 à 3 parmi ravbak, kalilk, skorpis, fliritus), sinon c'est une meute de trois ravbak ou un skorpis seul. En rencontre, utilise une bombe fumigène pour fuir : tu atterris à 3 à 5 pas, et le groupe est toujours là où il était. Si un seul personnage fuit, l'autre continue. En vue de debug, F2 apaise les rivaux. Quelle que soit l'issue, un groupe resté sur la carte garde les dégâts subis, et se repose quelques tours."
 
+msgid "SCENARIO_WATER_TITLE"
+msgstr "Eau : mare, planche, corniche et disarray"
+
+msgid "SCENARIO_WATER_DESC"
+msgstr "Personne n'entre dans l'eau volontairement : avancer vers la mare bleue, droit devant, ne mène à rien, sans chute ni dégâts. On ne fait que tomber dedans, puis on remonte sur la case de sortie près du départ, avec les dégâts de la chute et rien de plus. TROIS FAÇONS DE TOMBER À ESSAYER. (1) La PLANCHE qui franchit le canal au fond : elle est posée au niveau de l'eau, donc une chute n'y coûte rien. (2) La CORNICHE : monter les deux volées d'escaliers de droite jusqu'à la plateforme, puis passer par-dessus son bord nord. Sur presque toute la plateforme ce bord surplombe la mare (10 DEN, et remontée près du départ) ; à son extrémité est il surplombe le sol ordinaire (les mêmes 10 DEN, et on reste en bas). (3) Le DISARRAY : marcher sur le piège révélé juste avant la rive est de la mare, puis longer l'eau ; un pas dévié vers elle fait tomber dedans (une chute de hauteur 0 : aucun dégât)."
+
 msgid "DUNGEON_DEV_RIVALS_NAME"
 msgstr "Salle de test des rivaux"
 

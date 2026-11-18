@@ -125,8 +125,14 @@ func push_group_aside(group: Node, pushing: Dictionary = {}) -> bool:
 			return true
 	# A ledge: no floor there, but some further down. The group falls, and takes the damage.
 	for n in around:
+		# Never into water: no group is pushed into it.
 		var landing: Vector3i = _dungeon.layout.fall_landing(n)
-		if not _dungeon.is_floor(n) and landing != n and not safe.has(landing):
+		if (
+			not _dungeon.is_floor(n)
+			and landing != n
+			and not safe.has(landing)
+			and not _dungeon.layout.drops_into_water(n)
+		):
 			if group.has_method("fall_down"):
 				group.fall_down(n)
 				return true

@@ -76,8 +76,13 @@ func _run_scenario(id: StringName) -> void:
 		var top: float = mi.position.y + s.y * 0.5
 		if is_equal_approx(s.y, dm.FLOOR_THICKNESS):
 			slabs += 1
-			# Top face level with a storey's floor, or a pit's, offset by PIT_DEPTH.
-			if not (_on_level(top, dm.TILE_SIZE) or _on_level(top + dm.PIT_DEPTH, dm.TILE_SIZE)):
+			# Top face level with a storey's floor, or a pit's, offset by PIT_DEPTH, or a water
+			# surface, offset by WATER_SURFACE_DROP.
+			if not (
+				_on_level(top, dm.TILE_SIZE)
+				or _on_level(top + dm.PIT_DEPTH, dm.TILE_SIZE)
+				or _on_level(top + dm.WATER_SURFACE_DROP, dm.TILE_SIZE)
+			):
 				misplaced += 1
 		elif is_equal_approx(s.y, dm.TILE_SIZE):
 			walls += 1
@@ -199,8 +204,9 @@ func _check_no_double_ground(dm, slabs: int) -> void:
 		else:
 			expected += 1
 	for c in dm.layout.pit_tiles():
-		if dm.layout.fall_landing(c) == c:
+		if dm.layout.fall_landing(c) == c and not dm.layout.is_water(c):
 			expected += 1
+	expected += dm.layout.water_tiles().size()  # a slab of water on each water tile
 	_check(
 		slabs == expected,
 		(

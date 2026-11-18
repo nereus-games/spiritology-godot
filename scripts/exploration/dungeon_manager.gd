@@ -114,6 +114,10 @@ var _edge_mechanisms: Dictionary = {}
 ## How far (metres) a pit slab sits below the normal floor level.
 const PIT_DEPTH := 1.2
 
+## How far (metres) a water surface lies below the floor around it: enough to read as a shore, and
+## to keep a plank laid over it from sharing a plane with it, not enough to look like a pit.
+const WATER_SURFACE_DROP := 0.04
+
 var _player: Node3D
 var _rivals: Array[Node] = []
 
@@ -192,6 +196,24 @@ func move_occupant(from_tile: Vector3i, to_tile: Vector3i, who: Node) -> bool:
 	_occupants.erase(from_tile)
 	_occupants[to_tile] = who
 	return true
+
+
+# --------------------------------------------------------------------------
+# Water
+# --------------------------------------------------------------------------
+
+
+## Where an actor that has fallen into water comes back up: the layout's emerge tile, or the
+## nearest free tile to it when somebody stands there. `fallback` — the tile the actor fell from —
+## when level design declared no usable emerge tile, which the validator reports as an error
+## (`WATER_NO_EMERGE`): the actor then stays put rather than vanishing.
+func emerge_destination(fallback: Vector3i) -> Vector3i:
+	if not layout.has_emerge_tile() or not is_floor(layout.emerge_tile()):
+		push_warning(
+			"[DungeonManager] fell into water, but there is no emerge tile to come back up on."
+		)
+		return fallback
+	return tile_search.free_tile_near(layout.emerge_tile())
 
 
 # --------------------------------------------------------------------------
